@@ -1,0 +1,39 @@
+OMM com.skbank.sml.fns.inb.dto.INBPushNtfcRspGrid_DTO
+< logicalName= "PUSH.알림.응답.GRID.공통.IO" description="PUSH 알림 응답 IO"
+>
+{
+	String userMsgId<length=20 description="사용자메시지ID" >;
+	String msgId<length=50 description="메시지ID" >;
+	String msgGrpNm<length=20 description="메시지그룹명" >;
+	String appLink<length=10 description="앱링크코드" >;
+	String iconName<length=200 description="icon명" >;
+	String pushTitle<length=500 description="푸시제목" >;
+	String pushMsg<length=4000 description="푸시내용" >;
+	String msgText<length=4000 description="사서함메시지" >;
+	String map1<length=1000 description="매핑정보1" >;
+	String map2<length=1000 description="매핑정보2" >;
+	String map3<length=1000 description="매핑정보3" >;
+	String map4<length=1000 description="매핑정보4" >;
+	String map5<length=1000 description="매핑정보5" >;
+	String map6<length=1000 description="매핑정보6" >;
+	String map7<length=1000 description="매핑정보7" >;
+	String map8<length=1000 description="매핑정보8" >;
+	String map9<length=1000 description="매핑정보9" >;
+	String map10<length=1000 description="매핑정보10" >;
+	String name<length=200 description="고객명" >;
+	String account<length=20 description="계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String moneyDeal<length=30 description="거래금액" >;
+	String moneyBalance<length=30 description="잔액" >;
+	String serialNum<length=30 description="인증번호" >;
+	String typeDeal<length=10 description="업무유형" >;
+	String msgType<length=10 description="메시지타입" >;
+	String readYn<length=1 description="읽음여부" >;
+	String category<length=10 description="카테고리" >;
+	String isFav<length=1 description="즐겨찾기여부" >;
+	String expireDate<length=14 description="만기일" >;
+	String msgGrpCd<length=10 description="메시지그룹코드" >;
+	String umsTrno<length=20 description="UMS거래번호" >;
+	String umsReqDt<length=8 description="UMS요청일자" >;
+	String regDate < length = 14 description = "발송일" > ;
+	String rnum < length = 9 description = "넘버" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokEsnsPwnoCrtf_IDT
+< logicalName= "모임통장.간편비밀번호.인증.컨트롤러.입력.IO" description=""
+>
+{
+	String encyPinPwno < length = 32 description = "암호화핀비밀번호" > ;
+	String e2EPid < length = 50 description = "기기식별검증PID" > ;
+}

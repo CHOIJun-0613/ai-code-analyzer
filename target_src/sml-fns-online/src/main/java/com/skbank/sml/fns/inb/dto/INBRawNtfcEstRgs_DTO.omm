@@ -1,0 +1,21 @@
+OMM com.skbank.sml.fns.inb.dto.INBRawNtfcEstRgs_DTO
+< logicalName= "입출금알림설정DTO" description="입출금알림설정DTO"
+>
+{
+	String advpeEno < length = 8 description = "권유자직원번호" > ;
+	String actPwnoUsgYn < length = 1 description = "계좌비밀번호사용여부" > ;
+	String actPwno < length = 32 description = "계좌비밀번호" > ;
+	String tgtAcno < length = 15 description = "대상계좌번호" > ;
+	String ntcTgtTrnDscd < length = 1 description = "통지대상거래구분코드" > ;
+	String balNtrsnYn < length = 1 description = "잔액미전송여부" > ;
+	BigDecimal tmsLimAm < length = 15 description = "전송제한금액" > ;
+	String tmsStaTm < length = 6 description = "전송시작시각" > ;
+	String tmsEndTm < length = 6 description = "전송종료시각" > ;
+	String hpComCd < length = 4 description = "핸드폰회사코드" > ;
+	String hpTlenNo < length = 4 description = "핸드폰국번번호" > ;
+	String hpSerNo < length = 4 description = "핸드폰일련번호" > ;
+	String atsSndLimYn < length = 1 description = "자동이체발송제한여부" > ;
+	Integer prcSrno < length = 5 description = "처리일련번호" > ;
+	String chrSndXtYn < length = 1 description = "문자발송제외여부" > ;
+	String pushAgrYn < length = 1 description = "알림동의여부" > ;
+}

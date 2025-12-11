@@ -1,0 +1,51 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhMngSelectMetPbokMbhInf_ODT
+< logicalName= "모임통장.회원.정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String ebnkUtzpeNo < length = 13 description = "전자뱅킹이용자번호" align = left > ;
+	String metCtrStcd < length = 2 description = "모임계약상태코드" align = left > ;
+	String metCtrStcdNm < length = 50 description = "모임계약상태코드명" align = left > ;
+	String metPbokDscd < length = 1 description = "모임통장구분코드" align = left > ;
+	String metPbokDscdNm < length = 50 description = "모임통장구분코드명" align = left > ;
+	String metNm < length = 100 description = "모임명" align = left > ;
+	String rcvBkwAcno < length = 20 description = "입금전행계좌번호" align = left > ;
+	String cusUsgBkwAcno < length = 20 description = "고객사용전행계좌번호" align = left > ;
+	String encyRcvBkwAcno < length = 20 description = "암호화입금전행계좌번호" align = left > ;
+	String itcsno < length = 11 description = "통합고객번호" align = left > ;
+	String cusKorlNm < length = 100 description = "고객한글명" align = left > ;
+	String cusBkpnNm < length = 40 description = "고객부기명" align = left > ;
+	BigDecimal ctBal < length = 19 decimal = 3 description = "현재잔액" align = right fill = "0" > ;
+	BigDecimal payAvlBal < length = 19 decimal = 3 description = "지급가능잔액" align = right fill = "0" > ;
+	String pdcd < length = 9 description = "상품코드" align = left > ;
+	String pdcdKorlNm < length = 100 description = "상품코드한글명" align = left > ;
+	String prdKorlAbrNm < length = 50 description = "상품한글단축명" align = left > ;
+	String rlfAcno < length = 11 description = "안심계좌번호" align = left > ;
+	String mbpfPymDt < length = 8 description = "회비납부일자" align = left > ;
+	String mbpfPymCycd < length = 2 description = "회비납부주기코드" align = left > ;
+	String mbpfPymCycdNm < length = 50 description = "회비납부주기코드명" align = left > ;
+	BigDecimal mbpfPmtgtAm < length = 19 decimal = 3 description = "회비납부대상금액" align = right fill = "0" > ;
+	String agmdCollDt < length = 8 description = "동의서징구일자" align = left > ;
+	String advpeEno < length = 8 description = "권유자직원번호" align = left > ;
+	String asmnlApvCd < length = 1 description = "공동명의승인코드" align = left > ;
+	String asmnlApvCdNm < length = 50 description = "공동명의승인코드명" align = left > ;
+	String rppeChgRgsYn < length = 1 description = "대표자변경등록여부" align = left > ;
+	String rppeChgRgsDt < length = 8 description = "대표자변경등록일자" align = left > ;
+	String rppeChgVldDt < length = 8 description = "대표자변경유효일자" align = left > ;
+	String metDscd < length = 2 description = "모임구분코드" align = left > ;
+	String metDscdNm < length = 50 description = "모임구분코드명" align = left > ;
+	String metRgsDt < length = 8 description = "모임등록일자" align = left > ;
+	String rgsTm < length = 6 description = "등록시각" align = left > ;
+	String metBscImgUrlNm < length = 100 description = "모임기본이미지URL명" align = left > ;
+	Integer metMbhRgsCnt < length = 6 description = "모임회원등록건수" align = right fill = "0" > ;
+	Integer metMbhScssCnt < length = 6 description = "모임회원탈퇴건수" align = right fill = "0" > ;
+	String metRprsAlsNm < length = 60 description = "모임대표별칭명" align = left > ;
+	String metRprsMbhNm < length = 60 description = "모임대표회원명" align = left > ;
+	String metRprsImgUrlNm < length = 100 description = "모임대표이미지URL명" align = left > ;
+	BLOB metRprsImgFileData < length = 100000 description = "모임대표이미지파일데이터" > ;
+	String nxtMetMbhAlsNm < length = 60 description = "다음모임회원별칭명" align = left > ;
+	Integer gridCnt < length = 5 description = "그리드건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhInfListInq_ODT grid<length=0 description="모임통장.회원.정보.목록.조회.컨트롤러.출력.IO" arrayReference="1" >;
+	String rspRtcd < length = 100 description = "응답결과코드" > ;
+	String rspMsgTxt < length = 200 description = "응답메시지내용" > ;
+}

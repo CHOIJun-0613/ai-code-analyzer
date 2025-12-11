@@ -1,0 +1,35 @@
+OMM com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO
+< logicalName= "나만의알림조회DTO" description="나만의알림조회DTO"
+>
+{
+	String itcsno < length = 11 description = "통합고객번호" > ;
+	String seqno < length = 20 description = "순서번호" > ;
+	String userId < length = 20 description = "사용자ID" > ;
+	String trNotiYn < length = 1 description = "알림수신여부" > ;
+	String alimiType < length = 4 description = "알림구분" > ;
+	String ntfcTxt < length = 2000 description = "알림내용" > ;
+	String ntfcFm < length = 10 description = "알림방식" > ;
+	String month < length = 10 description = "월" > ;
+	String day < length = 10 description = "일" > ;
+	String weekdayNm < length = 10 description = "요일명" > ;
+	String alimiTm < length = 6 description = "알림시각" > ;
+	String tsNm < length = 100 description = "이체명" > ;
+	String wdrAcno < length = 13 description = "출금계좌번호" > ;
+	String tsAmt < length = 100 description = "이체금액" > ;
+	String rcvBkcd < length = 3 description = "입금은행코드" > ;
+	String rcvAcno < length = 20 description = "입금계좌번호" > ;
+	String wdrPbokMrk < length = 22 description = "출금통장표시내용" > ;
+	String rcvPbokMrk < length = 22 description = "입금통장표시내용" > ;
+	String mretTsYn < length = 1 description = "월세이체여부" > ;
+	String etc1 < length = 1000 description = "기타1" > ;
+	String etc2 < length = 100 description = "기타2" > ;
+	String etc3 < length = 100 description = "기타3" > ;
+	String etc4 < length = 100 description = "기타4" > ;
+	String notiTmpTyp < length = 18 description = "알림 템플릿 유형" > ;
+	Date rgsDh < length = 12 decimal = 6 description = "등록일시" > ;
+	Date chgDh < length = 12 decimal = 6 description = "변경일시" > ;
+	String eaiTrsmnDt < length = 8 description = "EAI전송관리일자" > ;
+	BigDecimal eaiTrsmnSrno < length = 20 description = "EAI전송관리일련번호" > ;
+	String eaiTmsRtcd < length = 1 description = "EAI전송결과코드" > ;
+	String eaiTmsRstDtm < length = 20 description = "EAI전송결과일시" > ;
+}

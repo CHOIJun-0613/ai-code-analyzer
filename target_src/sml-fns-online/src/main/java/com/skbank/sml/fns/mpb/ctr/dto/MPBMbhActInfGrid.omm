@@ -1,0 +1,39 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMbhActInfGrid
+< logicalName= "회원.계좌.정보.그리드.컨트롤러.출력.IO" description=""
+>
+{
+	String tobkDscd < length = 1 description = "당타행구분코드" align = left > ;
+	String openBnkgBkcd < length = 3 description = "오픈뱅킹은행코드" align = left > ;
+	String openBnkgAcno < length = 20 description = "오픈뱅킹계좌번호" align = left > ;
+	String openBnkgActDscd < length = 1 description = "오픈뱅킹계좌구분코드" align = left > ;
+	String openBnkgActPrdNm < length = 40 description = "오픈뱅킹계좌상품명" align = left > ;
+	String openBnkgByactNm < length = 20 description = "오픈뱅킹계좌별명" align = left > ;
+	String openBnkgInqYn < length = 1 description = "오픈뱅킹조회여부" align = left > ;
+	String openBnkgWdrYn < length = 1 description = "오픈뱅킹출금여부" align = left > ;
+	String reqCusFnchUtzNo < length = 24 description = "요청고객핀테크이용번호" align = left > ;
+	String acnmCnfVrtgtYn < length = 1 description = "실명확인검증대상여부" align = left > ;
+	String indvSavBkcd < length = 3 description = "개별저축은행코드" align = left > ;
+	String indvSavBkNm < length = 20 description = "개별저축은행명" align = left > ;
+	String dpacNo < length = 13 description = "수신계좌번호" align = left > ;
+	String cusUsgBkwAcno < length = 20 description = "고객사용전행계좌번호" align = left > ;
+	String dpacStcd < length = 2 description = "수신계좌상태코드" align = left > ;
+	String psklActYn < length = 1 description = "통장대출계좌여부" align = left > ;
+	BigDecimal dpacCtBal < length = 19 decimal = 3 description = "수신계좌현재잔액" align = right fill = "0" > ;
+	String pdcd < length = 13 description = "상품코드" align = left > ;
+	String prdKorlNm < length = 100 description = "상품한글명" align = left > ;
+	String prdKorlAbrNm < length = 50 description = "상품한글단축명" align = left > ;
+	String ntrnnActYn < length = 1 description = "무거래계좌여부" align = left > ;
+	String wdrActYn < length = 1 description = "출금계좌여부" align = left > ;
+	String wdrActUnitRcvDgnYn < length = 1 description = "출금계좌단위입금지정여부" align = left > ;
+	Integer pwnoErrTcn < length = 3 description = "비밀번호오류횟수" align = right fill = "0" > ;
+	String synpbPdcd < length = 13 description = "종합통장상품코드" align = left > ;
+	BigDecimal payAvlBal < length = 19 decimal = 3 description = "지급가능잔액" align = right fill = "0" > ;
+	String pbokSplitJnngYn < length = 1 description = "통장쪼개기가입여부" align = left > ;
+	Integer pbokSplitSpceCn < length = 3 description = "통장쪼개기공간수" align = right fill = "0" > ;
+	String pbokSplitRgsDt < length = 8 description = "통장쪼개기등록일자" align = left > ;
+	String pbokSplitJnngAvlYn < length = 1 description = "통장쪼개기가입가능여부" align = left > ;
+	String metPbokJnngYn < length = 1 description = "모임통장가입여부" align = left > ;
+	String metRgsDt < length = 8 description = "모임등록일자" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metPbokJnngAvlYn < length = 1 description = "모임통장가입가능여부" align = left > ;
+}

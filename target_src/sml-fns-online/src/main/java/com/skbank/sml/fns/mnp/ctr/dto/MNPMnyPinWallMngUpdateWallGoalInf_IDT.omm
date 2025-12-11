@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngUpdateWallGoalInf_IDT
+< logicalName= "머니클립.지갑.목표.정보.수정.컨트롤러.입력.IO" description=""
+>
+{
+	String trnDscd < length = 2 description = "거래구분코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsMngNo < length = 13 description = "자동이체관리번호" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsWdrBkwAcno < length = 20 description = "자동이체출금전행계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsBasDd < length = 2 description = "자동이체기준일" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsCycd < length = 2 description = "자동이체주기코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsAm < length = 18 description = "자동이체금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpChgItm_DTO mnpChgItmDto < description = "머니클립모으기변경정보.공통.IO" > ;
+}

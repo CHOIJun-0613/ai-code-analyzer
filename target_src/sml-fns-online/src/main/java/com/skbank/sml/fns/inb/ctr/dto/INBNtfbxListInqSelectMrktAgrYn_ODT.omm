@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqSelectMrktAgrYn_ODT
+< logicalName= "개인정보상품동의 ODT" description="개인정보상품동의 ODT"
+>
+{
+	String itcsno1 < length = 11 description = "통합고객번호_1" > ;
+	String mrktAgrYn1 < length = 1 description = "마케팅동의여부_1" > ;
+	String dmsdDscd1 < length = 2 description = "DM발송구분코드_1" > ;
+	String owhmTelAgrYn1 < length = 1 description = "자택전화동의여부_1" > ;
+	String wrlcTelAgrYn1 < length = 1 description = "직장전화동의여부_1" > ;
+	String hpMrktAgrYn1 < length = 1 description = "핸드폰마케팅동의여부_1" > ;
+	String smsMrktAgrYn1 < length = 1 description = "SMS마케팅동의여부_1" > ;
+	String emlMrktAgrYn1 < length = 1 description = "이메일마케팅동의여부_1" > ;
+	String eltTmsMdMrktAgrYn1 < length = 1 description = "전자전송매체마케팅동의여부_1" > ;
+	String chckTgtYn1 < length = 1 description = "점검대상여부_1" > ;
+	String csguAgmdCollDt < length = 8 description = "상품서비스안내동의서징구일자" > ;
+}

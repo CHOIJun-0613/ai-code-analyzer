@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInf_DIDT
+< logicalName= "통장.쪼객.통합.정보.조회.DBM.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String acno<length=13 description="계좌번호" >;
+	String inqDscd < length = 2 description = "조회구분코드" > ;
+	String spceNo < length = 6 description = "공간번호" > ;
+	String inqStaDt < length = 8 description = "조회시작일자" > ;
+	String inqEndDt < length = 8 description = "조회종료일자" > ;
+	String sortDscd < length = 2 description = "정렬구분코드" > ;
+	String atpmMngNo < length = 12 description = "자동납부관리번호" > ;
+}

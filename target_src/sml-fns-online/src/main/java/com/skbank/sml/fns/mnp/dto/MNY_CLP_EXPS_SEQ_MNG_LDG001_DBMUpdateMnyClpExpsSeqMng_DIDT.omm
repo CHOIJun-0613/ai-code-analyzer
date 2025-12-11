@@ -1,0 +1,18 @@
+OMM com.skbank.sml.fns.mnp.dto.MNY_CLP_EXPS_SEQ_MNG_LDG001_DBMUpdateMnyClpExpsSeqMng_DIDT
+< logicalName= "머니클립노출순서기본수정.DBM.입력.IO" description=""
+>
+{
+	String itcsno < length = 36 description = "통합고객번호" > ;
+	String mnyClpChidAcno < length = 13 description = "머니클립자계좌번호" formatType = masking format = "M141" > ;
+	String mnyClpMoAcno < length = 13 description = "머니클립모계좌번호" formatType = masking format = "M141" > ;
+	String mnyClpChidActDscd < length = 1 description = "머니클립자계좌구분코드" > ;
+	String mnyClpChidActNm < length = 100 description = "머니클립자계좌명" > ;
+	String mnyClpChidActExpsSeq < length = 3 description = "머니클립자계좌노출순서" > ;
+	String mnyClpChidActIconNm < length = 200 description = "머니클립자계좌아이콘명" > ;
+	String rgpeId < length = 20 description = "등록자ID" > ;
+	String rgpeDeptId < length = 6 description = "등록자부서ID" > ;
+	String rgsDtm < length = 14 description = "등록일시" > ;
+	String amdpeId < length = 20 description = "수정자ID" > ;
+	String amdpeDeptId < length = 6 description = "수정자부서ID" > ;
+	String amdDtm < length = 20 description = "수정일시" > ;
+}

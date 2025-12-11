@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokMbhWaitInfRgs_DIDT
+< logicalName= "모임통장.회원.대기정보.등록.DBM.입력.IO" description=""
+>
+{
+	String metMngNo < length = 1 description = "모임관리번호" > ;
+	String itcsno < length = 11 description = "통합고객번호" > ;
+	String esnsMbhNo < length = 11 description = "간편회원번호" > ;
+	String utzpeNoCfcd < length = 1 description = "이용자번호분류코드" > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" > ;
+	String metMbhNm < length = 60 description = "모임회원명" > ;
+	String metMbhStcd < length = 2 description = "모임회원상태코드" > ;
+	String metMbhDscd < length = 1 description = "모임회원구분코드" > ;
+	String metMbhHpNo < length = 11 description = "모임회원핸드폰번호" > ;
+	String lstDbChgId < length = 8 description = "최종DB변경ID" > ;
+	String lstDbChgDtm < length = 20 description = "최종DB변경일시" > ;
+}

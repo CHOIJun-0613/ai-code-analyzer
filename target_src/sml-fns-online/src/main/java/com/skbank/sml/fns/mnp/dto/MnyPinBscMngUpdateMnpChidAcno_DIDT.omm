@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinBscMngUpdateMnpChidAcno_DIDT
+< logicalName= "머니클립.자.계좌.수정.컴포넌트.입력IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" align = left > ;
+	String dpsRgsChgItcd < length = 6 description = "수신등록변경항목코드" align = left > ;
+	String prcDscd < length = 2 description = "처리구분코드" align = left > ;
+	String dpsRecdStcd < length = 2 description = "수신레코드상태코드" align = left > ;
+	String cucd < length = 3 description = "통화코드" align = left > ;
+	String itmChgRsnTxt < length = 100 description = "항목변경사유내용" align = left > ;
+	String frotPrcYn < length = 1 description = "대외처리여부" align = left > ;
+	Integer gridRowCnt < length = 5 description = "그리드열건수" align = right fill = "0" > ;
+	com.skbank.sml.ifi.mca.eims4.dto.IBSMR0004224_GRID_IDT grid < description = "그리드" arrayReference = "gridRowCnt" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdateEtcNtfcAgrYn_ODT
+< logicalName= "알림함응답결과ODTD" description="알림함응답결과ODTD"
+>
+{
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용 " > ;
+}

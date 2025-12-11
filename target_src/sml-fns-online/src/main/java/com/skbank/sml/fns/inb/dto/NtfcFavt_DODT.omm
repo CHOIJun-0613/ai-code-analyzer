@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.inb.dto.NtfcFavt_DODT
+< logicalName= "알림.즐겨찾기.DBM.출력.IO" description=""
+>
+{
+	String status<length=7 description="결과상태" >;
+	String code < length = 7 description = "결과코드" > ;
+	String msg<length=500 description="결과코드내용" >;
+	String appUserId < length = 100 description = "앱유저ID" > ;
+}

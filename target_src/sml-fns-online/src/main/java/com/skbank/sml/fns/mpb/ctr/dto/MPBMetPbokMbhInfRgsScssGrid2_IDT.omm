@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhInfRgsScssGrid2_IDT
+< logicalName= "모임통장.회원.정보.그리드2.등록.탈퇴.입력.IO" description=""
+>
+{
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+}

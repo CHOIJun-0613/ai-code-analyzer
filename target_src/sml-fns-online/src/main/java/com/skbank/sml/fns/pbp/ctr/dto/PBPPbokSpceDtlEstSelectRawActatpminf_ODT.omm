@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectRawActatpminf_ODT
+< logicalName= "입출금계좌.자동납부.정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectRawactatpminflist_ODT atpmList<length=0 description="입출금계좌.자동납부.정보.목록.조회.컨트롤러.출력.IO" arrayReference="1" >;
+}

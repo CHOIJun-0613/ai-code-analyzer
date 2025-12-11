@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokRprsChgReq_DIDT
+< logicalName= "모임통장.대표.변경.요청.DBM.입력.IO" description=""
+>
+{
+	String rgsRvkDscd < length = 1 description = "등록해제구분코드" > ;
+	String metMngNo < length = 9 description = "모임관리번호" > ;
+	String chgRppeMetMbhSrno < length = 7 description = "변경대표모임회원일련번호" > ;
+}

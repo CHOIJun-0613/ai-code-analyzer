@@ -1,0 +1,49 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinFncTrnSelectTrnPrts_DODT
+< logicalName= "머니클립거래내역조회.DBM.출력.IO" description=""
+>
+{
+	String fstNewRcknDt < length = 8 description = "최초신규기산일자" > ;
+	BigDecimal nsnctPrchPvdt < length = 19 decimal = 3 description = "미결재가계수표전일" > ;
+	BigDecimal nsnctCackPvdt < length = 19 decimal = 3 description = "미결재당좌수표전일" > ;
+	BigDecimal payAvlAm < length = 19 decimal = 3 description = "지급가능금액" > ;
+	BigDecimal nsnctBchkPvdt < length = 19 decimal = 3 description = "미결재자기앞수표전일" > ;
+	String cnrnRgsYn < length = 1 description = "출연등록여부" > ;
+	String owacFnm < length = 50 description = "예금주성명" > ;
+	String pdcd < length = 13 description = "상품코드" > ;
+	BigDecimal nsnctEtcObcPvdt < length = 19 decimal = 3 description = "미결재기타타점권전일" > ;
+	String cusUsgAcno < length = 20 description = "고객사용계좌번호" > ;
+	String synpbPdcd < length = 13 description = "종합통장상품코드" > ;
+	String newRcknDt < length = 8 description = "신규기산일자" > ;
+	String cnsgComNm < length = 50 description = "위탁회사명" > ;
+	BigDecimal ctBal < length = 19 decimal = 3 description = "현재잔액" > ;
+	String acno < length = 13 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String adntYn < length = 40 description = "사고여부" > ;
+	BigDecimal nsnctBokBchkPvdt < length = 19 decimal = 3 description = "미결재한국은행자기앞수표전일" > ;
+	String lstTrnDt < length = 8 description = "최종거래일자" > ;
+	BigDecimal nsnctPmbilPvdt < length = 19 decimal = 3 description = "미결재약속어음전일" > ;
+	String inqAcno < length = 15 description = "조회계좌번호" > ;
+	String psklEpdt < length = 20 description = "통장대출만기일" > ;
+	String actMngBrcd < length = 6 description = "계좌관리점코드" > ;
+	BigDecimal pbokLnlmAm < length = 19 decimal = 3 description = "통장대출한도금액" > ;
+	String nxtPidDt < length = 8 description = "다음납입일자" > ;
+	BigDecimal nstlObcAm < length = 19 decimal = 3 description = "미결제타점권금액" > ;
+	BigDecimal totBal < length = 19 decimal = 3 description = "총잔액" > ;
+	BigDecimal paySumAm < length = 16 description = "지급합계금액" > ;
+	BigDecimal rcvSumAm < length = 16 description = "입금합계금액" > ;
+	BigDecimal totSumAm < length = 16 description = "총합계금액" > ;
+	String pdcdNm < length = 100 description = "상품코드명" > ;
+	String pageUsgYn < length = 1 description = "페이지사용여부" > ;
+	String nxtPageYn < length = 1 description = "다음페이지여부" > ;
+	String totCnt < length = 6 description = "총건수" > ;
+	String totPage < length = 6 description = "총페이지" > ;
+	String pageNo < length = 6 description = "페이지번호" > ;
+	String inqStaNo < length = 6 description = "조회시작번호" > ;
+	String inqCnt < length = 6 description = "조회건수" > ;
+	String srchKrd < length = 100 description = "검색키워드" > ;
+	String minAm < length = 16 description = "최소금액" > ;
+	String maxAm < length = 16 description = "최대금액" > ;
+	BigDecimal d7UndAm < length = 18 decimal = 3 description = "7일미만금액" > ;
+	BigDecimal d7OverAm < length = 18 decimal = 3 description = "7일이상금액" > ;
+	BigDecimal d31OverAm < length = 18 decimal = 3 description = "31일이상금액" > ;
+	com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectTrnPrts_DTO grid < description = "머니클립거래내역조회.공통.출력.IO" arrayReference = "1" comment = "" > ;
+}

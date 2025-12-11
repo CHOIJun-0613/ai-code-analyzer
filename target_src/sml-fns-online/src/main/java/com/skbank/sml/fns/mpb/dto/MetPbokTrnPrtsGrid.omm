@@ -1,0 +1,31 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokTrnPrtsGrid
+< logicalName= "모임.통장.거래내역.Grid.출력.IO" description="IBSMR0005772"
+>
+{
+	String trnDt < length = 8 description = "거래일자" align = left > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" align = right fill = "0" > ;
+	Integer dpsTrnSrno < length = 7 description = "수신거래일련번호" align = right fill = "0" > ;
+	String trnBkcd < length = 3 description = "거래은행코드" align = left > ;
+	String trbkCdNm < length = 50 description = "거래은행코드명" align = left > ;
+	String ptnBkwAcno < length = 20 description = "상대전행계좌번호" align = left > ;
+	String trnTm < length = 6 description = "거래시각" align = left > ;
+	String dpsRapDscd < length = 1 description = "수신입지급구분코드" align = left > ;
+	String dpsRapDscdNm < length = 50 description = "수신입지급구분코드명" align = left > ;
+	String metTrnStcd < length = 2 description = "모임거래상태코드" align = left > ;
+	String metTrnStcdNm < length = 50 description = "모임거래상태코드명" align = left > ;
+	BigDecimal trnAm < length = 19 decimal = 3 description = "거래금액" align = right fill = "0" > ;
+	String rcvMbhNm < length = 60 description = "입금회원명" align = left > ;
+	String metMbhAlsNm < length = 60 description = "모임회원별칭명" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String pbokPrngOtlnTxt < length = 100 description = "통장인자적요내용" align = left > ;
+	String metTrnMemoTxt < length = 40 description = "모임거래메모내용" align = left > ;
+	String rcvMbhNmChgTgtYn < length = 1 description = "입금회원명변경대상여부" align = left > ;
+	BigDecimal bftrBal < length = 19 decimal = 3 description = "거래전잔액" align = right fill = "0" > ;
+	BigDecimal aftrBal < length = 19 decimal = 3 description = "거래후잔액" align = right fill = "0" > ;
+	String inqOtlnTxt < length = 10 description = "조회적요내용" align = left > ;
+	String mdKdcd < length = 8 description = "매체종류코드" align = left > ;
+	String mdKdcdNm < length = 60 description = "매체종류코드명" align = left > ;
+	String metmbWdrYn < length = 1 description = "모임원출금여부" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String ortrDt < length = 8 description = "원거래일자" align = left > ;
+	Integer ortrSrno < length = 8 description = "원거래일련번호" align = right fill = "0" > ;
+}

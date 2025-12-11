@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSpceDtlEstMngRawActatpminf_DIDT
+< logicalName= "입출금계좌.자동납부.등록.DBM.입력.IO" description=""
+>
+{
+	String prcDis < length = 2 description = "처리구분" > ;
+	String atpmMngNo < length = 20 description = "자동납부관리번호" > ;
+	String atpmCctnSpceSrno<length=10 description="자동납부연결공간일련번호" >;
+	String rprsAcno<length=13 description="대표계좌번호" >;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectSpcesrvcjnngavlyn_ODT
+< logicalName= "통장.쪼개기.가입.가능.정보.컨트롤러.출력.IO" description="통장쪼개기 가입 가능 정보 out"
+>
+{
+	String pbokSplitJnngYn<length=1 description="통장쪼개기가입여부" >;
+	String pbokSplitJnngAvlYn<length=1 description="통장쪼개기가입가능여부" >;
+}

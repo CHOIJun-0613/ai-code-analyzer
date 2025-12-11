@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqSelectUserInf_ODT
+< logicalName= "사용자정보조회" description="사용자정보조회"
+>
+{
+	String itcsno < length = 11 description = "통합고객번호" arrayReference = "" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String cusKorlNm < length = 100 description = "고객한글명" arrayReference = "" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String esnsMbhYn < length = 1 description = "간편회원여부" > ;
+	String lginYn < length = 1 description = "로그인여부" > ;
+	String hpComCd < length = 4 description = "핸드폰회사코드" arrayReference = "" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String hpTlenNo < length = 4 description = "핸드폰국번번호" arrayReference = "" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String hpSrno < length = 4 description = "핸드폰일련번호" arrayReference = "" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+}

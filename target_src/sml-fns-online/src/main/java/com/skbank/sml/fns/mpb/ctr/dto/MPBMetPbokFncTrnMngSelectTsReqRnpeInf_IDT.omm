@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngSelectTsReqRnpeInf_IDT
+< logicalName= "이체.요청.수취인.정보.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String tsReqBkcd < length = 3 description = "이체요청은행코드" > ;
+	String tsReqAcno < length = 13 description = "이체요청계좌번호" > ;
+	BigDecimal tsReqAm < length = 18 decimal = 3 description = "이체요청금액" > ;
+	String actPwnoUsgYn < length = 1 description = "계좌비밀번호사용여부" align = left > ;
+	String actPwno < length = 50 description = "계좌비밀번호" align = left > ;
+}

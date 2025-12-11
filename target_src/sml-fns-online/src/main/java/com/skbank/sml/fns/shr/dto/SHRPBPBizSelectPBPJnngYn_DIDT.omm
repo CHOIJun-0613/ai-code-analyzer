@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.shr.dto.SHRPBPBizSelectPBPJnngYn_DIDT
+< logicalName= "통장쪼개기 가입여부" description="통장쪼개기 가입여부 DIDT"
+>
+{
+	String itcsno < length = 36 description = "통합고객번호" > ;
+}

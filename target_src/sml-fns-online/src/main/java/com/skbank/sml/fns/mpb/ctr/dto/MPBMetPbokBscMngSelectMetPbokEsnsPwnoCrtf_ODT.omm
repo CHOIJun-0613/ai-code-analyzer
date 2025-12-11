@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokEsnsPwnoCrtf_ODT
+< logicalName= "모임통장.간편비밀번호.인증.컨트롤러.출력.IO" description=""
+>
+{
+	String trnScsYn < length = 1 description = "거래성공여부" > ;
+	String errCd < length = 20 description = "에러코드" > ;
+	String errTitle < length = 100 description = "에러메시지제목(커스텀)" > ;
+	String errType < length = 1 description = "에러타입(메시지유형, E:오류, I:정보, W:경고)" > ;
+	String errMsg < length = 100 description = "오류메시지" > ;
+	String errBtnNm < length = 100 description = "에러버튼명(커스텀)" > ;
+	String moveScrnId < length = 100 description = "[옵션]이동화면ID(URL)" > ;
+	String errMsgExpsTycd < length = 1 description = "에러메시지호출유형(N: Native)" > ;
+}

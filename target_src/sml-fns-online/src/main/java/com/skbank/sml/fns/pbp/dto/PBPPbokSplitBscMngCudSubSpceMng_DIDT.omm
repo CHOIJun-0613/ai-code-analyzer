@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitBscMngCudSubSpceMng_DIDT
+< logicalName= "통장.쪼개기.서브.공간.관리.DBM.입력.IO" description=""
+>
+{
+	String trnDscd < length = 1 description = "거래구분코드" > ;
+	String spceNo < length = 6 description = "공간번호" > ;
+	String acno < length = 13 description = "계좌번호" > ;
+	String spceNm<length=50 description="공간명" >;
+	String spceIconNo<length=2 description="공간아이콘명" >;
+	String goalStaDt<length=8 description="목표시작일자" >;
+	String goalEndDt<length=8 description="목표종료일자" >;
+	BigDecimal savGoalAm<length=18 decimal=3 description="저축목표금액" >;
+	String cnsmGoalCycd<length=2 description="소비목표주기코드" >;
+	BigDecimal cnsmGoalAm<length=18 decimal=3 description="소비목표금액" >;
+}

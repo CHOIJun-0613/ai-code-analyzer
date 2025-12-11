@@ -1,0 +1,5 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngUpdateTsReqPrtsInf_ODT
+< logicalName= "이체요청.정보.수정.컨트롤러.출력.IO" description=""
+>
+{
+}

@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMNPWallBizInsertMnyClpWallExpsSeq_DIDT
+< logicalName= "SHR 머니클립지갑노출순서등록.입력.IO" description="머니클립지갑노출순서등록.입력.IO DIDT"
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	String wallAcno < length = 15 description = "지갑계좌번호" > ;
+	String iconNo < length = 2 description = "아이콘코드" > ;
+	String wallNm < length = 50 description = "지갑명" > ;
+}

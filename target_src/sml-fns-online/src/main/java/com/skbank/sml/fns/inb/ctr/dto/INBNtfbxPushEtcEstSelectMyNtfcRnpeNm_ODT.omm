@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstSelectMyNtfcRnpeNm_ODT
+< logicalName= "수취인명ODT" description="수취인명ODT"
+>
+{
+	String rnpeFnm < length = 22 description = "수취인성명" > ;
+	String errMsgId < length = 10 description = "오류메시지ID" > ;
+	String errMsgTxt < length = 100 description = "오류메시지내용" > ;
+}

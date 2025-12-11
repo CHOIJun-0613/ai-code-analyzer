@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.dto.INBPushRawEstRst_DTO
+<logicalName= "PUSH.입출금.설정.결과.공통.IO" description=""
+>
+{
+	String rtcd<length=7 description="결과코드" >;
+	String rtcdTxt<length=100 description="결과코드내용" >;
+}

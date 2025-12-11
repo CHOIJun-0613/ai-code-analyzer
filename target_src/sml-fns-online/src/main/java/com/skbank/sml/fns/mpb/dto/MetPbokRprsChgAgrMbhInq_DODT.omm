@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokRprsChgAgrMbhInq_DODT
+<logicalName= "모임통장.대표.변경.동의.회원.조회.DBM.출력.IO" description=""
+>
+{
+	Integer agrMbhCn<length=9 description="동의회원수" >;
+	com.skbank.sml.fns.mpb.dto.MetPbokRprsChgAgrNtyMbhListInq_DODT metPbokRprsChgAgrMbhListInq_DODT<length=0 description="모임통장.대표.변경.동의.미참여.회원.목록.조회.DBM.출력.IO" arrayReference="1" >;
+}

@@ -1,0 +1,18 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngUpdateMetPbokImgInf_ODT
+< logicalName= "모임통장.이미지.정보.수정.입력.IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String metChgDscdNm < length = 50 description = "모임변경구분코드명" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metNm < length = 100 description = "모임명" align = left > ;
+	String mbpfPymDt < length = 8 description = "회비납부일자" align = left > ;
+	BigDecimal mbpfPmtgtAm < length = 19 decimal = 3 description = "회비납부대상금액" align = right fill = "0" > ;
+	String metDscd < length = 2 description = "모임구분코드" align = left > ;
+	String metDscdNm < length = 50 description = "모임구분코드명" align = left > ;
+	String agmdCollDt < length = 8 description = "동의서징구일자" align = left > ;
+	BigDecimal lifecAm < length = 19 decimal = 3 description = "생활비금액" align = right fill = "0" > ;
+	String metBscImgUrlNm < length = 100 description = "모임기본이미지URL명" align = left > ;
+	Integer cnt < length = 3 description = "건수 " align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMbhInfGrid_ODT grid < description = "모임통장.기본.회원.정보.그리드.수정.출력.IO" arrayReference = "cnt" > ;
+}

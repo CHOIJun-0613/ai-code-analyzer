@@ -1,0 +1,20 @@
+OMM com.skbank.sml.fns.mpb.dto.ObkTsReqRnpeInf_DIDT
+< logicalName= "타행.이체요청.수취인.정보.컴포넌트.입력.IO" description=""
+>
+{
+	String wdrAcno < length = 15 description = "출금계좌번호" align = left > ;
+	String actPwnoUsgYn < length = 1 description = "계좌비밀번호사용여부" align = left > ;
+	String actPwno < length = 50 description = "계좌비밀번호" align = left > ;
+	BigDecimal trnAm < length = 13 description = "거래금액" align = right fill = "0" > ;
+	String rsvDt < length = 8 description = "예약일자" align = left > ;
+	String rcvBkcd < length = 3 description = "입금은행코드" align = left > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" align = left > ;
+	String ptnPbokPrngTxt < length = 22 description = "상대통장인자내용" align = left > ;
+	String clnmNoAddSbj < length = 50 description = "집금번호추가사항" align = left > ;
+	String rnpeFnm < length = 22 description = "수취인성명" align = left > ;
+	String wibeeMnyDduYn < length = 1 description = "위비머니차감여부" align = left > ;
+	String xtTgtRgsYn < length = 1 description = "제외대상등록여부" align = left > ;
+	String addInqYn < length = 1 description = "추가조회여부" align = left > ;
+	String bokTrnDscd < length = 1 description = "한국은행거래구분코드" align = left > ;
+	String mretFdYn < length = 1 description = "월세자금여부" align = left > ;
+}

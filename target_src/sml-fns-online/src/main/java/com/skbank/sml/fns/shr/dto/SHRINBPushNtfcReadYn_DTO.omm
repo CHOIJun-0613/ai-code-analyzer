@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.shr.dto.SHRINBPushNtfcReadYn_DTO
+< logicalName= "PUSH알림열람여부" description="PUSH알림열람여부"
+>
+{
+	String readYn < length = 1 description = "읽음여부" > ;
+}

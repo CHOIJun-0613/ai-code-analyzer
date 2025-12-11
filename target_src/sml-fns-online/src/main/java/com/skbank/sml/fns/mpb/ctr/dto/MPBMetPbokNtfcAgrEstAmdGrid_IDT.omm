@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokNtfcAgrEstAmdGrid_IDT
+< logicalName= "모임통장.알림.동의.설정.수정.그리드.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String ancSndDscd < length = 1 description = "공지발송구분코드" align = left > ;
+}

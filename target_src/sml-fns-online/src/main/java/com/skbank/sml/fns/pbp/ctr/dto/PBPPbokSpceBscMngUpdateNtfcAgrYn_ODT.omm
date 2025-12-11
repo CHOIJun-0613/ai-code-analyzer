@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngUpdateNtfcAgrYn_ODT
+<logicalName= "공간.서비스.알림.여부.컨트롤러.출력.IO" description=""
+>
+{
+	Integer ntfcAcnoCnt<length=3 description="알림계좌건수" >;
+}

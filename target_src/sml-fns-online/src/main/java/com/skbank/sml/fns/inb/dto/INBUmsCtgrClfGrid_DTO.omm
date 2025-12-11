@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.inb.dto.INBUmsCtgrClfGrid_DTO
+< logicalName= "UMS카테고리분류코드GRID_DTO" description="UMS카테고리분류코드GRID_DTO"
+>
+{
+	String codeName < length = 100 description = "분류코드명" > ;
+	String cL1Cd < length = 2 description = "분류코드1" > ;
+	String cL2Cd < length = 2 description = "분류코드" > ;
+	String cAlCd < length = 4 description = "분류코드합" > ;
+	String codeName2 < length = 100 description = "분류코드명2" > ;
+	String seq < length = 100 description = "순서" > ;
+}

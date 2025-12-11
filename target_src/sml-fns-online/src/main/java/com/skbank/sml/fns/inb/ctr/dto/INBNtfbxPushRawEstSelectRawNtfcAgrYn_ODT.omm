@@ -1,0 +1,24 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushRawEstSelectRawNtfcAgrYn_ODT
+< logicalName= "입출금.알림.설정.컨트롤러.출력.IO" description="입출금알림설정 IO"
+>
+{
+	Integer cnt < length = 5 description = "건수" arrayReference = "" > ;
+	String hpComCd < length = 4 description = "핸드폰회사코드" arrayReference = "" > ;
+	String hpTlenNo < length = 4 description = "핸드폰국번번호" arrayReference = "" > ;
+	String hpSerNo < length = 4 description = "핸드폰일련번호" arrayReference = "" > ;
+	String appItllCmplYn < length = 1 description = "앱설치완료여부" arrayReference = "" > ;
+	String appItllDisNm < length = 30 description = "앱설치구분명" arrayReference = "" > ;
+	String appItllCmplDt < length = 8 description = "앱설치완료일자" arrayReference = "" > ;
+	String ntfcJnngYn < length = 1 description = "알림가입여부" arrayReference = "" > ;
+	String xrtntcCurYn < length = 1 description = "환율고시통화여부" arrayReference = "" > ;
+	String ntfcSrvcUsgYn1 < length = 1 description = "알림서비스사용여부_1" arrayReference = "" > ;
+	String ntfcSrvcUsgYn2 < length = 1 description = "알림서비스사용여부_2" arrayReference = "" > ;
+	String ntfcSrvcUsgYn3 < length = 1 description = "알림서비스사용여부_3" arrayReference = "" > ;
+	String ntfcSrvcUsgYn4 < length = 1 description = "알림서비스사용여부_4" arrayReference = "" > ;
+	String ntfcSrvcUsgYn5 < length = 1 description = "알림서비스사용여부_5" arrayReference = "" > ;
+	String ntfcSrvcUsgYn6 < length = 1 description = "알림서비스사용여부_6" arrayReference = "" > ;
+	String ntfcSrvcUsgYn99 < length = 1 description = "알림서비스사용여부_99" arrayReference = "" > ;
+	com.skbank.sml.fns.inb.dto.INBPushNtfcSrvcInqGrid_DTO pushNtfcSrvcInqGrid < description = "push알림서비스조회그리드" arrayReference = "1" PROP_OPTION_DSCD = "L999" > ;
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용" > ;
+}

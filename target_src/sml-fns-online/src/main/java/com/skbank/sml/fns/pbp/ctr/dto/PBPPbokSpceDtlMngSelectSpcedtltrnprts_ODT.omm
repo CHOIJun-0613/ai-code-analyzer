@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlMngSelectSpcedtltrnprts_ODT
+< logicalName= "공간.상세.거래내역.컨트롤러.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlMngSelectSpcedtltrnprtslist_ODT pBPSpceDtlTrnPrtsList_ODT<length=0 description="공간.상세.거래내역.목록.컨트롤러.출력.IO" arrayReference="1" >;
+	String nxtPageYn < length = 1 description = "다음페이지여부" > ;
+	String nxtPageTxt < length = 100 description = "다음페이지내용" > ;
+}

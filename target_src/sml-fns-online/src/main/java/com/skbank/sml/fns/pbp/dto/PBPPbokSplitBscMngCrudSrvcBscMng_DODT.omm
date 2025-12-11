@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitBscMngCrudSrvcBscMng_DODT
+< logicalName= "공간.기본정보.DBM.출력.IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" align = left > ;
+	String trnStcd < length = 1 description = "거래상태코드" align = left > ;
+	String rgsTrnDt < length = 8 description = "등록거래일자" align = left > ;
+	String rvkTrnDt < length = 8 description = "해제거래일자" align = left > ;
+	String bkAppPushAgrYn < length = 1 description = "은행앱PUSH동의여부" align = left > ;
+}

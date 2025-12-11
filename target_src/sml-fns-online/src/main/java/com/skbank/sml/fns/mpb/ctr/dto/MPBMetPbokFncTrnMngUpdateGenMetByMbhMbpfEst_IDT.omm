@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngUpdateGenMetByMbhMbpfEst_IDT
+< logicalName= "일반.모임.회원별.회비.설정.컨트롤러.출력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호 " align = left > ;
+	Integer gridCnt < length = 5 description = "건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.dto.MPBGenMetByMbhMbpfEstGrid_DTO grid < description = "일반.모임.회원별.회비.설정.GRID.컨트롤러.입출력.IO" arrayReference = "gridCnt" > ;
+}

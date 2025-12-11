@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhMngInsertMetPbokMbhInf_IDT
+< logicalName= "모임통장.회원.정보.등록.탈퇴.입력.IO" description=""
+>
+{
+	String trnDis < length = 1 description = "거래구분" > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer grid1Cnt < length = 3 description = "그리드1건수 " align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhInfRgsScssGrid1_IDT dis1Grid < description = "" arrayReference = "1" comment = "" > ;
+	Integer grid2Cnt < length = 3 description = "그리드2건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhInfRgsScssGrid2_IDT dis2Grid < description = "모임통장.회원.정보.그리드2.등록.탈퇴.입력.IO" arrayReference = "1" comment = "" > ;
+}

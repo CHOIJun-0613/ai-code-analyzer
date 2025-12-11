@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.mpb.dto.TsReqInfInq_DIDT
+< logicalName= "이체요청.정보.조회.DBM.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer tsReqMbhSrno < length = 7 description = "이체요청회원일련번호" > ;
+	String tsReqDelYn < length = 1 description = "이체요청삭제여부" > ;
+	String metMbhDscd < length = 1 description = "모임회원구분코드" > ;
+	String nxtTsReqDt < length = 8 description = "다음이체요청일자" > ;
+	String nxtTsReqTm < length = 6 description = "다음이체요청시간" > ;
+	Integer nxtTsReqMbhSrno < length = 7 description = "다음이체요청회원일련번호" > ;
+	Integer nxtTsReqSrno < length = 5 description = "다음이체요청일련번호" > ;
+	Integer inqCnt < length = 2 description = "조회건수" > ;
+}

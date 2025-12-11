@@ -1,0 +1,20 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpIntPrtsList_DODT
+< logicalName= "머니클립받은이자내역목록.컴포넌트.출력.IO" description=""
+>
+{
+	String trnDt < length = 8 description = "거래일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "N" > ;
+	String intCalStaDt < length = 8 description = "이자계산시작일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String intCalEndDt < length = 8 description = "이자계산종료일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal trnBasAm < length = 19 decimal = 3 description = "거래기준금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal totPayIntAm < length = 19 decimal = 3 description = "총지급이자금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal intIctx < length = 19 decimal = 3 description = "이자소득세" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal intIcmRdtx < length = 19 decimal = 3 description = "이자소득주민세" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal intIcmSrtx < length = 19 decimal = 3 description = "이자소득농특세" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal hcanFee < length = 19 decimal = 3 description = "중도해지수수료" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal rrintAm < length = 19 decimal = 3 description = "환입이자금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal rstrIctx < length = 19 decimal = 3 description = "환출소득세" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal rstrRdtx < length = 19 decimal = 3 description = "환출주민세" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal rstrSrtx < length = 19 decimal = 3 description = "환출농특세" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	String prmeYn < length = 1 description = "우대여부" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+}

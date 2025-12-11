@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokCadPrts_IDT
+<logicalName= "모임통장.카드내역.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	String metMbhSrno<length=30 description="모임회원일련번호" >;
+	String trnStaDt<length=8 description="거래시작일자" >;
+	String trnEndDt<length=8 description="거래종료일자" >;
+	String inqSortBscd<length=1 description="조회정렬기준코드" >;
+}

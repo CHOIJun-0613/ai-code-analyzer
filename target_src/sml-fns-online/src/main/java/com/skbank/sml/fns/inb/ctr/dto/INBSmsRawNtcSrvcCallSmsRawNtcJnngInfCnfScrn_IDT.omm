@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcCallSmsRawNtcJnngInfCnfScrn_IDT
+< logicalName= "SMS입출금통지.가입정보.확인.화면IDT" description="SMS입출금통지.가입정보.확인.화면IDT"
+>
+{
+	String trnDis < length = 1 description = "거래구분" > ;
+	String tgtAcno < length = 20 description = "수신계좌번호 " formatType = masking format = "M141"  > ;
+	String certScrtMensTgtYn < length = 1 description = "인증보안매체대상여부" > ;
+}

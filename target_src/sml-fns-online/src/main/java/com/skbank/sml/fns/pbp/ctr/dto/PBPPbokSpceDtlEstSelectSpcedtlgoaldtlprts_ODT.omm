@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectSpcedtlgoaldtlprts_ODT
+<logicalName= "공간.상세.목표.상세.내역.조회.컨트롤러.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectSpcedtlgoaldtlprtslist_ODT pBPSpceDtlGoalAmList_ODT<length=0 description="공간.상세.목표.금액.목록.컨트롤러.출력.IO" arrayReference="1" >;
+}

@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.mpb.dto.MbpfRcvstsInq_DIDT
+< logicalName= "회비.입금현황.조회.DBM.입력.IO" description="IBSMR0005773"
+>
+{
+	String inqDis < length = 2 description = "조회구분" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String nxtMetMbhAlsNm < length = 60 description = "다음모임회원별칭명" align = left > ;
+	String inqBasYm < length = 6 description = "조회기준년월" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String inqStaDt < length = 8 description = "조회시작일자" align = left > ;
+	Integer inqStaTrnSrno < length = 8 description = "조회시작거래일련번호" align = right fill = "0" > ;
+	String inqEndDt < length = 8 description = "조회종료일자" align = left > ;
+	Integer inqEndTrnSrno < length = 8 description = "조회종료거래일련번호" align = right fill = "0" > ;
+}

@@ -1,0 +1,29 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlMngSelectSpcedtlinf_ODT
+< logicalName= "공간.상세.정보.컨트롤러.출력.IO" description=""
+>
+{
+	String acno < length = 20 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	BigDecimal acnoBal < length = 18 decimal = 3 description = "계좌잔액" > ;
+	BigDecimal splitAvlAm < length = 18 decimal = 3 description = "쪼개기가능금액" > ;
+	String prdNm < length = 100 description = "상품명" > ;
+	String spceIconNo < length = 3 description = "공간아이콘번호" > ;
+	String spceSrno < length = 10 description = "공간일련번호" > ;
+	String spceNm < length = 50 description = "공간명" > ;
+	BigDecimal spceBal < length = 18 decimal = 3 description = "공간잔액" > ;
+	BigDecimal savGoalAm < length = 18 decimal = 3 description = "저축목표금액" > ;
+	String savGoalStaDt < length = 8 description = "저축목표시작일자" > ;
+	String savGoalEndDt < length = 8 description = "저축목표종료일자" > ;
+	BigDecimal cnsmGoalAm < length = 18 decimal = 3 description = "소비목표금액" > ;
+	String cnsmAmBscd < length = 1 description = "소비금액기준코드" > ;
+	String cnsmAmBscdNm < length = 40 description = "소비금액기준코드명" > ;
+	String atsMngNo < length = 13 description = "자동이체관리번호" > ;
+	String atsEstYn < length = 1 description = "자동이체설정여부" > ;
+	String atsCycd < length = 1 description = "자동이체주기코드" > ;
+	String atsCycdNm < length = 40 description = "자동이체주기코드명" align = left > ;
+	String atsDd < length = 8 description = "자동이체일" > ;
+	String atsWkdDscd < length = 1 description = "자동이체요일구분코드" align = left > ;
+	String atsWkdDscdNm < length = 40 description = "자동이체요일구분코드명" align = left > ;
+	BigDecimal atsAm < length = 18 decimal = 3 description = "자동이체금액" > ;
+	Integer atpmListCnt < length = 3 description = "자동납부목록건수" > ;
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlMngSelectSpcedtltrnprtslist_ODT pBPSpceDtlTrnPrtsList_ODT < description = "공간.상세.거래내역.목록.컨트롤러.출력.IO" arrayReference = "1" > ;
+}

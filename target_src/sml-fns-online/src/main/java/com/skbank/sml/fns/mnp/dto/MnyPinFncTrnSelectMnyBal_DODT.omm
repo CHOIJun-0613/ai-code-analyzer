@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinFncTrnSelectMnyBal_DODT
+< logicalName= "머니클립 월말 잔액조회.컴포넌트.출력IO" description=""
+>
+{
+	Integer cnt < length = 5 description = "건수" align = right fill = "0" > ;
+	String acno < length = 16 description = "계좌번호" align = left > ;
+	com.skbank.sml.fns.mnp.dto.MnyPinFncTrnSelectMnyBalList_DODT grid < description = "그리드" arrayReference = "cnt" > ;
+}

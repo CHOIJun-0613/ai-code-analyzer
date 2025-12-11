@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.mpb.dto.AsmnlRgsScss_DODT
+< logicalName= "공동명의.등록.해제.DBM.입력IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String metChgDscdNm < length = 50 description = "모임변경구분코드명" align = left > ;
+	String canYn < length = 1 description = "취소여부" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String asmnlApvCd < length = 1 description = "공동명의승인코드" align = left > ;
+	String asmnlApvCdNm < length = 50 description = "공동명의승인코드명" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+}

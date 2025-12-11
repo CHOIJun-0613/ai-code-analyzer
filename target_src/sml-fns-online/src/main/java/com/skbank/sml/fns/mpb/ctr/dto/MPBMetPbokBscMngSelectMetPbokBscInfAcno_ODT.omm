@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokBscInfAcno_ODT
+< logicalName= "모임통장.기본.정보.계좌번호.컨트롤러.출력.IO " description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metPbokDscd < length = 1 description = "모임통장구분코드" align = left > ;
+	String metPbokDscdNm < length = 50 description = "모임통장구분코드명" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String metMbhAlsNm < length = 60 description = "모임회원별칭명" align = left > ;
+	String metMbhDscd < length = 1 description = "모임회원구분코드" align = left > ;
+	String metMbhDscdNm < length = 50 description = "모임회원구분코드명" align = left > ;
+}

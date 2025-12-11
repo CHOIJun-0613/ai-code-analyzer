@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngInsertMetPbokPushNtfcSnd_IDT
+< logicalName= "모임통장.PUSH.알림.발송.등록.컨트롤러.IO" description=""
+>
+{
+	String umsTmplCd < length = 15 description = "UMS템플릿코드" > ;
+	String kkoTmplCd < length = 15 description = "카카오템플릿코드" > ;
+	String appMarkImgPathTxt < length = 500 description = "앱표시이미지경로내용" > ;
+	String msgDtlTxt < length = 500 description = "메세지상세내용" > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer gridCnt < length = 2 description = "그리드건수" > ;
+	com.skbank.sml.fns.mpb.dto.MPBMetPbokBscMngPushNtfcSndMbhList_DTO grid < description = "모임통장.PUSH.알림.발송.회원.리스트.DTO" arrayReference = "gridCnt" comment = "" > ;
+}

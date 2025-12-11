@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngSelectMetPbokTrnPrtsDown_IDT
+< logicalName= "모임통장.거래.내역.이메일.전송.컨트롤러.입력.IO" description="모임통장.거래.내역.다운로드.컨트롤러.입력.IO"
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String inqStaDt < length = 8 description = "조회시작일자" align = left > ;
+	String inqEndDt < length = 8 description = "조회종료일자" align = left > ;
+	String filePath < length = 300 description = "파일경로" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngSelectWallGoalDtlPrtsList_ODT
+< logicalName= "머니클립.지갑목표상세내역조회목록.컨트롤러.출력.IO" description=""
+>
+{
+	String dt < length = 8 description = "일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal bal < length = 19 decimal = 3 description = "잔액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+}

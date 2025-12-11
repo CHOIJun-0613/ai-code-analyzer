@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMNPWallBizSelectMnpChidAcnoRgsAvlYn_DODT
+< logicalName= "머니클립.자계좌.등록.가능.여부.조회.컴포넌트.출력IO" description=""
+>
+{
+	String newTrnCmpnChckTgtYn < length = 1 description = "신규거래구속성점검대상여부" align = left > ;
+	String prcRtcd < length = 7 description = "처리결과코드" > ;
+	String prcRstTxt < length = 38 description = "처리결과내용" > ;
+}

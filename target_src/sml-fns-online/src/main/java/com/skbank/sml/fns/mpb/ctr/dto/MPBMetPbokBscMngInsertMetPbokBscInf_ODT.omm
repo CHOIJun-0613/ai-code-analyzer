@@ -1,0 +1,23 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngInsertMetPbokBscInf_ODT
+< logicalName= "모임.서비스.대표자.정보.등록.컨트롤러.출력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metNm < length = 100 description = "모임명" align = left > ;
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" align = left > ;
+	String rlfAcno < length = 11 description = "안심계좌번호" align = left > ;
+	String metPbokDscd < length = 1 description = "모임통장구분코드" align = left > ;
+	String metPbokDscdNm < length = 50 description = "모임통장구분코드명" align = left > ;
+	String metMbhAlsNm < length = 60 description = "모임회원별칭명" align = left > ;
+	String metMbhNm < length = 60 description = "모임회원명" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String ancSndDscd < length = 1 description = "공지발송구분코드" align = left > ;
+	String ancSndDscdNm < length = 50 description = "공지발송구분코드명" align = left > ;
+	String agmdCollDt < length = 8 description = "동의서징구일자" align = left > ;
+	String metDscd < length = 2 description = "모임구분코드" align = left > ;
+	String metDscdNm < length = 50 description = "모임구분코드명" align = left > ;
+	String metRgsDt < length = 8 description = "모임등록일자" align = left > ;
+	String rgsTm < length = 6 description = "등록시각" align = left > ;
+	String dpacNo < length = 13 description = "수신계좌번호" align = left > ;
+	String metBscImgUrlNm < length = 100 description = "모임기본이미지URL명" align = left > ;
+}

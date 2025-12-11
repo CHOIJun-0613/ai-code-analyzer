@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.dto.INBBscActLIst_DTO
+< logicalName= "알림함계좌목록DTO" description="알림함계좌목록DTO"
+>
+{
+	com.skbank.sml.fns.inb.dto.INBActList_DTO iNBActList_DTO < description = "계좌목록DTO" arrayReference = "1" PROP_OPTION_DSCD = "L999" > ;
+}

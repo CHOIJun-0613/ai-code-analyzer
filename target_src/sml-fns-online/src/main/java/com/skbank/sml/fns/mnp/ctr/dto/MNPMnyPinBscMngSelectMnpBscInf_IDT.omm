@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinBscMngSelectMnpBscInf_IDT
+< logicalName= "머니클립.기본.정보.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	String pageId < length = 10 description = "화면ID" > ;
+}

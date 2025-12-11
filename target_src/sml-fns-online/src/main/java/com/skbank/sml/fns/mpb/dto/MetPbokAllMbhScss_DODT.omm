@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokAllMbhScss_DODT
+<logicalName= "모임통장.전체.회원.탈퇴.DBM.출력.IO" description=""
+>
+{
+	String rspRtcd<length=4 description="응답결과코드" >;
+	String rspMsgTxt<length=100 description="응답메시지내용" >;
+}

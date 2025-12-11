@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcCallSmsCrtfNoSnd_IDT
+< logicalName= "SMS인증번호발송IDT" description="SMS인증번호발송IDT"
+>
+{
+	String hpNo < length = 14 description = "핸드폰번호" comment = "AS-IS : TCH_USE_HP_NO" > ;
+}

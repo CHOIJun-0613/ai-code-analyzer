@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngInsertWallIntAmTs_ODT
+< logicalName= "머니클립지갑이자계산정보조회.출력IO" description=""
+>
+{
+	String actMngBrcd < length = 6 description = "계좌관리점코드" > ;
+	Integer lstTrhsSrno < length = 7 description = "최종거래명세일련번호" > ;
+	String csno < length = 9 description = "고객번호" > ;
+	String cusKorlNm < length = 100 description = "고객한글명" > ;
+	String prcRtcd < length = 7 description = "처리결과코드" > ;
+	String prcRstTxt < length = 38 description = "처리결과내용" > ;
+}

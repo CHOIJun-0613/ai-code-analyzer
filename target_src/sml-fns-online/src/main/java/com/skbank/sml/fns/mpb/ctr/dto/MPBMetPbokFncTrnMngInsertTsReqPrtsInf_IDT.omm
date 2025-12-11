@@ -1,0 +1,19 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngInsertTsReqPrtsInf_IDT
+< logicalName= "이체요청.정보.등록.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호 " align = left > ;
+	String tsReqDt < length = 8 description = "이체요청일자" > ;
+	Integer tsReqMbhSrno < length = 7 description = "이체요청회원일련번호" > ;
+	String tsReqMbhNm < length = 100 description = "이체요청회원명" > ;
+	String tsReqBkcd < length = 3 description = "이체요청은행코드" > ;
+	String tsReqAcno < length = 20 description = "이체요청계좌번호" > ;
+	BigDecimal tsReqAm < length = 18 decimal = 3 description = "이체요청금액" > ;
+	String tsReqTm < length = 6 description = "이체요청시각" > ;
+	String rvactOwacNm < length = 60 description = "입금계좌예금주명" > ;
+	String tsReqMemoTxt < length = 500 description = "이체요청메모내용" > ;
+	String metTsReqDscd < length = 1 description = "모임이체요청구분코드" > ;
+	String trnDt < length = 8 description = "거래일자" > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" > ;
+	String rlfAcno < length = 20 description = "안심계좌번호" > ;
+}

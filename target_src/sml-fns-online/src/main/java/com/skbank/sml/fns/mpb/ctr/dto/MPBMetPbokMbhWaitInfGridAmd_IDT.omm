@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhWaitInfGridAmd_IDT
+< logicalName= "모임통장.회원.대기정보.GRID.수정.컨트롤러.입력.IO" description=""
+>
+{
+	String esnsMbhNo < length = 11 description = "간편회원번호" align = left > ;
+	String itcsno < length = 11 description = "통합고객번호" align = left > ;
+	Integer metCrtfMbhSrno < length = 5 description = "모임인증회원일련번호" > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" > ;
+	String metMbhDscd < length = 1 description = "모임회원구분코드" > ;
+	String metMbhHpNo < length = 11 description = "모임회원핸드폰번호" > ;
+	String utzpeNoCfcd < length = 1 description = "이용자번호분류코드" > ;
+}

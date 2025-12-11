@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqUpdateNtfcFavt_ODT
+< logicalName= "알림.즐겨찾기.컨트롤러.출력.IO" description=""
+>
+{
+	String rtcd<length=7 description="결과코드" >;
+	String rtcdTxt<length=100 description="결과코드내용" >;
+	String msgId < length = 20 description = "메시지ID" > ;
+	String favtYn < length = 1 description = "즐겨찾기여부" > ;
+	String umsTrno < length = 19 description = "UMS트렌젝션번호" > ;
+}

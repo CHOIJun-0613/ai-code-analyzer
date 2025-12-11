@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngDeleteWallScss_IDT
+< logicalName= "머니클립.금고.해지.컨트롤러.입력.IO" description=""
+>
+{
+	String cancAcno < length = 20 description = "해지계좌번호" > ;
+	String dpacBal < length = 64 description = "수신계좌잔액" > ;
+	String rcvAcno < length = 30 description = "입금계좌번호" > ;
+}

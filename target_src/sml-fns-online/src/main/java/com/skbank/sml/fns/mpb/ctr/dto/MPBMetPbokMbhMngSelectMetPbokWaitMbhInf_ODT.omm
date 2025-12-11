@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhMngSelectMetPbokWaitMbhInf_ODT
+< logicalName= "모임통장.회원.대기정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer gridCnt < length = 2 description = "그리드건수 " > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhWaitInfGridInq_ODT grid < description = "" arrayReference = "gridCnt" comment = "" > ;
+}

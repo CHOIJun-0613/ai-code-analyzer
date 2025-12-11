@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.dto.NtfcReadYn_DIDT
+< logicalName= "알림열람여부 DIDT" description="알림열람여부 DIDT"
+>
+{
+	String itcsno < length = 11 description = "통합고객번호" > ;
+	com.skbank.sml.fns.inb.dto.INBNtfcReadYnGrid_DTO iNBNtfcReadYnGrid_DTO < description = "메시지리스트" arrayReference = "1" > ;
+}

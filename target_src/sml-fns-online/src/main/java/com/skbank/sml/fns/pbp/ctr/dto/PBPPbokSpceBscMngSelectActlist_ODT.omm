@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectActlist_ODT
+< logicalName= "계좌.정보.컨트롤러.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectActinf_ODT pBPJnngAvlActInf_DTO<length=0 description="계좌.정보.목록.컨트롤러.출력.IO" arrayReference="1" PROP_OPTION_DSCD = "L999" > ;
+}

@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngInsertMetPbokAutoRptPush_ODT
+< logicalName= "모임통장.관리.자동.리포트.푸쉬.생성.컨트롤러.출력.IO" description=""
+>
+{
+	Integer scsCnt < length = 3 description = "성공건수" align = left > ;
+}

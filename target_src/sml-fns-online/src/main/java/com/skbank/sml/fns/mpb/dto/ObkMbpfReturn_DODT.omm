@@ -1,0 +1,18 @@
+OMM com.skbank.sml.fns.mpb.dto.ObkMbpfReturn_DODT
+< logicalName= "타행회비돌려받기실행.DBM.출력.IO" description=""
+>
+{
+	String owacFnm < length = 22 description = "예금주성명" align = left > ;
+	BigDecimal bftrAfBal < length = 13 description = "거래전후잔액" align = right fill = "0" > ;
+	String rnpeFnm < length = 22 description = "수취인성명" align = left > ;
+	String trnSrno < length = 12 description = "거래일련번호" align = left > ;
+	BigDecimal feeAm < length = 11 description = "수수료금액" align = right fill = "0" > ;
+	BigDecimal rduFeeAm < length = 11 description = "감면수수료금액" align = right fill = "0" > ;
+	BigDecimal wmbRduAm < length = 11 description = "우리멤버스감면금액" align = right fill = "0" > ;
+	String frduRncd < length = 4 description = "수수료감면사유코드" align = left > ;
+	String npbokTrnCnt < length = 5 description = "무통장거래건수" align = left > ;
+	String payActTrnSrno < length = 7 description = "지급계좌거래일련번호" align = left > ;
+	String rspTxt < length = 200 description = "응답내용" align = left > ;
+	String rscd < length = 200 description = "응답코드" > ;
+	String chnlErrCd < length = 200 description = "채널오류코드" > ;
+}

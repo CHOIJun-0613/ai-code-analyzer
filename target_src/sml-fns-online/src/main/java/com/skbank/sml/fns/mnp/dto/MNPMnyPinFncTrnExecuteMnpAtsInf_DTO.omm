@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnExecuteMnpAtsInf_DTO
+< logicalName= "머니클립자동이체정보.컴포넌트.공통.출력.IO" description=""
+>
+{
+	String dpsRgsChgDtcd < length = 3 description = "수신등록변경상세코드" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String dpsRgsChgDtcdTxt < length = 80 description = "수신등록변경상세코드내용" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+}

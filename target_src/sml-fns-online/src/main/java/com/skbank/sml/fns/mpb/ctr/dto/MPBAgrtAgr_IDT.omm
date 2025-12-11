@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBAgrtAgr_IDT
+<logicalName= "약관동의.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String metNm<length=100 description="모임명" >;
+	String metPbokDscd<length=1 description="모임통장구분코드" >;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBAgrtAgrList_IDT mPBAgrtAgrList_IDT<length=0 description="약관동의.목록.컨트롤러.입력.IO" arrayReference="1" >;
+}

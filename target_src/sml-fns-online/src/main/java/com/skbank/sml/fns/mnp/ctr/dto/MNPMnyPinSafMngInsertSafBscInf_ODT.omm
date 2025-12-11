@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngInsertSafBscInf_ODT
+< logicalName= "머니클립.금고.기본.정보.등록.출력IO" description=""
+>
+{
+	String newAcno < length = 13 description = "신규계좌번호" > ;
+	String prcRtcd < length = 7 description = "처리결과코드" > ;
+	String prcRstTxt < length = 38 description = "처리결과내용" > ;
+}

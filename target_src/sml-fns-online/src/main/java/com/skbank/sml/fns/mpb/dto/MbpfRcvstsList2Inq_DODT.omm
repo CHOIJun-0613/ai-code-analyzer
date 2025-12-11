@@ -1,0 +1,27 @@
+OMM com.skbank.sml.fns.mpb.dto.MbpfRcvstsList2Inq_DODT
+< logicalName= "회비.입금현황.목록2.조회.DBM.출력.IO" description=""
+>
+{
+	String trnDt < length = 8 description = "거래일자" align = right fill = "0" > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" align = right fill = "0" > ;
+	String trnBkcd < length = 3 description = "거래은행코드" align = left > ;
+	String trbkCdNm < length = 50 description = "거래은행코드명" align = left > ;
+	String ptnBkwAcno < length = 20 description = "상대전행계좌번호" align = left > ;
+	String trnTm < length = 6 description = "거래시각" align = left > ;
+	String dpsRapDscd < length = 1 description = "수신입지급구분코드" align = left > ;
+	String dpsRapDscdNm < length = 50 description = "수신입지급구분코드명" align = left > ;
+	String metTrnStcd < length = 2 description = "모임거래상태코드" align = left > ;
+	String metTrnStcdNm < length = 50 description = "모임거래상태코드명" align = left > ;
+	String rcvMbhNm < length = 60 description = "입금회원명" align = left > ;
+	BigDecimal mbpfPymAm < length = 19 decimal = 3 description = "회비납부금액" align = right fill = "0" > ;
+	BigDecimal mbpfPmtgtAm < length = 19 decimal = 3 description = "회비납부대상금액" align = right fill = "0" > ;
+	BigDecimal metMbpfXmpAm < length = 19 decimal = 3 description = "모임회비면제금액" align = right fill = "0" > ;
+	String inqOtlnTxt < length = 10 description = "조회적요내용" align = left > ;
+	String pbokPrngOtlnTxt < length = 100 description = "통장인자적요내용" align = left > ;
+	String metTrnMemoTxt < length = 40 description = "모임거래메모내용" align = left > ;
+	String mdKdcd < length = 8 description = "매체종류코드" align = left > ;
+	String mdKdcdNm < length = 60 description = "매체종류코드명" align = left > ;
+	String metmbWdrYn < length = 1 description = "모임원출금여부" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String ortrDt < length = 8 description = "원거래일자" align = left > ;
+	Integer ortrSrno < length = 8 description = "원거래일련번호" align = right fill = "0" > ;
+}

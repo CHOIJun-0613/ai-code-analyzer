@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngUpdateTsReqPrtsInf_IDT
+< logicalName= "이체요청.정보.수정.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String tsReqDt < length = 8 description = "이체요청일자" > ;
+	Integer tsReqMbhSrno < length = 7 description = "이체요청회원일련번호" > ;
+	Integer tsReqSrno < length = 5 description = "이체요청일련번호" > ;
+	BigDecimal tsCmplAm < length = 18 decimal = 3 description = "이체완료금액" > ;
+	String metTsReqStcd < length = 1 description = "모임이체요청상태코드" > ;
+	String apvReqStcd < length = 1 description = "승인요청상태코드" > ;
+	String tsReqDelYn < length = 1 description = "이체요청삭제여부" > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" > ;
+}

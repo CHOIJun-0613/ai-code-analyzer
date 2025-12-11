@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.dto.INBSmsRawNtcTxtGrid_DTO
+< logicalName= "SMS입출금통지 공통 DTO" description="SMS입출금통지 공통 DTO"
+>
+{
+	String hpComCd < length = 4 description = "핸드폰회사코드" arrayReference = "" > ;
+	String hpTlen < length = 4 description = "핸드폰국번" arrayReference = "" > ;
+	String hpSrno < length = 4 description = "핸드폰일련번호" arrayReference = "" > ;
+	String ntcTgtTrnDscd < length = 1 description = "통지대상거래구분코드" arrayReference = "" > ;
+	Integer prcSrno < length = 9 description = "처리일련번호" arrayReference = "" > ;
+}

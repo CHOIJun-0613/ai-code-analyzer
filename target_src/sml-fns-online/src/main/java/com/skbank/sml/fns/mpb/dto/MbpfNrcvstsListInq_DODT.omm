@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.dto.MbpfNrcvstsListInq_DODT
+<logicalName= "회비.미입금현황.목록.조회.DBM.출력.IO" description=""
+>
+{
+	Integer trnDt<length=8 description="거래일자" >;
+	Integer metTrnSrno<length=8 description="모임거래일련번호" >;
+	BigDecimal nrcvAm<length=18 description="미입금금액" >;
+	String nrcvMbhNm<length=60 description="미입금회원명" >;
+}

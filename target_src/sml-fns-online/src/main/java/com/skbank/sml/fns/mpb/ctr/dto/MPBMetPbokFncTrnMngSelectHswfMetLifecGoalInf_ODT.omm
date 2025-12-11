@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngSelectHswfMetLifecGoalInf_ODT
+< logicalName= "생활비.목표.정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String metMngNo < length = 1 description = "모임관리번호" > ;
+	String metLifecEstYn < length = 1 description = "모임생활비설정여부" > ;
+	BigDecimal metLifecAm < length = 19 decimal = 3 description = "모임생활비금액" > ;
+	String metLifecEstDt < length = 8 description = "모임생활비설정일자" > ;
+	String metLifecBasDd < length = 2 description = "모임생활비기준일" > ;
+	BigDecimal totExpdAm < length = 18 decimal = 3 description = "총지출금액" > ;
+}

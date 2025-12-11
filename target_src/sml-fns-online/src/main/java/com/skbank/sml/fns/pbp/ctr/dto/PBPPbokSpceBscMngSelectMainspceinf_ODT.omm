@@ -1,0 +1,17 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectMainspceinf_ODT
+< logicalName= "메인.공간.정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String acno < length = 20 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	BigDecimal acnoBal < length = 18 decimal = 3 description = "계좌잔액" > ;
+	BigDecimal splitAvlAm < length = 18 decimal = 3 description = "쪼개기가능금액" > ;
+	String prdNm < length = 100 description = "상품명" > ;
+	String trnStcd < length = 1 description = "거래상태코드" > ;
+	String rgsTrnDt < length = 8 description = "등록거래일자" > ;
+	String rvkTrnDt < length = 8 description = "해제거래일자" > ;
+	String rvkRsnTxt < length = 10 description = "해제거래사유" > ;
+	String bkAppPushAgrYn < length = 1 description = "은행앱PUSH동의여부" > ;
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectUsgspceinf_ODT pBPPbokSpceBscMngSelectAllUsgspceinflist < description = "서브공간목록" arrayReference = "1" > ;
+	BigDecimal paySumAm < length = 18 decimal = 3 description = "지급합계금액" > ;
+	BigDecimal rcvSumAm < length = 18 decimal = 3 description = "입금합계금액" > ;
+}

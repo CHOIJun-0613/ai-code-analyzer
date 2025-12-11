@@ -1,0 +1,21 @@
+OMM com.skbank.sml.fns.mpb.dto.MET_PBOK_MSG_CAD_INF001SelectMetPbokMsgCadInf_DIDT
+< logicalName= "모임통장메시지카드정보 조회 입력" description=""
+>
+{
+	String metMsgCadId < length = 20 description = "모임메시지카드ID" > ;
+	String metMsgCadNm < length = 50 description = "모임메시지카드명" > ;
+	String metMsgCadTxt < length = 500 description = "모임메시지카드내용" > ;
+	Integer metMsgCadSortSeq < length = 6 description = "모임메시지카드정렬순서" > ;
+	String appMarkImgPathTxt < length = 500 description = "앱표시이미지경로내용" > ;
+	String snsMarkImgPathTxt < length = 500 description = "SNS표시이미지경로내용" > ;
+	String metMsgCadRgsDtm < length = 20 description = "모임메시지카드등록일시" > ;
+	String metMsgCadChgDtm < length = 20 description = "모임메시지카드변경일시" > ;
+	String metMsgCadUsgYn < length = 1 description = "모임메시지카드사용여부" > ;
+	String metMsgCadDisTxt < length = 20 description = "모임메시지카드구분내용" > ;
+	String metMsgCadDelYn < length = 1 description = "모임메시지카드삭제여부" > ;
+	String metMsgCadDscd < length = 2 description = "모임메시지카드구분코드" > ;
+	String metMsgCadRgpeId < length = 20 description = "모임메시지카드등록자ID" > ;
+	String metMsgCadAmdpeId < length = 20 description = "모임메시지카드수정자ID" > ;
+	String lstDbChgId < length = 8 description = "최종DB변경ID" > ;
+	String lstDbChgDtm < length = 20 description = "최종DB변경일시" > ;
+}

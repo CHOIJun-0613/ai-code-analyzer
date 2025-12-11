@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMbhActInf_IDT
+< logicalName= "회원.계좌.정보.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno < length = 36 description = "통합고객번호" > ;
+}

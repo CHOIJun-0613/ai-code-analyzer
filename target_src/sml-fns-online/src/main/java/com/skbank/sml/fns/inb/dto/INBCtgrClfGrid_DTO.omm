@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.inb.dto.INBCtgrClfGrid_DTO
+< logicalName= "카테고리분류.GRID.공통.IO" description="카테고리분류.공통.IO"
+>
+{
+	String ntfbxLrclCd<length=10 description="알림함대분류코드" > ;
+	String ntfbxMclfCd<length=10 description="알림함중분류코드" > ;
+	String ntfbxLrclCdNm<length=50 description="알림함대분류코드명" > ;
+	String ntfbxMclfCdNm<length=50 description="알림함중분류코드명" > ;
+	String lrclMclfCd < length = 10 description = "대분류중분류코드" > ;
+	Integer sortSeqNo < length = 5 description = "정렬순서번호" > ;
+}

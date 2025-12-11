@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpIntCalInf_DIDT
+< logicalName= "머니클립이자계산정보조회.컴포넌트.출력.IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String trnDscd < length = 1 description = "거래구분코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String inqDscd < length = 2 description = "조회구분코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String inqAimDscd < length = 2 description = "조회목적구분코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String inqBasDt < length = 8 description = "조회기준일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String inqEndDt < length = 8 description = "조회종료일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	BigDecimal trnAm < length = 19 decimal = 3 description = "거래금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal trnAtcnt < length = 19 decimal = 3 description = "거래좌수" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+}

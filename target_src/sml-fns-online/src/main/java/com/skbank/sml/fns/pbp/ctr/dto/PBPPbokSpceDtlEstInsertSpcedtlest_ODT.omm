@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstInsertSpcedtlest_ODT
+< logicalName= "공간.상세.설정.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String rspRtcd<length=4 description="응답결과코드" >;
+	String rspMsgTxt<length=100 description="응답메시지내용" >;
+}

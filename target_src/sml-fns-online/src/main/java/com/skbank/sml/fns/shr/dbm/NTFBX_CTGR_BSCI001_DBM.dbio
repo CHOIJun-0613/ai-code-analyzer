@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.shr.dbm.NTFBX_CTGR_BSCI001_DBM">
+<!--Generated 2025. 01. 07. 16:19:21-->
+<select id="selectPushCtgrList" resultType="com.skbank.sml.fns.shr.dto.SHRINBPushCtgrList_DTO">&#13;
+SELECT NTFC_CTGR_ID 				AS ntfcCtgrId
+			, NTFC_CTGR_CD_ID 		AS ntfcCtgrCdId
+			, NTFC_CTGR_CD_NM 		AS ntfcCtgrCdNm
+	FROM NTFBX_CTGR_BSCI
+ WHERE NTFC_DSCD = #{ntfcDscd}
+ 	   AND NTFC_CTGR_CD_USG_YN = 'Y'
+ ORDER BY NTFC_CTGR_CD_ID&#13;
+</select>
+</mapper>

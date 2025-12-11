@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngUpdateSafGoalInfScss_ODT
+< logicalName= "머니클립.금고.목표.정보.해지.수정.컨트롤러.출력.IO" description=""
+>
+{
+	String trnRstCd < length = 2 description = "거래결과코드" > ;
+	String trnRstTxt < length = 80 description = "거래결과내용" > ;
+}

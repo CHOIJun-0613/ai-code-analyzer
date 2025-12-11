@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectSpcesrvcJnngactlist_ODT
+< logicalName= "공간.서비스가입.계좌.정보.컨트롤러.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectSpcesrvcJnngactinf_ODT pBPSpceSrvcJnngActInfList_ODT<length=0 description="공간.서비스가입.계좌.정보.목록.컨트롤러.출력.IO" arrayReference="1" PROP_OPTION_DSCD = "L999" > ;
+}

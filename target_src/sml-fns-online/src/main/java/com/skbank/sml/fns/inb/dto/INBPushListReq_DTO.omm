@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.inb.dto.INBPushListReq_DTO
+< logicalName= "Push 목록 요청 DTO" description="Push 목록 요청 DTO"
+>
+{
+	String itcsno < length = 36 description = "통합고객번호" > ;
+	String umsReqStaDt < length = 8 description = "UMS요청시작일자" > ;
+	String umsReqEndDt < length = 8 description = "UMS요청종료일자" > ;
+	String ntfbxLrclCD < length = 10 description = "알림함대분류코드" > ;
+	String ntfbxMclfCD < length = 10 description = "알림함중분류코드" > ;
+	String favtYn < length = 1 description = "즐겨찾기여부" > ;
+	Integer pageNo < length = 6 description = "페이지번호" > ;
+	String pageSize < length = 10 description = "페이지사이즈" > ;
+	String ntfcRfwr < length = 10 description = "알림검색어" > ;
+	String umsTrno < length = 20 description = "UMS거래번호" > ;
+	String umsReqDt < length = 8 description = "UMS요청일자" > ;
+}

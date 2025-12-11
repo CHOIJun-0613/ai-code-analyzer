@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstUpdateSpcedtlatsest_IDT
+< logicalName= "공간.상세.자동이체.설정.수정.컨트롤러.입력.IO" description=""
+>
+{
+	String atsMngNo < length = 13 description = "자동이체관리번호" > ;
+	String acno<length=13 description="계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String spceNo<length=6 description="공간번호" >;
+	String atsEstYn<length=1 description="자동이체설정여부" >;
+	String atsCycd<length=1 description="자동이체주기코드" >;
+	String atsDd<length=8 description="자동이체일" >;
+	BigDecimal atsAm<length=18 decimal=3 description="자동이체금액" >;
+}

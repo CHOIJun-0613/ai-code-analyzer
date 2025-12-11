@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mnp.dto.MNY_CLP_EXPS_SEQ_MNG_LDG001_DBMDeleteMnyClpExpsSeqMngList_DIDT
+< logicalName= "머니클립노출순서삭제.DBM.입력.IO" description=""
+>
+{
+	String itcsno < length = 36 description = "통합고객번호" > ;
+	String mnyClpMoAcno < length = 13 description = "머니클립모계좌번호" formatType = masking format = "M141" > ;
+	com.skbank.sml.fns.mnp.dto.MNPBscInf_DTO grid < description = "머니클립기본정보그리드" arrayReference = "1" > ;
+}

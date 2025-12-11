@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngInsertMetPbokCadAut_IDT
+<logicalName= "모임통장.카드권한.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+}

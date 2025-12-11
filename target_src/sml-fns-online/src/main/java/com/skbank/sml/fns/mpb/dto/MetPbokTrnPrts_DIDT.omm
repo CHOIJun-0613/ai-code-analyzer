@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokTrnPrts_DIDT
+< logicalName= "모임.통장.거래내역.DBM.입력.IO" description="IBSMR0005772"
+>
+{
+	String inqDis < length = 2 description = "조회구분" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String inqStaDt < length = 8 description = "조회시작일자" align = left > ;
+	Integer inqStaTrnSrno < length = 8 description = "조회시작거래일련번호" align = right fill = "0" > ;
+	String inqEndDt < length = 8 description = "조회종료일자" align = left > ;
+	Integer inqEndTrnSrno < length = 8 description = "조회종료거래일련번호" align = right fill = "0" > ;
+	BigDecimal sctnStaAm < length = 19 decimal = 3 description = "구간시작금액" align = right fill = "0" > ;
+	BigDecimal sctnEndAm < length = 19 decimal = 3 description = "구간종료금액" align = right fill = "0" > ;
+	String rapDscd < length = 1 description = "입지급구분코드" align = left > ;
+	String metTrnMemoTxt < length = 40 description = "모임거래메모내용" align = left > ;
+}

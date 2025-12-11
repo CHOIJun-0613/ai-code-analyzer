@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngSelectSafGoalInf_IDT
+< logicalName= "머니클립.금고.목표.정보.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String moAcno < length = 20 description = "모계좌번호" > ;
+	String chactNo < length = 20 description = "자계좌번호" > ;
+}

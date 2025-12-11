@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.dto.ActPwnoCnfYn_DODT
+<logicalName= "계좌.비밀번호.확인.여부.DBM.출력.IO" description=""
+>
+{
+	String nmlYn<length=3 description="정상여부" >;
+}

@@ -1,0 +1,24 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstSelectEtcNtfcagrYn_ODT
+< logicalName= "기타알림.동의여부.컨트롤러.출력.IO" description="기타알림 동의 여부 컨트롤러 IO"
+>
+{
+	String xrtNtcSrvcYn<length=1 description="환율통지서비스여부" >;
+	String dgnNtfcSrvcYn<length=1 description="지정알림서비스여부" >;
+	String useYn1<length=1 description="사용여부_1" >;
+	String useYn2<length=1 description="사용여부_2" >;
+	String useYn3<length=1 description="사용여부_3" >;
+	String useYn4<length=1 description="사용여부_4" >;
+	String useYn5<length=1 description="사용여부_5" >;
+	String useYn6<length=1 description="사용여부_6" >;
+	String usgYn99<length=1 description="사용여부_99" >;
+	String pushEtcNtfcRgsYn<length=1 description="PUSH기타알림등록여부" >;
+	String pushAppDscd<length=2 description="PUSH앱구분코드" >;
+	String tim9brfAgrYn<length=1 description="9시브리핑동의여부" >;
+	String wctfcNtfcAgrYn<length=1 description="우리WON인증알림동의여부" >;
+	String mrktAgrYn1<length=1 description="마케팅동의여부_1" >;
+	String smsMrktAgrYn1<length=1 description="SMS마케팅동의여부_1" >;
+	String dayilyAgrYn < length = 1 description = "dayily구독여부" > ;
+	String weeklyAgrYn < length = 1 description = "weekly구독여부" > ;
+	String monthlyAgrYn < length = 1 description = "monthly구독여부" > ;
+	String issueAgrYn < length = 1 description = "issue구독여부" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcSelectSmsRawNtcRduPrdTgtAct_ODT
+< logicalName= "SMS입출금통지.감면상품.대상계좌.컨트롤러.출력.IO" description="SMS입출금통지.감면상품.대상계좌.컨트롤러.출력.IO"
+>
+{
+	String frduYn<length=1 description="수수료감면여부" >;
+	BigDecimal rduFrcsAm<length=18 description="감면예상금액" >;
+}

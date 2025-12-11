@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectUsgspceinflist_ODT
+< logicalName= "사용.공간.정보.컨트롤러.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectUsgspceinf_ODT spaceList<length=0 description="사용.공간.정보.목록.컨트롤러.출력.IO" arrayReference="1" >;
+}

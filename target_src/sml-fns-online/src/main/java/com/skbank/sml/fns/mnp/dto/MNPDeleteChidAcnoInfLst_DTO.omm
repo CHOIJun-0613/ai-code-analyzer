@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPDeleteChidAcnoInfLst_DTO
+< logicalName= "머니클립자계좌정보목록삭제" description="머니클립 자계좌 정보를 삭제 한다."
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	BigDecimal dpacBal < length = 18 description = "수신계좌잔액" > ;
+	Integer gridCnt < length = 2 description = "그리드건수" > ;
+	com.skbank.sml.fns.mnp.dto.MNPMnyPinBscMngSelectMnpChidAcno_DTO grid < description = "머니클립.자.계좌.조회.컴포넌트.공통.출력.IO" arrayReference = "1" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstInsertSpceatpminf_ODT
+< logicalName= "공간.자동납부.등록.컨트롤러.출력.IO" description="통장쪼개기.자동납부.등록 input"
+>
+{
+	String rspRtcd < length = 4 description = "응답결과코드" > ;
+	String rspMsgTxt < length = 100 description = "응답메시지내용" > ;
+}

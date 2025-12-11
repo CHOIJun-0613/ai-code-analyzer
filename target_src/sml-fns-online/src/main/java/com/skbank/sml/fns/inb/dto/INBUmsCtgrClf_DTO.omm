@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.inb.dto.INBUmsCtgrClf_DTO
+< logicalName= "UMS카테고리분류코드DTO" description="UMS카테고리분류코드DTO"
+>
+{
+	String code < length = 3 description = "리턴코드" > ;
+	String msg < length = 1000 description = "리턴메시지" > ;
+	com.skbank.sml.fns.inb.dto.INBUmsCtgrClfGrid_DTO msgs < description = "분류코드목록" arrayReference = "1" > ;
+	String appUserId < length = 100 description = "앱유저ID" > ;
+}

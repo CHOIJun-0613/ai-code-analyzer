@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.dto.MPBUpdateMetPbokTrnPrtsGrid_DTO
+< logicalName= "모임통장.거래내역.수정.공통.Grid" description=""
+>
+{
+	String trnDt < length = 8 description = "거래일자" align = left > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" align = right fill = "0" > ;
+	String rcvMbhNm < length = 60 description = "입금회원명" align = left > ;
+	String metTrnMemoTxt < length = 40 description = "모임거래메모내용" align = left > ;
+	BigDecimal metMbpfXmpAm < length = 19 decimal = 3 description = "모임회비면제금액" align = right fill = "0" > ;
+}

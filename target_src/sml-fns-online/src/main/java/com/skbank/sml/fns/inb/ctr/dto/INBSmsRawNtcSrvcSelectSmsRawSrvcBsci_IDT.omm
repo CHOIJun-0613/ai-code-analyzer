@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcSelectSmsRawSrvcBsci_IDT
+< logicalName= "SMS입출금.서비스.기본정보.컨트롤러.입력.IO" description="SMS입출금.서비스.기본정보.컨트롤러.입력.IO"
+>
+{
+	String userId<length=20 description="사용자ID" >;
+	String itcsno<length=11 description="통합고객번호" >;
+	String encyRbno<length=64 description="암호화주민사업자등록번호" >;
+	String ebnkUtzpeNo<length=13 description="전자뱅킹이용자번호" >;
+	String trnDis < length = 1 description = "거래구분" > ;
+	String tgtAcno < length = 20 description = "수신계좌번호" formatType = masking format = "M141"  > ;
+}

@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngUpdateMetPbokTrnPrts_ODT
+< logicalName= "모임통장.거래내역.컨트롤러.출력.IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String metChgDscdNm < length = 30 description = "모임변경구분코드명" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer cnt < length = 3 description = "건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.dto.MPBUpdateMetPbokTrnPrtsGrid_DTO grid < description = "" arrayReference = "cnt" comment = "" > ;
+}

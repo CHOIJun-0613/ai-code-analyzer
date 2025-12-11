@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectUsgspceinf_ODT
+< logicalName= "사용.공간.정보.목록.컨트롤러.출력.IO" description=""
+>
+{
+	String spceIconNo<length=3 description="공간아이콘번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+	String spceNm<length=50 description="공간명" >;
+	BigDecimal spceBal<length=18 decimal=3 description="공간잔액" >;
+	BigDecimal savGoalAm<length=18 decimal=3 description="저축목표금액" >;
+	String savGoalStaDt < length = 8 description = "저축목표시작일자" > ;
+	String savGoalEndDt < length = 8 description = "저축목표종료일자" > ;
+	BigDecimal cnsmGoalAm < length = 18 decimal = 3 description = "소비목표금액" > ;
+	String cnsmAmBscd < length = 1 description = "소비금액기준코드" > ;
+	String cnsmAmBscdNm < length = 40 description = "소비금액기준코드명" > ;
+}

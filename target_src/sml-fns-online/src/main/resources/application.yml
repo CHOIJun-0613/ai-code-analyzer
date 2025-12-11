@@ -1,0 +1,408 @@
+﻿spring:
+  application:
+    name: sml-fns-online
+  main:
+    banner-mode: "off"
+  zipkin:
+    enabled: false
+  sleuth:
+    enabled: false
+  messages:
+    basename: classpath:/i18n/messages
+    encoding: UTF-8
+    cache-duration: 15M
+  session:
+    store-type: redis
+    redis:
+      namespace: "nwn:bfw"
+    timeout: 900
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+      - org.springframework.cloud.loadbalancer.config.BlockingLoadBalancerClientAutoConfiguration
+  cloud:
+    kubernetes:
+      enabled: false
+    loadbalancer:
+      enabled: false
+  redis:
+    host: wnwnimdg01d.woorifg.com
+    port: 10010
+    username: NWNAPP
+    password : ENC(uTXbPJUwmZ9hEWen7MNCVu9Zfqj2uojT/m1zcO4mI1xU8rmF8Aenr3FXzPcZwGk8)
+  profiles:
+    active: swagger
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 100MB
+
+server:
+  port: 8089
+  max-http-header-size: 16KB
+  error:
+    include-exception: true
+    include-stacktrace: always
+
+mybatis:
+  configuration:
+    cache-enabled: false
+    local-cache-scope: statement
+
+logging:
+  level:
+    root: info
+    bxmc: debug
+    fwk.skbank: debug
+    com.skbank: debug
+
+    #io --
+    io.fabric8.kubernetes.client.Config: error
+
+    # org --
+    org.apache: warn
+    org.springframework: warn
+    org.springframework.web: info
+    org.springframework.servlet.FrameworkServlet: debug
+    org.springframework.servlet.DispatcherServlet: trace
+    org.apache.catalina.loader.WebappClassLoaderBase: error
+
+    # com --
+    com.ulisesbocchio.jasyptspringboot: warn
+    
+    bxmc.context.bean: info 
+    
+  pattern:
+    console: "%clr(%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}}){faint} %clr(%5p) [%X{GUID:-}] %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} [%X{serviceId:-}] [%C:%L] %m %n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}}"
+
+bxframework:
+  root-base-package: fwk.skbank,com.skbank
+  message:
+    enabled: true
+    sys-message-source: fwk.skbank.online.message.SFSystemDatabaseMessageSource
+    #app-message-source: fwk.skbank.online.message.SFAppDatabaseMessageSource
+    app-message-source: fwk.skbank.custom.sml.online.message.SFSmlAppDatabaseMessageSource
+  request:
+    body-message-handler: SFBodyMessageHandler
+    header-name: x-woori-systemheader
+    system-header: "fwk.skbank.online.context.impl.SFChannelHeader"
+    all-skip-patterns:
+      - "/v2/api-docs"
+      - "/actuator/*"
+      - "/swagger-resources/**"
+    interceptors:  # @Component annotated beanName
+      - SFDatabaseServiceControlHandler
+      - SFSmlSystemProcessHandler
+    biz-interceptors:
+      # 로컬에서만 사용(SHRTSTLocalInterceptor_COM)
+      - SHRTSTLocalInterceptor_COM
+      - SHRCMM_SCMInterceptor_COM
+    imageloggers:  # @Component annotated beanName
+      - SFImageLoggingHandler
+    min-timeout-duration: 3600s
+    context-transformer: SFContextTransfomer
+    custom-handler-interceptor: fwk.skbank.custom.sml.online.request.interceptor.SFSmlRequestInterceptor
+#    custom-handler-interceptor: fwk.skbank.online.request.interceptor.SFRequestInterceptor
+    servlet-handler-method-interceptor: SFServletHandlerMethodInterceptor
+    message-code-converter: SFMessageCodeConverter
+    web-client:
+      filter: SFDefaultWebClientFilter
+      max-idle-time: 300000
+  cache:
+    enabled: true
+    local-cache-spec:
+      - name: "TRX_INFO"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "SYS_MSG"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "APP_MSG"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "COM_CFG"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "APP_MSG_MAPPING"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "CMN_CD"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "CMN_LBLNG"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "CMN_URGN_ANC"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "CMN_PROP"
+        expire-after-write: 600000
+        maximum-size: 1000
+      - name: "CMN_SCRN"
+        expire-after-write: 600000
+        maximum-size: 1000
+  datasource: #BxmApplicationDataSourceConfig
+    driver-class-name: oracle.jdbc.OracleDriver
+    jdbc-url: jdbc:oracle:thin:@(DESCRIPTION =(LOAD_BALANCE = OFF)(FAILOVER = ON)(ADDRESS = (PROTOCOL = TCP)(HOST =192.168.117.109)(PORT = 1531))(ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.117.107)(PORT = 1531))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = WIBDBD)))
+    username: BFWAPP
+    password: ENC(P5WMitQrY0ef1Aycn63mFISLEcr0JmG5YdSB0De7zcIKikmX9ZGra7nkeaUGi5zC)
+    maximum-pool-size: 2
+    minimum-idle: 1
+    max-lifetime: 60000
+  application: #BxmApplication
+    type : online
+    datasource: #BxmApplicationDataSourceConfig
+      biz-ds: # DataSource Name <Map, ApplicationDataSource>
+        jdbc: #JdbcApplicationDataSource
+          driver-class-name: oracle.jdbc.OracleDriver
+          jdbc-url: jdbc:oracle:thin:@(DESCRIPTION =(LOAD_BALANCE = OFF)(FAILOVER = ON)(ADDRESS = (PROTOCOL = TCP)(HOST =192.168.117.109)(PORT = 1531))(ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.117.107)(PORT = 1531))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = WIBDBD)))
+          username: NWNAPP
+          password: ENC(JWeniO9j9QxwSh6Ymjn50JvssQe09spKzAsEeRTi0opIYDvNI30u8LN1264oYhkg)
+          maximum-pool-size: 2
+          minimum-idle: 1
+          max-lifetime: 60000
+          exception-override-class-name: fwk.skbank.online.exception.impl.HikariCPExceptionOverride
+      tcall-ds:
+         jdbc:
+          driver-class-name: oracle.jdbc.OracleDriver
+          jdbc-url: jdbc:oracle:thin:@(DESCRIPTION =(LOAD_BALANCE = OFF)(FAILOVER = ON)(ADDRESS = (PROTOCOL = TCP)(HOST =192.168.117.109)(PORT = 1531))(ADDRESS = (PROTOCOL = TCP)(HOST = 192.168.117.107)(PORT = 1531))(CONNECT_DATA =(SERVER = DEDICATED)(SERVICE_NAME = WIBDBD)))
+          username: TCALL
+          password: ENC(A2cRiYWLC+qx4TdgseXUPAkSl91RIzhz2r984yvbg7U1Ynl0Bj91Td8a6pOwDK3S)
+          maximum-pool-size: 2
+          minimum-idle: 1
+          max-lifetime: 60000
+          exception-override-class-name: fwk.skbank.online.exception.impl.HikariCPExceptionOverride
+  data-access:
+    identify-inject: true
+  loader:
+    fully-qualified-dbio-bean-name: true
+
+woori:
+  system:
+    chnl-cd: SBK
+    chnl-dscd: PSB
+    env-inf-dscd: L
+    sys-cd: IBS
+    server-type: V
+    disable-trx-ctrl: true
+  health-check:
+    enabled: true
+    servlet-uri: /fw/health
+  biz-date:
+    use-biz-dt: false
+    use-biz-day:
+      enabled: true
+      component-name: SHRBfwBzdtInfo_COM
+  session:
+    enabled: true
+    session-handler: SFRedisSessionHandlerImpl
+    cookie-path: /
+    common:
+      key-list:
+        - AFS_EVT_CUST_INFO
+        - AFS_WTT_INFO
+        - BSC_ACT_LIST
+        - BSC_BNKG_SRVC_CUS_INF
+        - BSC_BNKG_SRVC_MLTTRN_INF
+        - BSC_BNKG_SRVC_TRN_INF
+        - BSC_MYDT_ACT_LIST
+        - BSC_TS_CRTF_INF
+        - BSC_TS_FEE_INF
+        - BSC_TS_FEE_MLT_INF
+        - BSC_UNIVS_ACT_LIST
+        - BSC_WBK_ACT_LIST
+        - CEC_ADD_CRTF_INFO
+        - CEC_AUTH_INFO
+        - CEC_CERD_BYPS_PRVN_INFO
+        - CEC_CERT_SIGN_INFO
+        - CEC_CUST_SCRT_INFO
+        - CEC_DNI_ACNM_CNF_INFO
+        - CEC_SLF_CRTF_INFO
+        - CMM_CURRENT_CUST
+        - CMM_CUST_KYC_INFO
+        - CMM_ENC_INFO
+        - CMM_MCHR_INFO
+        - CMM_TPY_LGIN_INFO
+        - FNS_MBH_INFO
+        - MMH_CUST_INFO
+        - MMH_PIGT_AGR_INFO
+        - MYD_MBH_INFO
+        - OBS_OPEN_BNKG_ACT_LIST
+        - OBS_OPEN_BNKG_CUS_INF
+        - PDS_ACCT
+        - PDS_CUST
+        - UBS_MBH_INFO
+      allow:
+        uri:
+          - /com/skbank/sml/
+        class-name:
+          - SHRAFSEvtSession_COM
+          - SHRAFSTeenTeenSession_COM
+          - SHRBSCBnkgSrvcCusInfSession_COM
+          - SHRBSCBnkgSrvcMlttranInfSession_COM
+          - SHRBSCBnkgSrvcTrnInfSession_COM
+          - SHRBSCMydtActListSession_COM
+          - SHRBSCTbkActListSession_COM
+          - SHRBSCTsCrtfInfSession_COM
+          - SHRBSCTsFeeInfSession_COM
+          - SHRBSCTsFeeMltInfSession_COM
+          - SHRBSCUnivsActListSession_COM
+          - SHRBSCWbkActListSession_COM
+          - SHRCECDNISession_COM
+          - SHRCECSession_COM
+          - SHRCMMEncDecSession_COM
+          - SHRCMMKycSession_COM
+          - SHRCMMLoginSession_COM
+          - SHRCMMMchrSession_COM
+          - SHRFNSMbhSession_COM
+          - SHRMMHCustSession_COM
+          - SHRMYDSession_COM
+          - SHROBSOpenBnkgActListSession_COM
+          - SHROBSOpenBnkgCusInfSession_COM
+          - SHRPDSAcctSession_COM
+          - SHRPDSCustSession_COM
+          - SHRUBSSession_COM
+    biz:
+      key-list:
+        - TEMP
+  file:
+    root-path: C:/WFW_TOOL/bizfile/sml
+    max-file-size: 10000000
+    extension:
+      list-type: white
+      target-list:
+        - jpg
+        - png
+        - tif
+        - tiff
+        - xlsx
+  imdg:
+    enabled: true
+    imdg-handler: SFRedisImdgHandlerImpl
+    imdg-spec:
+      - name: "TRACE_KEY"
+        prefix: "nwn:bfw:txid:"
+        expire-after-write: 600
+  masking:
+    enabled: true
+  io-validation:
+    enabled: false
+  crypt:
+    service-id: IBS
+    environment: local
+    server-url: http://wnwnap01d.woorifg.com:20090/relay
+  data-container:
+    enabled: true
+    key-list:
+      - TEMP
+  cache:
+    enabled: true
+    initializer-load-list:
+      - SHRImdgToLocalCacheInitializer_COM
+    cache-list:
+      - "CMN_CD"
+      - "CMN_LBLNG"
+      - "CMN_URGN_ANC"
+      - "CMN_PROP"
+      - "CMN_SCRN"
+  common:
+    service-id-list: IBS_0002, IBS_0003, IBS_0004, IBS_0005, IBS_0006, IBS_0007, IBS_0008, IBS_0009, IBS_0010, MDP, VASP_0001, VASP_0002, ZPAY
+  omm-option:
+    enabled: true
+  prop-option:
+    enabled: true
+  logs:
+    appenders:
+      - name: CECCertLogFileAppender
+        type: FILE
+        logger-name: CECCertLogFileLogger
+        file-path: C:\WFW_TOOL\applog\certlog\certLog.log
+        file-name-pattern: C:\WFW_TOOL\bizfile\certlog\certLog.log.%d{yyyyMMdd}.%i.gz
+        pattern: "%d{${LOG_DATEFORMAT_PATTERN:yyyy-MM-dd HH:mm:ss.SSS}} [%X{SF_TRACE_ID:-}] %m %n"
+        max-file-size: 100MB 
+        max-history : 365
+
+# 인터페이스 아답터 관련 설정
+adaptor:
+  exp-enabled: true           # [프로젝트별 개별 설정] 연계시스템에서 에러를 응답받은 경우, Exception 발생 여부 설정
+  guid-gen: true
+  type: online                # 배치 프로젝트 아답터 EAI 사용
+  socket:
+    timeout: 195000           # [프로젝트별 개별 설정] 아답터 ↔ 인터페이스 간 TCP소켓통신 타임아웃(ms) 설정
+    read-timeout: 195000      # [프로젝트별 개별 설정] 아답터 ↔ 인터페이스 간 TCP소켓통신 Read 타임아웃(ms) 설정
+  urls:
+    mca: wmcaapt.woorifg.com:12100
+    eai: weaiapt.woorifg.com:11207
+    fep: wfepapt.woorifg.com:19200
+    ofep: wofeapt.woorifg.com:19803 #(OFEP 테스트환경)
+    ofep-http: http://wofeap01d.woorifg.com:8210/ONLWeb/outbound/api  # OFEP HTTP Dev Server
+  interface-header:
+    ver: "3110"               # [프로젝트별 개별 설정] 표준전문-시스템헤더부-버전 설정
+    tlm-ency-dscd: "1"        # [프로젝트별 개별 설정] 표준전문-시스템헤더부-전문암호화구분코드 설정
+    tms-sys-cd: "IBS"         # [프로젝트별 개별 설정] 표준전문-시스템헤더부-전송시스템코드 설정
+    md-kdcd: "MIBMPSBI"
+    req-sys-cd: "IBS"         # [프로젝트별 개별 설정] 표준전문-시스템헤더부-요청시스템코드 설정
+    ttl-usg-yn: "N"
+    vld-tim: 0
+    req-srvc-cetr-dscd: "S"   # [프로젝트별 개별 설정] 표준전문-시스템헤더부-요청서비스센터구분코드 설정
+    req-srvc-tp-dscd: "W"     # [프로젝트별 개별 설정] 표준전문-시스템헤더부-요청서비스유형구분코드 설정
+    req-srvc-id: "won301"     # [프로젝트별 개별 설정] 표준전문-시스템헤더부-요청서비스ID 설정
+    chnl-cd: "SBK"  # 표준전문-시스템헤더부-채널코드 설정(EAI 기본 채널 코드 INT 또는 FEP의 EXT외에 다른값을 set 할 경우 사용함)
+    chnl-dscd: "PSB"  # 표준전문-시스템헤더부-채널구분코드 설정(EAI 기본 채널구분 코드 INT 또는 FEP의 EXT외에 다른값을 set 할 경우 사용함)
+    trm-brno: 020900          # [프로젝트별 개별 설정] 표준전문-거래헤더부-단말번호 설정
+    trn-trm-no: 020900D001    # [프로젝트별 개별 설정] 표준전문-거래헤더부-거래단말번호 설정
+    dl-brcd: 020900           # [프로젝트별 개별 설정] 표준전문-거래헤더부-취급점코드 설정
+    opr-no: 8MIBM001          # [프로젝트별 개별 설정] 표준전문-거래헤더부-조작자번호 설정
+    env-inf-dscd: T
+    anti-customise-black-list:
+      exp-enabled: true
+      default-list:
+        system-header:
+          - ver
+          - tlmEncyDscd
+          - tmsSysCd
+          - reqSysCd
+          - reqSrvcCetrDscd
+          - reqSrvcTpDscd
+          - reqSrvcId
+        trn-header:
+          - trmBrno
+          - trnTrmNo
+          - oprNo
+      mca:
+        system-header:
+          - envInfDscd
+      eai:
+        system-header:
+          - envInfDscd
+      fep:
+        system-header:
+          - envInfDscd
+      ofep:
+        system-header:
+          - envInfDscd
+  local-test:
+    test-mode: true           # [프로젝트별 개별 설정] 로컬PC에서 인터페이스 테스트가 필요한 경우 설정
+    server-url: http://wnwnap01d.woorifg.com:20090/relay/adaptor/localTest # [프로젝트별 개별 설정] 로컬PC ↔ 인터페이스 간 통신 중계 서비스 URL 설정
+
+  simulation:
+    enabled: true             # 아답터 거래 시뮬레이션 모드 여부 설정
+  servlet-cache:
+    enabled: false            # 아답터 인터페이스 캐시 조작 Servlet 사용 여부 설정
+    servlet-uri: /fw/cache    # 캐시 조작 Servlet URL Path 설정
+  redis:
+    enabled: true
+  message-mapper: SFSmlMessageMapper
+
+convertor:
+  sys-cd: IBS
+  crypt:
+    enabled: true # 전문 통신에 암호화 사용 설정
+    service-id: IBS # 암복호화 모듈 사용 신청을 한 서비스아이디
+    environment: local
+    server-url: http://wnwnap01d.woorifg.com:20090/relay
+  interface-cache-ttl: 30s
+
+sml:
+  fds:
+    file-path: C:\WFW_TOOL\app\ipinside

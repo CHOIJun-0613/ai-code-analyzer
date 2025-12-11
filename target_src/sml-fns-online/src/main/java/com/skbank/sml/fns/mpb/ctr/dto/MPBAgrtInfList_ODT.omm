@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBAgrtInfList_ODT
+<logicalName= "약관.정보.목록.컨트롤러.출력.IO" description=""
+>
+{
+	String agrtId<length=10 description="약관ID" >;
+	String agrtNm<length=50 description="약관명" >;
+	String agrtTxt<length=4000 description="약관내용" >;
+}

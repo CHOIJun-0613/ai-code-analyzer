@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngUpdateWallAmRaw_IDT
+< logicalName= "머니클립지갑금액입출금수정.컨트롤러.입력IO" description=""
+>
+{
+	String wdrAcno < length = 15 description = "출금계좌번호" align = left > ;
+	BigDecimal trnAm < length = 13 description = "거래금액" align = right fill = "0" > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" align = left > ;
+	String ptnPbokPrngTxt < length = 22 description = "상대통장인자내용" align = left > ;
+	String wdrPbokPrngTxt < length = 22 description = "출금통장인자내용" align = left > ;
+}

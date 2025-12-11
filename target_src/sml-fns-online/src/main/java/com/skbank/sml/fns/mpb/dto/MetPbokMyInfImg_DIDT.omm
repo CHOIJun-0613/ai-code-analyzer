@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokMyInfImg_DIDT
+<logicalName= "모임통장.나의정보.이미지.DBM.입력.IO" description=""
+>
+{
+	String ImgDscd<length=2 description="이미지구분코드" >;
+	String imgKey<length=35 description="이미지키" >;
+	String imgKeyNm<length=40 description="이미지키명" >;
+	String imgFileNm<length=200 description="이미지파일명" >;
+	String imgFilePathNm<length=200 description="이미지파일경로명" >;
+}

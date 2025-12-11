@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcDeleteSmsRawNtcTxt_IDT
+< logicalName= "SMS입출금통지.내용.컨트롤러.입력.IO" description="SMS입출금통지.내용삭제IDT"
+>
+{
+	String fstlAct < length = 15 description = "수수료결제계좌" arrayReference = "" > ;
+	String pwnoUsgYn < length = 1 description = "비밀번호사용여부" arrayReference = "" > ;
+	String encyPwno < length = 32 description = "암호화비밀번호" arrayReference = "" > ;
+	String tgtAcno < length = 20 description = "대상계좌번호" arrayReference = "" > ;
+}

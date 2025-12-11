@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngInsertSubspceinf_ODT
+<logicalName= "메인.공간.정보.등록.컨트롤러.출력.IO" description=""
+>
+{
+	String rspRtcd<length=4 description="응답결과코드" >;
+	String rspMsgTxt<length=100 description="응답메시지내용" >;
+}

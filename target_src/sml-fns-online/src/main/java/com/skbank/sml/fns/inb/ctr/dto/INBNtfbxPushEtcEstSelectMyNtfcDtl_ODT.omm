@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstSelectMyNtfcDtl_ODT
+< logicalName= "나만의알림조회ODT" description="나만의알림조회ODT"
+>
+{
+	com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO myNtfcInqGrid < description = "나만의알림조회Grid" arrayReference = "1" > ;
+}

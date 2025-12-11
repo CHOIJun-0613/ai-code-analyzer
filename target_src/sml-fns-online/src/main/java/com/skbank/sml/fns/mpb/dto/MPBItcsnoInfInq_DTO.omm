@@ -1,0 +1,29 @@
+OMM com.skbank.sml.fns.mpb.dto.MPBItcsnoInfInq_DTO
+< logicalName= "통합고객번호.정보.조회" description=""
+>
+{
+	String itcsno < length = 11 description = "통합고객번호" align = left > ;
+	String encyRbno < length = 32 description = "암호화주민사업자등록번호" align = left > ;
+	String ebnkUtzpeNo < length = 13 description = "전자뱅킹이용자번호" align = left > ;
+	String userDis < length = 1 description = "사용자구분" align = left > ;
+	String ebnkInqUserYn < length = 1 description = "전자뱅킹조회사용자여부" align = left > ;
+	String mdAgrYn < length = 1 description = "매체동의여부" align = left > ;
+	BigDecimal tms1TsLmtAm < length = 18 description = "1회이체한도금액" align = right fill = "0" > ;
+	BigDecimal d1TsLmtAm < length = 18 description = "1일이체한도금액" align = right fill = "0" > ;
+	String scrtMensKd < length = 1 description = "보안수단종류" align = left > ;
+	String scrtMensMissYn < length = 1 description = "보안수단분실여부" align = left > ;
+	String spltCerdUsgYn < length = 1 description = "특수인증서사용여부" align = left > ;
+	String twochCrtfYn < length = 1 description = "2채널인증여부" align = left > ;
+	String otpCoCd < length = 3 description = "OTP업체코드" align = left > ;
+	String otpSrno < length = 12 description = "OTP일련번호" align = left > ;
+	String tmHndpeDtOtpYn < length = 1 description = "시각장애인디지털OTP여부" align = left > ;
+	String wonCrtfUsgYn < length = 1 description = "원인증사용여부" align = left > ;
+	String esnsBnkgUsgYn < length = 1 description = "간편뱅킹사용여부" align = left > ;
+	String esnsTsRgsYn < length = 1 description = "간편이체등록여부" align = left > ;
+	String efLieAtntInfRgsCusYn < length = 1 description = "전자금융사기주의정보등록고객여부" align = left > ;
+	String cusHpNo < length = 14 description = "고객핸드폰번호" align = left > ;
+	String fdtsTrnLimYn < length = 1 description = "자금이체거래제한여부" align = left > ;
+	String openBnkgJnngYn < length = 1 description = "오픈뱅킹가입여부" align = left > ;
+	String mydtCusYn < length = 1 description = "마이데이터고객여부" align = left > ;
+	String dethAtntInfRgsCusYn < length = 1 description = "사망주의정보등록고객여부" align = left > ;
+}

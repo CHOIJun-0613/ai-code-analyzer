@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMbhMbpfRcvPrtsListInq_ODT
+< logicalName= "회원.회비.입금내역.목록.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String metMbhSrno < length = 30 description = "모임회원일련번호" > ;
+	String metMbhNm < length = 50 description = "모임회원명" > ;
+	String metMbhAlsNm < length = 40 description = "모임회원별칭명" > ;
+	BigDecimal mbpfPymAm < length = 18 decimal = 3 description = "회비납부금액" > ;
+	BigDecimal mbpfPmtgtAm < length = 18 decimal = 3 description = "회비납부대상금액" > ;
+}

@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitBscMngCudSubSpceMng_DODT
+< logicalName= "공간.상세.설정.조회.DBM.출력.IO" description=""
+>
+{
+	String spceNo<length=6 description="공간번호" >;
+}

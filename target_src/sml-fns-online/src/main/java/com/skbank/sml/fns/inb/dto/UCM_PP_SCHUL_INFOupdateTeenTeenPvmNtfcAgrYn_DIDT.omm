@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.inb.dto.UCM_PP_SCHUL_INFOupdateTeenTeenPvmNtfcAgrYn_DIDT
+< logicalName= "틴틴오늘의급식알림동의여부수정DIDT" description="틴틴 오늘의 급식 알림 동의 여부 수정DIDT"
+>
+{
+	String cusCiNo < length = 88 description = "고객CI번호" > ;
+	Date chgDh < length = 12 decimal = 6 description = "변경일시" > ;
+	String alarmYn < length = 1 description = "알림여부" > ;
+	String itcsno < length = 36 description = "통합고객번호" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPDeleteChidAcnoInfLstOut_DTO
+< logicalName= "머니클립자계좌삭제out Dto" description="머니클립자계좌삭제out Dto"
+>
+{
+	String errMsgId < length = 10 description = "오류메시지ID" > ;
+	String errMsgTxt < length = 100 description = "오류메시지내용" > ;
+}

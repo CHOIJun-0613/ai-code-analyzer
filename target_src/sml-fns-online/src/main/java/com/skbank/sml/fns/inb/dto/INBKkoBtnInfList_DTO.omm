@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.inb.dto.INBKkoBtnInfList_DTO
+< logicalName= "카카오버튼정보목록DTO" description="카카오버튼정보목록DTO"
+>
+{
+	String type < length = 10 description = "타입" > ;
+	String name < length = 500 description = "이름" > ;
+	String url_pc < length = 1000 description = "url_pc" > ;
+	String url_mobile < length = 1000 description = "url_mobile" > ;
+}

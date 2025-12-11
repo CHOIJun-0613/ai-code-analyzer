@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInfTrnPrts_DODT
+< logicalName= "통장.쪼개기.통합.조회.거래내역.DBM.출력.IO" description=""
+>
+{
+	String dpsAcno < length = 13 description = "수신계좌번호" align = left > ;
+	String trnDt < length = 8 description = "거래일자" align = left > ;
+	String trnTm < length = 6 description = "거래시각" align = left > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" align = right fill = "0" > ;
+	String spceNo < length = 6 description = "공간번호" align = left > ;
+	String dpsRapDscd < length = 1 description = "수신입지급구분코드" align = left > ;
+	String dpsRapDscdNm < length = 50 description = "수신입지급구분코드명" align = left > ;
+	BigDecimal dpsTrnAm < length = 19 decimal = 3 description = "수신거래금액" align = right fill = "0" > ;
+	BigDecimal aftrBal < length = 19 decimal = 3 description = "거래후잔액" align = right fill = "0" > ;
+	String pbokPrngOtlnTxt < length = 100 description = "통장인자적요내용" align = left > ;
+	String mdKdcdNm < length = 50 description = "매체종류코드명" align = left > ;
+}

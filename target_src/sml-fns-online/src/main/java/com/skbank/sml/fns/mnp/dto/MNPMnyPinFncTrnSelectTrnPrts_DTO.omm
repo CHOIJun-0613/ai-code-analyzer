@@ -1,0 +1,28 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectTrnPrts_DTO
+< logicalName= "머니클립거래내역조회.공통.출력.IO" description=""
+>
+{
+	BigDecimal payAm < length = 19 decimal = 3 description = "지급금액" > ;
+	String pbokPrngOtlnCd < length = 4 description = "통장인자적요코드" > ;
+	String trnTm < length = 6 description = "거래시각" > ;
+	String rqspeNm < length = 16 description = "의뢰인명" > ;
+	String trnDt < length = 8 description = "거래일자" > ;
+	String trnTxt < length = 40 description = "거래내용" > ;
+	String otbrKd < length = 2 description = "타점종류" > ;
+	BigDecimal rcvAm < length = 19 decimal = 3 description = "입금금액" > ;
+	Integer trnSrno < length = 7 description = "거래일련번호" > ;
+	BigDecimal dpsBal < length = 19 decimal = 3 description = "수신잔액" > ;
+	BigDecimal otbrAm < length = 19 decimal = 3 description = "타점금액" > ;
+	String trbkGicd < length = 7 description = "거래은행지로코드" > ;
+	String trbkGicdNm < length = 100 description = "거래은행지로코드명" > ;
+	String otbrKdNm < length = 100 description = "타점종류명" > ;
+	BigDecimal trfrvAm < length = 19 decimal = 3 description = "대체입금금액" > ;
+	String trbkGicdFlag < length = 1 description = "거래은행지로코드플래그" > ;
+	String memo < length = 40 description = "메모" > ;
+	String memoDis < length = 2 description = "메모구분" > ;
+	String payYn < length = 1 description = "지급여부" > ;
+	String payTmDscd < length = 1 description = "지급기간구분코드" > ;
+	BigDecimal d7UnderDtlDpsBal < length = 19 decimal = 3 description = "7일미만상세수신잔액" > ;
+	BigDecimal d7OverDtlDpsBal < length = 19 decimal = 3 description = "7일이상상세수신잔액" > ;
+	BigDecimal d31OverDtlDpsBal < length = 19 decimal = 3 description = "31일이상상세수신잔액" > ;
+}

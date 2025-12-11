@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngSelectWallIntPrts_IDT
+< logicalName= "머니클립지갑이자내역조회.입력IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String inqBasY < length = 4 description = "조회기준년" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+}

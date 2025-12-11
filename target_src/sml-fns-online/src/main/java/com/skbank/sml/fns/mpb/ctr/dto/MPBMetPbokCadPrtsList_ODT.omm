@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokCadPrtsList_ODT
+<logicalName= "모임통장.카드내역.목록.컨트롤러.출력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	String metMbhNm<length=50 description="모임회원명" >;
+	String metMbhAlsNm<length=40 description="모임회원별칭명" >;
+	Integer trnDt<length=8 description="거래일자" >;
+	String trnTm<length=8 description="거래시각" >;
+	String bzBrcd<length=6 description="영업점코드" >;
+	String bzbrNm<length=50 description="영업점명" >;
+	String trnStcd<length=2 description="거래상태코드" >;
+	String trnAm<length=20 description="거래금액" >;
+	BigDecimal aftrBal<length=19 decimal=3 description="거래후잔액" >;
+	String metMbhSrno<length=30 description="모임회원일련번호" >;
+}

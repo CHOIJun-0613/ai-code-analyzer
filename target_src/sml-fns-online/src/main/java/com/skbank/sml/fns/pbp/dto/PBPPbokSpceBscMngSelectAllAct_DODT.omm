@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSpceBscMngSelectAllAct_DODT
+<logicalName= "계좌.정보.DBM.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.pbp.dto.PBPPbokSpceBscMngSelectAllActList_DODT jnngAvlActInfList_DODT<length=0 description="계좌.정보.목록.DBM.출력.IO" arrayReference="1" >;
+}

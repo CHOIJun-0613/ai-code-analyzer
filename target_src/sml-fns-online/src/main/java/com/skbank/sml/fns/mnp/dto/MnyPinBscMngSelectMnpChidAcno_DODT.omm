@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinBscMngSelectMnpChidAcno_DODT
+< logicalName= "머니클립.자.계좌.조회.컴포넌트.출력.IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	String dppdNm < length = 60 description = "수신상품명" > ;
+	BigDecimal dpacBal < length = 19 decimal = 3 description = "수신계좌잔액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	Integer gridCnt < length = 2 description = "그리드건수" > ;
+	com.skbank.sml.ifi.mca.eims5.dto.IBSMR0006155_GRID_ODT grid < description = "그리드" arrayReference = "gridCnt" EIMS_FLD_TYPE = "G" > ;
+}

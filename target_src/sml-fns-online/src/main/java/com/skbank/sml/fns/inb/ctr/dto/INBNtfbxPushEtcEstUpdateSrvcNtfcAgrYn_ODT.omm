@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdateSrvcNtfcAgrYn_ODT
+< logicalName= "서비스알림동의여부ODT" description="서비스알림동의여부ODT"
+>
+{
+	String mydtMbhJnngYn < length = 1 description = "마이데이터회원가입여부" > ;
+	String natScrrJnngYn < length = 1 description = "국민비서가입여부" > ;
+	String metPbokJnngYn < length = 1 description = "모임통장가입여부" > ;
+	String pbokSprnJnngYn < length = 1 description = "통장쪼개기가입여부" > ;
+	String wonPlayNtfcAgrYn < length = 1 description = "원플레이알림동의여부" > ;
+	String wttJnngYn < length = 1 description = "우리틴틴가입여부" > ;
+	String trnPrtsNtfcAgrYn < length = 1 description = "거래내역알림동의여부" > ;
+	String tdPvmNtfcAgrYn < length = 1 description = "오늘의급식알림동의여부" > ;
+	String natScrrNtfcAgrYn < length = 1 description = "국민비서알림동의여부" > ;
+}

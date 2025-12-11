@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitActRapTotAmInf_DIDT
+< logicalName= "통장.쪼객.통합.정보.조회.DBM.입력.IO" description=""
+>
+{
+	String acno<length=13 description="계좌번호" >;
+	String inqStaDt < length = 8 description = "조회시작일자" > ;
+	String inqEndDt < length = 8 description = "조회종료일자" > ;
+}

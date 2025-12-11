@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.dto.MET_PBOK_MBH_CRTF_MNG_LDG001SelectMetPbokWaitMbhList_DIDT
+< logicalName= "모임통장대기회원목록조회 입력" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metMbhStcd < length = 2 description = "모임회원상태코드" > ;
+	String metMbhDscd < length = 1 description = "모임회원구분코드" > ;
+}

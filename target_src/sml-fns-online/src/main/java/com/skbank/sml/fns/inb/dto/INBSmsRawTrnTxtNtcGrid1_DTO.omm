@@ -1,0 +1,38 @@
+OMM com.skbank.sml.fns.inb.dto.INBSmsRawTrnTxtNtcGrid1_DTO
+< logicalName= "SMS입출금.거래내용.통지.GRID1.공통.IO" description="SMS입출금.거래내용.통지.GRID.DBM.출력.IO"
+>
+{
+	String dpsAcno<length=20 description="수신계좌번호" >;
+	String ebnkSrvcStcd<length=2 description="전자뱅킹서비스상태코드" >;
+	String hpNo1<length=14 description="핸드폰번호_1" >;
+	Integer rgsCnt<length=5 description="등록건수" >;
+	String balNtrsnYn<length=1 description="잔액미전송여부" >;
+	BigDecimal smsTmsLimAm<length=18 description="SMS전송제한금액" >;
+	String tmsStaTm<length=2 description="전송시작시각" >;
+	String tmsEndTm<length=2 description="전송종료시각" >;
+	Integer ntcLimCnt<length=6 description="통지제한건수" >;
+	String smsLstNtcDt<length=8 description="SMS최종통지일자" >;
+	Integer lstNtcCnt<length=6 description="최종통지건수" >;
+	String fstlNwolAcno<length=15 description="수수료결제신구계좌번호" >;
+	String smsFeeWdrDd<length=2 description="SMS수수료출금일" >;
+	String feeLevyDt<length=8 description="수수료징수일자" >;
+	String efFeeAplCd<length=1 description="전자금융수수료적용코드" >;
+	String fxmpXprDt<length=8 description="수수료면제만기일자" >;
+	String smsCtrDt<length=8 description="SMS계약일자" >;
+	String fstCtrDt<length=8 description="최초계약일자" >;
+	String mdKdcd<length=8 description="매체종류코드" >;
+	String smsRqSrno<length=20 description="SMS신청일련번호" >;
+	String advpeEno<length=8 description="권유자직원번호" >;
+	String smsCancDt<length=8 description="SMS해지일자" >;
+	String feeDfpmLevyYn<length=1 description="수수료후불징수여부" >;
+	String atsSndLimYn<length=1 description="자동이체발송제한여부" >;
+	String cusInfNlkgYn<length=1 description="고객정보미연동여부" >;
+	String feeWdrGdncNoreYn<length=1 description="수수료출금안내미수신여부" >;
+	String lstFeeWdrDd<length=8 description="최종수수료출금일" >;
+	Integer lstFeePymCnt<length=7 description="최종수수료납부건수" >;
+	BigDecimal lstFeePymAm<length=18 description="최종수수료납부금액" >;
+	Integer byImpnScdCnt<length=5 description="건별부과예정건수" >;
+	BigDecimal byImpnScdAm<length=18 description="건별부과예정금액" >;
+	String langDscd<length=2 description="언어구분코드" >;
+	String actNm < length = 100 description = "계좌명" > ;
+}

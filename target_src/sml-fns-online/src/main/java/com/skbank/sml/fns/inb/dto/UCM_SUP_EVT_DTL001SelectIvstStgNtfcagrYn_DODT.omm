@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.dto.UCM_SUP_EVT_DTL001SelectIvstStgNtfcagrYn_DODT
+< logicalName= "투자전략.동의여부.DBM.출력.IO" description="투자전략 동의 여부 IO"
+>
+{
+	Integer sbscCnt<length=5 description="구독개수" >;
+}

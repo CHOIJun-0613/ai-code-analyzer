@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001SelectMbpfRtunInf_DIDT
+< logicalName= "모임원 회비 돌려받기 정보 조회 입력 " description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String trnDt < length = 8 description = "거래일자" > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" > ;
+	String metTsReqDscd < length = 2 description = "모임이체요청구분코드" > ;
+	String tsReqDelYn < length = 1 description = "이체요청삭제여부" > ;
+}

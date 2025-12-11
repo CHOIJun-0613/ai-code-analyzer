@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mnp.dto.MNY_CLP_EXPS_SEQ_MNG_LDG001_DBMSelectMnyClpExpsSeqMng_DODT
+< logicalName= "머니클립노출순서기본조회.DBM.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.mnp.dto.MNPBscInf_DTO mnpBscInfGrid < description = "머니클립기본정보" arrayReference = "1" > ;
+}

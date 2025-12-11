@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokCadPrts_ODT
+< logicalName= "모임통장.카드내역.컨트롤러.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.mpb.dto.MetPbokCadPrtsList_DODT metPbokCadPrtsList_DODT<length=0 description="모임통장.카드내역.목록.DBM.출력.IO " >;
+}

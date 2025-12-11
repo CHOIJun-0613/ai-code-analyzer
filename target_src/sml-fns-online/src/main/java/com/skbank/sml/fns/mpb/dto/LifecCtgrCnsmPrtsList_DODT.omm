@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.mpb.dto.LifecCtgrCnsmPrtsList_DODT
+<logicalName= "생활비.카테고리.소비.내역.목록.DBM.출력.IO" description=""
+>
+{
+	String cmgnIconId<length=3 description="캠페인아이콘ID" >;
+	String cmgnIconNm<length=100 description="캠페인아이콘명" >;
+	String goalNm<length=40 description="목표명" >;
+	String ctgrId<length=36 description="카테고리ID" >;
+	String ctgrDisId<length=1 description="카테고리구분ID" >;
+	BigDecimal goalAm<length=18 description="목표금액" >;
+	BigDecimal usgAm<length=13 description="사용금액" >;
+	String bzBrcd<length=6 description="영업점코드" >;
+	String bzbrNm<length=50 description="영업점명" >;
+	Integer bzbrStlCnt<length=10 description="영업점결제건수" >;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngDeletePbokSplitSrvcScss_ODT
+< logicalName= "통장.쪼개기.서비스.탈퇴.컨트롤러.출력.IO" description="통장.쪼개기.서비스.탈퇴 out"
+>
+{
+	String rspRtcd<length=4 description="응답결과코드" >;
+	String rspMsgTxt<length=100 description="응답메시지내용" >;
+}

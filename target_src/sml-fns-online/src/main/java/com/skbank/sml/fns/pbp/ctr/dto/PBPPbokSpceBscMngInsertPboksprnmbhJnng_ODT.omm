@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngInsertPboksprnmbhJnng_ODT
+<logicalName= "통장.분리.회원가입.컨트롤러.출력.IO" description=""
+>
+{
+	String rspRtcd<length=4 description="응답결과코드" >;
+	String rspMsgTxt<length=100 description="응답메시지내용" >;
+}

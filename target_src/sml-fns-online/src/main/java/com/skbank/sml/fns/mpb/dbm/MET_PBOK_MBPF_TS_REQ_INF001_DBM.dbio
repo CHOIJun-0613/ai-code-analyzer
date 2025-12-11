@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.mpb.dbm.MET_PBOK_MBPF_TS_REQ_INF001_DBM">
+<!--Generated 2024. 09. 05. 15:19:24-->
+<select id="selectAllTsReqCnt" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001SelectAllTsReqCnt_DIDT" resultType="java.lang.Integer">&#13;
+SELECT COUNT(*) as selectCnt
+   FROM MET_PBOK_MBPF_TS_REQ_INF
+ WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+      AND TS_REQ_DEL_YN = #{tsReqDelYn} /* 이체요청삭제여부*/
+      AND MET_TS_REQ_STCD = '1'&#13;
+</select>
+<select id="selectMbhTsReqInf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001SelectMbhTsReqInf_DIDT" resultType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001SelectMbhTsReqInf_DODT">&#13;
+SELECT * FROM 
+(
+	SELECT * FROM 
+	(
+		/* #### Original SQL [[ ################# */
+		SELECT /* 모임통장회비이체요청정보 */ 
+		       		   MET_MNG_NO          			AS metMngNo /* 모임관리번호 */
+				       , TS_REQ_DT         			AS tsReqDt /* 이체요청일자 */
+				       , TS_REQ_MBH_SRNO  		AS tsReqMbhSrno /* 이체요청회원일련번호 */
+				       , TS_REQ_SRNO       			AS tsReqSrno /* 이체요청일련번호 */
+				       , TS_REQ_MBH_NM    		AS tsReqMbhNm /* 이체요청회원명 */
+				       , TS_REQ_BKCD       			AS tsReqBkcd /* 이체요청은행코드 */
+				       , TS_REQ_ACT_NO       		AS tsReqAcno /* 이체요청계좌번호 */
+				       , TS_REQ_AM         			AS tsReqAm /* 이체요청금액 */
+				       , TS_CMPL_AM        			AS tsCmplAm /* 이체완료금액 */
+				       , MET_TS_REQ_STCD  		AS metTsReqStcd /* 모임이체요청상태코드 */
+				       , APV_REQ_STCD      		AS apvReqStcd /* 승인요청상태코드 */
+				       , TS_REQ_TM         			AS tsReqTm /* 이체요청시각 */
+				       , MET_CHIF_MBH_SRNO 	AS metChifMbhSrno /* 모임장회원일련번호 */
+				       , RVACT_OWAC_NM     		AS rvactOwacNm /* 입금계좌예금주명 */
+				       , TS_REQ_MEMO_TXT   		AS tsReqMemoTxt /* 이체요청메모내용 */
+				       , TS_REQ_DEL_YN     		AS tsReqDelYn /* 이체요청삭제여부 */
+				       , MET_TS_REQ_DSCD   	AS metTsReqDscd /* 모임이체요청구분코드 */
+				       , TRN_DT						    AS trnDt /*거래일자*/
+				       , TRN_SRNO          			AS trnSrno /* 거래일련번호 */
+				       , LST_DB_CHG_ID     			AS lstDbChgId /* 최종DB변경ID */
+				       , LST_DB_CHG_DTM    		AS lstDbChgDtm /* 최종DB변경일시 */
+		  FROM MET_PBOK_MBPF_TS_REQ_INF
+		 WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+		      AND TS_REQ_DEL_YN = #{tsReqDelYn} /* 이체요청삭제여부*/
+		      AND TS_REQ_MBH_SRNO = #{tsReqMbhSrno} /* 이체요청회원일련번호 */
+    ORDER BY TS_REQ_DT DESC,TS_REQ_TM DESC, TS_REQ_MBH_SRNO DESC, TS_REQ_SRNO DESC
+		/* #### Original SQL ]] ################# */
+	)
+	WHERE 
+		( 
+			(  #{nxtTsReqDt} IS NULL OR tsReqDt = #{nxtTsReqDt} ) 
+			AND ( #{nxtTsReqTm} IS NULL OR tsReqTm = #{nxtTsReqTm} ) 
+			AND ( #{nxtTsReqMbhSrno} = 0 OR tsReqMbhSrno = #{nxtTsReqMbhSrno} ) 
+			AND ( #{nxtTsReqSrno} = 0 OR tsReqSrno &lt;= #{nxtTsReqSrno} ) 
+		)
+		OR ( tsReqDt = #{nxtTsReqDt} 
+			AND tsReqTm = #{nxtTsReqTm} 
+			AND tsReqMbhSrno &gt; #{nxtTsReqMbhSrno} 
+			)
+		OR ( tsReqDt = #{nxtTsReqDt} 
+			AND tsReqTm &lt; #{nxtTsReqTm} 
+			)
+		OR ( tsReqDt &lt; #{nxtTsReqDt} )
+)
+WHERE ROWNUM &lt;= (#{inqCnt} + 1)&#13;
+</select>
+<select id="selectAllTsReqInf" resultType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001SelectAllTsReqInf_DODT">&#13;
+SELECT * FROM 
+(
+	SELECT * FROM 
+	(
+
+		/* #### Original SQL [[ ################# */
+		SELECT /* 모임통장회비이체요청정보 */ 
+				       MET_MNG_NO          			AS metMngNo /* 모임관리번호 */
+				       , TS_REQ_DT         			AS tsReqDt /* 이체요청일자 */
+				       , TS_REQ_MBH_SRNO  		AS tsReqMbhSrno /* 이체요청회원일련번호 */
+				       , TS_REQ_SRNO       			AS tsReqSrno /* 이체요청일련번호 */
+				       , TS_REQ_MBH_NM    		AS tsReqMbhNm /* 이체요청회원명 */
+				       , TS_REQ_BKCD       			AS tsReqBkcd /* 이체요청은행코드 */
+				       , TS_REQ_ACT_NO      		AS tsReqAcno /* 이체요청계좌번호 */
+				       , TS_REQ_AM         			AS tsReqAm /* 이체요청금액 */
+				       , TS_CMPL_AM        			AS tsCmplAm /* 이체완료금액 */
+				       , MET_TS_REQ_STCD  		AS metTsReqStcd /* 모임이체요청상태코드 */
+				       , APV_REQ_STCD      		AS apvReqStcd /* 승인요청상태코드 */
+				       , TS_REQ_TM         			AS tsReqTm /* 이체요청시각 */
+				       , MET_CHIF_MBH_SRNO 	AS metChifMbhSrno /* 모임장회원일련번호 */
+				       , RVACT_OWAC_NM     		AS rvactOwacNm /* 입금계좌예금주명 */
+				       , TS_REQ_MEMO_TXT   		AS tsReqMemoTxt /* 이체요청메모내용 */
+				       , TS_REQ_DEL_YN     		AS tsReqDelYn /* 이체요청삭제여부 */
+				       , MET_TS_REQ_DSCD   	AS metTsReqDscd /* 모임이체요청구분코드 */
+				       , TRN_DT							AS trnDt /*거래일자*/
+				       , TRN_SRNO          			AS trnSrno /* 거래일련번호 */
+				       , LST_DB_CHG_ID     			AS lstDbChgId /* 최종DB변경ID */
+				       , LST_DB_CHG_DTM    		AS lstDbChgDtm /* 최종DB변경일시 */
+		  FROM MET_PBOK_MBPF_TS_REQ_INF
+	   WHERE MET_MNG_NO = #{inData.metMngNo} /* 모임관리번호 */
+		     AND TS_REQ_DEL_YN = #{inData.tsReqDelYn} /* 이체요청삭제여부*/
+	    ORDER BY TS_REQ_DT DESC, TS_REQ_TM DESC,TS_REQ_MBH_SRNO ASC, TS_REQ_SRNO DESC
+		/* #### Original SQL ]] ################# */
+
+	)
+	WHERE 
+		(  ( #{inData.nxtTsReqDt} IS NULL OR tsReqDt = #{inData.nxtTsReqDt} ) 
+			AND ( #{inData.nxtTsReqTm} IS NULL OR tsReqTm = #{inData.nxtTsReqTm} ) 
+			AND ( #{inData.nxtTsReqMbhSrno} = 0 OR tsReqMbhSrno = #{inData.nxtTsReqMbhSrno} ) 
+			AND ( #{inData.nxtTsReqSrno} = 0 OR tsReqSrno &lt;= #{inData.nxtTsReqSrno} ) )
+		OR ( tsReqDt = #{inData.nxtTsReqDt} 
+				AND tsReqTm = #{inData.nxtTsReqTm} 
+				AND tsReqMbhSrno &gt; #{inData.nxtTsReqMbhSrno} )
+		OR ( tsReqDt = #{inData.nxtTsReqDt} 
+				AND tsReqTm &lt; #{inData.nxtTsReqTm} )
+		OR ( tsReqDt &lt; #{inData.nxtTsReqDt} )
+)
+WHERE ROWNUM &lt;= (#{inData.inqCnt} + 1)&#13;
+</select>
+<insert id="insertTsReqInf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001InsertTsReqInf_DIDT">&#13;
+INSERT INTO MET_PBOK_MBPF_TS_REQ_INF /* 모임통장회비이체요청정보 */
+(
+     MET_MNG_NO /* 모임관리번호 */
+    , TS_REQ_DT /* 이체요청일자 */
+    , TS_REQ_MBH_SRNO /* 이체요청회원일련번호 */
+    , TS_REQ_SRNO /* 이체요청일련번호 */
+    , TS_REQ_MBH_NM /* 이체요청회원명 */
+    , TS_REQ_BKCD /* 이체요청은행코드 */
+    , TS_REQ_ACT_NO /* 이체요청계좌번호 */
+    , TS_REQ_AM /* 이체요청금액 */
+    , TS_CMPL_AM /* 이체완료금액 */
+    , MET_TS_REQ_STCD /* 모임이체요청상태코드 */
+    , APV_REQ_STCD /* 승인요청상태코드 */
+    , TS_REQ_TM /* 이체요청시각 */
+    , MET_CHIF_MBH_SRNO /* 모임장회원일련번호 */
+    , RVACT_OWAC_NM /* 입금계좌예금주명 */
+    , TS_REQ_MEMO_TXT /* 이체요청메모내용 */
+    , TS_REQ_DEL_YN /* 이체요청삭제여부 */
+    , MET_TS_REQ_DSCD /* 모임이체요청구분코드 */
+	, TRN_DT/* 거래일자 T*/
+    , TRN_SRNO /* 거래일련번호 */
+    , RLF_ACNO /* 안심계좌번호 */
+    , LST_DB_CHG_ID /* 최종DB변경ID */
+    , LST_DB_CHG_DTM /* 최종DB변경일시 */ 
+)
+VALUES
+(
+    #{metMngNo} /* 모임관리번호 */
+    , #{tsReqDt} /* 이체요청일자 */
+    , #{tsReqMbhSrno} /* 이체요청회원일련번호 */
+    , (SELECT NVL(MAX(TS_REQ_SRNO), 0) +1 
+         FROM MET_PBOK_MBPF_TS_REQ_INF 
+	   WHERE MET_MNG_NO = #{metMngNo}
+	 	 	AND TS_REQ_MBH_SRNO = #{tsReqMbhSrno}) /* 이체요청일련번호 */
+    , #{tsReqMbhNm} /* 이체요청회원명 */
+    , #{tsReqBkcd} /* 이체요청은행코드 */
+    , #{tsReqAcno} /* 이체요청계좌번호 */
+    , #{tsReqAm} /* 이체요청금액 */
+    , #{tsCmplAm} /* 이체완료금액 */
+    , #{metTsReqStcd} /* 모임이체요청상태코드 */
+    , #{apvReqStcd} /* 승인요청상태코드 */
+    , #{tsReqTm} /* 이체요청시각 */
+    , #{metChifMbhSrno} /* 모임장회원일련번호 */
+    , #{rvactOwacNm} /* 입금계좌예금주명 */
+    , #{tsReqMemoTxt} /* 이체요청메모내용 */
+    , #{tsReqDelYn} /* 이체요청삭제여부 */
+    , #{metTsReqDscd} /* 모임이체요청구분코드 */
+    , #{trnDt}/* 거래일자 T*/
+    , #{trnSrno} /* 거래일련번호 */
+    , #{rlfAcno} /* 안심계좌번호 */
+    , #{lstDbChgId} /* 최종DB변경ID */
+    , #{lstDbChgDtm} /* 최종DB변경일시 */ 
+)&#13;
+</insert>
+<update id="updateTsReqInf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001UpdateTsReqInf_DIDT">&#13;
+UPDATE MET_PBOK_MBPF_TS_REQ_INF /* 모임통장회비이체요청정보 */
+   SET TS_REQ_MBH_NM = #{tsReqMbhNm} /* 이체요청회원명 */
+       , TS_REQ_BKCD = #{tsReqBkcd} /* 이체요청은행코드 */
+       , TS_REQ_ACT_NO = #{tsReqAcno} /* 이체요청계좌번호 */
+       , TS_REQ_AM = #{tsReqAm} /* 이체요청금액 */
+       , TS_CMPL_AM = #{tsCmplAm} /* 이체완료금액 */
+       , MET_TS_REQ_STCD = #{metTsReqStcd} /* 모임이체요청상태코드 */
+       , APV_REQ_STCD = #{apvReqStcd} /* 승인요청상태코드 */
+       , TS_REQ_TM = #{tsReqTm} /* 이체요청시각 */
+       , MET_CHIF_MBH_SRNO = #{metChifMbhSrno} /* 모임장회원일련번호 */
+       , RVACT_OWAC_NM = #{rvactOwacNm} /* 입금계좌예금주명 */
+       , TS_REQ_MEMO_TXT = #{tsReqMemoTxt} /* 이체요청메모내용 */
+       , TS_REQ_DEL_YN = #{tsReqDelYn} /* 이체요청삭제여부 */
+       , MET_TS_REQ_DSCD = #{metTsReqDscd} /* 모임이체요청구분코드 */
+       , TRN_SRNO = #{trnSrno} /* 거래일련번호 */
+       , LST_DB_CHG_ID = #{lstDbChgId} /* 최종DB변경ID */
+       , LST_DB_CHG_DTM = #{lstDbChgDtm} /* 최종DB변경일시 */
+ WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+   AND TS_REQ_DT = #{tsReqDt} /* 이체요청일자 */
+   AND TS_REQ_MBH_SRNO = #{tsReqMbhSrno} /* 이체요청회원일련번호 */
+   AND TS_REQ_SRNO = #{tsReqSrno} /* 이체요청일련번호 */&#13;
+</update>
+<update id="updateTsReqStcd" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001UpdateTsReqStcd_DIDT">&#13;
+UPDATE MET_PBOK_MBPF_TS_REQ_INF /* 모임통장회비이체요청정보 */
+   SET TS_CMPL_AM = #{tsCmplAm} /* 이체완료금액 */
+       , MET_TS_REQ_STCD = #{metTsReqStcd} /* 모임이체요청상태코드 */
+       , APV_REQ_STCD = #{apvReqStcd} /* 승인요청상태코드 */
+       , TS_REQ_DEL_YN = #{tsReqDelYn} /* 이체요청삭제여부 */
+       , TRN_SRNO = #{trnSrno} /* 거래일련번호 */
+       , LST_DB_CHG_ID = #{lstDbChgId} /* 최종DB변경ID */
+       , LST_DB_CHG_DTM = #{lstDbChgDtm} /* 최종DB변경일시 */
+ WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+   AND TS_REQ_DT = #{tsReqDt} /* 이체요청일자 */
+   AND TS_REQ_MBH_SRNO = #{tsReqMbhSrno} /* 이체요청회원일련번호 */
+   AND TS_REQ_SRNO = #{tsReqSrno} /* 이체요청일련번호 */&#13;
+</update>
+<update id="deleteTsReqInf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001DeleteTsReqInf_DIDT">&#13;
+UPDATE MET_PBOK_MBPF_TS_REQ_INF /* 모임통장회비이체요청정보 */
+      SET TS_REQ_DEL_YN = 'Y' /* 이체요청삭제여부 */
+     	   , LST_DB_CHG_ID = #{lstDbChgId} /* 최종DB변경ID */
+       	   , LST_DB_CHG_DTM = #{lstDbChgDtm} /* 최종DB변경일시 */
+ WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+  	   AND TS_REQ_DT = #{tsReqDt} /* 이체요청일자 */
+  	   AND TS_REQ_MBH_SRNO = #{tsReqMbhSrno} /* 이체요청회원일련번호 */
+  	   AND TS_REQ_SRNO = #{tsReqSrno} /* 이체요청일련번호 */&#13;
+</update>
+<select id="selectMbpfRtunInf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001SelectMbpfRtunInf_DIDT" resultType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MBPF_TS_REQ_INF001SelectMbpfRtunInf_DODT">&#13;
+SELECT /* 모임통장회비이체요청정보 */ 
+  	       	  NVL(MAX(MET_TS_REQ_STCD), '0')   AS metTsReqStcd /* 모임이체요청상태코드 */
+   FROM MET_PBOK_MBPF_TS_REQ_INF
+WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+      AND MET_TS_REQ_DSCD = #{metTsReqDscd}
+      AND TRN_DT=#{trnDt}
+      AND TRN_SRNO = #{trnSrno}
+      AND TS_REQ_DEL_YN = #{tsReqDelYn}&#13;
+</select>
+</mapper>

@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSpceDtlMngDeleteSpcedtlinf_DIDT
+< logicalName= "공간.상세.정보.삭제.DBM.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+}

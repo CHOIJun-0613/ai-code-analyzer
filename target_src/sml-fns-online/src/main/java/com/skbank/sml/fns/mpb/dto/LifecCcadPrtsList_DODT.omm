@@ -1,0 +1,17 @@
+OMM com.skbank.sml.fns.mpb.dto.LifecCcadPrtsList_DODT
+<logicalName= "생활비.신용카드.내역.목록.DBM.출력.IO" description=""
+>
+{
+	BigDecimal mmCnsmAm<length=18 decimal=3 description="월소비금액" >;
+	Integer trnDt<length=8 description="거래일자" >;
+	String trnTm<length=8 description="거래시각" >;
+	String bzBrcd<length=6 description="영업점코드" >;
+	String bzbrNm<length=50 description="영업점명" >;
+	String trnSrno<length=4 description="거래일련번호" >;
+	String cadNo<length=20 description="카드번호" >;
+	String cadcDscd<length=2 description="카드사구분코드" >;
+	String cadPrdBkcd<length=3 description="카드상품은행코드" >;
+	String trnStcd<length=2 description="거래상태코드" >;
+	String trnAm<length=20 description="거래금액" >;
+	String cadSalKdcd<length=2 description="카드매출종류코드" >;
+}

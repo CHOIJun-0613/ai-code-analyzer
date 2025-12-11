@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdatePushMrktAgrYn_IDT
+< logicalName= "PUSH.마케팅동의여부.컨트롤러.입력.IO" description=""
+>
+{
+	String mrktAgrYn<length=1 description="마케팅동의여부 " >;
+}

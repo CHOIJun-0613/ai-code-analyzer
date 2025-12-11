@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcCallSmsCrtfNoChk_ODT
+< logicalName= "SMS인증번호확인ODT" description="SMS인증번호확인ODT"
+>
+{
+	Boolean crtfNoRslt < length = 1 description = "인증번호결과" > ;
+}

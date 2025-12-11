@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMNPWallBizInsertWdrAcno_DIDT
+< logicalName= "SHR 머니클립자계좌등록.컴포넌트.공통.입력.IO" description=""
+>
+{
+	String acno < length = 20 description = "계좌번호" > ;
+}

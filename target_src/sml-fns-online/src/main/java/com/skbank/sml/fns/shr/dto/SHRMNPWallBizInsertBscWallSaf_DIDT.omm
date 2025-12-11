@@ -1,0 +1,17 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMNPWallBizInsertBscWallSaf_DIDT
+< logicalName= "SHR 머니클립.기본.지갑.금고.등록.입력IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	String acnoTyp < length = 1 description = "계좌타입" > ;
+	String iconNo < length = 2 description = "아이콘번호" > ;
+	String acnoNm < length = 50 description = "계좌명" > ;
+	String atsYn < length = 1 description = "자동이체여부" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsCycd < length = 2 description = "자동이체주기코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	Integer atsDd < length = 2 description = "자동이체일" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsStaDt < length = 8 description = "자동이체시작일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsAm < length = 19 decimal = 3 description = "자동이체금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal goalAm < length = 18 description = "목표금액" > ;
+	String atsStaWkdDscd < length = 1 description = "자동이체시작요일구분코드" > ;
+	String goalNm < length = 80 description = "목표명" > ;
+}

@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushRawEstInsertRawNtfcEstInf_IDT
+< logicalName= "입출금알림설정등록" description="입출금알림설정등록 IDT"
+>
+{
+	com.skbank.sml.fns.inb.dto.INBRawNtfcEstRgs_DTO rawNtfcEstRgsGrid < description = "입출금알림등록GRID" arrayReference = "1" > ;
+	String switchYn < length = 1 description = "스위치여부 " > ;
+	String switchAllYn < length = 1 description = "스위치전체여부 " > ;
+}

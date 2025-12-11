@@ -1,0 +1,30 @@
+OMM com.skbank.sml.fns.inb.dto.INBPushNtfcSrvcInqGrid_DTO
+< logicalName= "PUSH알림서비스조회GRID" description="PUSH알림서비스조회GRID(01249)"
+>
+{
+	String dpacNo < length = 20 description = "수신계좌번호" arrayReference = "" > ;
+	String ebnkSrvcStcd < length = 2 description = "전자뱅킹서비스상태코드" arrayReference = "" > ;
+	String hpNo < length = 20 description = "핸드폰번호" arrayReference = "" > ;
+	String ntcTgtTrnDscd < length = 1 description = "통지대상거래구분코드" arrayReference = "" > ;
+	String balNtrsnYn < length = 1 description = "잔액미전송여부" arrayReference = "" > ;
+	BigDecimal smsTmsLimAm < length = 18 description = "SMS전송제한금액" arrayReference = "" > ;
+	String tmsStaTm < length = 2 description = "전송시작시각" arrayReference = "" > ;
+	String tmsEndTm < length = 2 description = "전송종료시각" arrayReference = "" > ;
+	Integer prcSrno < length = 5 description = "처리일련번호" arrayReference = "" > ;
+	String smsLstNtcDt < length = 8 description = "SMS최종통지일자" arrayReference = "" > ;
+	Integer lstNtcCnt < length = 6 description = "최종통지건수" arrayReference = "" > ;
+	String smsCtrDt < length = 8 description = "SMS계약일자" arrayReference = "" > ;
+	String rgpe < length = 30 description = "등록자" arrayReference = "" > ;
+	String fstCtrDt < length = 8 description = "최초계약일자" arrayReference = "" > ;
+	String mdKdcd < length = 8 description = "매체종류코드" arrayReference = "" > ;
+	String advpeEno < length = 8 description = "권유자직원번호" arrayReference = "" > ;
+	String smsCancDt < length = 8 description = "SMS해지일자" arrayReference = "" > ;
+	String atsSndLimYn < length = 1 description = "자동이체발송제한여부" arrayReference = "" > ;
+	String cusInfNlkgYn < length = 1 description = "고객정보미연동여부" arrayReference = "" > ;
+	String newAcno < length = 13 description = "신계좌번호" arrayReference = "" > ;
+	String acctNo < length = 20 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String acctAliasNm < length = 200 description = "계좌명" > ;
+	String pushAgrYn < length = 1 description = "PUSH동의여부" > ;
+	Boolean isChecked < length = 1 description = "체크여부" > ;
+	Boolean isDisabled < length = 1 description = "disable여부" > ;
+}

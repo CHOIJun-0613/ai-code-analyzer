@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.mpb.dbm.MET_PBOK_MSG_CAD_INF001_DBM">
+<!--Generated 2024. 07. 05. 15:18:03-->
+<select id="selectMetPbokMsgCadInf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MSG_CAD_INF001SelectMetPbokMsgCadInf_DIDT" resultType="com.skbank.sml.fns.mpb.dto.MET_PBOK_MSG_CAD_INF001SelectMetPbokMsgCadInf_DODT">&#13;
+SELECT /* 모임통장메시지카드정보 */ 
+		       MET_MSG_CAD_ID          			AS metMsgCadId 				/* 모임메시지카드ID */
+		       , MET_MSG_CAD_NM        		AS metMsgCadNm 			/* 모임메시지카드명 */
+		       , MET_MSG_CAD_TXT       			AS metMsgCadTxt 			/* 모임메시지카드내용 */
+		       , MET_MSG_CAD_SORT_SEQ  	AS metMsgCadSortSeq 		/* 모임메시지카드정렬순서 */
+		       , APP_MARK_IMG_PATH_TXT 	AS appMarkImgPathTxt 		/* 앱표시이미지경로내용 */
+		       , SNS_MARK_IMG_PATH_TXT 	AS snsMarkImgPathTxt 		/* SNS표시이미지경로내용 */
+		       , MET_MSG_CAD_RGS_DTM   	AS metMsgCadRgsDtm 		/* 모임메시지카드등록일시 */
+		       , MET_MSG_CAD_CHG_DTM   	AS metMsgCadChgDtm 		/* 모임메시지카드변경일시 */
+		       , MET_MSG_CAD_USG_YN    	AS metMsgCadUsgYn 		/* 모임메시지카드사용여부 */
+		       , MET_MSG_CAD_DIS_TXT   		AS metMsgCadDisTxt 		/* 모임메시지카드구분내용 */
+		       , MET_MSG_CAD_DEL_YN    		AS metMsgCadDelYn 		/* 모임메시지카드삭제여부 */
+		       , MET_MSG_CAD_DSCD      		AS metMsgCadDscd 			/* 모임메시지카드구분코드 */
+		       , MET_MSG_CAD_RGPE_ID   	AS metMsgCadRgpeId 		/* 모임메시지카드등록자ID */
+		       , MET_MSG_CAD_AMDPE_ID  	AS metMsgCadAmdpeId 	/* 모임메시지카드수정자ID */
+		       , LST_DB_CHG_ID         				AS lstDbChgId 					/* 최종DB변경ID */
+		       , LST_DB_CHG_DTM        			AS lstDbChgDtm				/* 최종DB변경일시 */
+    FROM MET_PBOK_MSG_CAD_INF
+ WHERE MET_MSG_CAD_DSCD = #{metMsgCadDscd} /* 모임메시지카드ID */
+       AND MET_MSG_CAD_DEL_YN = 'N'
+       AND MET_MSG_CAD_USG_YN = 'Y'&#13;
+</select>
+</mapper>

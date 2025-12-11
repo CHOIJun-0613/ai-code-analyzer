@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcInsertSmsRawNtcTxt_ODT
+< logicalName= "SMS입출금통지.내용.컨트롤러.출력.IO" description="SMS입출금통지.내용.컨트롤러.출력.IO"
+>
+{
+	String smsRawNtcSrvcJnngYn < length = 1 description = "SMS입출금통지서비스가입여부" > ;
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용" > ;
+}

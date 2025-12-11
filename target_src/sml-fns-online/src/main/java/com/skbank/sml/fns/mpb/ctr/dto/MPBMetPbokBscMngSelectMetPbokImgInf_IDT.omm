@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokImgInf_IDT
+< logicalName= "모임통장.이미지.정보.조회.입력.IO" description=""
+>
+{
+	String fileNm < length = 100 description = "파일명 " > ;
+	String filePath < length = 100 description = "파일경로" > ;
+}

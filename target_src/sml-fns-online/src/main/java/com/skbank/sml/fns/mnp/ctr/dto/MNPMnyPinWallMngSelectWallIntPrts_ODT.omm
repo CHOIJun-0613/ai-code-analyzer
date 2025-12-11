@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngSelectWallIntPrts_ODT
+< logicalName= "머니클립지갑이자내역조회.출력IO" description=""
+>
+{
+	Integer gridRowCnt < length = 6 description = "그리드열건수" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngSelectWallIntPrtsList_ODT grid < description = "그리드" arrayReference = "gridRowCnt" > ;
+	String trnY < length = 4 description = "거래년" > ;
+	BigDecimal totPayIntAm < length = 19 decimal = 3 description = "총지급이자금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+}

@@ -1,0 +1,5 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSetPbokSplitCmnScrtCrtf_IDT
+< logicalName= "통장쪼개기.공통.보안인증.셋팅.입력.IO" description=""
+>
+{
+}

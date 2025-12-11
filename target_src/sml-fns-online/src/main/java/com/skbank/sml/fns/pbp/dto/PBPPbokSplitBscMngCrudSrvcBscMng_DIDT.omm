@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitBscMngCrudSrvcBscMng_DIDT
+< logicalName= "공간.기본정보.DBM.입력.IO" description=""
+>
+{
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String trnDscd < length = 1 description = "거래구분코드" > ;
+	String appPushAgrYn < length = 1 description = "앱푸쉬동의여부" > ;
+}

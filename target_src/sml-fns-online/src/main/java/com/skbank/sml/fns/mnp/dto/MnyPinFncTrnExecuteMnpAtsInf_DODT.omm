@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinFncTrnExecuteMnpAtsInf_DODT
+< logicalName= "머니클립자동이체정보.컴포넌트.출력IO" description=""
+>
+{
+	String trnRstCd < length = 2 description = "거래결과코드" > ;
+	String trnRstTxt < length = 80 description = "거래결과내용" > ;
+}

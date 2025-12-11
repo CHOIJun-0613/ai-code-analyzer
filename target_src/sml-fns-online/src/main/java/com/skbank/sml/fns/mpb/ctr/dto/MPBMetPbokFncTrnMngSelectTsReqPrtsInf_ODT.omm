@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngSelectTsReqPrtsInf_ODT
+< logicalName= "이체요청.정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String nxtTsReqDt < length = 8 description = "다음이체요청일자" > ;
+	String nxtTsReqTm < length = 6 description = "다음이체요청시간" > ;
+	Integer nxtTsReqMbhSrno < length = 7 description = "다음이체요청회원일련번호" > ;
+	Integer nxtTsReqSrno < length = 5 description = "다음이체요청일련번호" > ;
+	Integer gridCnt < length = 2 description = "그리드건수" > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBTsReqInfListInq_ODT grid<length=0 description="이체요청.정보.목록.조회.컨트롤러.출력.IO" arrayReference="gridCnt" >;
+}

@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokTpyMbhInfInq_DODT
+<logicalName= "모임통장.임시.회원.정보.조회.DBM.출력.IO" description=""
+>
+{
+	String hpNo<length=14 description="핸드폰번호" >;
+	String metMbhNm<length=50 description="모임회원명" >;
+	String metPtcpStcd<length=2 description="모임참여상태코드" >;
+	String metMbhDis<length=1 description="모임회원구분코드" >;
+	String metSecLrgDt<length=8 description="모임초대일자" >;
+	String metSecLrgTm<length=6 description="모임초대시각" >;
+	String metSecLrgVldEndDt<length=8 description="모임초대유효종료일자" >;
+	String metSecLrgVldEndTm<length=6 description="모임초대유효종료시각" >;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectRawActatpminf_IDT
+< logicalName= "입출금계좌.자동납부.정보.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+}

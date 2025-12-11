@@ -1,0 +1,17 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngUpdateSafAmRaw_ODT
+< logicalName= "머니클립금고금액입출금수정.컨트롤러.출력IO" description=""
+>
+{
+	String owacFnm < length = 22 description = "예금주성명" align = left > ;
+	BigDecimal bftrAfBal < length = 13 description = "거래전후잔액" align = right fill = "0" > ;
+	String rnpeFnm < length = 22 description = "수취인성명" align = left > ;
+	String trnSrno < length = 12 description = "거래일련번호" align = left > ;
+	BigDecimal feeAm < length = 11 description = "수수료금액" align = right fill = "0" > ;
+	BigDecimal rduFeeAm < length = 11 description = "감면수수료금액" align = right fill = "0" > ;
+	BigDecimal wmbRduAm < length = 11 description = "우리멤버스감면금액" align = right fill = "0" > ;
+	String frduRncd < length = 4 description = "수수료감면사유코드" align = left > ;
+	String npbokTrnCnt < length = 5 description = "무통장거래건수" align = left > ;
+	String trhsSrno < length = 7 description = "거래명세일련번호" align = left > ;
+	String errMsgId < length = 10 description = "오류메시지ID" > ;
+	String errMsgTxt < length = 100 description = "오류메시지내용" > ;
+}

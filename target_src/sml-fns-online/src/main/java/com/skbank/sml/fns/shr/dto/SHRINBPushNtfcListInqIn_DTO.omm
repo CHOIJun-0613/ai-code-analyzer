@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.shr.dto.SHRINBPushNtfcListInqIn_DTO
+< logicalName= "PUSH알림목록조회DTO" description="PUSH알림목록조회DTO"
+>
+{
+	String itcsno < length = 36 description = "통합고객번호" > ;
+	String umsReqStaDt < length = 8 description = "UMS요청시작일자" > ;
+	String umsReqEndDt < length = 8 description = "UMS요청종료일자" > ;
+	String mchrTkn < length = 57 description = "기기토큰" > ;
+}

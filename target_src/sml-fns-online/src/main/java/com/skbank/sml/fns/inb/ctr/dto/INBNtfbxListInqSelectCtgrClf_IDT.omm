@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqSelectCtgrClf_IDT
+< logicalName= "카테고리분류조회IDT" description="카테고리분류조회IDT"
+>
+{
+	String ntfcDscd < length = 1 description = "알림구분코드" > ;
+	String itcsno < length = 36 description = "통합고객번호" > ;
+}

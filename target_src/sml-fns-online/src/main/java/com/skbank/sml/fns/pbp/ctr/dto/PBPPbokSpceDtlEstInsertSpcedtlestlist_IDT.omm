@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstInsertSpcedtlestlist_IDT
+< logicalName= "공간.상세.자동납부.설정.등록.목록.컨트롤러.입력.IO" description=""
+>
+{
+	String atpmMngNo < length = 13 description = "자동납부관리번호" > ;
+}

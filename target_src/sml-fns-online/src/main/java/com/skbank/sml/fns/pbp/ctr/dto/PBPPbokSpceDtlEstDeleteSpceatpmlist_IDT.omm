@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstDeleteSpceatpmlist_IDT
+< logicalName= "통장쪼개기.자동납부.목록.삭제.컨트롤러.입력.IO" description="통장쪼개기.자동납부.목록.삭제 input"
+>
+{
+	String atpmMngNo<length=13 description="자동납부관리번호" >;
+}

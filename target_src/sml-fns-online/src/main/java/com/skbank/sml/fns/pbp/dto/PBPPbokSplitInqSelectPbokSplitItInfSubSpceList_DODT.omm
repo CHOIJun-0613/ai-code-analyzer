@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInfSubSpceList_DODT
+< logicalName= "통장.쪼개기.통합.조회.서브.공간.목록.DBM.출력.IO" description=""
+>
+{
+	String dpsAcno < length = 13 description = "수신계좌번호" align = left > ;
+	String spceNo < length = 6 description = "공간번호" align = left > ;
+	String spceNm < length = 40 description = "공간명" align = left > ;
+	BigDecimal spceBal < length = 19 decimal = 3 description = "공간잔액" align = right fill = "0" > ;
+	String spceIconNo < length = 3 description = "공간아이콘번호" align = left > ;
+	BigDecimal savGoalAm < length = 19 decimal = 3 description = "저축목표금액" align = right fill = "0" > ;
+	String savGoalStaDt < length = 8 description = "저축목표시작일자" align = left > ;
+	String savGoalEndDt < length = 8 description = "저축목표종료일자" align = left > ;
+	BigDecimal cnsmGoalAm < length = 19 decimal = 3 description = "소비목표금액" align = right fill = "0" > ;
+	String cnsmAmBscd < length = 1 description = "소비금액기준코드" align = left > ;
+	String cnsmAmbsCdNm < length = 40 description = "소비금액기준코드명" align = left > ;
+}

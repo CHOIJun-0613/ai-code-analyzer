@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstSelectSrvcNtfcagrYn_IDT
+< logicalName= "서비스알림.동의여부.컨트롤러.출력.IO" description=""
+>
+{
+	String pushSrvcNtfcId < length = 10 description = "PUSH서비스알림ID" > ;
+	String mchrUnqInfId < length = 300 description = "기기고유정보ID" > ;
+	String mblMchrSftrVerTxt < length = 20 description = "모바일기기소프트웨어버전내용" > ;
+	String mblMchrAppVerTxt < length = 20 description = "모바일기기앱버전내용" > ;
+	String mblMchrMdlNm < length = 50 description = "모바일기기모델명" > ;
+}

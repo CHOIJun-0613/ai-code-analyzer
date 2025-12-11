@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngUpdateWallBscInf_ODT
+< logicalName= "머니클립지갑기본정보수정.출력.IO" description=""
+>
+{
+	String trnRstCd < length = 4 description = "거래결과코드" > ;
+	String trnRstTxt < length = 80 description = "거래결과내용" > ;
+}

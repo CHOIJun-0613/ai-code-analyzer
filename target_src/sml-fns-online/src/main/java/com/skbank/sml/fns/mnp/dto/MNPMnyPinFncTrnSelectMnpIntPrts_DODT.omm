@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpIntPrts_DODT
+< logicalName= "머니클립이자계산정보조회.컴포넌트.출력.IO" description=""
+>
+{
+	Integer gridRowCnt < length = 6 description = "그리드열건수" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpIntPrtsList_DODT grid < description = "그리드" arrayReference = "1" > ;
+}

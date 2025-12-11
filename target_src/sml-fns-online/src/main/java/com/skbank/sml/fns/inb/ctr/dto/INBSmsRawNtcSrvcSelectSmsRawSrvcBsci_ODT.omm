@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcSelectSmsRawSrvcBsci_ODT
+< logicalName= "SMS입출금.서비스.기본정보.컨트롤러.출력.IO" description="SMS입출금.서비스.기본정보.컨트롤러.출력.IO"
+>
+{
+	Integer cnt<length=5 description="건수" >;
+	Integer cnt2<length=5 description="건수_2" >;
+	com.skbank.sml.fns.inb.dto.INBSmsRawTrnTxtNtcGrid1_DTO iNBSmsRawTrnTxtNtcGrid1_DTO<length=0 description="SMS입출금.거래내용.통지.GRID1.공통.IO" arrayReference = "1" > ;
+	com.skbank.sml.fns.inb.dto.INBSmsRawTrnTxtNtcGrid2_DTO iNBSmsRawTrnTxtNtcGrid2_DTO<length=0 description="SMS입출금.거래내용.통지.GRID2.공통.IO" arrayReference = "1" > ;
+	String smsRawNtcSrvcJnngYn < length = 1 description = "SMS입출금통지서비스가입여부" > ;
+}

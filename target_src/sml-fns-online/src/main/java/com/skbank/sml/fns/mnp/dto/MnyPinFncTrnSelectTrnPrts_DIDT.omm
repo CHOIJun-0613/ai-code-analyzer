@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinFncTrnSelectTrnPrts_DIDT
+< logicalName= "머니클립거래내역조회.DBM.입력.IO" description=""
+>
+{
+	String sortDis < length = 1 description = "정렬구분" > ;
+	String inqTgtDis < length = 1 description = "조회대상구분" > ;
+	String acno < length = 20 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String inqStaDt < length = 8 description = "조회시작일자" > ;
+	String inqEndDt < length = 8 description = "조회종료일자" > ;
+	String pageNo < length = 6 description = "페이지번호" > ;
+	String minAm < length = 16 description = "최소금액" > ;
+	String maxAm < length = 16 description = "최대금액" > ;
+}

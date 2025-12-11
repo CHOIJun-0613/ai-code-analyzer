@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcCallSmsRawJnngInfScrn_ODT
+< logicalName= "SMS입출금.가입정보.화면.컨트롤러.출력.IO" description="SMS입출금.가입정보.화면.컨트롤러.출력.IO"
+>
+{
+	com.skbank.sml.fns.inb.dto.INBCusInfInq_DTO iNBCusInfInq_DTO < description = "고객정보조회DTO" > ;
+	com.skbank.sml.fns.inb.dto.INBActList_DTO iNBActList_DTO < description = "계좌목록DTO" arrayReference = "1" PROP_OPTION_DSCD = "L999" > ;
+	com.skbank.sml.fns.inb.dto.INBSmsRawTrnTxtNtcGrid1_DTO iNBSmsRawTrnTxtNtcGrid1_DTO < description = "SMS입출금.거래내용.통지.GRID1.공통.IO" arrayReference = "1" > ;
+}

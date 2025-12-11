@@ -1,0 +1,31 @@
+OMM com.skbank.sml.fns.inb.dto.INBPushListRsp_DTO
+< logicalName= "Push 목록 응답 DTO" description="Push 목록 응답 DTO"
+>
+{
+	String ntfbxLrclCd < length = 10 description = "알림함대분류코드" > ;
+	String ntfbxMclfCd < length = 10 description = "알림함중분류코드" > ;
+	String ntfbxLrclCdNm < length = 200 description = "알림함대분류코드명" > ;
+	String ntfbxMclfCdNm < length = 200 description = "알림함중분류코드명" > ;
+	String favtYn < length = 1 description = "즐겨찾기여부" > ;
+	String ntfcRfwr < length = 10 description = "알림검색어" > ;
+	String umsTrno < length = 20 description = "UMS거래번호" > ;
+	String umsReqDt < length = 8 description = "UMS요청일자" > ;
+	String mskAcno < length = 20 description = "마스킹계좌번호" > ;
+	String acno < length = 20 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String mskCusNm < length = 50 description = "마스킹고객명" > ;
+	String rawCusNm < length = 50 description = "입출금고객명" > ;
+	String readYn < length = 1 description = "읽음여부" > ;
+	String pushTitlTxt < length = 100 description = "PUSH제목내용" > ;
+	String pushTxt < length = 1500 description = "PUSH내용" > ;
+	String msgTxt < length = 1500 description = "사서함메시지" > ;
+	String ntfcDtm < length = 14 description = "알림발송일시" > ;
+	String otln < length = 100 description = "적요" > ;
+	String msgId < length = 50 description = "메시지ID" > ;
+	String rawDscd < length = 2 description = "입출금구분코드" > ;
+	String pushTyp < length = 2 description = "PUSH타입" > ;
+	com.skbank.sml.fns.inb.dto.INBKkoBtnInfList_DTO kkoBtnInfList < description = "카카오버튼정보목록" arrayReference = "1" > ;
+	String pageId < length = 200 description = "페이지ID" > ;
+	String prdCd < length = 100 description = "상품코드" > ;
+	String prdDscd < length = 100 description = "상품구분코드" > ;
+	String actBal < length = 18 description = "계좌잔액" > ;
+}

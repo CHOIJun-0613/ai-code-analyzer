@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectSrvcbscinf_IDT
+< logicalName= "메인.공간.정보.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String acno<length=13 description="계좌번호" PROP_OPTION_DSCD = "L999" > ;
+}

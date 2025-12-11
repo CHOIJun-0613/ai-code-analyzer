@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.inb.dbm.UCM_SUP_EVT_DTL001_DBM">
+<!--Generated 2024. 08. 25. 19:12:11-->
+<select id="selectIvstStgNtfcagrYn" parameterType="com.skbank.sml.fns.inb.dto.UCM_SUP_EVT_DTL001SelectIvstStgNtfcagrYn_DIDT" resultType="com.skbank.sml.fns.inb.dto.UCM_SUP_EVT_DTL001SelectIvstStgNtfcagrYn_DODT">&#13;
+SELECT COUNT(*) AS sbscCnt
+   FROM UCM_SUP_EVT_DTL
+WHERE NG_ITG_CSNO = #{ngItgCsno}
+	  AND EVT_DIS = #{evtDis}
+/*WPBNEWEEKLY_11Q.SQL001*/&#13;
+</select>
+<select id="insertIvstStgNtfcAgrYn" parameterType="com.skbank.sml.fns.inb.dto.UCM_SUP_EVT_DTL001InsertIvstStgNtfcAgrYn_DIDT" resultType="java.lang.Integer">&#13;
+insert into UCM_SUP_EVT_DTL 
+( EVT_DIS
+ ,EVT_NM
+ ,USER_ID
+ ,NG_ITG_CSNO 
+ ,SUP_NM
+ ,SUP_DIS
+ ,PROC_SYS_DTIME 
+ ,EAI_TRSMN_DT
+ )  
+ values  
+(
+ #{evtDis}
+,#{evtNm}
+,#{userId}
+,#{ngItgCsno}
+,#{supNm}
+,#{supDis}
+,current_timestamp 
+,TO_CHAR(SYSDATE, 'YYYYMMDD')
+) /* CDCCOMEVNT_21U.001 */&#13;
+</select>
+<select id="deleteIvstStgNtfcagrYn" parameterType="com.skbank.sml.fns.inb.dto.UCM_SUP_EVT_DTL001DeleteIvstStgNtfcagrYn_DIDT" resultType="java.lang.Integer">&#13;
+DELETE FROM UCM_SUP_EVT_DTL 
+WHERE EVT_DIS = #{evtDis}
+AND NG_ITG_CSNO = #{ngItgCsno}
+/*wpwam100_01t.jsp.SQL002*/&#13;
+</select>
+</mapper>

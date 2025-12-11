@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinBscMngInsertMnpMoAcno_DODT
+< logicalName= "머니클립.모.계좌.등록.컴포넌트.출력.IO" description=""
+>
+{
+	String newAcno < length = 13 description = "신규계좌번호" align = left > ;
+}

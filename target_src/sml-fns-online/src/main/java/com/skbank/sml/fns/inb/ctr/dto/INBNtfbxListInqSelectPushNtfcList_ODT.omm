@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqSelectPushNtfcList_ODT
+< logicalName= "통합.알림.목록.조회.컨트롤러.출력.IO" description="통합 알림 목록 조회 IO"
+>
+{
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용" > ;
+	com.skbank.sml.fns.inb.dto.INBPushListRsp_DTO inbPushListRsp_DTO < description = "PUSH목록응답DTO" arrayReference = "1" PROP_OPTION_DSCD = "L999" > ;
+}

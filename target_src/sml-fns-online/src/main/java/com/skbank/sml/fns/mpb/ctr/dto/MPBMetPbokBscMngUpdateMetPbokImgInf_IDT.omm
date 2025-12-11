@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngUpdateMetPbokImgInf_IDT
+< logicalName= "모임통장.이미지.정보.수정.입력.IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String metMngNo < length = 1 description = "모임관리번호" > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String metMbhNm < length = 60 description = "모임회원명" align = left > ;
+	String metImgUrlNm < length = 100 description = "모임이미지URL명" align = left > ;
+	String fileNm < length = 100 description = "파일명" > ;
+	String filePath < length = 200 description = "파일경로" > ;
+}

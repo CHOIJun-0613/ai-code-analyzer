@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokBscInfInq_DODT
+< logicalName= "모임통장.기본.정보.조회.DBM.출력.IO" description="IBSMR0005769"
+>
+{
+	String metOrgJnngYn < length = 1 description = "모임원가입여부" align = left > ;
+	Integer metMbhJnngCnt < length = 3 description = "모임회원가입건수" align = right fill = "0" > ;
+	BigDecimal metmbDlyWdrLmtAvlAm < length = 19 decimal = 3 description = "모임원일일출금한도가능금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	String nxtMetMngNo < length = 9 description = "다음모임관리번호 " align = left > ;
+	Integer gridCnt < length = 5 description = "그리드건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.dto.MetPbokBscInfGrid grid < description = "모임통장.기본.정보.조회.DBM. 출력.IO" arrayReference = "gridCnt" comment = "" > ;
+}

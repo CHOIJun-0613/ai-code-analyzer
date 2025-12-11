@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcSelectSmsRawFeeList_ODT
+< logicalName= "SMS입출금.수수료목록.조회ODT" description="SMS입출금.수수료목록.조회ODT"
+>
+{
+	Integer cnt < length = 5 description = "건수" > ;
+	com.skbank.sml.fns.inb.dto.INBSmsRawTrnTxtNtcGrid1_DTO iNBSmsRawTrnTxtNtcGrid1_DTO < description = "SMS입출금.거래내용.통지.GRID1.공통.IO" arrayReference = "1" > ;
+}

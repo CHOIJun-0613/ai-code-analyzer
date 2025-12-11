@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInfAtsList_DODT
+< logicalName= "통장.쪼개기.통합.조회.자동이체.목록.DBM.출력.IO" description=""
+>
+{
+	String spceNo < length = 6 description = "공간번호" align = left > ;
+	String atsMngNo < length = 13 description = "자동납부관리번호" align = left > ;
+	String atpmTsRgsYn < length = 1 description = "자동납부이체등록여부" align = left > ;
+	String atsCycd < length = 2 description = "자동이체주기코드" align = left > ;
+	String atsCycdNm < length = 40 description = "자동이체주기코드명" align = left > ;
+	String atsBasDd < length = 2 description = "자동이체기준일" align = left > ;
+	BigDecimal atsReqAm < length = 19 decimal = 3 description = "자동이체요청금액" align = right fill = "0" > ;
+	String atsWkdDscd < length = 1 description = "자동이체요일구분코드" align = left > ;
+	String atsWkdDscdNm < length = 40 description = "자동이체요일구분코드명" align = left > ;
+}

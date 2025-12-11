@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngUpdateNtfcAgrYn_IDT
+< logicalName= "공간.서비스.알림.여부.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngUpdateNtfcAgrYnlist_IDT pBPSpceSrvcNtfcYnAcnoList_IDT<length=0 description="공간.서비스.알림.여부.계좌.목록.컨트롤러.입력.IO" arrayReference="1" PROP_OPTION_DSCD = "L999" > ;
+}

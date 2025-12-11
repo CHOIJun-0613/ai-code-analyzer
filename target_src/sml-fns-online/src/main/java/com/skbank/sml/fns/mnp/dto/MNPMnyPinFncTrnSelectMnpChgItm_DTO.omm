@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpChgItm_DTO
+< logicalName= "머니클립모으기변경정보.공통.IO" description=""
+>
+{
+	String tsCyc < length = 6 description = "이체주기" > ;
+	String tsExeDd < length = 10 description = "이체실행일" > ;
+	String tsAm < length = 18 description = "이체금액" > ;
+	String goalAm < length = 18 description = "목표금액" > ;
+	String goalNm < length = 80 description = "목표명" > ;
+}

@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMsgCad_IDT
+< logicalName= "메시지.카드.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String metMsgCadDscd < length = 2 description = "모임메시지카드구분코드" > ;
+}

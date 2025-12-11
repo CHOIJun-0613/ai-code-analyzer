@@ -1,0 +1,20 @@
+OMM com.skbank.sml.fns.inb.dto.INBPushBscInf_DTO
+< logicalName= "알림비즈" description="알림비즈"
+>
+{
+	String userId < length = 10 description = "사용자ID" > ;
+	String appDscd < length = 2 description = "앱구분코드" > ;
+	String smtphOsTpNm < length = 2 description = "스마트폰OS타입명" > ;
+	String mchrUnqInfId < length = 300 description = "기기고유정보ID" > ;
+	String cusNo < length = 20 description = "고객번호" > ;
+	String pushAgrYn < length = 1 description = "PUSH동의여부" > ;
+	String delYn < length = 1 description = "삭제여부" > ;
+	String rgpeId < length = 32 description = "등록자ID" > ;
+	String rgs_dh < length = 14 description = "등록일시" > ;
+	String amdpeId < length = 32 description = "수정자ID" > ;
+	String amdDh < length = 14 description = "수정일시" > ;
+	String aplDscd < length = 3 description = "업무구분코드" > ;
+	String deviceId < length = 300 description = "디바이스ID" > ;
+	String ngItgCsno < length = 13 description = "통합고객번호" > ;
+	String spCusYn < length = 1 description = "간편회원여부" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushRawEstDeleteRawNtfcAgrYn_ODT
+< logicalName= "입출금알림설정삭제ODT" description="입출금알림설정삭제ODT"
+>
+{
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용" > ;
+}

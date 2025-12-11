@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.dto.MPBMetPbokBscMngPushNtfcSndMbhList_DTO
+< logicalName= "모임통장.PUSH.알림.발송.회원.리스트.DTO" description=""
+>
+{
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+}

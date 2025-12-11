@@ -1,0 +1,38 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMNPWallBizSelectMnpChidAcnoRgsAvlYn_DIDT
+< logicalName= "머니클립.자계좌.등록.가능.여부.조회.컴포넌트.입력IO" description=""
+>
+{
+	String wdrAcno < length = 15 description = "출금계좌번호" align = left > ;
+	String actPwnoUsgYn < length = 1 description = "계좌비밀번호사용여부" align = left > ;
+	String encyWdrActPwno < length = 32 description = "암호화출금계좌비밀번호" align = left > ;
+	String cucd < length = 3 description = "통화코드" align = left > ;
+	String csno < length = 9 description = "고객번호" > ;
+	String pdcd < length = 13 description = "상품코드" > ;
+	BigDecimal newAm < length = 19 decimal = 3 description = "신규금액" > ;
+	Integer ctrtmMcn < length = 3 description = "계약기간월수" > ;
+	String synpbDscd < length = 1 description = "종합통장구분코드" align = left > ;
+	String actMngBrcd < length = 6 description = "계좌관리점코드" > ;
+	String bchrCponNo < length = 8 description = "바우처쿠폰번호" > ;
+	String encyDpsActPwno < length = 32 description = "암호화수신계좌비밀번호" > ;
+	String fncTrnAimCollDis < length = 1 description = "금융거래목적징구구분" > ;
+	String nrsrCnfDocCollYn < length = 1 description = "비거주자확인서류징구여부" align = left > ;
+	String psnInfAgmdMngNo < length = 19 description = "개인정보동의서관리번호" align = left > ;
+	String smsdDscd < length = 1 description = "SMS발송구분코드" align = left > ;
+	String advpeEno < length = 8 description = "권유자직원번호" > ;
+	String agnpeEncyRrno < length = 32 description = "대리인암호화주민등록번호" > ;
+	String rppeEncyRrno < length = 32 description = "대표자암호화주민등록번호" > ;
+	String agnpeFnm < length = 30 description = "대리인성명" > ;
+	String rppeFnm < length = 30 description = "대표자성명" > ;
+	String kycChkXtYn < length = 1 description = "KYC체크제외여부" align = left > ;
+	String atsYn < length = 1 description = "자동이체여부" align = left > ;
+	String atsStaDt < length = 8 description = "자동이체시작일자" align = left > ;
+	String atsEndDt < length = 8 description = "자동이체종료일자" align = left > ;
+	BigDecimal atsAm < length = 19 decimal = 3 description = "자동이체금액" align = right fill = "0" > ;
+	Integer atsDd < length = 2 description = "자동이체일" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsCycd < length = 2 description = "자동이체주기코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String insvAcldTsStaWkdDscd < length = 1 description = "적금적립이체시작요일구분코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String cusDntnAscnCd < length = 3 description = "고객기부단체코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String cusDgnPrdNm < length = 50 description = "고객지정상품명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String aimFdNm < length = 40 description = "목적자금명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal dinsvGoalAm < length = 19 decimal = 3 description = "꿈적금목표금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+}

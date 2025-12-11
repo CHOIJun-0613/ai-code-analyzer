@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngSelectWallIntPrtsList_ODT
+< logicalName= "머니클립지갑이자내역목록.출력IO" description=""
+>
+{
+	String trnYm < length = 6 description = "거래년월" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal trnIntAm < length = 19 decimal = 3 description = "거래이자금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+}

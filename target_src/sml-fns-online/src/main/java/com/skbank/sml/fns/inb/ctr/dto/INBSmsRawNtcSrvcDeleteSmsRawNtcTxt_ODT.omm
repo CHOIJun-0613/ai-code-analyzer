@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcDeleteSmsRawNtcTxt_ODT
+< logicalName= "SMS입출금통지.내용삭제ODT" description="SMS입출금통지.내용삭제ODT"
+>
+{
+	String smsRawNtcSrvcJnngYn < length = 1 description = "SMS입출금통지서비스가입여부" > ;
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용" > ;
+}

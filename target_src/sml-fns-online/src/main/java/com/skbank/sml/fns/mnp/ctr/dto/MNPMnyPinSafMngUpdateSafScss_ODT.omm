@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngUpdateSafScss_ODT
+< logicalName= "머니클립.금고.해지.컨트롤러.출력.IO" description=""
+>
+{
+	String errMsgId < length = 10 description = "오류메시지ID" > ;
+	String errMsgTxt < length = 100 description = "오류메시지내용" > ;
+}

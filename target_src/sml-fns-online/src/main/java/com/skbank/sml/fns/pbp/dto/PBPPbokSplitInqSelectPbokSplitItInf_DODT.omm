@@ -1,0 +1,25 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInf_DODT
+< logicalName= "통장.쪼개기.통합.정보.조회.DBM.출력.IO" description=""
+>
+{
+	String dpsAcno < length = 13 description = "수신계좌번호" align = left > ;
+	String prdNm < length = 1000 description = "상품명" align = left > ;
+	BigDecimal dpacBal < length = 19 decimal = 3 description = "수신계좌잔액" align = right fill = "0" > ;
+	String rgsTrnDt < length = 8 description = "등록거래일자" align = left > ;
+	String rvkTrnDt < length = 8 description = "해제거래일자" align = left > ;
+	String bkAppPushAgrYn < length = 1 description = "은행앱PUSH동의여부" align = left > ;
+	String rcvCnt < length = 5 description = "입금건수" align = left > ;
+	BigDecimal rcvSumAm < length = 19 decimal = 3 description = "입금합계금액" align = right fill = "0" > ;
+	String payCnt < length = 5 description = "지급건수" align = left > ;
+	BigDecimal paySumAm < length = 19 decimal = 3 description = "지급합계금액" align = right fill = "0" > ;
+	Integer grid1Cnt < length = 3 description = "공간목록건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInfSubSpceList_DODT subSpceList < description = "서브공간목록" arrayReference = "1" > ;
+	Integer grid2Cnt < length = 3 description = "거래내역건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInfTrnPrts_DODT trnPrts < description = "거래내역" arrayReference = "1" > ;
+	Integer grid3Cnt < length = 3 description = "자동이체목록건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInfAtsList_DODT atsList < description = "자동이체목록" arrayReference = "1" > ;
+	Integer grid4Cnt < length = 3 description = "자동납부목록건수" align = right fill = "0" > ;
+	com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitItInfAtpmList_DODT atpmList < description = "자동납부목록" arrayReference = "1" > ;
+	String atpmNxtTrnYn < length = 1 description = "자동납부다음거래여부" align = left > ;
+	String atpmMngNo < length = 15 description = "자동납부관리번호" align = left > ;
+}

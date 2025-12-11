@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngUpdateSafGoalInfScss_IDT
+< logicalName= "머니클립.금고.목표.정보.해지.수정.컨트롤러.입력.IO" description=""
+>
+{
+	BigDecimal atsMngNo < length = 13 description = "자동이체관리번호" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsWdrBkwAcno < length = 20 description = "자동이체출금전행계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsAm < length = 18 description = "자동이체금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsItcd < length = 2 description = "자동이체항목코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsItmTxt < length = 70 description = "자동이체항목내용" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+}

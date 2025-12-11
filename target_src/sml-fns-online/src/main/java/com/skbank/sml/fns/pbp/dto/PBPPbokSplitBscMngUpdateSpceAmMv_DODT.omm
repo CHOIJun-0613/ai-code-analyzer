@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitBscMngUpdateSpceAmMv_DODT
+< logicalName= "통장.쪼개기.공간.금액.이동.수정.DBM.출력.IO" description=""
+>
+{
+	String rspRtcd<length=4 description="응답결과코드" >;
+	String rspMsgTxt<length=100 description="응답메시지내용" >;
+}

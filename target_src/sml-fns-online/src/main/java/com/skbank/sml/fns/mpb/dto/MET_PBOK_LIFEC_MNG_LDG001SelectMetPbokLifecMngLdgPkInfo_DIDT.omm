@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.dto.MET_PBOK_LIFEC_MNG_LDG001SelectMetPbokLifecMngLdgPkInfo_DIDT
+< logicalName= "모임통장생활비관리원장 입력" description=""
+>
+{
+	String metMngNo < length = 1 description = "모임관리번호" > ;
+}

@@ -1,0 +1,18 @@
+OMM com.skbank.sml.fns.inb.dto.INBNtfcDpsEstGrid_DTO
+<logicalName= "알림.수신설정.GRID.공통.IO" description="알림 수신설정 결과 리턴 GRID\r\n"
+>
+{
+	String wonNtfcRgsYn<length=10 description="WON알림등록여부" >;
+	String smsTmsLimAm<length=10 description="SMS전송제한금액" >;
+	String dpacNo<length=10 description="수신계좌번호" >;
+	String newAcno<length=1 description="신계좌번호" >;
+	String ebnkSrvcStcd<length=10 description="전자뱅킹서비스상태코드" >;
+	String hpNo<length=14 description="핸드폰번호" >;
+	String ntcTgtTrnDscd<length=1 description="통지대상거래구분코드" >;
+	String balNtrsnYn<length=1 description="잔액미전송여부" >;
+	String tmsStaTm<length=6 description="전송시작시각" >;
+	String tmsEndTm<length=6 description="전송종료시각" >;
+	Integer prcSrno<length=9 description="처리일련번호" >;
+	String atsSndLimYn<length=1 description="자동이체발송제한여부" >;
+	String advpeEno<length=8 description="권유자직원번호" >;
+}

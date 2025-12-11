@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMPBBizSelectPushInfOut_DTO
+< logicalName= "모임통장푸쉬알림저정보DTO" description=""
+>
+{
+	String tmsMsgTitl < length = 500 description = "전송메시지제목" > ;
+	String tmsMsgTxt < length = 2000 description = "전송메시지내용" > ;
+	String sndTgtDscd < length = 1 description = "발송대상구분코드" > ;
+}

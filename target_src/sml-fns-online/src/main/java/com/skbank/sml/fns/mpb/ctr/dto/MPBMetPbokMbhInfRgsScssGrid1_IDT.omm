@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhInfRgsScssGrid1_IDT
+< logicalName= "모임통장.회원.정보.그리드1.등록.탈퇴.입력.IO" description=""
+>
+{
+	String utzpeNoCfcd < length = 2 description = "이용자번호분류코드" > ;
+	Integer metCrtfMbhSrno < length = 5 description = "모임인증회원일련번호" > ;
+	String itcsno < length = 11 description = "통합고객번호" align = left > ;
+	String esnsMbhNo < length = 11 description = "간편회원번호" > ;
+	String metMbhAlsNm < length = 60 description = "모임회원별칭명" > ;
+	String agmdCollDt < length = 8 description = "동의서징구일자" > ;
+	String ancSndDscd < length = 1 description = "공지발송구분코드" > ;
+	String metMbhImgUrlNm < length = 100 description = "모임회원이미지URL명" align = left > ;
+}

@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.dto.INBCusInfInq_DTO
+< logicalName= "고객정보 조회 DTO" description="고객정보 조회 DTO"
+>
+{
+	String hpComCd < length = 4 description = "핸드폰회사코드" arrayReference = "" > ;
+	String hpTlenNo < length = 4 description = "핸드폰국번번호" arrayReference = "" > ;
+	String hpSrno < length = 4 description = "핸드폰일련번호" arrayReference = "" > ;
+}

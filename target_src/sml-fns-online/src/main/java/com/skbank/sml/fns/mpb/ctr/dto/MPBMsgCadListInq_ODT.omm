@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMsgCadListInq_ODT
+<logicalName= "메시지.카드.목록.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String imgKeyNm<length=40 description="이미지키명" >;
+	String imgFileNm<length=200 description="이미지파일명" >;
+	String imgSrno<length=13 description="이미지일련번호" >;
+	String imgTxt<length=1000 description="이미지내용" >;
+}

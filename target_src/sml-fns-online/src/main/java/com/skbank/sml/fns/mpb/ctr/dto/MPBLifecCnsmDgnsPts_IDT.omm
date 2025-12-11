@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBLifecCnsmDgnsPts_IDT
+<logicalName= "생활비.소비.진단.현황.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String trnMm<length=2 description="거래월" >;
+}

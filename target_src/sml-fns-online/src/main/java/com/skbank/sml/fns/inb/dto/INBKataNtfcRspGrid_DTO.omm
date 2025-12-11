@@ -1,0 +1,46 @@
+OMM com.skbank.sml.fns.inb.dto.INBKataNtfcRspGrid_DTO
+< logicalName= "카카오톡.알림.응답.GRID.공통.IO" description="카카오톡 알림 응답 IO"
+>
+{
+	String msgType<length=1 description="메시지타입" >;
+	String mapType<length=1 description="매핑타입" >;
+	String kkoMsg<length=4000 description="사서함메시지" >;
+	String checkYn<length=1 description="읽음여부" >;
+	String name<length=20 description="고객명" >;
+	String moneyBalance<length=30 description="잔액" >;
+	String typeDeal<length=30 description="업무유형" >;
+	String account<length=20 description="계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String moneyDeal<length=30 description="거래금액" >;
+	String serialNum<length=64 description="인증번호" >;
+	String map1<length=1000 description="매핑정보1" >;
+	String map2<length=1000 description="매핑정보2" >;
+	String map3<length=1000 description="매핑정보3" >;
+	String map4<length=1000 description="매핑정보4" >;
+	String map5<length=1000 description="매핑정보5" >;
+	String map6<length=1000 description="매핑정보6" >;
+	String map7<length=1000 description="매핑정보7" >;
+	String map8<length=1000 description="매핑정보8" >;
+	String map9<length=1000 description="매핑정보9" >;
+	String map10<length=1000 description="매핑정보10" >;
+	String map11<length=1000 description="매핑정보11" >;
+	String map12<length=1000 description="매핑정보12" >;
+	String map13<length=1000 description="매핑정보13" >;
+	String map14<length=1000 description="매핑정보14" >;
+	String map15<length=1000 description="매핑정보15" >;
+	String map16<length=1000 description="매핑정보16" >;
+	String map17<length=1000 description="매핑정보17" >;
+	String map18<length=1000 description="매핑정보18" >;
+	String map19<length=1000 description="매핑정보19" >;
+	String map20<length=1000 description="매핑정보20" >;
+	String imgFilePathNm<length=200 description="이미지파일경로" >;
+	String kkoSendBtns<length=5000 description="카카오버튼내용" > ;
+	String isFav<length=1 description="즐겨찾기여부" >;
+	String regDate<length=14 description="등록일" >;
+	String expireDate<length=14 description="만기일" >;
+	String uptDate<length=14 description="갱신일" >;
+	String umsTrno < length = 20 description = "UMS거래번호" > ;
+	String umsReqDt < length = 8 description = "UMS요청일자" > ;
+	String msgGrpCd < length = 50 description = "메시지그룹코드" > ;
+	String msgGrpNm < length = 200 description = "메시지그룹명" > ;
+	String iconName < length = 50 description = "아이콘명" > ;
+}

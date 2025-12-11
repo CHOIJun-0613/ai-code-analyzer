@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokImgInfInq_DODT
+< logicalName= "모임통장.이미지.정보.조회.입력.IO" description=""
+>
+{
+	String fileNm < length = 100 description = "파일명" > ;
+	String fileDir < length = 500 description = "파일디렉토리" > ;
+	String filePath < length = 500 description = "파일경로" > ;
+	Long fileSize < length = 100 description = "파일크기" > ;
+	BLOB fileData < length = 100000 description = "파일데이터" > ;
+}

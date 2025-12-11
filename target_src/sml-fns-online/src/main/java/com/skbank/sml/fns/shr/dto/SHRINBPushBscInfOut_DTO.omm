@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.shr.dto.SHRINBPushBscInfOut_DTO
+< logicalName= "알림비즈" description="알림비즈"
+>
+{
+	String rsltCd < length = 10 description = "결과코드" > ;
+	String rsltCdTxt < length = 1000 description = "결과코드내용" > ;
+	Integer updateCnt < length = 3 description = "업데이트건수" > ;
+}

@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.mpb.dto.NtarInfAmd_DIDT
+< logicalName= "공지사항.정보.수정.DBM.입력.IO" description=""
+>
+{
+	String metMngNo < length = 1 description = "모임관리번호" > ;
+	String metNtarRgsDt < length = 8 description = "모임공지사항등록일자" > ;
+	Integer metNtarSrno < length = 5 description = "모임공지사항일련번호" > ;
+	String metNtarTxt < length = 500 description = "모임공지사항내용" > ;
+	String metNtarHdnYn < length = 1 description = "모임공지사항숨김여부" > ;
+	String metNtarDelYn < length = 1 description = "모임공지사항삭제여부" > ;
+	Integer metNtarChgMbhSrno < length = 7 description = "모임공지사항변경회원일련번호" > ;
+	String metNtarChgDt < length = 8 description = "모임공지사항변경일자" > ;
+	String metNtarChgTm < length = 6 description = "모임공지사항변경시각" > ;
+	String lstDbChgId < length = 8 description = "최종DB변경ID" > ;
+	String lstDbChgDtm < length = 20 description = "최종DB변경일시" > ;
+}

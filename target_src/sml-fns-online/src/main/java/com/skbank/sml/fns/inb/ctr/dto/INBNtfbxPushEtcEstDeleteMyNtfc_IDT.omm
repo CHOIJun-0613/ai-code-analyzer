@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstDeleteMyNtfc_IDT
+< logicalName= "나만의알림삭제IDT" description="나만의알림삭제IDT"
+>
+{
+	com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO myNtfcGrid < description = "나만의알림그리드" arrayReference = "1" > ;
+}

@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokCadAutInq_DODT
+<logicalName= "모임통장.카드권한.조회.DBM.출력.IO" description=""
+>
+{
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokCadAutListInq_ODT mPBMetPbokCadAutListInq_ODT<length=0 description="모임통장.카드권한.목록.조회.컨트롤러.출력.IO" arrayReference="1" >;
+}

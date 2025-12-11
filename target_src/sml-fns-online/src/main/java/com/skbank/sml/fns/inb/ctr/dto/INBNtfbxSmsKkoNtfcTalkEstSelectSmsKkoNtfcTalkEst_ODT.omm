@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxSmsKkoNtfcTalkEstSelectSmsKkoNtfcTalkEst_ODT
+< logicalName= "SMS.카카오알림톡.설정.서비스가입여부.컨트롤러.출력.IO" description="SMS.카카오알림톡.설정.서비스가입여부.컨트롤러.출력.IO"
+>
+{
+	String lnGdncNtfcSrvcJnngYn<length=1 description="대출안내알림서비스가입여부" >;
+	String prtfGdncSrvdJnngYn<length=1 description="포트폴리오안내서비스가입여부" >;
+	String rtpenPtrtNtfcSrvcJnngYn<length=1 description="퇴직연금수익률알림서비스가입여부" >;
+	String rtpenDcRcvNtfcSrvcJnngYn<length=1 description="퇴직연금DC입금알림서비스가입여부" >;
+	String fgrmtArvNtcSrvcJnngYn<length=1 description="해외송금도착통지서비스가입여부" >;
+	String tptaIsaLossRtChrDpsMnJnngYn<length=1 description="일임형ISA손실율문자수신관리가입여부" >;
+	String fndAtsXprNprcNtcSrvcJnngYn<length=1 description="펀드자동이체만기통보서비스가입여부" >;
+	String fndGdncSrvcJnngYn < length = 1 description = "펀드안내서비스가입여부" > ;
+	String smsSrvcNtfcId < length = 10 description = "SMS서비스알림ID" > ;
+}

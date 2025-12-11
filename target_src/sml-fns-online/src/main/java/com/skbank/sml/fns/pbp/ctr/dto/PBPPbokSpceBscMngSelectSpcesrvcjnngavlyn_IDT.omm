@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectSpcesrvcjnngavlyn_IDT
+< logicalName= "공간.서비스가입.가능.정보.컨트롤러.입력.IO" description="통장 쪼개기 가입 가능 정보 input"
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+}

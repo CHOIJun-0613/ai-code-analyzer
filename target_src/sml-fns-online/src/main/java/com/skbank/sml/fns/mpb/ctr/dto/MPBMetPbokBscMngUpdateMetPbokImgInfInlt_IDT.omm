@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngUpdateMetPbokImgInfInlt_IDT
+< logicalName= "모임통장 이미지 정보 초기화 수정" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String metMngNo < length = 1 description = "모임관리번호" > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String metMbhNm < length = 60 description = "모임회원명" align = left > ;
+	String metImgUrlNm < length = 100 description = "모임이미지URL명" align = left > ;
+	String bscImgUrlNm < length = 100 description = "기본이미지URL명" align = left > ;
+}

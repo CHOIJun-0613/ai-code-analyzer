@@ -1,0 +1,14 @@
+pytest
+neo4j
+javalang>=0.13.0
+click
+pydantic
+python-dotenv
+PyYAML
+pandas
+openpyxl
+#google-adk
+google-genai
+psutil
+pathspec
+litellm>=1.43.0

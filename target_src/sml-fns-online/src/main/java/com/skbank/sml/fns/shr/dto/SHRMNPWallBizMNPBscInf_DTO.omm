@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMNPWallBizMNPBscInf_DTO
+< logicalName= "SHR 머니클립 기본정보 DTO" description="SHR 머니클립 기본정보 DTO"
+>
+{
+	String mnyClpChidAcno < length = 13 description = "머니클립자계좌번호" formatType = masking format = "M141" > ;
+	String mnyClpMoAcno < length = 13 description = "머니클립모계좌번호" formatType = masking format = "M141" > ;
+	String mnyClpChidActDscd < length = 1 description = "머니클립자계좌구분코드" > ;
+	String mnyClpChidActNm < length = 100 description = "머니클립자계좌명" > ;
+	String mnyClpChidActExpsSeq < length = 3 description = "머니클립자계좌노출순서" > ;
+	String mnyClpChidActIconNm < length = 200 description = "머니클립자계좌아이콘명" > ;
+}

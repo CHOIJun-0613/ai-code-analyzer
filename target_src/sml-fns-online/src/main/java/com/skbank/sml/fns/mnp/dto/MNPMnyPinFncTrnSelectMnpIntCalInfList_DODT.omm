@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpIntCalInfList_DODT
+< logicalName= "머니클립이자계산정보목록.컴포넌트.출력.IO" description=""
+>
+{
+	String rcvDt < length = 8 description = "입금일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String intCalStaDt < length = 8 description = "이자계산시작일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String intCalEndDt < length = 8 description = "이자계산종료일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal intAamAm < length = 19 decimal = 3 description = "이자적수금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal aplIrt < length = 14 decimal = 6 description = "적용이율" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal intAm < length = 19 decimal = 3 description = "이자금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	String irngYn < length = 1 description = "금리네고여부" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String rvsnIntYn < length = 1 description = "보정이자여부" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+}

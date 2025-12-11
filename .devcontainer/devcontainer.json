@@ -1,0 +1,25 @@
+{
+  "name": "CSA Dev Container",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+
+  // 컨테이너 시작 전(호스트에서 실행): env.gitpod → .env 자동 복사
+  "initializeCommand": "bash -lc 'cd ..; if [ ! -f .env ] && [ -f env.gitpod ]; then cp env.gitpod .env; echo \"[init] Copied env.gitpod -> .env\"; fi'",
+
+  // 컨테이너 안에서: 개발 환경 설정
+  "postCreateCommand": "bash -c 'set -e && echo \"[setup] Starting dev environment setup...\" && /usr/local/bin/ensure-plantuml-into-workspace && echo \"[setup] Setting npm global directory permissions...\" && sudo chown -R vscode:vscode /usr/local/lib/node_modules && sudo chown -R vscode:vscode /usr/local/bin && echo \"[setup] Creating Python virtual environment...\" && python -m venv /workspace/.venv && echo \"[setup] Installing Python packages...\" && /workspace/.venv/bin/pip install --upgrade pip && /workspace/.venv/bin/pip install -r /workspace/requirements.txt && echo \"[setup] Installing Claude Code CLI...\" && npm install -g @anthropic-ai/claude-code && echo \"[setup] Installing Codex CLI...\" && npm install -g @openai/codex && echo \"[setup] Dev environment setup complete!\"'",
+
+  "forwardPorts": [13000, 7474, 7687],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker",
+        "neo4j.neo4j-extension"
+      ]
+    }
+  },
+  "remoteUser": "vscode"
+}
+

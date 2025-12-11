@@ -1,0 +1,18 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngSelectSafBscInf_ODT
+< logicalName= "머니클립금고기본정보조회.출력IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	String dppdNm < length = 60 description = "수신상품명" > ;
+	BigDecimal dpacBal < length = 18 description = "수신계좌잔액" > ;
+	String mnyClpChidAcno < length = 13 description = "머니클립자계좌번호" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String mnyClpChidActNm < length = 100 description = "머니클립자계좌명" > ;
+	BigDecimal dpacCtBal < length = 19 decimal = 3 description = "수신계좌현재잔액" > ;
+	String mnyClpChidActDscd < length = 1 description = "머니클립자계좌구분코드" > ;
+	BigDecimal bscIntAm < length = 19 decimal = 3 description = "기본이자금액" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+	BigDecimal actAplIrt < length = 10 decimal = 6 description = "계좌적용이율" > ;
+	String mnyClpChidActCreDt < length = 8 description = "머니클립자계좌생성일자" > ;
+	String mnyClpIconNo < length = 2 description = "머니클립아이콘번호" > ;
+	BigDecimal mnyClpGoalAm < length = 19 decimal = 3 description = "머니클립목표금액" > ;
+	String pushAgrYn < length = 1 description = "PUSH동의여부" > ;
+}

@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.dto.MPBMetPbokBscMnginsertMetPbokPushNtfcSndInput_DTO
+< logicalName= "모임통장.push.알림.발송.in.DTO" description=""
+>
+{
+	String umsTmplCd < length = 15 description = "UMS템플릿코드" > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String metMbhNm < length = 50 description = "모임회원명" > ;
+}

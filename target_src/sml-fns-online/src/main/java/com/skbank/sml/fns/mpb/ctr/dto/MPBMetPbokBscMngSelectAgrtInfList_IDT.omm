@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectAgrtInfList_IDT
+<logicalName= "약관.정보.컨트롤러.입력.IO" description=""
+>
+{
+	String agrtDscd<length=2 description="약관구분코드" >;
+}

@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqSelectCtgrClf_ODT
+< logicalName= "카테고리분류.컨트롤러.출력.IO" description="카테고리분류.컨트롤러.출력.IO"
+>
+{
+	com.skbank.sml.fns.inb.dto.INBCtgrClfGrid_DTO iNBCtgrClfGrid_DTO<length=0 description="카테고리분류.GRID.공통.IO" arrayReference = "1" > ;
+}

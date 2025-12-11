@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokMbhScss_DIDT
+< logicalName= "모임통장.회원.탈퇴.DBM.입력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String metMbhStcd < length = 2 description = "모임회원상태코드" > ;
+	String lstDbChgId < length = 8 description = "최종DB변경ID" > ;
+	String lstDbChgDtm < length = 20 description = "최종DB변경일시" > ;
+}

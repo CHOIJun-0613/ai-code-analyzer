@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectSpcedtlatsest_ODT
+<logicalName= "공간.상세.자동이체.설정.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String atsEstYn<length=1 description="자동이체설정여부" >;
+	String atsCycd<length=1 description="자동이체주기코드" >;
+	String atsDd<length=8 description="자동이체일" >;
+	BigDecimal atsAm<length=18 decimal=3 description="자동이체금액" >;
+}

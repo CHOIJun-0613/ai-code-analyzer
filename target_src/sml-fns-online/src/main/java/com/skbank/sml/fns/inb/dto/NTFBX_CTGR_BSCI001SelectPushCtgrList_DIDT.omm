@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.dto.NTFBX_CTGR_BSCI001SelectPushCtgrList_DIDT
+< logicalName= "PUSH카테고리목록조회DIDT" description="PUSH카테고리목록조회DIDT"
+>
+{
+	String ntfcDscd < length = 1 description = "알림구분코드" > ;
+}

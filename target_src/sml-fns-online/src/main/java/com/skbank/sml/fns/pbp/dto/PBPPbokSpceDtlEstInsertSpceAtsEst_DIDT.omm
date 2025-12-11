@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSpceDtlEstInsertSpceAtsEst_DIDT
+< logicalName= "공간.상세.자동이체.설정.수정.DBM.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+	String atsEstYn<length=1 description="자동이체설정여부" >;
+	String atsCycd<length=1 description="자동이체주기코드" >;
+	String atsDd<length=8 description="자동이체일" >;
+	BigDecimal atsAm<length=18 decimal=3 description="자동이체금액" >;
+}

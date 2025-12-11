@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.dto.LifecCcadFixExpdCmplList_DODT
+<logicalName= "생활비.신용카드.고정지출.완료.목록.DBM.출력.IO" description=""
+>
+{
+	String bzBrcd<length=6 description="영업점코드" >;
+	String bzbrNm<length=50 description="영업점명" >;
+	String cmplDt<length=8 description="완료일자" >;
+}

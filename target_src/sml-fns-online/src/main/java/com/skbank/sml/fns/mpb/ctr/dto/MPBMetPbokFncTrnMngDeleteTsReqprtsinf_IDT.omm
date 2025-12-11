@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngDeleteTsReqprtsinf_IDT
+< logicalName= "이체요청.정보.삭제.컨트롤러.입력.IO" description=""
+>
+{
+	Integer gridCnt < length = 2 description = "그리드건수 " > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBTsReqInfDelGrid_IDT grid < description = "이체요청.정보.삭제.GRID.컨트롤러.입력.IO" arrayReference = "gridCnt" comment = "" > ;
+}

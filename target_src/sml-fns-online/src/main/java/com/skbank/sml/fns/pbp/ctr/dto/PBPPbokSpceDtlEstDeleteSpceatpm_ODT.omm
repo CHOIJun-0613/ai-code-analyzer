@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstDeleteSpceatpm_ODT
+< logicalName= "통장.쪼개기.자동납부.삭제.컨트롤러.출력.IO" description="통장.쪼개기.자동납부.삭제 out"
+>
+{
+	String rspRtcd < length = 4 description = "응답결과코드" > ;
+	String rspMsgTxt < length = 100 description = "응답메시지내용" > ;
+}

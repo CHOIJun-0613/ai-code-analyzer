@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngInsertAsscNompefTsApv_ODT
+< logicalName= "공동명의인.이체.승인.등록.컨트롤러.출력.IO" description=""
+>
+{
+	String owacFnm < length = 22 description = "예금주성명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal bftrAfBal < length = 13 description = "거래전후잔액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String rnpeFnm < length = 22 description = "수취인성명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String trhsSrno < length = 7 description = "거래명세일련번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String wdrAcno < length = 15 description = "출금계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal trnAm < length = 13 description = "거래금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String ptnPbokPrngTxt < length = 22 description = "상대통장인자내용" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rspTxt < length = 200 description = "응답내용" align = left > ;
+	String rscd < length = 200 description = "응답코드" > ;
+	String chnlErrCd < length = 200 description = "채널오류코드" > ;
+}

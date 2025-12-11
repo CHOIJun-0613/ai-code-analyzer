@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMbhMbpfAmAmdList_IDT
+<logicalName= "회원.회비금액.수정.목록.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	String metMbhSrno<length=30 description="모임회원일련번호" >;
+	String mbpfPymDt<length=8 description="회비납부일자" >;
+	String mbpfPymCycd<length=2 description="회비납부주기코드" >;
+	BigDecimal mbpfPymAm<length=18 decimal=3 description="회비납부금액" >;
+}

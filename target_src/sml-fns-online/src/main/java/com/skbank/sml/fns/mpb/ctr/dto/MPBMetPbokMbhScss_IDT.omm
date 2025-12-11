@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhScss_IDT
+<logicalName= "모임통장.회원.탈퇴.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	String metMbhSrno<length=30 description="모임회원일련번호" >;
+	String ptcpStcd<length=1 description="참여상태코드" >;
+	String mbhDscd<length=100 description="회원구분코드" >;
+	String metScssDt<length=8 description="모임탈퇴일자" >;
+	String metScssTm<length=6 description="모임탈퇴시각" >;
+}

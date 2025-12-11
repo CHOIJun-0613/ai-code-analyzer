@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokImgInfInq_DIDT
+< logicalName= "모임통장.이미지.정보.조회.입력.IO" description=""
+>
+{
+	String imgUrlNm < length = 100 description = "이미지URL명" align = left > ;
+}

@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.mpb.dto.HswfMetTmmTrnPrtsList_DODT
+<logicalName= "부부.모임.당월.거래내역.목록.DBM.출력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	Integer trnDt<length=8 description="거래일자" >;
+	Integer metTrnSrno<length=8 description="모임거래일련번호" >;
+	String metMoAcno<length=13 description="모임모계좌번호" >;
+	String trnSrno<length=4 description="거래일련번호" >;
+	String dpsRapDscd<length=1 description="수신입지급구분코드" >;
+	String dpsRapDisNm<length=50 description="수신입지급구분명" >;
+	String trnStcd<length=2 description="거래상태코드" >;
+	String trnAm<length=20 description="거래금액" >;
+	String mbhNm<length=30 description="회원명" >;
+}

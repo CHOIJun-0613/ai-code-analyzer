@@ -1,0 +1,29 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokRprsChgGrid_ODT
+< logicalName= "모임통장대표변경그리드" description=""
+>
+{
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String metMbhCtrStcd < length = 2 description = "모임회원계약상태코드" align = left > ;
+	String metMbhCtrStcdNm < length = 50 description = "모임회원계약상태코드명" align = left > ;
+	String metMbhDscd < length = 1 description = "모임회원구분코드" align = left > ;
+	String metMbhDscdNm < length = 50 description = "모임회원구분코드명" align = left > ;
+	String utzpeNoCfcd < length = 1 description = "이용자번호분류코드" align = left > ;
+	String utzpeNoCfcdNm < length = 50 description = "이용자번호분류코드명" align = left > ;
+	String ebnkUtzpeNo < length = 13 description = "전자뱅킹이용자번호" align = left > ;
+	String esnsMbhNo < length = 11 description = "간편회원번호" align = left > ;
+	String itcsno < length = 11 description = "통합고객번호" align = left > ;
+	String metMbhNm < length = 60 description = "모임회원명" align = left > ;
+	String metMbhAlsNm < length = 60 description = "모임회원별칭명" align = left > ;
+	BigDecimal mbpfPmtgtAm < length = 19 decimal = 3 description = "회비납부대상금액" align = right fill = "0" > ;
+	String agmdCollDt < length = 8 description = "동의서징구일자" align = left > ;
+	String metPtcpDt < length = 8 description = "모임참여일자" align = left > ;
+	String metPtcpTm < length = 6 description = "모임참여시각" align = left > ;
+	String metScssDt < length = 8 description = "모임탈퇴일자" align = left > ;
+	String metScssTm < length = 6 description = "모임탈퇴시각" align = left > ;
+	String ancSndDscd < length = 1 description = "공지발송구분코드" align = left > ;
+	String ancSndDscdNm < length = 50 description = "공지발송구분코드명" align = left > ;
+	String rppeChgApvCd < length = 1 description = "대표자변경승인코드" align = left > ;
+	String rppeChgApvCdNm < length = 50 description = "대표자변경승인코드명" align = left > ;
+	String rppeChgApvDt < length = 8 description = "대표자변경승인일자" align = left > ;
+	String metMbhImgUrlNm < length = 100 description = "모임회원이미지URL명" align = left > ;
+}

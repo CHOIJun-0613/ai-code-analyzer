@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.dto.EqvMmRcvstsListInq_DODT
+<logicalName= "해당.월.입금현황.목록.조회.DBM.출력.IO" description=""
+>
+{
+	String trnSrno<length=4 description="거래일련번호" >;
+	String dpsRapDscd<length=1 description="수신입지급구분코드" >;
+	String trnStcd<length=2 description="거래상태코드" >;
+	String trnAm<length=20 description="거래금액" >;
+	String rcvMbhNm<length=60 description="입금회원명" >;
+}

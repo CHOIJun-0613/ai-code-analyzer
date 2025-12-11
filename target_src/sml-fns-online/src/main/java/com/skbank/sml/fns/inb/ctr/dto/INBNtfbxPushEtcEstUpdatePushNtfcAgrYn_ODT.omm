@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdatePushNtfcAgrYn_ODT
+< logicalName= "PUSH.동의여부.컨트롤러.출력.IO" description=""
+>
+{
+	String pushAgrYn < length = 1 description = "PUSH동의여부" > ;
+	String aplDscdYn < length = 1 description = "업무구분코드사용여부" > ;
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용" > ;
+	String mchrUnqInfId < length = 300 description = "기기고유정보ID" > ;
+}

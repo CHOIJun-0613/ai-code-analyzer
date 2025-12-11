@@ -1,0 +1,23 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstSelectNtfcdpsEst_IDT
+< logicalName= "PUSH.동의여부.컨트롤러.입력.IO" description=""
+>
+{
+	String userId < length = 10 description = "사용자ID" > ;
+	String appDscd < length = 2 description = "앱구분코드" > ;
+	String smtphOsTpNm < length = 2 description = "스마트폰OS타입명" > ;
+	String mchrUnqInfId < length = 300 description = "기기고유정보ID" > ;
+	String cusNo < length = 20 description = "고객번호" > ;
+	String pushAgrYn < length = 1 description = "PUSH동의여부" > ;
+	String delYn < length = 1 description = "삭제여부" > ;
+	String rgpeId < length = 32 description = "등록자ID" > ;
+	String rgs_dh < length = 14 description = "등록일시" > ;
+	String amdpeId < length = 32 description = "수정자ID" > ;
+	String amdDh < length = 14 description = "수정일시" > ;
+	String aplDscd < length = 3 description = "업무구분코드" > ;
+	String deviceId < length = 300 description = "디바이스ID" > ;
+	String ngItgCsno < length = 13 description = "통합고객번호" > ;
+	String spCusYn < length = 1 description = "간편회원여부" > ;
+	String mblMchrSftrVerTxt < length = 20 description = "모바일기기소프트웨어버전내용" > ;
+	String mblMchrAppVerTxt < length = 20 description = "모바일기기앱버전내용" > ;
+	String mblMchrMdlNm < length = 50 description = "모바일기기모델명" > ;
+}

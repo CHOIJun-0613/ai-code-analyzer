@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.mpb.dto.MPBMetPbokMbhMngSelectCsInf_DODT
+< logicalName= "고객.정보.조회 DODT" description=""
+>
+{
+	String csno < length = 9 description = "고객번호" align = left > ;
+	String itcsno < length = 11 description = "통합고객번호" align = left > ;
+	String cusKorlNm < length = 100 description = "고객한글명" align = left > ;
+	String hpComCd < length = 4 description = "핸드폰회사코드" align = left > ;
+	String hpTlenNo < length = 4 description = "핸드폰국번번호" align = left > ;
+	String hpSrno < length = 4 description = "핸드폰일련번호" align = left > ;
+	String email < length = 50 description = "이메일주소" align = left > ;
+	String cusMemoTxt < length = 100 description = "고객메모내용" align = left > ;
+	String cusCiNo < length = 88 description = "고객CI번호" align = left > ;
+	String mydtCusYn < length = 1 description = "마이데이터고객여부" align = left > ;
+}

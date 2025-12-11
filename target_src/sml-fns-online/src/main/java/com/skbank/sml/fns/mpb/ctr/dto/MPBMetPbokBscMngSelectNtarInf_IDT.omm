@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectNtarInf_IDT
+< logicalName= "공지사항.정보.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo<length=9 description="모임관리번호 " >;
+	Integer reloadCnt < length = 2 description = "재조회건수" > ;
+}

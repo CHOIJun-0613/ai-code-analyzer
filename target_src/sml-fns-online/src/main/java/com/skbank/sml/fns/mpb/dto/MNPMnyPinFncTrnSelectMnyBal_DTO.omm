@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.dto.MNPMnyPinFncTrnSelectMnyBal_DTO
+< logicalName= "머니클립 월말 잔액조회.컴포넌트.출력SubIO" description=""
+>
+{
+	String dt < length = 8 description = "일자" align = left > ;
+	BigDecimal bal < length = 19 decimal = 3 description = "잔액" align = right fill = "0" > ;
+}

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.shr.dbm.UADS_SMT_BNKG_PUSH_USER_INF001_DBM">
+<!--Generated 2025. 01. 08. 16:45:05-->
+<select id="selectPushBscInf" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO" resultType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+SELECT USER_ID 					AS userId ,
+			 SMTPH_OS_TP_NM 	AS smtphOsTpNm,
+			 MCN_UNQ_INF_ID		AS mchrUnqInfId,
+			 CUS_NO 						AS cusNo,
+			 PSH_SVC_AGR_YN		AS pushAgrYn,
+			 DEL_YN 						AS delYn,
+			 AMD_DH 						AS amdDh,
+			 APL_DSCD 					AS aplDscd, 
+			 DEVICE_ID 					AS deviceId
+FROM  UADS_SMT_BNKG_PUSH_USER_INF
+WHERE APP_DSCD = #{appDscd}
+	  AND USER_ID = #{userId}
+/*	AND A.DEL_YN = 'N' */&#13;
+</select>
+<update id="updatePushDelYn" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+UPDATE UADS_SMT_BNKG_PUSH_USER_INF 
+	  SET DEL_YN = 'Y'
+		   , AMDPE_ID = #{amdpeId}
+		   , AMD_DH= TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+WHERE APP_DSCD = #{appDscd}
+	  AND MCN_UNQ_INF_ID = #{mchrUnqInfId}
+	  AND USER_ID &lt;&gt; #{userId}
+	  AND DEL_YN &lt;&gt; 'Y'&#13;
+</update>
+<update id="updatePushInf" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+UPDATE UADS_SMT_BNKG_PUSH_USER_INF 
+	  SET MCN_UNQ_INF_ID= #{mchrUnqInfId}
+ 		   , SMTPH_OS_TP_NM = #{smtphOsTpNm}
+ 		   , PSH_SVC_AGR_YN = #{pushAgrYn}
+           , AMDPE_ID = #{amdpeId}
+ 		   , AMD_DH= TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+           , DEVICE_ID = #{deviceId}
+           , DEL_YN = #{delYn}
+WHERE USER_ID =#{userId}
+AND     APP_DSCD = #{appDscd}&#13;
+</update>
+<insert id="insertPushBscInf" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+INSERT INTO UADS_SMT_BNKG_PUSH_USER_INF
+( 
+  APP_DSCD 
+ , USER_ID 
+ , SMTPH_OS_TP_NM
+ , MCN_UNQ_INF_ID
+ , CUS_NO
+ , PSH_SVC_AGR_YN
+ , DEL_YN 
+ , RGPE_ID
+ , RGS_DH
+ , AMDPE_ID
+ , AMD_DH  
+ , DEVICE_ID
+)
+VALUES
+(
+ #{appDscd}
+ , #{userId}
+ , #{smtphOsTpNm}
+ , #{mchrUnqInfId}
+ , #{cusNo}
+ , #{pushAgrYn}
+ , #{delYn}
+ , #{rgpeId}
+ , TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+ , #{amdpeId}
+ , TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+ , #{deviceId}
+)&#13;
+</insert>
+<insert id="insertUmsPushUserLdg" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+INSERT INTO UMS_PUSH_USER_IF
+(
+  UMS_REQ_DT,
+  SELECTDTM,
+  USER_ID,
+  APP_DSCD,
+  NG_ITG_CSNO,
+  SMTPH_OS_TP_NM,
+  MCN_UNQ_INF_ID,
+  PSH_SVC_AGR_YN,
+  DEL_YN,
+  RGS_DH,
+  AMD_DH,
+  DEVICE_ID,
+  EAI_TRSMN_SRNO,
+  EAI_TRSMN_DT,
+  EAI_TMS_RST_DTM,
+  EAI_TMS_RTCD,
+  MBL_MCHR_SFTR_VER_TXT,
+  MBL_MCHR_APP_VER_TXT,
+  MBL_MCHR_MDL_NM
+)
+SELECT 
+    TO_CHAR(SYSDATE, 'YYYYMMDD') AS UMS_REQ_DT,
+    TO_CHAR(SYSTIMESTAMP, 'YYYYMMDDHH24MISSFF4') AS SELECTDTM,
+    USER_ID,
+    APP_DSCD,
+    #{ngItgCsno},
+    SMTPH_OS_TP_NM,
+    MCN_UNQ_INF_ID,
+    PSH_SVC_AGR_YN,
+    DEL_YN,
+    RGS_DH,
+    AMD_DH,
+    DEVICE_ID,
+    EAI_TRSMN_SRNO.NEXTVAL AS EAI_TRSMN_SRNO,
+    TO_CHAR(SYSDATE, 'YYYYMMDD') AS EAI_TRSMN_DT,
+    NULL AS EAI_TMS_RST_DTM,
+    'X' AS EAI_TMS_RTCD,
+    #{mblMchrSftrVerTxt},
+    #{mblMchrAppVerTxt},
+    #{mblMchrMdlNm}
+FROM  UADS_SMT_BNKG_PUSH_USER_INF
+WHERE APP_DSCD = #{appDscd}
+AND USER_ID = #{userId}&#13;
+</insert>
+<update id="updatePushAgrYn" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+UPDATE UADS_SMT_BNKG_PUSH_USER_INF 
+	  SET  PSH_SVC_AGR_YN = #{pushAgrYn}
+			, AMD_DH= TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+WHERE USER_ID 		= #{userId}
+	  AND APP_DSCD 		= #{appDscd}
+/* wgadm710_00i.jsp_026 */&#13;
+</update>
+<update id="updatePushEtcInf" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+UPDATE UADS_SMT_BNKG_PUSH_USER_INF 
+	  SET APL_DSCD = #{aplDscd}
+	  	   , AMD_DH= TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+WHERE APP_DSCD = #{appDscd}
+	  AND USER_ID = #{userId}
+/* wpads113_01i.jsp.002 알림설정설정 */
+/* AND PSH_SVC_AGR_YN = 'T' 제거 23.09.18.*/&#13;
+</update>
+<select id="selectNlginPushBscInf" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO" resultType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+SELECT DECODE(APL_DSCD, NULL, 'Y', 'N') 					AS aplDscd
+			, NG_ITG_CSNO  AS ngItgCsno
+			, USER_ID AS userId
+FROM (
+		SELECT A.APL_DSCD, B.NG_ITG_CSNO, A.USER_ID
+		FROM  UADS_SMT_BNKG_PUSH_USER_INF A
+				  , UMS_PUSH_USER_IF B
+		WHERE A.USER_ID = B.USER_ID
+		AND A.APP_DSCD = B.APP_DSCD
+		AND A.APP_DSCD = #{appDscd}
+		AND A.MCN_UNQ_INF_ID = #{mchrUnqInfId}
+		AND A.DEL_YN = 'N' 
+		ORDER BY A.AMD_DH, B.RGS_DH DESC
+)
+WHERE ROWNUM = 1&#13;
+</select>
+<update id="mergePushBscInf" parameterType="com.skbank.sml.fns.shr.dto.SHRINBPushBscInf_DTO">&#13;
+MERGE INTO UADS_SMT_BNKG_PUSH_USER_INF A
+  USING DUAL
+	   ON (A.APP_DSCD = #{appDscd} AND A.USER_ID = #{userId})
+  WHEN MATCHED 
+   THEN UPDATE 
+     SET  A.MCN_UNQ_INF_ID= #{mchrUnqInfId}
+ 		   , A.SMTPH_OS_TP_NM = #{smtphOsTpNm}
+ 		   , A.PSH_SVC_AGR_YN = #{pushAgrYn}
+           , A.AMDPE_ID = #{amdpeId}
+ 		   , A.AMD_DH= TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+           , A.DEVICE_ID = #{deviceId}
+           , A.DEL_YN = #{delYn}
+  WHEN NOT MATCHED
+   THEN INSERT
+   			 ( 
+			   A.APP_DSCD 
+			 , A.USER_ID 
+			 , A.SMTPH_OS_TP_NM
+			 , A.MCN_UNQ_INF_ID
+			 , A.CUS_NO
+			 , A.PSH_SVC_AGR_YN
+			 , A.DEL_YN 
+			 , A.RGPE_ID
+			 , A.RGS_DH
+			 , A.AMDPE_ID
+			 , A.AMD_DH  
+			 , A.DEVICE_ID
+			)
+			VALUES
+			(
+			 #{appDscd}
+			 , #{userId}
+			 , #{smtphOsTpNm}
+			 , #{mchrUnqInfId}
+			 , #{cusNo}
+			 , #{pushAgrYn}
+			 , #{delYn}
+			 , #{rgpeId}
+			 , TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+			 , #{amdpeId}
+			 , TO_CHAR(SYSTIMESTAMP,'YYYYMMDDhh24miss')
+			 , #{deviceId}
+			)&#13;
+</update>
+</mapper>

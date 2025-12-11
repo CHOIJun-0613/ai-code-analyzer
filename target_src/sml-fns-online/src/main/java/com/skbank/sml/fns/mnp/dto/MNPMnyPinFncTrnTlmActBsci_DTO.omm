@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnTlmActBsci_DTO
+< logicalName= "머니클립.계좌기본정보조회.입력.IO" description=""
+>
+{
+	String acno < length = 20 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+}

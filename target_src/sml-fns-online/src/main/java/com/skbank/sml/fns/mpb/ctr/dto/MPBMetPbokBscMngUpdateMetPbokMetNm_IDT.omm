@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngUpdateMetPbokMetNm_IDT
+< logicalName= "모임통장.모임명.수정.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metNm<length=100 description="모임명 " >;
+}

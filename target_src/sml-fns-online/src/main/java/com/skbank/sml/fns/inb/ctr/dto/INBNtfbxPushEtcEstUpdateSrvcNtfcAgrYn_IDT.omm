@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdateSrvcNtfcAgrYn_IDT
+< logicalName= "서비스알림.동의여부.컨트롤러.입력.IO" description=""
+>
+{
+	String wonPlayNtfcAgrYn < length = 1 description = "원플레이알림동의여부" > ;
+	String trnPrtsNtfcAgrYn < length = 1 description = "거래내역알림동의여부" > ;
+	String tdPvmNtfcAgrYn < length = 1 description = "오늘의급식알림동의여부" > ;
+	String srvcDisv < length = 20 description = "서비스구분값" > ;
+	String mchrUnqInfId < length = 300 description = "기기고유정보ID" > ;
+	String natScrrNtfcAgrYn < length = 1 description = "국민비서알림동의여부" > ;
+}

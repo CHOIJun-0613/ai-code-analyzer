@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngInsertMetPbokAutoRptPush_IDT
+< logicalName= "모임통장.관리.자동.리포트.푸쉬.생성.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metMsgCadId < length = 20 description = "모임메시지카드ID" > ;
+	String metMsgCadNm < length = 50 description = "모임메시지카드명" > ;
+	String metMsgCadTxt < length = 500 description = "모임메시지카드내용" > ;
+	String appMarkImgPathTxt < length = 500 description = "앱표시이미지경로내용" > ;
+	String autoRptTxt1 < length = 100 description = "자동리포팅내용1" > ;
+	String autoRptTxt2 < length = 100 description = "자동리포팅내용2" > ;
+	String autoRptTxt3 < length = 100 description = "자동리포팅내용3" > ;
+	String autoRptTxt4 < length = 100 description = "자동리포팅내용4" > ;
+	String autoRptTxt5 < length = 100 description = "자동리포팅내용5" > ;
+	String autoRptTxt6 < length = 100 description = "자동리포팅내용6" > ;
+}

@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.dto.UCM_PP_SCHUL_INFOselectTeenTeenPvmNtfcAgrYn_DIDT
+< logicalName= "선불서비스 학교기본정보_틴틴급식알림동의여부IDT" description="선불서비스 학교기본정보_틴틴급식알림동의여부IDT"
+>
+{
+	String cusCiNo < length = 88 description = "고객CI번호" > ;
+}

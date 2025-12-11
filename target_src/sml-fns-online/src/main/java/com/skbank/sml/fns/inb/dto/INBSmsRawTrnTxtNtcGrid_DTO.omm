@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.dto.INBSmsRawTrnTxtNtcGrid_DTO
+<logicalName= "SMS입출금.거래내용.통지.GRID.공통.IO" description="SMS입출금.거래내용.통지.GRID.DBM.입력.IO"
+>
+{
+	String hpComCd<length=4 description="핸드폰회사코드" >;
+	String hpTlen<length=4 description="핸드폰국번" >;
+	String hpSerNo<length=4 description="핸드폰일련번호" >;
+	String ntcTgtTrnDscd<length=1 description="통지대상거래구분코드" >;
+	Integer prcSrno<length=9 description="처리일련번호" >;
+}

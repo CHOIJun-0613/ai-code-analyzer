@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokRprsChgAmd_DIDT
+< logicalName= "모임통장.대표.변경.수정.DBM.입력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" > ;
+	String rcvBkwAcno < length = 20 description = "입금전행계좌번호" formatType = masking format = "M141" > ;
+}

@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstUpdateSpcedtlgoalest_IDT
+< logicalName= "공간.상세.목표.설정.수정.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+	String savGoalEstYn<length=1 description="저축목표설정여부" >;
+	String cnsmGoalEstYn<length=1 description="소비목표설정여부" >;
+	String savGoalStaDt<length=8 description="저축목표시작일자" >;
+	String savGoalEndDt<length=8 description="저축목표종료일자" >;
+	BigDecimal savGoalAm<length=18 decimal=3 description="저축목표금액" >;
+	String cnsmAmBscd<length=1 description="소비금액기준코드" >;
+	BigDecimal cnsmGoalAm<length=18 decimal=3 description="소비목표금액" >;
+}

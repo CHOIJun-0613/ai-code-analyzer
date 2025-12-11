@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.shr.dto.SHRPBPBizSelectPBPJnngYn_DODT
+< logicalName= "통장쪼개기 가입여부" description="통장쪼개기 가입여부 DODT"
+>
+{
+	String pbokSplitJnngYn < length = 1 description = "통장쪼개기 가입여부" > ;
+	String pbokSplitJnngAvlYn < length = 1 description = "통장쪼개기 가입가능여부" > ;
+}

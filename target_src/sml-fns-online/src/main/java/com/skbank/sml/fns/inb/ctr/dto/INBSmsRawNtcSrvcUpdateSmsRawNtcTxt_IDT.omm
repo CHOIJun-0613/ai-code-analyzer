@@ -1,0 +1,20 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcUpdateSmsRawNtcTxt_IDT
+< logicalName= "SMS입출금통지.내용.컨트롤러.입력.IO" description="SMS입출금통지.내용.컨트롤러.입력.IO"
+>
+{
+	String fstlAct < length = 15 description = "수수료결제계좌" arrayReference = "" > ;
+	String pwnoUsgYn < length = 1 description = "비밀번호사용여부" arrayReference = "" > ;
+	String encyPwno < length = 32 description = "암호화비밀번호" arrayReference = "" > ;
+	String tgtAcno < length = 20 description = "대상계좌번호" arrayReference = "" > ;
+	String balNtrsnYn < length = 1 description = "잔액미전송여부" arrayReference = "" > ;
+	BigDecimal smsTmsLimAm < length = 19 decimal = 3 description = "SMS전송제한금액" arrayReference = "" > ;
+	String tmsStaTm < length = 6 description = "전송시작시각" arrayReference = "" > ;
+	String tmsEndTm < length = 6 description = "전송종료시각" arrayReference = "" > ;
+	String atsSndLimYn < length = 1 description = "자동이체발송제한여부" arrayReference = "" > ;
+	String cusInfNlkgYn < length = 1 description = "고객정보미연동여부" arrayReference = "" > ;
+	String feeFeKd < length = 1 description = "수수료요금종류" arrayReference = "" > ;
+	String feeDfpmLevyYn < length = 1 description = "수수료후불징수여부" arrayReference = "" > ;
+	String feeWdrGdncNtcYn < length = 1 description = "수수료출금안내통지여부" arrayReference = "" > ;
+	Integer gridCnt < length = 5 description = "그리드건수" arrayReference = "" > ;
+	com.skbank.sml.fns.inb.dto.INBSmsRawNtcTxtGrid_DTO iNBSmsRawNtcTxtGrid_DTO < description = "SMS입출금통지 그리드" arrayReference = "1" > ;
+}

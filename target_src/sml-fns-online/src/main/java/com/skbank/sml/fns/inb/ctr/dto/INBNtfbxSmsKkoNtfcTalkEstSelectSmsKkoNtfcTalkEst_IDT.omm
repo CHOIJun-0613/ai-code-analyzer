@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxSmsKkoNtfcTalkEstSelectSmsKkoNtfcTalkEst_IDT
+< logicalName= "SMS.카카오알림톡.설정.서비스가입여부.컨트롤러.출력.IO" description="SMS.카카오알림톡.설정.서비스가입여부.컨트롤러.출력.IO"
+>
+{
+	String smsSrvcNtfcId < length = 10 description = "SMS서비스알림ID" > ;
+}

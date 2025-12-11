@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.mpb.dto.MbpfRcvstsListInq_DODT
+< logicalName= "회비.입금현황.목록.조회.DBM.출력.IO" description=""
+>
+{
+	String inqBasYm < length = 6 description = "조회기준년월" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String metMbhAlsNm < length = 60 description = "모임회원별칭명" align = left > ;
+	String metMbhDscd < length = 1 description = "모임회원구분코드" align = left > ;
+	String metMbhDscdNm < length = 50 description = "모임회원구분코드명" align = left > ;
+	String metMbhImgUrlNm < length = 100 description = "모임회원이미지URL명" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal mbpfPmtgtAm < length = 19 decimal = 3 description = "회비납부대상금액" align = right fill = "0" > ;
+	BigDecimal mbpfPymAm < length = 19 decimal = 3 description = "회비납부금액" align = right fill = "0" > ;
+	BigDecimal metMbpfXmpAm < length = 19 decimal = 3 description = "모임회비면제금액" align = right fill = "0" > ;
+}

@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectSpcedtlgoaldtlprts_IDT
+< logicalName= "공간.상세.목표.상세.내역.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+	String savGoalStaDt<length=8 description="저축목표시작일자" >;
+	String savGoalEndDt<length=8 description="저축목표종료일자" >;
+	String cnsmAmBsCd<length=1 description="소비금액기준코드" >;
+}

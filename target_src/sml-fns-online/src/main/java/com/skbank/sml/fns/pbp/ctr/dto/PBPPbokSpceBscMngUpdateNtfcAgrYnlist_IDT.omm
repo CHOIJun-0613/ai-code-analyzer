@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngUpdateNtfcAgrYnlist_IDT
+< logicalName= "공간.서비스.알림.여부.계좌.목록.컨트롤러.입력.IO" description=""
+>
+{
+	String acno<length=20 description="계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String ntfcYn<length=10 description="알림여부" >;
+}

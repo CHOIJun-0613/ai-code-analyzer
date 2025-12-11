@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngSelectWallIntInf_ODT
+< logicalName= "머니클립지갑이자계산정보조회.출력IO" description=""
+>
+{
+	Integer gridCnt < length = 5 description = "그리드건수" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngSelectWallIntInfList_ODT grid < description = "그리드" arrayReference = "1" > ;
+	BigDecimal intSumAm < length = 19 decimal = 3 description = "이자합계금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	String nextIntDt < length = 8 description = "다음이자일" > ;
+	BigDecimal intIctx < length = 19 decimal = 3 description = "이자소득세" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	String intCalStaDt < length = 8 description = "이자계산시작일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	String intCalEndDt < length = 8 description = "이자계산종료일자" align = left EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal aplIrt < length = 14 decimal = 6 description = "적용이율" align = right fill = "0" EIMS_FLD_TYPE = "C" EIMS_DATA_TYPE = "D" > ;
+}

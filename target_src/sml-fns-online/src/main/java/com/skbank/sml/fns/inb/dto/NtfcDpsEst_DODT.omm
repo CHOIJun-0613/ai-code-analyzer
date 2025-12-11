@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.dto.NtfcDpsEst_DODT
+<logicalName= "알림.수신설정.DBM.출력.IO" description="알림함 동의 여부 조회 io"
+>
+{
+	String aplDscd<length=10 description="업무구분코드" >;
+	String langCd<length=2 description="언어구분코드" >;
+}

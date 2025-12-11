@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.inb.dto.UCM_SUP_EVT_DTL001InsertIvstStgNtfcAgrYn_DIDT
+< logicalName= "투자전략.동의여부.DBM.입력.IO" description="투자전략 동의 여부 IO"
+>
+{
+	Integer evtDis < length = 11 description = "이벤트구분번호" > ;
+	String evtNm < length = 120 description = "행사명" > ;
+	String userId < length = 320 description = "사용자ID" > ;
+	String ngItgCsno < length = 13 description = "차세대통합고객번호" > ;
+	String supNm < length = 40 description = "지원명" > ;
+	String supDis < length = 20 description = "지원구분번호 " > ;
+}

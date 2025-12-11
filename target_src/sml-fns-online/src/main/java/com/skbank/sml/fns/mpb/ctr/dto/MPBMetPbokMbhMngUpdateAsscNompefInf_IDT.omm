@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhMngUpdateAsscNompefInf_IDT
+< logicalName= "공동명의인.정보.컨트롤러.입력.IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String canYn < length = 1 description = "취소여부" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+}

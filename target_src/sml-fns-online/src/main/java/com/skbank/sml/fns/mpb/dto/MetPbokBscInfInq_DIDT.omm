@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokBscInfInq_DIDT
+< logicalName= "모임통장.기본.정보.조회.DBM.입력.IO" description="IBSMR0005769"
+>
+{
+	String inqDis < length = 2 description = "조회구분" align = left > ;
+	String nxtMetMngNo < length = 9 description = "다음모임관리번호" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+}

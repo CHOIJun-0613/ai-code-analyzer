@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSplitInqSelectPbokSplitActRapTotAmInf_DODT
+< logicalName= "통장.쪼개기.계좌.입지급.합계.금액.정보.조회.DBM.출력.IO" description=""
+>
+{
+	Integer paySumCnt < length = 6 description = "지급합계건수" > ;
+	BigDecimal paySumAm < length = 19 decimal = 3 description = "지급합계금액" > ;
+	Integer rcvSumCnt < length = 6 description = "입금합계건수" > ;
+	BigDecimal rcvSumAm < length = 19 decimal = 3 description = "입금합계금액" > ;
+	BigDecimal ctBal < length = 19 decimal = 3 description = "현재잔액" > ;
+}

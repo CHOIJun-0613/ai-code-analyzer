@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngSelectHswfMetLifecGoalInf_IDT
+< logicalName= "생활비.목표.정보.조회.컨트롤러.입력.IO" description=""
+>
+{
+	String metMngNo<length=9 description="모임관리번호 " >;
+}

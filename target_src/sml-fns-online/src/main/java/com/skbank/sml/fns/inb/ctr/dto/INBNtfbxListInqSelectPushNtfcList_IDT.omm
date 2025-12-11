@@ -1,0 +1,21 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqSelectPushNtfcList_IDT
+< logicalName= "통합.알림.목록.조회.컨트롤러.입력.IO" description="통합 알림 목록 조회 IO"
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String umsAppGrpId < length = 10 description = "UMS앱그룹ID" > ;
+	String umsReqStaDt<length=8 description="UMS요청시작일자" >;
+	String umsReqEndDt<length=8 description="UMS요청종료일자" >;
+	String ntfbxLrclCD<length=10 description="알림함대분류코드" >;
+	String ntfbxMclfCD<length=10 description="알림함중분류코드" >;
+	String favtCdYn<length=1 description="즐겨찾기여부" >;
+	String ntfcRfwr<length=30 description="알림검색어" >;
+	String ntfcRfwrYn < length = 1 description = "알림검색어여부" > ;
+	String sortDis < length = 1 description = "정렬구분" > ;
+	Integer pageNo<length=6 description="페이지번호" >;
+	Integer pageSize<length=10 description="페이지사이즈" >;
+	String mchrTkn < length = 57 description = "기기토큰" > ;
+	String mblMchrSftrVerTxt < length = 20 description = "모바일기기소프트웨어버전내용" > ;
+	String mblMchrAppVerTxt < length = 20 description = "모바일기기앱버전내용" > ;
+	String mblMchrMdlNm < length = 50 description = "모바일기기모델명" > ;
+}

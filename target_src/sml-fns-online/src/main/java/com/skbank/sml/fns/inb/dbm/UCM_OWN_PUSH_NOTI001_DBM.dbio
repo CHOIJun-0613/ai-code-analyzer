@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.inb.dbm.UCM_OWN_PUSH_NOTI001_DBM">
+<!--Generated 2024. 07. 17. 15:44:19-->
+<select id="selectMyNtfcList" resultType="com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO">&#13;
+/* 나만의 PUSH 알림 조회 (Select) */
+SELECT SEQNO				AS seqno
+		   , TR_NOTI_YN		AS trNotiYn
+		   , REPLACE(ALIMI_TYPE, ' ', '')			AS alimiType
+		   , NTFC_TXT			AS ntfcTxt
+		   , NTFC_FM				AS ntfcFm
+		   , MONTH				AS month
+		   , DAY						AS day
+		   , WEEKDAY_NM	AS weekdayNm
+		   , ALIMI_TM 			AS alimiTm
+		   , RGS_DH				AS rgsDh
+		   , ETC1					AS etc1
+		   , NOTI_TMP_TYP	AS notiTmpTyp
+FROM UCM_OWN_PUSH_NOTI
+WHERE ITCSNO = #{itcsno}
+AND ETC1 IS NULL&#13;
+</select>
+<update id="updateMyNtfc" parameterType="com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO">&#13;
+update UCM_OWN_PUSH_NOTI 
+set  TR_NOTI_YN= #{trNotiYn}
+	, CHG_DH=current_timestamp
+where ITCSNO= #{itcsno}
+and SEQNO= #{seqno}
+/* wpads130_16i.jsp.002 - 나만의 PUSH 알림 스위치 변경 (Update) */&#13;
+</update>
+<update id="deleteMyNtfc" parameterType="com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO">&#13;
+/* wpads130_17i.jsp.003 */ 
+UPDATE UCM_OWN_PUSH_NOTI 
+	  SET ETC1 = #{etc1}
+	  	   , CHG_DH=current_timestamp 
+WHERE ITCSNO = #{itcsno}
+	  AND SEQNO = #{seqno}&#13;
+</update>
+<insert id="insertMyNtfc" parameterType="com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO">&#13;
+/* wpads130_17i.jsp.002 - 나만의 PUSH 알림 등록 (Insert) */ 
+insert into UCM_OWN_PUSH_NOTI
+(
+	ITCSNO,
+	SEQNO,
+	USER_ID,
+	TR_NOTI_YN,
+	ALIMI_TYPE,
+	NTFC_TXT,
+	NTFC_FM,
+	MONTH,
+	DAY,
+	WEEKDAY_NM,
+	ALIMI_TM,
+	WDR_ACNO,
+	TS_AMT,
+	RCV_BKCD,
+	RCV_ACNO,
+	WDR_PBOK_MRK,
+	RCV_PBOK_MRK,
+	MRET_TS_YN,
+	NOTI_TMP_TYP,
+	RGS_DH
+)
+values( #{itcsno}, #{seqno}, #{userId}, #{trNotiYn}, #{alimiType}, #{ntfcTxt}, #{ntfcFm}, #{month}, #{day}, #{weekdayNm}, #{alimiTm}
+, #{wdrAcno}, #{tsAmt}, #{rcvBkcd}, #{rcvAcno}, #{wdrPbokMrk}, #{rcvPbokMrk}, #{mretTsYn}, #{notiTmpTyp}, current_timestamp)&#13;
+</insert>
+<select id="selectMyNtfcDtl" parameterType="com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO" resultType="com.skbank.sml.fns.inb.dto.INBMyNtfc_DTO">&#13;
+SELECT SEQNO									AS seqno
+			, REPLACE(ALIMI_TYPE, ' ', '')	AS alimiType
+			, NTFC_TXT								AS ntfcTxt
+			, NTFC_FM								AS ntfcFm
+			, MONTH									AS month
+			, DAY										AS day
+			, WEEKDAY_NM						AS weekdayNm
+			, ALIMI_TM								AS alimiTm
+			, WDR_ACNO							AS wdrAcno
+			, TS_AMT									AS tsAmt
+			, RCV_BKCD								AS rcvBkcd
+			, RCV_ACNO								AS rcvAcno
+			, WDR_PBOK_MRK					AS wdrPbokMrk
+			, RCV_PBOK_MRK					AS rcvPbokMrk
+			, MRET_TS_YN							AS mretTsYn
+			, NOTI_TMP_TYP						AS notiTmpTyp
+			, ETC1										AS etc1
+	FROM UCM_OWN_PUSH_NOTI
+ WHERE ITCSNO = #{itcsno}
+	   AND SEQNO = #{seqno}
+/* wpads130_17i.jsp.001 - 나만의 PUSH 알림 상세조회 (Select) */&#13;
+</select>
+</mapper>

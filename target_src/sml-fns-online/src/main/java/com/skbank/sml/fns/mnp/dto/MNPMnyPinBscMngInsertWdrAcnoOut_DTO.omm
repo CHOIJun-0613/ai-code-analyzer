@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinBscMngInsertWdrAcnoOut_DTO
+< logicalName= "머니클립자계좌등록.컴포넌트.공통.IO" description=""
+>
+{
+	String prcRtcd < length = 7 description = "처리결과코드" > ;
+	String prcRstTxt < length = 38 description = "처리결과내용" > ;
+}

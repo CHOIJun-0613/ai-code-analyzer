@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpIntCalInf_DODT
+< logicalName= "머니클립이자계산정보조회.컴포넌트.출력.IO" description=""
+>
+{
+	Integer gridCnt < length = 5 description = "그리드건수" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpIntCalInfList_DODT grid < description = "그리드" arrayReference = "1" > ;
+	BigDecimal intSumAm < length = 19 decimal = 3 description = "이자합계금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+}

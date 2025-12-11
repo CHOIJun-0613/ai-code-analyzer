@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSpceBscMngSelectAllActList_DODT
+< logicalName= "계좌.정보.목록.DBM.출력.IO" description=""
+>
+{
+	String acno<length=20 description="계좌번호" >;
+	String cusUsgBkwAcno < length = 20 description = "고객사용전행계좌번호" > ;
+	String prdNm<length=40 description="상품명" >;
+	BigDecimal rawActBal<length=18 decimal=3 description="입출금계좌잔액" >;
+	String spceSrvcJnngYn<length=1 description="공간서비스가입여부" >;
+	String spceSvrcJnngDt<length=8 description="공간서비스가입일자" >;
+	Integer spceCnt < length = 3 description = "공간건수" > ;
+}

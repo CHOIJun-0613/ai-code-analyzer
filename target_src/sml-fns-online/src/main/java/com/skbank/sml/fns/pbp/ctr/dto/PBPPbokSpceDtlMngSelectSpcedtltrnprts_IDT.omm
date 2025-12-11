@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlMngSelectSpcedtltrnprts_IDT
+< logicalName= "공간.상세.거래내역.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+	String trnStaDt<length=8 description="거래시작일자" >;
+	String trnEndDt<length=8 description="거래종료일자" >;
+	String sortDis < length = 1 description = "정렬구분" > ;
+	String nxtPageTxt < length = 100 description = "다음페이지내용" > ;
+	String dpsRapDscd < length = 2 description = "입출금구분코드" > ;
+	BigDecimal minAm < length = 18 decimal = 3 description = "최소금액" > ;
+	BigDecimal maxAm < length = 18 decimal = 3 description = "최대금액" > ;
+}

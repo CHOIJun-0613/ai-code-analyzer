@@ -1,0 +1,23 @@
+OMM com.skbank.sml.fns.mnp.dto.MNPMnyPinBscMngUpdateMnpChidAcno_DTO
+< logicalName= "머니클립.자.계좌.수정.컴포넌트.공통.출력IO" description=""
+>
+{
+	String dpsRgsChgItcd < length = 6 description = "수신등록변경항목코드" align = left > ;
+	String dpsRgsChgDtcdNm < length = 60 description = "수신등록변경상세코드명" align = left > ;
+	String dpsRgsChgDtcd < length = 3 description = "수신등록변경상세코드" align = left > ;
+	String dpsItmAtrbDscd < length = 2 description = "수신항목속성구분코드" align = left > ;
+	String dpsItmAtrbDscdNm < length = 60 description = "수신항목속성구분코드명" align = left > ;
+	Integer dpsItmChgLen < length = 3 description = "수신항목변경길이" align = right fill = "0" > ;
+	String bfchDpsRgsChgDtcdTxt < length = 80 description = "변경전수신등록변경상세코드내용" align = left > ;
+	String dpsRgsChgDtcdTxt < length = 80 description = "수신등록변경상세코드내용" align = left > ;
+	String dpsItmMndYn < length = 1 description = "수신항목필수여부" align = left > ;
+	String dpsItmBscTxt < length = 80 description = "수신항목기본내용" align = left > ;
+	String dpsItmHdnYn < length = 1 description = "수신항목숨김여부" align = left > ;
+	Integer dpsItmMarkSeq < length = 3 description = "수신항목표시순서" align = right fill = "0" > ;
+	String dpsItmDmnNm < length = 70 description = "수신항목도메인명" align = left > ;
+	String dpsItmGrcd < length = 2 description = "수신항목그룹코드" align = left > ;
+	String dpsRefcLdgNm < length = 20 description = "수신참조원장명" align = left > ;
+	String dpsRefcLdgItmNm < length = 50 description = "수신참조원장항목명" align = left > ;
+	String dpsRgsChgHelpTxt < length = 500 description = "수신등록변경도움말내용" align = left > ;
+	String etcRmrkTxt < length = 500 description = "기타비고내용" align = left > ;
+}

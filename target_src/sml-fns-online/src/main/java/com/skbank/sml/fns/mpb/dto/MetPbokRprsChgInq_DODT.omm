@@ -1,0 +1,12 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokRprsChgInq_DODT
+<logicalName= "모임통장.대표.변경.조회.DBM.출력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	String metNm<length=100 description="모임명" >;
+	String ctRppeNm<length=30 description="현재대표자명" >;
+	String ctMetMbhSrno<length=30 description="현재모임회원일련번호" >;
+	String chgRppeNm<length=30 description="변경대표자명" >;
+	String chgMetMbhSrno<length=30 description="변경모임회원일련번호" >;
+	String chgScdDt<length=8 description="변경예정일자" >;
+}

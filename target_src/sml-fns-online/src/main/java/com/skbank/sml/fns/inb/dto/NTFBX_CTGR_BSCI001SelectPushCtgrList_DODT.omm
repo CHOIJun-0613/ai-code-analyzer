@@ -1,0 +1,15 @@
+OMM com.skbank.sml.fns.inb.dto.NTFBX_CTGR_BSCI001SelectPushCtgrList_DODT
+< logicalName= "PUSH카테고리목록조회DODT" description="PUSH카테고리목록조회DODT"
+>
+{
+	String ntfcCtgrId < length = 40 description = "알림카테고리ID" > ;
+	String ntfcCtgrCdId < length = 16 description = "알림카테고리코드ID" > ;
+	String ntfcCtgrCdNm < length = 120 description = "알림카테고리코드명" > ;
+	String ntfcCtgrCdEngNm < length = 60 description = "알림카테고리코드영문명" > ;
+	String ntfcCtgrCdUsgYn < length = 1 description = "알림카테고리코드사용여부" > ;
+	String ntfcCtgrCdStaDt < length = 8 description = "알림카테고리코드시작일자" > ;
+	String ntfcCtgrCdEndDt < length = 8 description = "알림카테고리코드종료일자" > ;
+	String ntfcCtgrCdTxt < length = 500 description = "알림카테고리코드내용" > ;
+	Integer ntfcCtgrCdInqSrno < length = 5 description = "알림카테고리코드조회일련번호" > ;
+	String ntfcDscd < length = 1 description = "알림구분코드" > ;
+}

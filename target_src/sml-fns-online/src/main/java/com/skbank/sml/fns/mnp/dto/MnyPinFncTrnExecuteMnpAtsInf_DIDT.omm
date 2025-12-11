@@ -1,0 +1,33 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinFncTrnExecuteMnpAtsInf_DIDT
+< logicalName= "머니클립자동이체정보.컴포넌트.입력IO" description=""
+>
+{
+	String trnDscd < length = 2 description = "거래구분코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsMngNo < length = 13 description = "자동이체관리번호" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsWdrBkwAcno < length = 20 description = "자동이체출금전행계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String cucd < length = 3 description = "통화코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsRcvBkcd < length = 3 description = "자동이체입금은행코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String afchAtsRcvBkwAcno < length = 20 description = "변경후자동이체입금전행계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsBasDd < length = 2 description = "자동이체기준일" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String encyActPwno < length = 32 description = "암호화계좌비밀번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsCycd < length = 2 description = "자동이체주기코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsChgAtsCycd < length = 2 description = "자동이체변경자동이체주기코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsAm < length = 18 description = "자동이체금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsStaDt < length = 8 description = "자동이체시작일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String afchAtsStaDt < length = 8 description = "변경후자동이체시작일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsEndDt < length = 8 description = "자동이체종료일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String afchAtsEndDt < length = 8 description = "변경후자동이체종료일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsRqAdvpeEno < length = 8 description = "자동이체신청권유자직원번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rnpeNm < length = 40 description = "수취인명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String afchAtsRnpeNm < length = 50 description = "변경후자동이체수취인명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rqspeNm < length = 16 description = "의뢰인명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String afchAtsRqspeNm < length = 50 description = "변경후자동이체의뢰인명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsTitl < length = 30 description = "자동이체제목" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsItcd < length = 2 description = "자동이체항목코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsItmTxt < length = 70 description = "자동이체항목내용" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsHldyPrcBscd < length = 1 description = "자동이체휴일처리기준코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsAfchFndAcno < length = 13 description = "자동이체변경후펀드계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	Integer cnt < length = 5 description = "건수" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	com.skbank.sml.ifi.mca.eims6.dto.IBSMR0006066_GRID_IDT grid < description = "그리드" arrayReference = "cnt" EIMS_FLD_TYPE = "G" > ;
+}

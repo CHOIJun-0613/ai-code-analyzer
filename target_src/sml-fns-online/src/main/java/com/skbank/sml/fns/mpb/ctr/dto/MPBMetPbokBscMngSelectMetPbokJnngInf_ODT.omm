@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokJnngInf_ODT
+< logicalName= "모임통장.가입.정보.조회.컨트롤러.출력IO" description=""
+>
+{
+	String lginYn < length = 1 description = "로그인여부" > ;
+	String metPbokJnngYn < length = 1 description = "모임통장가입여부" align = left > ;
+	String metRgsDt < length = 8 description = "모임등록일자" align = left > ;
+	String itcsno < length = 36 description = "통합고객번호" > ;
+	String ebnkUtzpeNo < length = 13 description = "전자뱅킹이용자번호" > ;
+}

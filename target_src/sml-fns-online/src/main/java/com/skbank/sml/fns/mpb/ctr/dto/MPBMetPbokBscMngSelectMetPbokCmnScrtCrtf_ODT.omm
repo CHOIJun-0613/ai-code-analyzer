@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokCmnScrtCrtf_ODT
+< logicalName= "모임통장.공통.보안인증.셋팅.출력.IO" description=""
+>
+{
+	String userId < length = 13 description = "이용자아이디" > ;
+	String itcsno < length = 36 description = "통합고객번호" > ;
+	String spCusYn < length = 1 description = "간편회원여부" > ;
+	String esnsMbhNo < length = 11 description = "고객간편회원일련번호" > ;
+	String ciNo < length = 88 description = "CI번호" > ;
+}

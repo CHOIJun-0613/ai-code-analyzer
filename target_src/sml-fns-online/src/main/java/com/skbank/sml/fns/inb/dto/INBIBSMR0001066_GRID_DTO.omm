@@ -1,0 +1,33 @@
+OMM com.skbank.sml.fns.inb.dto.INBIBSMR0001066_GRID_DTO
+<logicalName= "개인계좌보유조회_GRID.공통.IO" description="개인계좌보유조회 IBSMR0001066"
+>
+{
+	String newAcno<length=15 description="신계좌번호" >;
+	String cusUsgAcno<length=15 description="고객사용계좌번호" >;
+	String pdcd<length=13 description="상품코드" >;
+	String prdNm<length=100 description="상품명" >;
+	String cucd<length=3 description="통화코드" >;
+	BigDecimal pbokBal<length=19 decimal=3 description="통장잔액" >;
+	BigDecimal faxcBal<length=19 decimal=3 description="대미환산잔액" >;
+	BigDecimal wdrAvlAm<length=19 decimal=3 description="출금가능금액" >;
+	BigDecimal faxcWdrAvlAm<length=19 decimal=3 description="대미환산출금가능금액" >;
+	String psklActYn<length=1 description="통장대출계좌여부" >;
+	String lactYn<length=1 description="여신계좌여부" >;
+	String fxActYn<length=1 description="외환계좌여부" >;
+	String pbokKd<length=4 description="통장종류" >;
+	String newDt<length=8 description="신규일자" >;
+	String lstTrnDt<length=8 description="최종거래일자" >;
+	String epdt<length=8 description="만기일" >;
+	String adntRgsYn<length=1 description="사고등록여부" >;
+	String crtdIsuActYn<length=1 description="증명서발급계좌여부" >;
+	String wdrActYn<length=1 description="출금계좌여부" >;
+	String csno<length=9 description="고객번호" >;
+	String ntrnnActYn<length=1 description="무거래계좌여부" >;
+	String wdrActUnitRcvDgnYn<length=1 description="출금계좌단위입금지정여부" >;
+	String prdDisSmlItm<length=1 description="상품구분소항목" >;
+	String psnMmfYn<length=1 description="개인MMF여부" >;
+	String elfYn<length=1 description="ELF여부" >;
+	BigDecimal actKrxcBal<length=19 decimal=3 description="계좌원화환산잔액" >;
+	String hdnActYn<length=1 description="숨김계좌여부" >;
+	String pnsnPayStepDscd<length=1 description="연금지급단계구분코드" >;
+}

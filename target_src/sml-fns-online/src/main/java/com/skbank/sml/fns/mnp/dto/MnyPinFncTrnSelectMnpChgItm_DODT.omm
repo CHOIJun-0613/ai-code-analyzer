@@ -1,0 +1,23 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinFncTrnSelectMnpChgItm_DODT
+< logicalName= "머니클립변경항목조회.컴포넌트.출력.IO" description=""
+>
+{
+	BigDecimal atsMngNo < length = 13 description = "자동이체관리번호" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsWdrBkwAcno < length = 20 description = "자동이체출금전행계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String cucd < length = 3 description = "통화코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsRcvBkcd < length = 3 description = "자동이체입금은행코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsBasDd < length = 2 description = "자동이체기준일" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsCycd < length = 2 description = "자동이체주기코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsAm < length = 18 description = "자동이체금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "N" > ;
+	String atsStaDt < length = 8 description = "자동이체시작일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsEndDt < length = 8 description = "자동이체종료일자" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsRqAdvpeEno < length = 8 description = "자동이체신청권유자직원번호" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rnpeNm < length = 40 description = "수취인명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String rqspeNm < length = 16 description = "의뢰인명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsTitl < length = 30 description = "자동이체제목" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsItcd < length = 2 description = "자동이체항목코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsItmTxt < length = 70 description = "자동이체항목내용" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsHldyPrcBscd < length = 1 description = "자동이체휴일처리기준코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	com.skbank.sml.fns.mnp.dto.MNPMnyPinFncTrnSelectMnpChgItm_DTO mnpChgItmDto < description = "머니클립모으기변경정보.공통.IO" > ;
+}

@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngSelectSpcebsci_ODT
+< logicalName= "공간.기본정보.컨트롤러.출력.IO" description=""
+>
+{
+	Integer spceIconNo<length=2 description="공간아이콘번호" >;
+	String actKdNm<length=20 description="계좌종류명" >;
+	String acno<length=20 description="계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	BigDecimal actTotAm<length=18 decimal=3 description="계좌총금액" >;
+	BigDecimal mmImAm<length=18 decimal=3 description="월수입금액" >;
+	BigDecimal mmExpdAm<length=18 decimal=3 description="월지출금액" >;
+}

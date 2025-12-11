@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngUpdateGenMetByMbhMbpfXmp_IDT
+< logicalName= "회원별.회비.면제.입력.IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	Integer cnt < length = 3 description = "건수 " align = right fill = "0" > ;
+	com.skbank.sml.fns.mpb.dto.MPBByMbhMbpfXmpGrid_DTO grid < description = "회원별.회비.면제.공통.Sub.IO" arrayReference = "cnt" comment = "" > ;
+}

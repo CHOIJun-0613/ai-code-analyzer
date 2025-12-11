@@ -1,0 +1,13 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMbhInfGrid_ODT
+< logicalName= "모임통장.기본.회원.정보.그리드.수정.출력.IO" description=""
+>
+{
+	Integer metMbhSrno < length = 7 description = "모임회원일련번호" align = right fill = "0" > ;
+	String ebnkUtzpeNo < length = 13 description = "전자뱅킹이용자번호" align = left > ;
+	String metMbhNm < length = 60 description = "모임회원명" align = left > ;
+	BigDecimal mbpfPmtgtAm < length = 19 decimal = 3 description = "회비납부대상금액" align = right fill = "0" > ;
+	String ancSndDscd < length = 1 description = "공지발송구분코드" align = left > ;
+	String ancSndDscdNm < length = 50 description = "공지발송구분코드명" align = left > ;
+	String agmdCollDt < length = 8 description = "동의서징구일자" align = left > ;
+	String metMbhImgUrlNm < length = 100 description = "모임회원이미지URL명" align = left > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinBscMngUpdateWallSeq_IDT
+< logicalName= "머니클립.지갑.순서.수정.컨트롤러.입력.IO" description=""
+>
+{
+	String mnyClpMoAcno < length = 13 description = "머니클립모계좌번호" formatType = masking format = "M141" > ;
+	com.skbank.sml.fns.mnp.dto.MNPBscInf_DTO grid < description = "머니클립기본정보그리드" arrayReference = "1" > ;
+}

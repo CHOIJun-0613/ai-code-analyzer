@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.mpb.dbm.MET_PBOK_LIFEC_MNG_LDG001_DBM">
+<!--Generated 2024. 07. 05. 15:20:15-->
+<select id="selectMetPbokLifecMngLdgPkInfo" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_LIFEC_MNG_LDG001SelectMetPbokLifecMngLdgPkInfo_DIDT" resultType="com.skbank.sml.fns.mpb.dto.MET_PBOK_LIFEC_MNG_LDG001SelectMetPbokLifecMngLdgPkInfo_DODT">&#13;
+SELECT /* 모임통장생활비관리원장 */ 
+		      MET_MNG_NO        	AS metMngNo 		/* 모임관리번호 */
+		    , MET_LIFEC_EST_YN 	AS metLifecEstYn /* 모임생활비설정여부 */
+		    , MET_LIFEC_AM     		AS metLifecAm 		/* 모임생활비금액 */
+		    , MET_LIFEC_EST_DT 	AS metLifecEstDt 	/* 모임생활비설정일자 */
+		    , MET_LIFEC_BAS_DD	AS metLifecBasDd	/* 모임생활비기준일 */
+		    , LST_DB_CHG_ID    		AS lstDbChgId 		/* 최종DB변경ID */
+  	        , LST_DB_CHG_DTM   	AS lstDbChgDtm 	/* 최종DB변경일시 */
+   FROM MET_PBOK_LIFEC_MNG_LDG
+WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */&#13;
+</select>
+<insert id="insertMetPbokLifecMngLdgPk" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_LIFEC_MNG_LDG001InsertMetPbokLifecMngLdgPk_DIDT">&#13;
+INSERT INTO MET_PBOK_LIFEC_MNG_LDG /* 모임통장생활비관리원장 */
+(
+     MET_MNG_NO /* 모임관리번호 */
+    , MET_LIFEC_EST_YN /* 모임생활비설정여부 */
+    , MET_LIFEC_AM /* 모임생활비금액 */
+    , MET_LIFEC_EST_DT /* 모임생활비설정일자 */
+    , MET_LIFEC_BAS_DD /* 모임생활비기준일 */
+    , LST_DB_CHG_ID /* 최종DB변경ID */
+    , LST_DB_CHG_DTM /* 최종DB변경일시 */ 
+)
+VALUES
+(
+    #{metMngNo} /* 모임관리번호 */
+    , #{metLifecEstYn} /* 모임생활비설정여부 */
+    , #{metLifecAm} /* 모임생활비금액 */
+    , #{metLifecEstDt} /* 모임생활비설정일자 */
+    , #{metLifecBasDd} /* 모임생활비기준일 */
+    , #{lstDbChgId} /* 최종DB변경ID */
+    , #{lstDbChgDtm} /* 최종DB변경일시 */ 
+)&#13;
+</insert>
+<update id="updateMetPbokLifecMngLdgPk" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_LIFEC_MNG_LDG001UpdateMetPbokLifecMngLdgPk_DIDT">&#13;
+UPDATE MET_PBOK_LIFEC_MNG_LDG /* 모임통장생활비관리원장 */
+   	  SET  MET_LIFEC_EST_YN = #{metLifecEstYn} /* 모임생활비설정여부 */
+      	 	, MET_LIFEC_AM = #{metLifecAm} /* 모임생활비금액 */
+       		, MET_LIFEC_EST_DT = #{metLifecEstDt} /* 모임생활비설정일자 */
+       		, MET_LIFEC_BAS_DD = #{metLifecBasDd} /* 모임생활비기준일 */
+       		, LST_DB_CHG_ID = #{lstDbChgId} /* 최종DB변경ID */
+       		, LST_DB_CHG_DTM = #{lstDbChgDtm} /* 최종DB변경일시 */
+ WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */&#13;
+</update>
+</mapper>

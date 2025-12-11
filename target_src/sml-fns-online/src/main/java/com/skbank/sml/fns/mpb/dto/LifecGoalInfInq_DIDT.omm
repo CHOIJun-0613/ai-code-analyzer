@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.mpb.dto.LifecGoalInfInq_DIDT
+<logicalName= "생활비.목표.정보.조회.DBM.입력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+}

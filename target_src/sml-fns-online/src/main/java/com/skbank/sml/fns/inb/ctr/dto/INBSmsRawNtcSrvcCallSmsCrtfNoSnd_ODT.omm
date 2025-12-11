@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBSmsRawNtcSrvcCallSmsCrtfNoSnd_ODT
+< logicalName= "SMS인증발송ODT" description="SMS인증발송ODT"
+>
+{
+	String scsYn < length = 1 description = "성공여부" > ;
+	String crtfNo < length = 10 description = "인증번호" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBLifecExpdCnsmListPts_ODT
+< logicalName= "생활비.지출.소비.목록.현황.컨트롤러.출력.IO" description=""
+>
+{
+	String basYm < length = 7 description = "기준년월" > ;
+	BigDecimal expdAm < length = 19 decimal = 3 description = "지출금액" align = right fill = "0" > ;
+}

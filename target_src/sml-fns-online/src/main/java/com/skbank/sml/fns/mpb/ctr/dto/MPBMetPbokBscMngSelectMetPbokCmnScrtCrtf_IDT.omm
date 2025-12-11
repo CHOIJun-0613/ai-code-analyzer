@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokCmnScrtCrtf_IDT
+< logicalName= "모임통장.공통.보안인증.셋팅.입력.IO" description=""
+>
+{
+	String scrtMdUsgYn < length = 1 description = "보안매체사용여부" > ;
+	String dniAcnmCnfYn < length = 1 description = "비대면실명확인여부 " > ;
+}

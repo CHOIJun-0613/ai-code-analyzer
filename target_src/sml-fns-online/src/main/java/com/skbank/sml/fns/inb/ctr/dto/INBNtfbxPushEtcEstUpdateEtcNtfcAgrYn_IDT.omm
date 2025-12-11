@@ -1,0 +1,24 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdateEtcNtfcAgrYn_IDT
+< logicalName= "기타알림.동의여부.컨트롤러.입력.IO" description="기타알림 동의 여부 컨트롤러 IO"
+>
+{
+	String dpidTrtXprNtfcAgrYn < length = 1 description = "예적금신탁만기알림동의여부" > ;
+	String fnsXprNtfcAgrYn < length = 1 description = "펀드만기알림동의여부" > ;
+	String lnXprNtfcAgrYn < length = 1 description = "대출만기알림동의여부" > ;
+	String lnintPidNtfcAgrYn < length = 1 description = "대출이자납입알림동의여부" > ;
+	String atsXprNtfcAgrYn < length = 1 description = "자동이체만기알림동의여부" > ;
+	String eltUndasPrNtfcAgrYn < length = 1 description = "ELT기초자산가격알림동의여부" > ;
+	String sltMndNtfcAgrYn < length = 1 description = "기타알림동의여부" > ;
+	Integer xprNtfcIdx < length = 1 description = "만기여부인덱스" > ;
+	String dayilyAgrYn < length = 1 description = "dayily구독여부" > ;
+	String weeklyAgrYn < length = 1 description = "weekly구독여부" > ;
+	String monthlyAgrYn < length = 1 description = "monthly구독여부" > ;
+	String issueAgrYn < length = 1 description = "issue구독여부" > ;
+	String tim9brfAgrYn < length = 1 description = "9시브리핑동의여부" > ;
+	String wctfcNtfcAgrYn < length = 1 description = "우리WON인증알림동의여부" > ;
+	String mrktAgrYn1 < length = 1 description = "마케팅동의여부_1" > ;
+	String smsMrktAgrYn1 < length = 1 description = "SMS마케팅동의여부_1" > ;
+	String etcEstDis < length = 200 description = "기타설정구분" > ;
+	String evtDis < length = 2 description = "이벤트구분번호" > ;
+	String nlginAgrYn < length = 1 description = "비로그인동의여부" > ;
+}

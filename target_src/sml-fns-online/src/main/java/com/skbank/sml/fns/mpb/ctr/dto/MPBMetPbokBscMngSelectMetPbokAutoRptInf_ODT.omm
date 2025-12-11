@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMetPbokAutoRptInf_ODT
+< logicalName= "모임통장.관리.메인.정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	BigDecimal ctBal < length = 19 decimal = 3 description = "현재잔액" align = right fill = "0" > ;
+	Integer mbhGridCnt < length = 5 description = "회원그리드건수" align = right fill = "0" > ;
+	BigDecimal mbpfPmtSumAm < length = 19 decimal = 3 description = "회비납부합계금액" align = right fill = "0" > ;
+	BigDecimal expdSumAm < length = 19 decimal = 3 description = "지출합계금액" align = right fill = "0" > ;
+}

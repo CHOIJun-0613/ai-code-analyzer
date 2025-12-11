@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngSelectMbhActInf_ODT
+< logicalName= "회원.계좌.정보.컨트롤러.출력.IO" description=""
+>
+{
+	Integer gridCnt < length = 2 description = "그리드건수" > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMbhActInfGrid grid < description = "회원.계좌.정보.그리드.컨트롤러.출력.IO" arrayReference = "gridCnt" comment = "" > ;
+}

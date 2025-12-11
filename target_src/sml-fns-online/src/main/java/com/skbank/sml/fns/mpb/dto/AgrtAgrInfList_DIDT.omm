@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mpb.dto.AgrtAgrInfList_DIDT
+<logicalName= "약관동의정보.목록.DBM.입력.IO" description=""
+>
+{
+	String agrtDscd<length=2 description="약관구분코드" >;
+	String agrtId<length=10 description="약관ID" >;
+	String agrtAgrYn<length=1 description="약관동의여부" >;
+}

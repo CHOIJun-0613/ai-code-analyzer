@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.mnp.dbm.MNY_CLP_EXPS_SEQ_MNG001_DBM">
+<!--Generated 2024. 10. 23. 13:48:36-->
+<select id="selectMnyClpExpsSeqMng" parameterType="com.skbank.sml.fns.mnp.dto.MNY_CLP_EXPS_SEQ_MNG_LDG001_DBMSelectMnyClpExpsSeqMng_DIDT" resultType="com.skbank.sml.fns.mnp.dto.MNPBscInf_DTO">&#13;
+SELECT /* 머니클립노출순서관리 */ 
+       ITCSNO                      AS itcsno /* 통합고객번호 */
+       , MNY_CLP_MO_ACNO           AS mnyClpMoAcno /* 머니클립모계좌번호 */
+       , MNY_CLP_CHID_ACNO         AS mnyClpChidAcno /* 머니클립자계좌번호 */
+       , MNY_CLP_CHID_ACT_DSCD     AS mnyClpChidActDscd /* 머니클립자계좌구분코드 */
+       , MNY_CLP_CHID_ACT_NM       AS mnyClpChidActNm /* 머니클립자계좌명 */
+       , MNY_CLP_CHID_ACT_EXPS_SEQ AS mnyClpChidActExpsSeq /* 머니클립자계좌노출순서 */
+       , MNY_CLP_CHID_ACT_ICON_NM  AS mnyClpChidActIconNm /* 머니클립자계좌아이콘명 */
+       , RGPE_ID                   AS rgpeId /* 등록자ID */
+       , RGPE_DEPT_ID              AS rgpeDeptId /* 등록자부서ID */
+       , RGS_DTM                   AS rgsDtm /* 등록일시 */
+       , AMDPE_ID                  AS amdpeId /* 수정자ID */
+       , AMDPE_DEPT_ID             AS amdpeDeptId /* 수정자부서ID */
+       , AMD_DTM                   AS amdDtm /* 수정일시 */
+  FROM MNY_CLP_EXPS_SEQ_MNG_LDG
+ WHERE ITCSNO = #{itcsno} /* 통합고객번호 */
+   AND MNY_CLP_MO_ACNO = #{mnyClpMoAcno} /* 머니클립모계좌번호 */
+ ORDER BY MNY_CLP_CHID_ACT_EXPS_SEQ&#13;
+</select>
+<insert id="insertMnyClpExpsSeqMng" parameterType="com.skbank.sml.fns.mnp.dto.MNY_CLP_EXPS_SEQ_MNG_LDG001_DBMInsertMnyClpExpsSeqMng_DIDT">&#13;
+INSERT INTO MNY_CLP_EXPS_SEQ_MNG_LDG /* 머니클립노출순서관리 */
+(
+     ITCSNO /* 통합고객번호 */
+    , MNY_CLP_MO_ACNO /* 머니클립모계좌번호 */
+    , MNY_CLP_CHID_ACNO /* 머니클립자계좌번호 */
+    , MNY_CLP_CHID_ACT_DSCD /* 머니클립자계좌구분코드 */
+    , MNY_CLP_CHID_ACT_NM /* 머니클립자계좌명 */
+    , MNY_CLP_CHID_ACT_EXPS_SEQ /* 머니클립자계좌노출순서 */
+    , MNY_CLP_CHID_ACT_ICON_NM /* 머니클립자계좌아이콘명 */
+    , RGPE_ID /* 등록자ID */
+    , AMDPE_ID /* 수정자ID */
+    , RGS_DTM
+    , AMD_DTM
+)
+VALUES
+(
+    #{itcsno} /* 통합고객번호 */
+    , #{mnyClpMoAcno} /* 머니클립모계좌번호 */
+    , #{mnyClpChidAcno} /* 머니클립자계좌번호 */
+    , #{mnyClpChidActDscd} /* 머니클립자계좌구분코드 */
+    , #{mnyClpChidActNm} /* 머니클립자계좌명 */
+    , #{mnyClpChidActExpsSeq} /* 머니클립자계좌노출순서 */
+    , #{mnyClpChidActIconNm} /* 머니클립자계좌아이콘명 */
+    , #{rgpeId} /* 등록자ID */
+    , #{amdpeId} /* 수정자ID */
+    , TO_CHAR(systimestamp, 'YYYYMMDDHH24MISS')
+    , TO_CHAR(systimestamp, 'YYYYMMDDHH24MISS')
+)&#13;
+</insert>
+<update id="updateMnyClpExpsSeqMng" parameterType="com.skbank.sml.fns.mnp.dto.MNY_CLP_EXPS_SEQ_MNG_LDG001_DBMUpdateMnyClpExpsSeqMng_DIDT">&#13;
+UPDATE MNY_CLP_EXPS_SEQ_MNG_LDG /* 머니클립노출순서관리 */
+   SET MNY_CLP_CHID_ACT_NM = #{mnyClpChidActNm} /* 머니클립자계좌명 */
+       , MNY_CLP_CHID_ACT_EXPS_SEQ = #{mnyClpChidActExpsSeq} /* 머니클립자계좌노출순서 */
+       , MNY_CLP_CHID_ACT_ICON_NM = #{mnyClpChidActIconNm} /* 머니클립자계좌아이콘명 */
+       , AMDPE_ID = #{amdpeId} /* 수정자ID */
+       , AMD_DTM = TO_CHAR(systimestamp, 'YYYYMMDDHH24MISS') /* 수정일시 */
+ WHERE ITCSNO = #{itcsno} /* 통합고객번호 */
+   AND MNY_CLP_CHID_ACNO = #{mnyClpChidAcno} /* 머니클립자계좌번호 */
+   AND MNY_CLP_MO_ACNO = #{mnyClpMoAcno} /* 머니클립모계좌번호 */&#13;
+</update>
+<delete id="deleteMnyClpExpsSeqMng" parameterType="com.skbank.sml.fns.mnp.dto.MNY_CLP_EXPS_SEQ_MNG_LDG001_DBMDeleteMnyClpExpsSeqMng_DIDT">&#13;
+DELETE 
+FROM MNY_CLP_EXPS_SEQ_MNG_LDG /* 머니클립노출순서관리 */
+ WHERE ITCSNO = #{itcsno} /* 통합고객번호 */
+   AND MNY_CLP_MO_ACNO = #{mnyClpMoAcno} /* 머니클립모계좌번호 */
+   AND MNY_CLP_CHID_ACNO = #{mnyClpChidAcno} /* 머니클립자계좌번호 */&#13;
+</delete>
+<delete id="deleteMnyClpExpsSeqMngList">&#13;
+DELETE 
+FROM MNY_CLP_EXPS_SEQ_MNG_LDG /* 머니클립노출순서관리 */
+ WHERE ITCSNO = #{itcsno} /* 통합고객번호 */
+   AND MNY_CLP_MO_ACNO = #{mnyClpMoAcno} /* 머니클립모계좌번호 */&#13;
+</delete>
+</mapper>

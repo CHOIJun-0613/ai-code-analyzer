@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdateMyNtfcDtl_ODT
+< logicalName= "나만의알림상세변경ODT" description="나만의알림상세변경ODT"
+>
+{
+	String rtcd < length = 7 description = "결과코드" > ;
+	String rtcdTxt < length = 100 description = "결과코드내용" > ;
+}

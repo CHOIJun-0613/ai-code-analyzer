@@ -1,0 +1,6 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqSelectPushAgrYn_IDT
+< logicalName= "push기본정보 조회 IDT" description="push기본정보 조회 IDT"
+>
+{
+	String mchrUnqInfId < length = 300 description = "기기고유정보ID" > ;
+}

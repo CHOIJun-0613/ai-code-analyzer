@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngUpdateWallBscInf_IDT
+< logicalName= "머니클립지갑기본정보수정.입력.IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	String wallAcno < length = 15 description = "지갑계좌번호" > ;
+	String iconCd < length = 3 description = "아이콘코드" > ;
+	String wallAlsNm < length = 50 description = "지갑별칭명" > ;
+}

@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.dto.NtfcDpsEst_DIDT
+<logicalName= "알림.수신설정.DBM.입력.IO" description="PUSH 알림 설정 조회 IO"
+>
+{
+	String appDscd<length=1 description="앱구분코드" >;
+	String userId<length=320 description="사용자ID" >;
+}

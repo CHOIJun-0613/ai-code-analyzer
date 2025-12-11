@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngUpdateGenMetMbpfEst_IDT
+< logicalName= "일반.모임.회비.설정.컨트롤러.입력.IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" align = left > ;
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String mbpfPymDt < length = 8 description = "회비납부일자" align = left > ;
+	BigDecimal mbpfPmtgtAm < length = 19 decimal = 3 description = "회비납부대상금액" align = right fill = "0" > ;
+}

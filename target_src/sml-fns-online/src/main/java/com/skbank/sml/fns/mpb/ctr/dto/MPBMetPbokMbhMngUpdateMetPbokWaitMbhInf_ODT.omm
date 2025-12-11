@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokMbhMngUpdateMetPbokWaitMbhInf_ODT
+< logicalName= "모임통장.회원.대기정보.수정.컨트롤러.출력.IO" description=""
+>
+{
+	String rspRtcd < length = 4 description = "응답결과코드" > ;
+	String rspMsgTxt < length = 100 description = "응답메시지내용" > ;
+}

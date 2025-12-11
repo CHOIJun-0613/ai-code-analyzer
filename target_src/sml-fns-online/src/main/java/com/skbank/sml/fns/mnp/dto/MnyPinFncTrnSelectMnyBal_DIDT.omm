@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mnp.dto.MnyPinFncTrnSelectMnyBal_DIDT
+< logicalName= "머니클립 월말 잔액조회.컴포넌트.입력IO" description=""
+>
+{
+	String inqAcno < length = 16 description = "조회계좌번호" align = left > ;
+	String inqStaYm < length = 6 description = "조회시작년월" align = left > ;
+	String inqEndYm < length = 6 description = "조회종료년월" align = left > ;
+}

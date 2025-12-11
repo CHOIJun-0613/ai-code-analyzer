@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.dto.HswfMetLifecExpdPts_DODT
+< logicalName= "부부.모임.생활비.지출.현황.출력.IO" description=""
+>
+{
+	String metMngNo < length = 9 description = "모임관리번호" align = left > ;
+	String metNm < length = 100 description = "모임명" align = left > ;
+	Integer gridCnt < length = 5 description = "그리드건수" > ;
+	com.skbank.sml.fns.mpb.dto.HswfMetLifecExpdPtsSub_DODT grid < description = "부부.모임.생활비.지출.현황.SUB.출력.IO" arrayReference = "gridCnt" comment = "" > ;
+}

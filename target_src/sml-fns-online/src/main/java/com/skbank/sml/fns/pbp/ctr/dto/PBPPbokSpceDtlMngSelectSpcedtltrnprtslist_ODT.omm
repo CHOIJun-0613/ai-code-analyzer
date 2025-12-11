@@ -1,0 +1,16 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlMngSelectSpcedtltrnprtslist_ODT
+< logicalName= "공간.상세.거래내역.목록.컨트롤러.출력.IO" description=""
+>
+{
+	String trnDt<length=8 description="거래일자" >;
+	String trnTm<length=8 description="거래시각" >;
+	String rcvWdrDscd<length=1 description="입금출금구분코드" >;
+	String rcvWdrDscdNm < length = 50 description = "입금출금구분코드명" > ;
+	String spceNo < length = 2 description = "공간번호" > ;
+	Integer trnSrno < length = 8 description = "거래일련번호" > ;
+	BigDecimal rawAm<length=18 decimal=3 description="입출금금액" >;
+	BigDecimal pbokRestAm<length=18 decimal=3 description="통장잔여금액" >;
+	String pbokPrngTxt<length=100 description="통장인자내용" >;
+	String trnKdNm<length=10 description="거래종류명" >;
+	String trnMemo<length=10 description="거래메모" >;
+}

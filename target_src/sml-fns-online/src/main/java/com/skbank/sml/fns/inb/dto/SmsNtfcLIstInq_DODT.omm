@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.dto.SmsNtfcLIstInq_DODT
+< logicalName= "SMS.알림.목록.조회.DBM.출력.IO" description="통합 알림 목록 조회 IO"
+>
+{
+	String status < length = 10 description = "상태" > ;
+	String code<length=3 description="리턴코드" >;
+	String msg<length=500 description="리턴메시지" >;
+	com.skbank.sml.fns.inb.dto.INBSmsNtfcRspGrid_DTO msgs<length=0 description="SMS.알림.응답.GRID.공통.IO" arrayReference="1" >;
+	String appUserId < length = 100 description = "앱유저ID" > ;
+}

@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngInsertPboksprnmbhJnng_IDT
+< logicalName= "통장.분리.회원가입.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String acno < length = 20 description = "계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String agrtDscd < length = 2 description = "약관구분코드" > ;
+	String agrtAgrYn < length = 1 description = "약관동의여부" > ;
+}

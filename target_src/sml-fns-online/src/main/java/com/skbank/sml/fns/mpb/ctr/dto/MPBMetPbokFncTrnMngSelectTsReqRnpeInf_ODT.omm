@@ -1,0 +1,22 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokFncTrnMngSelectTsReqRnpeInf_ODT
+< logicalName= "이체.요청.수취인.정보.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String owacFnm < length = 22 description = "예금주성명 " align = left > ;
+	BigDecimal bftrAfBal < length = 13 description = "거래전후잔액" align = right fill = "0" > ;
+	String rnpeFnm < length = 22 description = "수취인성명" align = left > ;
+	String trnSrno < length = 12 description = "거래일련번호" align = left > ;
+	BigDecimal feeAm < length = 11 description = "수수료금액" align = right fill = "0" > ;
+	BigDecimal rduFeeAm < length = 11 description = "감면수수료금액" align = right fill = "0" > ;
+	BigDecimal wmbRduAm < length = 11 description = "우리멤버스감면금액" align = right fill = "0" > ;
+	String frduRncd < length = 4 description = "수수료감면사유코드" align = left > ;
+	String oldAtrbDpstDlTgtYn < length = 1 description = "구속성예금취급대상여부" align = left > ;
+	String nrsrYn1 < length = 1 description = "비거주자여부_1" align = left > ;
+	String nrsrYn2 < length = 1 description = "비거주자여부_2" align = left > ;
+	String tlmNo < length = 13 description = "전문번호" align = left > ;
+	String tnbkNm < length = 12 description = "상호저축은행명" align = left > ;
+	String rcvBkwAcno < length = 20 description = "입금전행계좌번호" align = left > ;
+	String rspTxt < length = 200 description = "응답내용" align = left > ;
+	String rscd < length = 200 description = "응답코드" > ;
+	String chnlErrCd < length = 200 description = "채널오류코드" > ;
+}

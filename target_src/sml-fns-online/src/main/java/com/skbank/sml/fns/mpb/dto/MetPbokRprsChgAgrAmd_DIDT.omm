@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokRprsChgAgrAmd_DIDT
+< logicalName= "모임통장.대표.변경.동의.수정.DBM.입력.IO" description=""
+>
+{
+	String rgsChgTmntDis < length = 1 description = "등록변경해지구분" > ;
+	String metMngNo<length=9 description="모임관리번호" >;
+	Integer metMbhSrno<length=7 description="모임회원일련번호" >;
+	String rppeChgApvCd < length = 1 description = "대표자변경승인코드" > ;
+}

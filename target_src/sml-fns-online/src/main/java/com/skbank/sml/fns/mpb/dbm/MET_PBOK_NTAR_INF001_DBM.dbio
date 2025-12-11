@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.skbank.sml.fns.mpb.dbm.MET_PBOK_NTAR_INF001_DBM">
+<!--Generated 2024. 10. 14. 11:17:06-->
+<select id="selectNtarinf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_NTAR_INF001SelectNtarinf_DIDT" resultType="com.skbank.sml.fns.mpb.dto.MET_PBOK_NTAR_INF001SelectNtarinf_DODT">&#13;
+SELECT /* 모임통장공지사항정보 */ 
+       A.MET_MNG_NO              AS metMngNo /* 모임관리번호 */
+       , A.MET_NTAR_RGS_DT       AS metNtarRgsDt /* 모임공지사항등록일자 */
+       , A.MET_NTAR_SRNO         AS metNtarSrno /* 모임공지사항일련번호 */
+       , A.MET_NTAR_TXT          AS metNtarTxt /* 모임공지사항내용 */
+       , A.MET_NTAR_DEL_YN       AS metNtarDelYn /* 모임공지사항삭제여부 */
+       , A.MET_NTAR_HDN_YN       AS metNtarHdnYn /* 모임공지사항숨김여부 */
+       , A.MET_NTAR_RGS_MBH_SRNO AS metNtarRgsMbhSrno /* 모임공지사항등록회원일련번호 */
+       , A.MET_NTAR_CHG_MBH_SRNO AS metNtarChgMbhSrno /* 모임공지사항변경회원일련번호 */
+       , A.MET_NTAR_RGS_TM       AS metNtarRgsTm /* 모임공지사항등록시각 */
+       , A.MET_NTAR_CHG_DT       AS metNtarChgDt /* 모임공지사항변경일자 */
+       , A.MET_NTAR_CHG_TM       AS metNtarChgTm /* 모임공지사항변경시각 */
+       , A.LST_DB_CHG_ID         AS lstDbChgId /* 최종DB변경ID */
+       , A.LST_DB_CHG_DTM        AS lstDbChgDtm /* 최종DB변경일시 */
+  FROM MET_PBOK_NTAR_INF A
+	     , (SELECT X.MET_NTAR_RGS_DT, X.MET_NTAR_SRNO 
+		  	   FROM MET_PBOK_NTAR_INF X
+		  	WHERE X.MET_MNG_NO =#{metMngNo}
+				  AND X.MET_NTAR_RGS_DT = (SELECT MAX(Y.MET_NTAR_RGS_DT)
+																    FROM MET_PBOK_NTAR_INF Y
+																 WHERE Y.MET_MNG_NO = #{metMngNo})
+		GROUP BY X.MET_NTAR_RGS_DT, X.MET_NTAR_SRNO 
+		 	 HAVING X.MET_NTAR_SRNO = (SELECT MAX(MET_NTAR_SRNO)
+							       								 FROM MET_PBOK_NTAR_INF Z
+														      WHERE Z.MET_MNG_NO = #{metMngNo}
+															        AND Z.MET_NTAR_RGS_DT = X.MET_NTAR_RGS_DT) 
+			) B 
+ WHERE A.MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+   	   AND A.MET_NTAR_RGS_DT = B.MET_NTAR_RGS_DT
+   	   AND A.MET_NTAR_SRNO = B.MET_NTAR_SRNO
+       AND MET_NTAR_DEL_YN = 'N'&#13;
+</select>
+<insert id="insertNtarinf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_NTAR_INF001InsertNtarinf_DIDT">&#13;
+INSERT INTO MET_PBOK_NTAR_INF /* 모임통장공지사항정보 */
+(
+     MET_MNG_NO /* 모임관리번호 */
+    , MET_NTAR_RGS_DT /* 모임공지사항등록일자 */
+    , MET_NTAR_SRNO /* 모임공지사항일련번호 */
+    , MET_NTAR_TXT /* 모임공지사항내용 */
+    , MET_NTAR_DEL_YN /* 모임공지사항삭제여부 */
+    , MET_NTAR_HDN_YN /* 모임공지사항숨김여부 */
+    , MET_NTAR_RGS_MBH_SRNO /* 모임공지사항등록회원일련번호 */
+    , MET_NTAR_CHG_MBH_SRNO /* 모임공지사항변경회원일련번호 */
+    , MET_NTAR_RGS_TM /* 모임공지사항등록시각 */
+    , MET_NTAR_CHG_DT /* 모임공지사항변경일자 */
+    , MET_NTAR_CHG_TM /* 모임공지사항변경시각 */
+    , MET_ACNO /* 모임 계좌번호 */
+    , RLF_ACNO /* 안심계좌번호 */
+    , LST_DB_CHG_ID /* 최종DB변경ID */
+    , LST_DB_CHG_DTM /* 최종DB변경일시 */ 
+)
+VALUES
+(
+    #{metMngNo} /* 모임관리번호 */
+    , #{metNtarRgsDt} /* 모임공지사항등록일자 */
+    , (SELECT NVL(MAX(MET_NTAR_SRNO), 0) +1 
+		  FROM MET_PBOK_NTAR_INF 
+	   WHERE MET_MNG_NO = #{metMngNo}
+			 AND MET_NTAR_RGS_DT = #{metNtarRgsDt}) /* 모임공지사항일련번호 */
+    , #{metNtarTxt} /* 모임공지사항내용 */
+    , #{metNtarDelYn} /* 모임공지사항삭제여부 */
+    , #{metNtarHdnYn} /* 모임공지사항숨김여부 */
+    , #{metNtarRgsMbhSrno} /* 모임공지사항등록회원일련번호 */
+    , #{metNtarChgMbhSrno} /* 모임공지사항변경회원일련번호 */
+    , #{metNtarRgsTm} /* 모임공지사항등록시각 */
+    , #{metNtarChgDt} /* 모임공지사항변경일자 */
+    , #{metNtarChgTm} /* 모임공지사항변경시각 */
+    , #{metAcno} /* 모임 계좌번호 */
+    , #{rlfAcno} /* 안심계좌번호 */
+    , #{lstDbChgId} /* 최종DB변경ID */
+    , TO_CHAR(systimestamp, 'YYYYMMDDHH24MISS') /* 최종DB변경일시 */ 
+)&#13;
+</insert>
+<update id="updateNtarinf" parameterType="com.skbank.sml.fns.mpb.dto.MET_PBOK_NTAR_INF001UpdateNtarinf_DIDT">&#13;
+UPDATE MET_PBOK_NTAR_INF /* 모임통장공지사항정보 */
+   SET MET_NTAR_TXT = #{metNtarTxt} /* 모임공지사항내용 */
+       , MET_NTAR_DEL_YN = #{metNtarDelYn} /* 모임공지사항삭제여부 */
+       , MET_NTAR_HDN_YN =  #{metNtarHdnYn} /* 모임공지사항숨김여부 */
+       , MET_NTAR_CHG_MBH_SRNO = #{metNtarChgMbhSrno} /* 모임공지사항변경회원일련번호 */
+       , MET_NTAR_CHG_DT = #{metNtarChgDt} /* 모임공지사항변경일자 */
+       , MET_NTAR_CHG_TM = #{metNtarChgTm} /* 모임공지사항변경시각 */
+       , LST_DB_CHG_ID = #{lstDbChgId} /* 최종DB변경ID */
+       , LST_DB_CHG_DTM = TO_CHAR(systimestamp, 'YYYYMMDDHH24MISS') /* 최종DB변경일시 */
+ WHERE MET_MNG_NO = #{metMngNo} /* 모임관리번호 */
+   AND MET_NTAR_RGS_DT = #{metNtarRgsDt} /* 모임공지사항등록일자 */
+   AND MET_NTAR_SRNO = #{metNtarSrno} /* 모임공지사항일련번호 */&#13;
+</update>
+</mapper>

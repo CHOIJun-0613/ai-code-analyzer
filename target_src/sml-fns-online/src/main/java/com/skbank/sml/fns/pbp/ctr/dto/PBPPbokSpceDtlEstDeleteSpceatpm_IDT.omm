@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstDeleteSpceatpm_IDT
+< logicalName= "통장쪼개기.자동납부.삭제.컨트롤러.입력.IO" description="통장쪼개기.자동납부.삭제 input"
+>
+{
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+	com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstDeleteSpceatpmlist_IDT pBPPbokSpceDtlEstDeleteSpceatpmlist_IDT<length=0 description="공간.자동납부.목록.수정.컨트롤러.입력.IO" arrayReference="1" >;
+}

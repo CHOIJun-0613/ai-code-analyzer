@@ -1,0 +1,19 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceDtlEstSelectRawactatpminflist_ODT
+< logicalName= "입출금계좌.자동납부.정보.목록.조회.컨트롤러.출력.IO" description=""
+>
+{
+	String atpmMngNo < length = 13 description = "자동납부관리번호" > ;
+	String atsSrvcPdcd < length = 13 description = "자동이체서비스상품코드" align = left > ;
+	String atsWdrBkwAcno < length = 20 description = "자동이체출금전행계좌번호" align = left > ;
+	String atsRgsStcd < length = 1 description = "자동이체등록상태코드" align = left > ;
+	String atsRgsStcdNm < length = 40 description = "자동이체등록상태코드명" align = left > ;
+	String atsRgsDt < length = 8 description = "자동이체등록일자" align = left > ;
+	String atsCsno < length = 9 description = "자동이체고객번호" align = left > ;
+	String atsItcsno < length = 11 description = "자동이체통합고객번호" align = left > ;
+	String atsCtrIscd < length = 10 description = "자동이체계약기관코드" align = left > ;
+	String atsPypeNo < length = 20 description = "자동이체납부자번호" align = left > ;
+	String atsTlmOccIstSrno < length = 30 description = "자동이체전문발생기관일련번호" align = left > ;
+	String atsCtrIstNm < length = 40 description = "자동이체계약기관명" align = left > ;
+	String spceNo < length = 6 description = "공간번호" align = left > ;
+	String spceNm < length = 50 description = "공간명" align = left > ;
+}

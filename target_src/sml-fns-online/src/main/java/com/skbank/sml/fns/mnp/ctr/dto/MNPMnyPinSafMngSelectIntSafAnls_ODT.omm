@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinSafMngSelectIntSafAnls_ODT
+< logicalName= "머니클립.금고.이자.분석.조회.컨트롤러.입력IO" description=""
+>
+{
+	BigDecimal intSumAm < length = 19 decimal = 3 description = "이자합계금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	String errMsgId < length = 10 description = "오류메시지ID" > ;
+	String errMsgTxt < length = 100 description = "오류메시지내용" > ;
+}

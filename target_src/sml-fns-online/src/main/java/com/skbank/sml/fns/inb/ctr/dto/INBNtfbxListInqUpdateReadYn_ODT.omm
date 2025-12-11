@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxListInqUpdateReadYn_ODT
+< logicalName= "알림열람여부 ODT" description="알림열람여부 ODT"
+>
+{
+	String code < length = 5 description = "상태" > ;
+	String msg < length = 100 description = "결과메시지" > ;
+}

@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.shr.dto.SHRINBPushNtfcListInqOut_DTO
+< logicalName= "PUSH알림목록조회out DTO" description="PUSH알림목록조회out DTO"
+>
+{
+	String status < length = 10 description = "상태" > ;
+	String code < length = 3 description = "리턴코드" > ;
+	String msg < length = 500 description = "리턴메시지" > ;
+	String appUserId < length = 11 description = "APP유저아이디(통합고객번호)" > ;
+	com.skbank.sml.fns.shr.dto.SHRINBPushNtfcListInqOutGrid_DTO msgs < description = "PUSH알림목록조회GRID" arrayReference = "1" PROP_OPTION_DSCD = "L999" > ;
+}

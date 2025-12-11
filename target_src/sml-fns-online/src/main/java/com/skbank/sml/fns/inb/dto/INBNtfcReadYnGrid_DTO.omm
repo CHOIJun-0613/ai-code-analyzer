@@ -1,0 +1,8 @@
+OMM com.skbank.sml.fns.inb.dto.INBNtfcReadYnGrid_DTO
+< logicalName= "알림읽음여부GRID DTO" description="알림읽음여부GRID DTO"
+>
+{
+	String umsTrno < length = 20 description = "UMS트렌젝션번호" > ;
+	String umsReqDt < length = 8 description = "UMS요청일자" > ;
+	String msgId < length = 20 description = "메시지ID" > ;
+}

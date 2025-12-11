@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstSelectMyNtfcRnpeNm_IDT
+< logicalName= "수취인명IDT" description="수취인명IDT"
+>
+{
+	String wdrBkcd < length = 3 description = "출금은행코드" > ;
+	String wdrAcno < length = 15 description = "출금계좌번호" > ;
+	BigDecimal trnAm < length = 13 description = "거래금액" > ;
+	String rcvBkcd < length = 3 description = "입금은행코드" > ;
+	String rcvAcno < length = 15 description = "입금계좌번호" > ;
+}

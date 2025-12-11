@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBLifecCnsmDgnsPts_ODT
+<logicalName= "생활비.소비.진단.현황.컨트롤러.출력.IO" description=""
+>
+{
+	BigDecimal avgCnsmAm<length=18 decimal=3 description="평균소비금액" >;
+	Integer avgCnsmCnt<length=9 description="평균소비건수" >;
+	BigDecimal totCnsmAm<length=18 description="총소비금액" >;
+	BigDecimal bmmTotCnsmAm<length=18 description="전월총소비금액" >;
+	BigDecimal bf2mnTotCnsmAm<length=18 description="전전월총소비금액" >;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBLifecCtgrCnsmPrtsList_ODT mPBLifecCtgrCnsmPrtsList_ODT<length=0 description="생활비.카테고리.소비.내역.목록.컨트롤러.출력.IO" arrayReference="1" >;
+}

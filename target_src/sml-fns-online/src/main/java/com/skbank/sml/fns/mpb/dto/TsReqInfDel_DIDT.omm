@@ -1,0 +1,11 @@
+OMM com.skbank.sml.fns.mpb.dto.TsReqInfDel_DIDT
+< logicalName= "이체요청.정보.삭제.DBM.입력.IO" description=""
+>
+{
+	String metMngNo<length=1 description="모임관리번호" >;
+	String tsReqDt < length = 8 description = "이체요청일자" > ;
+	Integer tsReqMbhSrno < length = 7 description = "이체요청회원일련번호" > ;
+	Integer tsReqSrno < length = 5 description = "이체요청일련번호" > ;
+	String lstDbChgId < length = 8 description = "최종DB변경ID" > ;
+	String lstDbChgDtm < length = 20 description = "최종DB변경일시" > ;
+}

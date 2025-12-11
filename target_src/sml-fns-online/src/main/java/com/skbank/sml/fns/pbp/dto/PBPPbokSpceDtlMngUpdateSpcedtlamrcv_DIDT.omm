@@ -1,0 +1,10 @@
+OMM com.skbank.sml.fns.pbp.dto.PBPPbokSpceDtlMngUpdateSpcedtlamrcv_DIDT
+< logicalName= "공간상세금액입금수정.DBM.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String rprsAcno<length=13 description="대표계좌번호" >;
+	String spceSrno<length=10 description="공간일련번호" >;
+	BigDecimal spceMvbAm<length=18 decimal=3 description="공간이동금액" >;
+	String trnDscd < length = 1 description = "거래구분코드" > ;
+}

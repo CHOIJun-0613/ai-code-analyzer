@@ -1,0 +1,9 @@
+OMM com.skbank.sml.fns.pbp.ctr.dto.PBPPbokSpceBscMngInsertSubspceinf_IDT
+< logicalName= "메인.공간.정보.등록.컨트롤러.입력.IO" description=""
+>
+{
+	String itcsno<length=36 description="통합고객번호" >;
+	String acno<length=20 description="계좌번호" PROP_OPTION_DSCD = "L999" > ;
+	String actNm<length=20 description="계좌명" >;
+	BigDecimal actTotAm<length=18 decimal=3 description="계좌총금액" >;
+}

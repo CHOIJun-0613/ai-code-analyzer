@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinBscMngDeleteMnpWallLst_ODT
+< logicalName= "머니클립.지갑.목록.삭제.컨트롤러.출력.IO" description=""
+>
+{
+	String errMsgId < length = 10 description = "오류메시지ID" > ;
+	String errMsgTxt < length = 100 description = "오류메시지내용" > ;
+}

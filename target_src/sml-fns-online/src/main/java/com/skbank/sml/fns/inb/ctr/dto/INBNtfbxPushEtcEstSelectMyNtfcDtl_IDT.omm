@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstSelectMyNtfcDtl_IDT
+< logicalName= "나만의알림상세조회IDT" description="나만의알림상세조회IDT"
+>
+{
+	String seqno < length = 20 description = "순서번호" > ;
+	String itcsno < length = 36 description = "통합고객번호" > ;
+}

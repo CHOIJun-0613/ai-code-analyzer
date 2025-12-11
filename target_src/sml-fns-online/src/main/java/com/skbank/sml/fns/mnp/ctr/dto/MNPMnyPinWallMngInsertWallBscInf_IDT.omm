@@ -1,0 +1,14 @@
+OMM com.skbank.sml.fns.mnp.ctr.dto.MNPMnyPinWallMngInsertWallBscInf_IDT
+< logicalName= "머니클립.지갑.기본.정보.등록.입력IO" description=""
+>
+{
+	String dpsInpAcno < length = 15 description = "수신입력계좌번호" > ;
+	String iconCd < length = 3 description = "아이콘코드" > ;
+	String wallAlsNm < length = 50 description = "지갑별칭명" > ;
+	String atsYn < length = 1 description = "자동이체여부" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsCycd < length = 2 description = "자동이체주기코드" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	String atsDd < length = 8 description = "자동이체일" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal atsAm < length = 19 decimal = 3 description = "자동이체금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+	String aimFdNm < length = 40 description = "목적자금명" align = left EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "S" > ;
+	BigDecimal dinsvGoalAm < length = 19 decimal = 3 description = "꿈적금목표금액" align = right fill = "0" EIMS_FLD_TYPE = "F" EIMS_DATA_TYPE = "D" > ;
+}

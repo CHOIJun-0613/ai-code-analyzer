@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.inb.ctr.dto.INBNtfbxPushEtcEstUpdateMyNtfc_IDT
+< logicalName= "나만의알림등록IDT" description="나만의알림등록IDT"
+>
+{
+	String seqno < length = 20 description = "순서번호" > ;
+	String trNotiYn < length = 1 description = "알림수신여부" > ;
+}

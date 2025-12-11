@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokBscMngUpdateMetPbokNtfcAgrEst_IDT
+< logicalName= "모임통장.알림.동의.설정.수정.컨트롤러.입력.IO" description=""
+>
+{
+	Integer gridCnt < length = 2 description = "그리드건수" > ;
+	com.skbank.sml.fns.mpb.ctr.dto.MPBMetPbokNtfcAgrEstAmdGrid_IDT grid < description = "" arrayReference = "gridCnt" comment = "" > ;
+}

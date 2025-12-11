@@ -1,0 +1,7 @@
+OMM com.skbank.sml.fns.shr.dto.SHRMNPWallBizInsertMnyClpWallExpsSeq_DODT
+< logicalName= "SHR 머니클립지갑노출순서등록.출력.IO" description="머니클립지갑노출순서등록.출력.IO DODT"
+>
+{
+	String prcRtcd < length = 7 description = "처리결과코드" > ;
+	String prcRstTxt < length = 38 description = "처리결과내용" > ;
+}

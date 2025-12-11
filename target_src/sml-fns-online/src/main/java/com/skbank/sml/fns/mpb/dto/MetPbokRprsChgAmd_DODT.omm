@@ -1,0 +1,27 @@
+OMM com.skbank.sml.fns.mpb.dto.MetPbokRprsChgAmd_DODT
+< logicalName= "모임통장.대표.변경.수정.DBM.출력.IO" description=""
+>
+{
+	String metChgDscd < length = 2 description = "모임변경구분코드" > ;
+	String metMngNo < length = 9 description = "모임관리번호" > ;
+	String ebnkUtzpeNo < length = 13 description = "전자뱅킹이용자번호" formatType = masking format = "M191" > ;
+	String metCtrStcd < length = 2 description = "모임계약상태코드" > ;
+	String metPbokDscd < length = 1 description = "모임통장구분코드" > ;
+	String metNm < length = 100 description = "모임명" > ;
+	String rcvBkwAcno < length = 20 description = "입금전행계좌번호" formatType = masking format = "M141" > ;
+	String rlfAcno < length = 20 description = "안심계좌번호" formatType = masking format = "M141" > ;
+	String mbpfPymDt < length = 8 description = "회비납부일자" > ;
+	String mbpfPymCycd < length = 2 description = "회비납부주기코드" > ;
+	BigDecimal mbpfPmtgtAm < length = 18 decimal = 3 description = "회비납부대상금액" > ;
+	String agmdCollDt < length = 8 description = "동의서징구일자" > ;
+	String advpeEno < length = 8 description = "권유자직원번호" > ;
+	String asmnlApvCd < length = 1 description = "공동명의승인코드" > ;
+	String rppeChgRgsYn < length = 1 description = "대표자변경등록여부" > ;
+	String rppeChgRgsDt < length = 8 description = "대표자변경등록일자" > ;
+	String rppeChgVldYn < length = 8 description = "대표자변경유효일자" > ;
+	String metDscd < length = 2 description = "모임구분코드" > ;
+	String metRgsDt < length = 8 description = "모임등록일자" > ;
+	String rgsTm < length = 8 description = "등록시각" > ;
+	String cusUsgBkwAcno < length = 20 description = "고객사용전행계좌번호" formatType = masking format = "M141" > ;
+	com.skbank.sml.fns.mpb.dto.MetPbokRprsChgReqGrid_DODT metpbokrprschgreqgridDodt < arrayReference = "1" > ;
+}
