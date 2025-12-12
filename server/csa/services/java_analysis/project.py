@@ -1666,7 +1666,8 @@ def parse_java_project_streaming(
 
     parse_elapsed = time.time() - parse_start_time
     success_files = total_files - failed_files - timeout_files
-    logger.info(f"파싱 및 저장 완료 - 소요 시간: {parse_elapsed:.2f}초 (파일당 평균: {parse_elapsed/total_files*1000:.0f}ms)")
+    avg_time_per_file = (parse_elapsed / total_files * 1000) if total_files > 0 else 0
+    logger.info(f"파싱 및 저장 완료 - 소요 시간: {parse_elapsed:.2f}초 (파일당 평균: {avg_time_per_file:.0f}ms)")
     logger.info(f"  성공: {success_files}/{total_files}, 실패: {failed_files}, 타임아웃: {timeout_files}")
 
     # 2. MyBatis XML mappers 추출 및 저장

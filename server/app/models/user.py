@@ -30,3 +30,6 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: str
     groups: List[Group] = []
+
+class UserInDB(User):
+    password: str

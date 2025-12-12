@@ -7,7 +7,8 @@ def get_db():
         pool.initialize(
             uri=settings.NEO4J_URI,
             user=settings.NEO4J_USER,
-            password=settings.NEO4J_PASSWORD
+            password=settings.NEO4J_PASSWORD,
+            database=settings.NEO4J_DATABASE or "neo4j"
         )
     return pool
 

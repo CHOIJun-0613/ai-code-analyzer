@@ -1,12 +1,12 @@
 import { create } from 'zustand';
-import axios from 'axios';
+
 
 interface User {
     username: string;
     // Add other fields as needed
 }
 
-interface AuthState {
+export interface AuthState {
     user: User | null;
     token: string | null;
     login: (token: string, username: string) => void;
@@ -16,7 +16,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
     token: localStorage.getItem('token'),
-    login: (token, username) => {
+    login: (token: string, username: string) => {
         localStorage.setItem('token', token);
         set({ token, user: { username } });
     },

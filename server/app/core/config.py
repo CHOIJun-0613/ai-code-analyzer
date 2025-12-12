@@ -4,6 +4,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Code Analyzer"
     API_V1_STR: str = "/api/v1"
+    SECRET_KEY: str = "YOUR_SECRET_KEY"  # Should be changed in production
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    
     
     # Neo4j Config
     NEO4J_URI: str = "bolt://localhost:7687"
