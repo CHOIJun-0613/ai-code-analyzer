@@ -4,6 +4,7 @@ import glob
 import threading
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
+from csa.utils.context import get_client_id
 
 # Load environment variables
 load_dotenv()
@@ -79,8 +80,12 @@ class CustomFormatter(logging.Formatter):
         # 타임스탬프 포맷: YYYY-MM-DD HH24:MI:SS.sss
         timestamp = datetime.fromtimestamp(record.created).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         
-        # 포맷된 메시지: YYYY-MM-DD HH24:MI:SS.sss [D/I/W/E/C] : 로그 메시지
-        formatted_message = f"{timestamp} [{level_char}] : {record.getMessage()}"
+        # 클라이언트 ID 확인
+        client_id = get_client_id()
+        client_info = f" [{client_id}]" if client_id else ""
+        
+        # 포맷된 메시지: YYYY-MM-DD HH24:MI:SS.sss [D/I/W/E/C] [ClientID] : 로그 메시지
+        formatted_message = f"{timestamp} [{level_char}]{client_info} : {record.getMessage()}"
         
         return formatted_message
 
@@ -145,9 +150,23 @@ def setup_logger(name: str = None, command: str = None) -> logging.Logger:
         # 과거 로그 파일 정리
         _cleanup_old_logs(logs_dir)
         
-        # 로그 파일명 생성: {작업명령어}-YYYYMMDD.log
+        # 로그 파일명 생성: {prefix}-YYYYMMDD.log
         today = datetime.now().strftime('%Y%m%d')
-        log_filename = f"{command}-{today}.log"
+        
+        # 기본 접두어는 명령어
+        log_prefix = command
+        
+        # CLI 명령어가 명시되지 않은 경우(Server 모드 "run" 또는 None)에만 패키지명 기반 분리 적용
+        # 이렇게 하면 CLI 실행 시 "analyze" 등이 유지되고, 서버 실행 시 "app"/"csa"로 분리됨
+        is_server_mode = (not _current_command) or (_current_command == "run")
+        if is_server_mode:
+            if name:
+                if name.startswith("app.") or name == "app":
+                    log_prefix = "app"
+                elif name.startswith("csa.") or name == "csa":
+                    log_prefix = "csa"
+                
+        log_filename = f"{log_prefix}-{today}.log"
         log_filepath = os.path.join(logs_dir, log_filename)
         
         # 파일 핸들러 생성

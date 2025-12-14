@@ -1,0 +1,14 @@
+from contextvars import ContextVar
+from typing import Optional
+
+# 요청별 클라이언트 식별자 (IP, UserID 등) 저장을 위한 ContextVar
+# 스레드 및 비동기 태스크 간에 안전하게 격리됨
+client_id_ctx: ContextVar[Optional[str]] = ContextVar("client_id", default=None)
+
+def get_client_id() -> str:
+    """현재 컨텍스트의 클라이언트 ID를 반환 (없으면 빈 문자열)"""
+    return client_id_ctx.get() or ""
+
+def set_client_id(client_id: str):
+    """현재 컨텍스트의 클라이언트 ID 설정"""
+    client_id_ctx.set(client_id)

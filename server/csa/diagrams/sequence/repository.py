@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from csa.utils.logger import get_logger
@@ -178,23 +179,41 @@ def fetch_call_chain(
             # 둘 다 없으면
             return "void"
 
-    def _should_include_method(target_project: Optional[str]) -> bool:
+    def _should_include_method(target_project: Optional[str], target_package: Optional[str] = None) -> bool:
         """메서드 호출을 포함할지 결정합니다.
 
         외부 클래스 제외 규칙:
         - target_project가 빈 문자열(""), None, "null"인 경우 제외 (False 반환)
+          단, target_package가 SEQUENCE_DIAGRAM_INCLUDE_PACKAGES에 정의된 패턴과 일치하면 포함 (True 반환)
         - project_name이 지정되지 않은 경우 모든 프로젝트 포함 (True 반환)
         - target_project와 project_name이 일치하는 경우만 포함 (True 반환)
         """
         project = _safe_project(target_project)
-        # 프로젝트명이 없는 외부 클래스는 제외
+        
+        # 1. 프로젝트명이 일치하면 무조건 포함
+        if project_name is None:
+            if project is not None:
+                return True
+        elif project == project_name:
+            return True
+            
+        # 2. .env에 설정된 외부 패키지 포함 확인
+        include_packages_env = os.getenv("SEQUENCE_DIAGRAM_INCLUDE_PACKAGES", "")
+        if include_packages_env and target_package:
+            include_prefixes = [p.strip() for p in include_packages_env.split(",") if p.strip()]
+            for prefix in include_prefixes:
+                if target_package.startswith(prefix):
+                    return True
+                    
+        # 3. 프로젝트명이 없는 외부 클래스는 제외
         if project is None:
             return False
-        # 필터링할 project_name이 없으면 모든 프로젝트 포함
-        if project_name is None:
-            return True
-        # 프로젝트명이 일치하는 경우만 포함
-        return project == project_name
+            
+        # 4. 다른 프로젝트의 클래스는 제외
+        if project_name is not None and project != project_name:
+            return False
+            
+        return True
 
     def _sql_tables_or_empty(raw_tables):
         """SqlStatement.tables 속성을 파싱하여 테이블 목록을 반환합니다.
@@ -303,9 +322,11 @@ def fetch_call_chain(
             target_class = record["target_class"]
             target_method = record["target_method"]
             target_project = _safe_project(record["target_project"])
+            target_package = record["target_package"] or ""
+            
             if not target_class or not target_method:
                 continue
-            if not _should_include_method(target_project):
+            if not _should_include_method(target_project, target_package):
                 continue
 
             call_event = {

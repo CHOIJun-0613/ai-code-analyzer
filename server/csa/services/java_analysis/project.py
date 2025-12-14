@@ -108,6 +108,60 @@ def extract_inner_class_source(inner_class_declaration: javalang.tree.ClassDecla
     return ''.join(lines[start_line:end_line + 1])
 
 
+def _scan_for_preceding_comments(lines: List[str], start_line_idx: int) -> int:
+    """
+    주어진 시작 라인 위로 스캔하여 주석이나 어노테이션이 포함된 시작 라인을 찾습니다.
+    
+    Args:
+        lines: 파일의 전체 라인 리스트
+        start_line_idx: 탐색을 시작할 라인 인덱스 (0-based)
+        
+    Returns:
+        수정된 시작 라인 인덱스 (0-based)
+    """
+    current_idx = start_line_idx - 1
+    new_start_idx = start_line_idx
+    
+    # 빈 줄 허용 개수
+    empty_line_count = 0
+    max_empty_lines = 1
+    
+    while current_idx >= 0:
+        line = lines[current_idx].strip()
+        
+        # 빈 줄 처리
+        if not line:
+            empty_line_count += 1
+            if empty_line_count > max_empty_lines:
+                break
+            # 빈 줄도 포함하기 위해 인덱스 업데이트 (단, 너무 많은 빈 줄은 위에서 break로 끊김)
+            current_idx -= 1
+            continue
+            
+        # 주석 확인
+        if line.startswith('//') or line.startswith('/*') or line.startswith('*') or line.endswith('*/'):
+            new_start_idx = current_idx
+            empty_line_count = 0 # 주석을 찾았으므로 빈 줄 카운트 초기화
+            current_idx -= 1
+            continue
+            
+        # 어노테이션 확인 (@로 시작)
+        if line.startswith('@'):
+            new_start_idx = current_idx
+            empty_line_count = 0
+            current_idx -= 1
+            continue
+            
+        # 닫는 중괄호나 세미콜론 등을 만나면 이전 코드 블록의 끝이므로 중단
+        if line.endswith('}') or line.endswith(';') or line.endswith('{'):
+            break
+            
+        # 그 외의 경우 (일반 코드 등) 중단
+        break
+        
+    return new_start_idx
+
+
 def parse_inner_classes(
     outer_class_declaration: javalang.tree.ClassDeclaration,
     outer_class_name: str,
@@ -284,8 +338,18 @@ def parse_inner_classes(
                                     if found_opening_brace and brace_count == 0:
                                         end_line = i
                                         break
-                            if found_opening_brace and brace_count == 0:
+                        if found_opening_brace and brace_count == 0:
                                 break
+
+                        # 어노테이션 위치 고려하여 시작 라인 조정
+                        if hasattr(method_declaration, 'annotations') and method_declaration.annotations:
+                            for annotation in method_declaration.annotations:
+                                if hasattr(annotation, 'position') and annotation.position:
+                                    if annotation.position.line - 1 < start_line:
+                                        start_line = annotation.position.line - 1
+
+                        # 선행 주석 스캔
+                        start_line = _scan_for_preceding_comments(lines, start_line)
 
                         method_source = "".join(lines[start_line:end_line + 1])
 
@@ -548,6 +612,16 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                         if brace_count == 0:
                             break
                     
+                    # 어노테이션 위치 고려하여 시작 라인 조정
+                    if hasattr(declaration, 'annotations') and declaration.annotations:
+                        for annotation in declaration.annotations:
+                            if hasattr(annotation, 'position') and annotation.position:
+                                if annotation.position.line - 1 < start_line:
+                                    start_line = annotation.position.line - 1
+
+                    # 선행 주석 스캔
+                    start_line = _scan_for_preceding_comments(lines, start_line)
+
                     method_source = "".join(lines[start_line:end_line + 1])
                 
                 # 논리명 추출 시도 (rule001: @BxmCategory의 logicalName 파라미터에서 추출)
