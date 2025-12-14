@@ -7,11 +7,13 @@ from csa.services.graph_db.database_nodes import DatabaseMixin
 from csa.services.graph_db.maintenance import MaintenanceMixin
 from csa.services.graph_db.persistence_nodes import PersistenceMixin
 from csa.services.graph_db.project_nodes import ProjectMixin
+from csa.services.graph_db.class_nodes import ClassMixin
 
 
 class GraphDB(
     GraphDBBase,
     ProjectMixin,
+    ClassMixin,
     ApplicationMixin,
     PersistenceMixin,
     DatabaseMixin,

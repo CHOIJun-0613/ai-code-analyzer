@@ -19,6 +19,8 @@ server/
 │   ├── services/       # 비즈니스 로직 (사용자 서비스, 분석 래퍼)
 │   └── main.py         # FastAPI 진입점
 ├── csa/                # 핵심 분석 엔진 (레거시/공유 로직)
+│   ├── models/         # 그래프 엔티티 모델
+│   │   └── entities/   # 모듈화된 엔티티 정의 (project.py, class_model.py 등)
 ├── requirements.txt    # Python 의존성
 ├── .env.example        # 환경 변수 템플릿
 └── README.md           # 이 파일
@@ -111,3 +113,8 @@ uvicorn app.main:app --reload --port 8000
 ## 개발 참고 사항
 - `csa/` 디렉토리는 기존 CLI 도구에서 포팅된 핵심 로직을 포함합니다.
 - `app/services/analysis_wrapper.py`는 FastAPI 환경과 `csa` 로직을 연결하는 역할을 합니다.
+- **주요 리팩토링 사항 (2025.12)**:
+    - `graph_entities.py`: 거대한 모델 파일을 `server/csa/models/entities/` 아래에 도메인별로 분리하여 유지보수성을 개선했습니다.
+    - `project_nodes.py` & `class_nodes.py`: 데이터 변환 로직을 분리하고, DB 저장 로직을 배치 처리 방식으로 통합하여 중복을 제거하고 성능을 최적화했습니다.
+    - **테스트**: `server/tests/` 디렉토리에 리팩토링 검증을 위한 테스트 케이스가 추가되었습니다.
+
