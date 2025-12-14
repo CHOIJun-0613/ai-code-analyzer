@@ -2,6 +2,7 @@ import React from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { LayoutDashboard, FileCode, Users, LogOut } from 'lucide-react';
+import AnimatedLogo from './AnimatedLogo';
 
 const Layout: React.FC = () => {
     const logout = useAuthStore((state) => state.logout);
@@ -21,9 +22,7 @@ const Layout: React.FC = () => {
             {/* Sidebar */}
             <div className="w-72 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-10 transition-all duration-300">
                 <div className="p-6 flex items-center gap-3 border-b border-slate-800/50">
-                    <div className="w-8 h-8 bg-indigo-500 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/30">
-                        <FileCode className="w-5 h-5 text-white" />
-                    </div>
+                    <AnimatedLogo className="w-8 h-8" />
                     <span className="text-xl font-bold text-white tracking-tight">AI Code Analyzer</span>
                 </div>
 

@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
-import { Lock, User, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, User, ArrowRight } from 'lucide-react';
+import loginVisual from '../assets/login-visual.png';
+import AnimatedLogo from '../components/AnimatedLogo';
 
 const Login: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -24,89 +26,110 @@ const Login: React.FC = () => {
             navigate('/');
         } catch (error) {
             console.error('Login failed', error);
-            alert('Login failed. Please check your credentials.');
+            alert('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-slate-900 relative overflow-hidden">
-            {/* Background decoration */}
-            <div className="absolute inset-0 overflow-hidden">
-                <div className="absolute -top-[40%] -left-[20%] w-[70%] h-[70%] rounded-full bg-indigo-500/20 blur-[120px]" />
-                <div className="absolute -bottom-[40%] -right-[20%] w-[70%] h-[70%] rounded-full bg-blue-500/20 blur-[120px]" />
+        <div className="min-h-screen flex bg-slate-900 font-sans">
+            {/* Left Side - Visual */}
+            <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-black">
+                <img
+                    src={loginVisual}
+                    alt="AI Code Analyzer"
+                    className="absolute inset-0 w-full h-full object-cover opacity-90"
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-slate-900/10 to-slate-900/40" />
+                <div className="absolute bottom-0 left-0 p-12 w-full bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent">
+                    <h1 className="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                        AI Code Analyzer
+                    </h1>
+                    <p className="text-lg text-slate-200 max-w-md drop-shadow-md">
+                        양자 기반 AI와 그래프 데이터베이스 기술을 활용한 고급 정적 분석 플랫폼.
+                    </p>
+                </div>
             </div>
 
-            <div className="relative z-10 w-full max-w-md p-4">
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl overflow-hidden">
-                    <div className="p-8">
-                        <div className="text-center mb-10">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500 shadow-lg shadow-indigo-500/30 mb-6">
-                                <ShieldCheck className="w-8 h-8 text-white" />
-                            </div>
-                            <h2 className="text-3xl font-bold text-white mb-2">Welcome Back</h2>
-                            <p className="text-slate-400">Sign in to access your dashboard</p>
-                        </div>
+            {/* Right Side - Form */}
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-4 bg-slate-900 relative">
+                {/* Background decoration for mobile/right side */}
+                <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                    <div className="absolute top-[10%] right-[10%] w-[50%] h-[50%] rounded-full bg-indigo-500/10 blur-[100px]" />
+                    <div className="absolute bottom-[10%] left-[10%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[100px]" />
+                </div>
 
-                        <form onSubmit={handleSubmit} className="space-y-6">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300 ml-1">Username</label>
-                                <div className="relative group">
+                <div className="w-full max-w-md space-y-8 relative z-10">
+                    <div className="text-center">
+                        <div className="flex justify-center mb-6">
+                            <AnimatedLogo className="w-24 h-24" />
+                        </div>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">환영합니다</h2>
+                        <p className="mt-2 text-slate-400">대시보드에 접속하려면 로그인하세요</p>
+                    </div>
+
+                    <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+                        <div className="space-y-5">
+                            <div className="relative group">
+                                <label className="text-sm font-medium text-slate-300 ml-1 mb-1 block">아이디</label>
+                                <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <User className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
+                                        <User className="h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
                                     </div>
                                     <input
                                         type="text"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200"
-                                        placeholder="Enter your username"
+                                        className="block w-full pl-11 pr-4 py-3.5 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200"
+                                        placeholder="아이디를 입력하세요"
                                         required
                                     />
                                 </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-slate-300 ml-1">Password</label>
-                                <div className="relative group">
+                            <div className="relative group">
+                                <label className="text-sm font-medium text-slate-300 ml-1 mb-1 block">비밀번호</label>
+                                <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-slate-400 group-focus-within:text-indigo-400 transition-colors" />
+                                        <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
                                     </div>
                                     <input
                                         type="password"
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="block w-full pl-11 pr-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200"
-                                        placeholder="Enter your password"
+                                        className="block w-full pl-11 pr-4 py-3.5 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200"
+                                        placeholder="비밀번호를 입력하세요"
                                         required
                                     />
                                 </div>
                             </div>
+                        </div>
 
-                            <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full flex items-center justify-center py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed group"
-                            >
-                                {isLoading ? (
-                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : (
-                                    <>
-                                        Sign In
-                                        <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                                    </>
-                                )}
-                            </button>
-                        </form>
-                    </div>
+                        <button
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full flex items-center justify-center py-3.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/20 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed group"
+                        >
+                            {isLoading ? (
+                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            ) : (
+                                <>
+                                    로그인
+                                    <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                </>
+                            )}
+                        </button>
 
-                    <div className="px-8 py-4 bg-slate-900/50 border-t border-white/10 text-center">
-                        <p className="text-sm text-slate-400">
-                            Don't have an account?{' '}
-                            <span className="text-indigo-400 hover:text-indigo-300 cursor-pointer transition-colors">Contact Admin</span>
-                        </p>
-                    </div>
+                        <div className="text-center mt-6">
+                            <p className="text-sm text-slate-400">
+                                계정이 없으신가요?{' '}
+                                <button type="button" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
+                                    관리자에게 문의
+                                </button>
+                            </p>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

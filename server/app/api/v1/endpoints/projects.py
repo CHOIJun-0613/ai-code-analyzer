@@ -1,8 +1,47 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from typing import List, Dict, Any
 from app.core.database import get_db
 
 router = APIRouter()
+
+class ProjectUpdate(BaseModel):
+    framework: str = None
+    repository: str = None
+
+@router.patch("/{project_name}")
+def update_project(project_name: str, update_data: ProjectUpdate):
+    pool = get_db()
+    
+    # Dynamic query construction
+    set_clauses = []
+    params = {"name": project_name}
+    
+    if update_data.framework is not None:
+        set_clauses.append("p.framework = $framework")
+        params["framework"] = update_data.framework
+        
+    if update_data.repository is not None:
+        set_clauses.append("p.repository = $repository")
+        params["repository"] = update_data.repository
+    
+    if not set_clauses:
+        return {"message": "No changes requested"}
+        
+    set_clauses.append("p.updated_at = toString(datetime())")
+    
+    query = f"""
+    MATCH (p:Project {{name: $name}})
+    SET {", ".join(set_clauses)}
+    RETURN p
+    """
+    
+    with pool.session() as session:
+        result = session.run(query, **params).single()
+        if not result:
+            raise HTTPException(status_code=404, detail="Project not found")
+            
+        return dict(result["p"])
 
 @router.get("/", response_model=List[Dict[str, Any]])
 def get_projects():
@@ -45,7 +84,7 @@ def get_project_hierarchy(project_name: str):
     query = """
     MATCH (p:Project {name: $name})-[:CONTAINS]->(pkg:Package)
     OPTIONAL MATCH (pkg)-[:CONTAINS]->(c:Class)
-    RETURN pkg.name as package_name, collect(c.name) as classes
+    RETURN pkg.name as package_name, collect({name: c.name, logical_name: c.logical_name}) as classes
     ORDER BY pkg.name
     """
     with pool.session() as session:

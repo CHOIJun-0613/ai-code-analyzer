@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { LayoutDashboard, FileCode, Clock, Folder, ArrowUpRight, Activity } from 'lucide-react';
 
 interface Project {
@@ -11,6 +12,7 @@ interface Project {
 const Dashboard: React.FC = () => {
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchProjects = async () => {
@@ -30,6 +32,10 @@ const Dashboard: React.FC = () => {
     const totalProjects = projects.length;
     const totalFiles = projects.reduce((acc, curr) => acc + curr.number_of_files, 0);
     const recentActivity = projects.length > 0 ? new Date(projects[0].updated_at).toLocaleDateString() : 'N/A';
+
+    const handleProjectClick = (projectName: string) => {
+        navigate(`/projects/${encodeURIComponent(projectName)}`);
+    };
 
     return (
         <div className="space-y-8">
@@ -105,7 +111,11 @@ const Dashboard: React.FC = () => {
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {projects.map((project) => (
-                            <div key={project.name} className="group bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 relative overflow-hidden cursor-pointer">
+                            <div
+                                key={project.name}
+                                onClick={() => handleProjectClick(project.name)}
+                                className="group bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-xl hover:border-indigo-100 transition-all duration-300 relative overflow-hidden cursor-pointer"
+                            >
                                 <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-slate-50 to-transparent rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-150 duration-500" />
 
                                 <div className="relative">
