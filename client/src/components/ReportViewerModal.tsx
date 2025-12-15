@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { X, Download, Printer } from 'lucide-react';
+import { X, Printer, FileSpreadsheet, FileImage, FileText } from 'lucide-react';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import * as XLSX from 'xlsx';
+import { toSvg } from 'html-to-image';
+import MermaidDiagram from './MermaidDiagram';
 
 interface ReportViewerModalProps {
     isOpen: boolean;
@@ -11,9 +16,13 @@ interface ReportViewerModalProps {
 }
 
 const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, title, content }) => {
+    const reportRef = useRef<HTMLDivElement>(null);
+
     if (!isOpen) return null;
 
-    const handleDownload = () => {
+    // --- Export Functions ---
+
+    const handleDownloadMarkdown = () => {
         const blob = new Blob([content], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -25,38 +34,80 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
         URL.revokeObjectURL(url);
     };
 
-    const handlePrint = () => {
-        // Simple print: open new window with formatted content or just print current window's masked area?
-        // Better approach for Markdown print: open a new window, write HTML, and print.
-        // But for simplicity, we can try CSS media print styles or use a library.
-        // Let's try opening a new window for a clean print.
-        const printWindow = window.open('', '_blank');
-        if (printWindow) {
-            printWindow.document.write(`
-                <html>
-                    <head>
-                        <title>${title}</title>
-                        <style>
-                            body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto; }
-                            table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
-                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                            th { background-color: #f5f5f5; }
-                            pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow-x: auto; }
-                            blockquote { border-left: 4px solid #ddd; margin: 0; padding-left: 1rem; color: #666; }
-                            .markdown-body { line-height: 1.6; }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="markdown-body" id="content"></div>
-                        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-                        <script>
-                            document.getElementById('content').innerHTML = marked.parse(${JSON.stringify(content)});
-                            window.onload = () => { window.print(); window.close(); };
-                        </script>
-                    </body>
-                </html>
-            `);
-            printWindow.document.close();
+    const handleExportPDF = async () => {
+        if (!reportRef.current) return;
+        try {
+            const element = reportRef.current;
+            const canvas = await html2canvas(element, {
+                scale: 2,
+                logging: false,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            });
+            const imgData = canvas.toDataURL('image/png');
+
+            // PDF A4 size calculation
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+
+            const imgWidth = pdfWidth;
+            const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+            let heightLeft = imgHeight;
+            let position = 0;
+
+            pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+            heightLeft -= pdfHeight;
+
+            while (heightLeft >= 0) {
+                position = heightLeft - imgHeight;
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pdfHeight;
+            }
+
+            pdf.save(`${title.replace(/\s+/g, '_')}.pdf`);
+        } catch (err) {
+            console.error('PDF export failed', err);
+            alert('Failed to export PDF');
+        }
+    };
+
+    const handleExportExcel = () => {
+        // Extract tables from markdown content via HTML
+        // This is a heuristic: we look for <table> elements in the rendered content
+        if (!reportRef.current) return;
+
+        const tables = reportRef.current.querySelectorAll('table');
+        if (tables.length === 0) {
+            alert('No tables found to export to Excel.');
+            return;
+        }
+
+        const wb = XLSX.utils.book_new();
+
+        tables.forEach((table, index) => {
+            const ws = XLSX.utils.table_to_sheet(table);
+            const sheetName = `Table ${index + 1}`;
+            XLSX.utils.book_append_sheet(wb, ws, sheetName);
+        });
+
+        XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}.xlsx`);
+    };
+
+    const handleExportSVG = async () => {
+        if (!reportRef.current) return;
+
+        try {
+            const dataUrl = await toSvg(reportRef.current, { backgroundColor: '#ffffff' });
+            const link = document.createElement('a');
+            link.download = `${title.replace(/\s+/g, '_')}.svg`;
+            link.href = dataUrl;
+            link.click();
+        } catch (err) {
+            console.error('SVG export failed', err);
+            alert('Failed to export SVG');
         }
     };
 
@@ -66,21 +117,36 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-100">
                     <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1">
                         <button
-                            onClick={handleDownload}
+                            onClick={handleDownloadMarkdown}
                             className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
                             title="Save as Markdown"
                         >
-                            <Download className="w-5 h-5" />
+                            <FileText className="w-5 h-5" />
                         </button>
                         <button
-                            onClick={handlePrint}
-                            className="p-2 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                            title="Print / Save as PDF"
+                            onClick={handleExportPDF}
+                            className="p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Export to PDF"
                         >
                             <Printer className="w-5 h-5" />
                         </button>
+                        <button
+                            onClick={handleExportExcel}
+                            className="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"
+                            title="Export Tables to Excel"
+                        >
+                            <FileSpreadsheet className="w-5 h-5" />
+                        </button>
+                        <button
+                            onClick={handleExportSVG}
+                            className="p-2 text-slate-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            title="Export as SVG"
+                        >
+                            <FileImage className="w-5 h-5" />
+                        </button>
+                        <div className="w-px h-6 bg-slate-200 mx-2" />
                         <button
                             onClick={onClose}
                             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
@@ -92,8 +158,26 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto p-8 bg-white custom-scrollbar">
-                    <div className="prose prose-slate prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-slate-600 prose-li:text-slate-600 max-w-none">
-                        <Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+                    <div ref={reportRef} className="prose prose-slate prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-slate-600 prose-li:text-slate-600 max-w-none bg-white p-4">
+                        <Markdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                code(props) {
+                                    const { children, className, node, ...rest } = props;
+                                    const match = /language-(\w+)/.exec(className || '');
+                                    if (match && match[1] === 'mermaid') {
+                                        return <MermaidDiagram definition={String(children).replace(/\n$/, '')} />;
+                                    }
+                                    return (
+                                        <code {...rest} className={className}>
+                                            {children}
+                                        </code>
+                                    );
+                                }
+                            }}
+                        >
+                            {content}
+                        </Markdown>
                     </div>
                 </div>
 
@@ -112,3 +196,4 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
 };
 
 export default ReportViewerModal;
+
