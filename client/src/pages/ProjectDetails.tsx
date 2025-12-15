@@ -67,9 +67,11 @@ const ProjectDetails: React.FC = () => {
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [reportData, setReportData] = useState<{ title: string; content: string } | null>(null);
     const [isReportMenuOpen, setIsReportMenuOpen] = useState(false);
+    const [isFetchingReport, setIsFetchingReport] = useState(false);
 
     const handleOpenReport = async (type: 'stats' | 'crud' | 'classes', title: string) => {
         setIsReportMenuOpen(false);
+        setIsFetchingReport(true);
         try {
             const { data } = await axios.get<{ content: string }>(`/api/v1/projects/${projectName}/reports/${type}`);
             setReportData({ title, content: data.content });
@@ -77,6 +79,8 @@ const ProjectDetails: React.FC = () => {
         } catch (err) {
             console.error('Failed to fetch report', err);
             alert('Failed to fetch report');
+        } finally {
+            setIsFetchingReport(false);
         }
     };
 
@@ -211,12 +215,22 @@ const ProjectDetails: React.FC = () => {
                     {/* Reports Menu */}
                     <div className="relative">
                         <button
-                            onClick={() => setIsReportMenuOpen(!isReportMenuOpen)}
-                            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm font-medium"
+                            onClick={() => !isFetchingReport && setIsReportMenuOpen(!isReportMenuOpen)}
+                            disabled={isFetchingReport}
+                            className={`flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 transition-colors shadow-sm font-medium ${isFetchingReport ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-50 hover:text-indigo-600'}`}
                         >
-                            <FileText className="w-5 h-5" />
-                            Reports
-                            <ChevronDown className={`w-4 h-4 transition-transform ${isReportMenuOpen ? 'rotate-180' : ''}`} />
+                            {isFetchingReport ? (
+                                <>
+                                    <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                                    Generating...
+                                </>
+                            ) : (
+                                <>
+                                    <FileText className="w-5 h-5" />
+                                    Reports
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${isReportMenuOpen ? 'rotate-180' : ''}`} />
+                                </>
+                            )}
                         </button>
 
                         {isReportMenuOpen && (

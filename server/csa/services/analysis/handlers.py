@@ -201,6 +201,7 @@ def analyze_project(
                 project_entity,
                 clean,
                 logger,
+                java_source_folder=project_path,
             )
 
         # 인덱스는 이미 데이터 저장 전에 생성됨

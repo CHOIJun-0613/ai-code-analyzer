@@ -66,7 +66,19 @@ class CrudMatrixMixin:
                 raw_data = [record.data() for record in result]
 
                 class_table_relations: List[Dict[str, Any]] = []
-                processed_combinations = set()
+                
+                # Dictionary to aggregate operations by (class_name, table_name) key
+                # Key: (class_name, table_name)
+                # Value: {
+                #   "class_name": str,
+                #   "package_name": str,
+                #   "table_name": str,
+                #   "database_name": str,
+                #   "schema_name": str,
+                #   "operations": set(),
+                #   "sql_statements": set()
+                # }
+                aggregated_relations: Dict[tuple, Dict[str, Any]] = {}
 
                 for row in raw_data:
                     class_name = row["class_name"]
@@ -81,51 +93,41 @@ class CrudMatrixMixin:
                             for table_info in tables:
                                 if isinstance(table_info, dict) and "name" in table_info:
                                     table_name = table_info["name"]
-                                    combination_key = f"{class_name}_{table_name}"
-                                    if combination_key not in processed_combinations:
-                                        processed_combinations.add(combination_key)
-
-                                        # Table 노드에서 schema 정보 조회
+                                    
+                                    key = (class_name, table_name)
+                                    
+                                    if key not in aggregated_relations:
+                                        # First time seeing this combination, fetch schema info
                                         schema_info = self._get_table_schema_info(session, table_name, project_name)
-                                        database_name = schema_info["database_name"]
-                                        schema_name = schema_info["schema_name"]
+                                        aggregated_relations[key] = {
+                                            "class_name": class_name,
+                                            "package_name": package_name,
+                                            "table_name": table_name,
+                                            "database_name": schema_info["database_name"],
+                                            "schema_name": schema_info["schema_name"],
+                                            "operations": set(),
+                                            "sql_statements": set()
+                                        }
+                                    
+                                    # Add operation and sql_id to existing entry
+                                    aggregated_relations[key]["operations"].add(operation)
+                                    aggregated_relations[key]["sql_statements"].add(sql_id)
 
-                                        table_operations = set()
-                                        table_sql_statements = set()
-
-                                        for check_row in raw_data:
-                                            if (
-                                                check_row["class_name"] == class_name
-                                                and check_row["tables_json"]
-                                                and check_row["tables_json"] != "[]"
-                                            ):
-                                                try:
-                                                    check_tables = json.loads(check_row["tables_json"])
-                                                    for check_table in check_tables:
-                                                        if (
-                                                            isinstance(check_table, dict)
-                                                            and "name" in check_table
-                                                            and check_table["name"] == table_name
-                                                        ):
-                                                            table_operations.add(check_row["operation"])
-                                                            table_sql_statements.add(check_row["sql_id"])
-                                                except (json.JSONDecodeError, TypeError):
-                                                    continue
-
-                                        class_table_relations.append(
-                                            {
-                                                "class_name": class_name,
-                                                "package_name": package_name,
-                                                "table_name": table_name,
-                                                "database_name": database_name,
-                                                "schema_name": schema_name,
-                                                "operations": list(table_operations),
-                                                "sql_statements": list(table_sql_statements),
-                                            }
-                                        )
                     except (json.JSONDecodeError, TypeError) as exc:
                         self.logger.warning(f"Table JSON parse error: {exc}")
                         continue
+
+                # Convert aggregated dictionary back to list format expected by downstream logic
+                for val in aggregated_relations.values():
+                    class_table_relations.append({
+                        "class_name": val["class_name"],
+                        "package_name": val["package_name"],
+                        "table_name": val["table_name"],
+                        "database_name": val["database_name"],
+                        "schema_name": val["schema_name"],
+                        "operations": list(val["operations"]),
+                        "sql_statements": list(val["sql_statements"])
+                    })
 
                 class_matrix: Dict[str, Dict[str, Any]] = {}
                 for relation in class_table_relations:
@@ -146,14 +148,14 @@ class CrudMatrixMixin:
                         "operations": relation["operations"],
                     }
 
-                    if table_entry not in class_matrix[class_name]["tables"]:
-                        class_matrix[class_name]["tables"].append(table_entry)
+                    # Optimization: table_entry logic above was slightly inefficient in original code (checking existence in list)
+                    # But keeping logic essentially same, just simplified. 
+                    # Since we aggregated by (class, table) already, 'table_entry' is unique per class here.
+                    class_matrix[class_name]["tables"].append(table_entry)
 
                     class_matrix[class_name]["operations"].update(relation["operations"])
-                    if isinstance(relation["sql_statements"], dict):
-                        class_matrix[class_name]["sql_statements"].update(relation["sql_statements"])
-                    elif isinstance(relation["sql_statements"], (list, set)):
-                        class_matrix[class_name]["sql_statements"].update(relation["sql_statements"])
+                    # sql_statements is already a list in relation due to conversion above
+                    class_matrix[class_name]["sql_statements"].update(relation["sql_statements"])
 
                 class_matrix_list = [
                     {

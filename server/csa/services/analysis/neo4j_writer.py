@@ -539,6 +539,7 @@ def save_java_objects_to_neo4j(
     project: Project,
     clean: bool,
     logger,
+    java_source_folder: str = None,
 ) -> JavaAnalysisStats:
     """Persist Java analysis artifacts to Neo4j and return corresponding stats."""
     java_start_time = datetime.now()
@@ -584,7 +585,13 @@ def save_java_objects_to_neo4j(
     project.updated_at = datetime.now().strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
 
     # Project 통계 집계 (파일 수, LOC 통계)
-    java_source_folder = os.getenv("JAVA_SOURCE_FOLDER", "")
+    # 인자로 전달된 java_source_folder 사용, 없으면 환경변수 사용
+    if not java_source_folder:
+        java_source_folder = os.getenv("JAVA_SOURCE_FOLDER", "")
+        # 만약 환경변수도 없고 project.path가 있으면 그것을 사용
+        if not java_source_folder and project.path:
+            java_source_folder = project.path
+            
     logger.info(f"Project 통계 집계 시작: clean={clean}, java_source_folder={java_source_folder}")
 
     # 스트리밍 모드 확인
