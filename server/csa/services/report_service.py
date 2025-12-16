@@ -57,14 +57,34 @@ class ReportService(CrudMatrixMixin):
         
         return "\n".join(lines)
 
-    def generate_crud_matrix_md(self, project_name: str) -> str:
-        # Uses CrudMatrixMixin.generate_crud_table_matrix via inheritance
+    def generate_crud_matrix_data(self, project_name: str) -> Dict[str, Any]:
+        """
+        Generates raw data for CRUD Matrix.
+        Returns a dictionary containing summary, table_headers, and table_rows.
+        """
         crud_data = self.generate_crud_table_matrix(project_name)
         if "error" in crud_data:
-            return f"# CRUD Matrix Report\n\n**Error**: {crud_data['error']}"
+             return {"error": crud_data["error"]}
 
         table_matrix = crud_data.get("table_matrix", [])
         table_names = crud_data.get("table_names", [])
+        summary = crud_data.get("summary", {})
+
+        return {
+            "summary": summary,
+            "headers": ["Package", "Class"] + table_names,
+            "rows": table_matrix,
+            "table_names": table_names # Keep original table names list for reference
+        }
+
+    def generate_crud_matrix_md(self, project_name: str) -> str:
+        data = self.generate_crud_matrix_data(project_name)
+        if "error" in data:
+            return f"# CRUD Matrix Report\n\n**Error**: {data['error']}"
+
+        table_matrix = data.get("rows", [])
+        table_names = data.get("table_names", [])
+        summary = data.get("summary", {})
         
         if not table_matrix or not table_names:
             return "# CRUD Matrix Report\n\nNo CRUD data available."
@@ -74,7 +94,6 @@ class ReportService(CrudMatrixMixin):
         lines.append("")
         
         # Summary Section
-        summary = crud_data.get("summary", {})
         lines.append("## Summary")
         lines.append(f"- **Total Classes**: {summary.get('total_classes', 0)}")
         lines.append(f"- **Total Tables**: {summary.get('total_tables', 0)}")
@@ -105,21 +124,40 @@ class ReportService(CrudMatrixMixin):
             
         return "\n".join(lines)
 
-    def generate_class_list_md(self, project_name: str) -> str:
+    def generate_class_list_data(self, project_name: str) -> List[Dict[str, Any]]:
+        """
+        Generates raw data for Class List.
+        Returns a list of dictionaries representing classes.
+        """
         query = """
         MATCH (c:Class {project_name: $project_name})
         RETURN c.package_name as package, c.name as name, c.logical_name as logical_name, c.type as type, c.sub_type as sub_type
         ORDER BY c.package_name, c.name
         """
         
-        lines = []
-        lines.append(f"# Class List Report: {project_name}")
-        lines.append("")
-        
         with self._open_session() as session:
             result = session.run(query, project_name=project_name)
             records = [record.data() for record in result]
             
+        processed_records = []
+        for r in records:
+            sub_type = r.get("sub_type") or r.get("type") or "Class"
+            processed_records.append({
+                "package": r.get("package") or "-",
+                "name": r.get("name") or "-",
+                "logical_name": r.get("logical_name") or "-",
+                "type": sub_type
+            })
+            
+        return processed_records
+
+    def generate_class_list_md(self, project_name: str) -> str:
+        records = self.generate_class_list_data(project_name)
+        
+        lines = []
+        lines.append(f"# Class List Report: {project_name}")
+        lines.append("")
+        
         if not records:
              lines.append("No classes found for this project.")
              return "\n".join(lines)
@@ -132,12 +170,6 @@ class ReportService(CrudMatrixMixin):
         lines.append("|---|---|---|---|")
         
         for r in records:
-            package = r.get("package") or "-"
-            name = r.get("name") or "-"
-            logical = r.get("logical_name") or "-"
-            # Prefer sub_type, fallback to type, then "Class"
-            sub_type = r.get("sub_type") or r.get("type") or "Class"
-            
-            lines.append(f"| {package} | `{name}` | {logical} | {sub_type} |")
+            lines.append(f"| {r['package']} | `{r['name']}` | {r['logical_name']} | {r['type']} |")
             
         return "\n".join(lines)

@@ -96,3 +96,89 @@ def get_project_hierarchy(project_name: str):
                 "classes": record["classes"]
             })
     return hierarchy
+
+@router.get("/{project_name}/reports/{report_type}")
+def get_project_report(project_name: str, report_type: str, format: str = "markdown"):
+    from csa.services.report_service import ReportService
+    report_service = ReportService()
+    
+    # Initialize response content
+    content = ""
+    
+    if report_type == "stats":
+        project = report_service.get_project_by_name(project_name)
+        if not project:
+            raise HTTPException(status_code=404, detail="Project not found")
+        content = report_service.generate_project_stats_md(project)
+        
+    elif report_type == "crud":
+        if format == "json":
+            return report_service.generate_crud_matrix_data(project_name)
+        content = report_service.generate_crud_matrix_md(project_name)
+        
+    elif report_type == "classes":
+        if format == "json":
+            return report_service.generate_class_list_data(project_name)
+        content = report_service.generate_class_list_md(project_name)
+        
+    else:
+        raise HTTPException(status_code=400, detail="Invalid report type")
+        
+    return {"content": content}
+
+@router.get("/{project_name}/classes/{class_name}")
+def get_class_details(project_name: str, class_name: str, package: str):
+    pool = get_db()
+    
+    # 1. Fetch Class Node & Basic Info
+    # Also fetch annotations, extended class, implemented interfaces
+    query_class = """
+    MATCH (c:Class {name: $class_name, package_name: $package, project_name: $project_name})
+    OPTIONAL MATCH (c)-[:EXTENDS]->(super:Class)
+    OPTIONAL MATCH (c)-[:IMPLEMENTS]->(iface:Interface)
+    OPTIONAL MATCH (c)-[:ANNOTATED_WITH]->(anno:Annotation)
+    RETURN c, 
+           super.name as superclass_name, 
+           collect(distinct iface.name) as interfaces,
+           collect(distinct anno.name) as annotations
+    """
+    
+    # 2. Fetch Fields
+    query_fields = """
+    MATCH (c:Class {name: $class_name, package_name: $package, project_name: $project_name})
+    MATCH (c)-[:HAS_FIELD]->(f:Field)
+    RETURN f
+    ORDER BY f.name
+    """
+    
+    # 3. Fetch Methods
+    query_methods = """
+    MATCH (c:Class {name: $class_name, package_name: $package, project_name: $project_name})
+    MATCH (c)-[:HAS_METHOD]->(m:Method)
+    RETURN m
+    ORDER BY m.name
+    """
+
+    with pool.session() as session:
+        # Execute Class Query
+        result_class = session.run(query_class, class_name=class_name, package=package, project_name=project_name).single()
+        
+        if not result_class:
+            raise HTTPException(status_code=404, detail=f"Class {class_name} not found in package {package}")
+            
+        class_data = dict(result_class["c"])
+        class_data["superclass"] = result_class["superclass_name"]
+        class_data["interfaces"] = result_class["interfaces"]
+        class_data["annotations"] = result_class["annotations"]
+
+        # Execute Fields Query
+        result_fields = session.run(query_fields, class_name=class_name, package=package, project_name=project_name)
+        fields = [dict(record["f"]) for record in result_fields]
+        class_data["fields"] = fields
+
+        # Execute Methods Query
+        result_methods = session.run(query_methods, class_name=class_name, package=package, project_name=project_name)
+        methods = [dict(record["m"]) for record in result_methods]
+        class_data["methods"] = methods
+        
+        return class_data

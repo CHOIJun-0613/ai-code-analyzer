@@ -65,7 +65,16 @@ const ProjectDetails: React.FC = () => {
 
     // Report State
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-    const [reportData, setReportData] = useState<{ title: string; content: string } | null>(null);
+    const [reportData, setReportData] = useState<{
+        title: string;
+        content: string;
+        isGrid?: boolean;
+        gridData?: {
+            headers: string[];
+            rows: any[];
+            summary?: any;
+        };
+    } | null>(null);
     const [isReportMenuOpen, setIsReportMenuOpen] = useState(false);
     const [isFetchingReport, setIsFetchingReport] = useState(false);
 
@@ -73,8 +82,54 @@ const ProjectDetails: React.FC = () => {
         setIsReportMenuOpen(false);
         setIsFetchingReport(true);
         try {
-            const { data } = await axios.get<{ content: string }>(`/api/v1/projects/${projectName}/reports/${type}`);
-            setReportData({ title, content: data.content });
+            if (type === 'stats') {
+                const { data } = await axios.get<{ content: string }>(`/api/v1/projects/${projectName}/reports/${type}`);
+                setReportData({ title, content: data.content, isGrid: false });
+            } else {
+                // Fetch JSON data for Grid
+                const { data } = await axios.get<any>(`/api/v1/projects/${projectName}/reports/${type}?format=json`);
+                console.log('Report Data Response:', data); // DEBUG LOG
+
+                if (!data) {
+                    alert('No data received from server');
+                    throw new Error('No data received');
+                }
+
+                // Backend returns { summary: {...}, headers: [...], rows: [...], table_names: [...] } for crud
+                // headers might be implicit or explicit. My implementation of crud_matrix_data returns headers.
+                // class_list_data returns list of dicts. We need to normalize headers if not present.
+
+                let gridData = null;
+                if (data.headers && data.rows) {
+                    // Standardized format from my implementation (CRUD)
+                    gridData = data;
+                } else if (Array.isArray(data)) {
+                    // List of dicts (Class List)
+                    // If empty, headers are arbitrary or empty
+                    const rows = data;
+                    let headers: string[] = [];
+                    if (rows.length > 0) {
+                        // Infer headers from first item keys 
+                        // But I want pretty headers. The server returns 'package', 'name', 'logical_name', 'type'.
+                        // Let's manually map for known types or use keys.
+                        if (type === 'classes') {
+                            headers = ["Package", "Class (Physical)", "Class (Logical)", "Sub-type"];
+                        } else {
+                            headers = Object.keys(rows[0]);
+                        }
+                    } else {
+                        if (type === 'classes') headers = ["Package", "Class (Physical)", "Class (Logical)", "Sub-type"];
+                    }
+                    gridData = { headers, rows };
+                }
+
+                setReportData({
+                    title,
+                    content: '', // Empty content for grid mode
+                    isGrid: true,
+                    gridData: gridData
+                });
+            }
             setIsReportModalOpen(true);
         } catch (err) {
             console.error('Failed to fetch report', err);
@@ -103,7 +158,7 @@ const ProjectDetails: React.FC = () => {
                 });
                 setHierarchy(hierarchyRes.data);
 
-                // Select first package by default if available
+                // NO OP - Let's view the file first to be exact. package by default if available
                 if (hierarchyRes.data.length > 0) {
                     setSelectedPackage(hierarchyRes.data[0].package);
                 }
@@ -391,52 +446,66 @@ const ProjectDetails: React.FC = () => {
                         </h3>
 
                         {areCardsExpanded && (
-                            <>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                        <span className="text-sm font-medium text-slate-500 block mb-1">Total Lines (PLOC)</span>
-                                        <span className="text-2xl font-bold text-slate-900">{stats.project.total_PLOC.toLocaleString()}</span>
-                                    </div>
-                                    <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                                        <span className="text-sm font-medium text-emerald-700 block mb-1">Code Lines (LLOC)</span>
-                                        <span className="text-2xl font-bold text-emerald-700">{stats.project.total_LLOC.toLocaleString()}</span>
-                                    </div>
-                                    <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
-                                        <span className="text-sm font-medium text-amber-700 block mb-1">Comment Lines (CLOC)</span>
-                                        <span className="text-2xl font-bold text-amber-700">{stats.project.total_CLOC.toLocaleString()}</span>
-                                    </div>
-                                    <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                                        <span className="text-sm font-medium text-indigo-700 block mb-1">Blank Lines</span>
-                                        <span className="text-2xl font-bold text-indigo-700">
-                                            {(stats.project.total_PLOC - stats.project.total_LLOC - stats.project.total_CLOC).toLocaleString()}
-                                        </span>
+                            <div className="flex flex-col xl:flex-row gap-6">
+                                {/* Left: Line Statistics (LOC) */}
+                                <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-slate-500 mb-3 ml-1">Line Statistics</h4>
+                                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                        <div className="divide-y divide-slate-100">
+                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
+                                                <span className="text-sm font-medium text-slate-600">Total Lines (PLOC)</span>
+                                                <span className="text-lg font-bold text-slate-900">{stats.project.total_PLOC.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 hover:bg-emerald-50/30 transition-colors">
+                                                <span className="text-sm font-medium text-emerald-700">Code Lines (LLOC)</span>
+                                                <span className="text-lg font-bold text-emerald-700">{stats.project.total_LLOC.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 hover:bg-amber-50/30 transition-colors">
+                                                <span className="text-sm font-medium text-amber-700">Comment Lines (CLOC)</span>
+                                                <span className="text-lg font-bold text-amber-700">{stats.project.total_CLOC.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 hover:bg-indigo-50/30 transition-colors">
+                                                <span className="text-sm font-medium text-indigo-700">Blank Lines</span>
+                                                <span className="text-lg font-bold text-indigo-700">
+                                                    {(stats.project.total_PLOC - stats.project.total_LLOC - stats.project.total_CLOC).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* File Counts */}
-                                <div className="space-y-2 text-sm border-l border-slate-100 pl-4">
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Total Files</span>
-                                        <span className="font-bold text-slate-900">{stats.project.total_file_count.toLocaleString()}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Valid Java Files</span>
-                                        <span className="text-slate-900">{stats.project.total_java_file_count}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">XML Files</span>
-                                        <span className="text-slate-900">{stats.project.total_xml_file_count}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Config Files</span>
-                                        <span className="text-slate-900">{stats.project.total_config_file_count}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span className="text-slate-500">Ignored</span>
-                                        <span className="text-slate-400">{stats.project.total_ignored_file_count}</span>
+                                {/* Divider (Visible on large screens) */}
+                                <div className="hidden xl:block w-px bg-slate-100 self-stretch mx-2"></div>
+
+                                {/* Right: File Statistics */}
+                                <div className="flex-1">
+                                    <h4 className="text-sm font-semibold text-slate-500 mb-3 ml-1">File Statistics</h4>
+                                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+                                        <div className="divide-y divide-slate-100">
+                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
+                                                <span className="text-sm font-medium text-slate-600">Total Files</span>
+                                                <span className="text-lg font-bold text-slate-900">{stats.project.total_file_count.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 hover:bg-blue-50/30 transition-colors">
+                                                <span className="text-sm font-medium text-blue-700">Valid Java Files</span>
+                                                <span className="text-lg font-bold text-blue-700">{stats.project.total_java_file_count.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 hover:bg-orange-50/30 transition-colors">
+                                                <span className="text-sm font-medium text-orange-700">XML Files</span>
+                                                <span className="text-lg font-bold text-orange-700">{stats.project.total_xml_file_count.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50/50 transition-colors">
+                                                <span className="text-sm font-medium text-slate-600">Config Files</span>
+                                                <span className="text-lg font-bold text-slate-900">{stats.project.total_config_file_count.toLocaleString()}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center p-4 hover:bg-red-50/30 transition-colors">
+                                                <span className="text-sm font-medium text-red-700">Ignored</span>
+                                                <span className="text-lg font-bold text-red-700">{stats.project.total_ignored_file_count.toLocaleString()}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </>
+                            </div>
                         )}
                     </div>
                 </div>
@@ -556,7 +625,7 @@ const ProjectDetails: React.FC = () => {
                                             {filteredClasses.map((cls, idx) => (
                                                 <tr
                                                     key={idx}
-                                                    onClick={() => navigate(`/projects/${encodeURIComponent(projectName || '')}/classes/${encodeURIComponent(cls.name)}`)}
+                                                    onClick={() => navigate(`/projects/${encodeURIComponent(projectName || '')}/classes/${encodeURIComponent(cls.name)}?package=${encodeURIComponent(selectedPackage || '')}`)}
                                                     className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
                                                 >
                                                     <td className="px-6 py-3">
@@ -589,6 +658,8 @@ const ProjectDetails: React.FC = () => {
                 onClose={() => setIsReportModalOpen(false)}
                 title={reportData?.title || ''}
                 content={reportData?.content || ''}
+                isGrid={reportData?.isGrid}
+                gridData={reportData?.gridData}
             />
         </div >
     );
