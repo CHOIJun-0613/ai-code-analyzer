@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { Lock, User, ArrowRight } from 'lucide-react';
 import loginVisual from '../assets/login-visual.png';
 import AnimatedLogo from '../components/AnimatedLogo';
+import MatrixRain from '../components/MatrixRain';
 
 const Login: React.FC = () => {
     const [username, setUsername] = useState('');
@@ -39,15 +40,17 @@ const Login: React.FC = () => {
                 <img
                     src={loginVisual}
                     alt="AI Code Analyzer"
-                    className="absolute inset-0 w-full h-full object-cover opacity-90"
+                    className="absolute inset-0 w-full h-full object-cover opacity-50"
                 />
+                <div className="absolute inset-0 bg-black/60" />
+                <MatrixRain className="absolute inset-0 w-full h-full opacity-40 mix-blend-screen" />
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900/10 to-slate-900/40" />
                 <div className="absolute bottom-0 left-0 p-12 w-full bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent">
                     <h1 className="text-4xl font-bold text-white mb-4 drop-shadow-lg">
                         AI Code Analyzer
                     </h1>
-                    <p className="text-lg text-slate-200 max-w-md drop-shadow-md">
-                        양자 기반 AI와 그래프 데이터베이스 기술을 활용한 고급 정적 분석 플랫폼.
+                    <p className="text-lg text-slate-200 whitespace-nowrap drop-shadow-md">
+                        AI와 그래프 데이터베이스 기술을 활용한 고급 정적 분석 플랫폼.
                     </p>
                 </div>
             </div>
@@ -66,7 +69,6 @@ const Login: React.FC = () => {
                             <AnimatedLogo className="w-24 h-24" />
                         </div>
                         <h2 className="text-3xl font-bold text-white tracking-tight">환영합니다</h2>
-                        <p className="mt-2 text-slate-400">대시보드에 접속하려면 로그인하세요</p>
                     </div>
 
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
