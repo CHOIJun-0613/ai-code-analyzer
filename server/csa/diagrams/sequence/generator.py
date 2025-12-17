@@ -71,6 +71,29 @@ class SequenceDiagramGenerator:
             image_height=image_height
         )
     
+    def generate_content(
+        self,
+        class_name: str,
+        method_name: Optional[str] = None,
+        max_depth: int = 10,
+        include_external_calls: bool = True,
+        project_name: Optional[str] = None
+    ) -> Dict:
+        """
+        Generate sequence diagram content without writing to files.
+        """
+        if self.format == 'mermaid':
+            return self._generator.generate_content(
+                class_name=class_name,
+                method_name=method_name,
+                max_depth=max_depth,
+                include_external_calls=include_external_calls,
+                project_name=project_name
+            )
+        else:
+             # PlantUML not supported for content yet
+             return {"error": "Content generation only supported for Mermaid format"}
+    
     def get_available_classes(self, project_name: Optional[str] = None) -> List[Dict]:
         """
         Get available classes from the database.

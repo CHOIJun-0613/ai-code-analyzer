@@ -109,9 +109,65 @@ class MermaidDiagramGenerator:
                         logger.info(f"Generated image: {image_path}")
                 
                 return result
+                
+                return result
         except Exception as e:
             logger.error(f"Error generating sequence diagram: {e}", exc_info=True)
             return f"Error: {e}"
+
+    def generate_content(
+        self,
+        class_name: str,
+        method_name: Optional[str] = None,
+        max_depth: int = 10,
+        include_external_calls: bool = True,
+        project_name: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate sequence diagram content without writing to files.
+        Returns a dictionary with 'type' ('class' or 'method') and 'content' (str or list of dicts).
+        """
+        try:
+            session_kwargs = {"database": self.database} if self.database else {}
+            with self.driver.session(**session_kwargs) as session:
+                class_info = self._get_class_info(session, class_name, project_name)
+                if not class_info:
+                    return {"error": f"Class '{class_name}' not found in database."}
+
+                actual_project_name = resolve_project_name(class_info, project_name)
+
+                if method_name is None:
+                    # Class level: Generate for all methods
+                    methods = self._get_class_methods(session, class_name, project_name)
+                    if not methods:
+                        return {"type": "class", "items": [], "error": "No methods found."}
+                    
+                    items = []
+                    for method in methods:
+                        m_name = method['name']
+                        call_chain = self._fetch_call_chain(session, class_name, m_name, max_depth, project_name)
+                        if call_chain:
+                            flows = self._build_flows(call_chain, m_name)
+                            if flows:
+                                diagram = self._generate_mermaid_diagram(session, class_info, flows, include_external_calls, m_name, actual_project_name)
+                                items.append({
+                                    "method_name": m_name,
+                                    "content": diagram
+                                })
+                    return {"type": "class", "items": items}
+                else:
+                    # Method level
+                    call_chain = self._fetch_call_chain(session, class_name, method_name, max_depth, project_name)
+                    if not call_chain:
+                         return {"type": "method", "content": "", "error": f"No outbound calls found for {method_name}."}
+                    
+                    flows = self._build_flows(call_chain, method_name)
+                    diagram = self._generate_mermaid_diagram(session, class_info, flows, include_external_calls, method_name, actual_project_name)
+                    return {"type": "method", "content": diagram}
+
+        except Exception as e:
+            logger.error(f"Error generating sequence content: {e}", exc_info=True)
+            return {"error": str(e)}
 
     def _generate_class_level_diagram(self, session, class_info: Dict, max_depth: int, include_external_calls: bool, project_name: Optional[str], output_dir: str, image_format: str = "png", image_width: int = 1200, image_height: int = 800) -> Dict:
         """클래스 단위 다이어그램 생성: 각 메서드별로 별도 파일 생성"""
