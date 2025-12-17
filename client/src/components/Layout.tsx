@@ -22,9 +22,9 @@ const Layout: React.FC = () => {
         // or simple logic.
         // If we wanted global distinct modes, we might set a class on body.
         if (theme === 'dark-modern') {
-            document.documentElement.classList.add('dark-theme');
+            document.documentElement.classList.add('dark');
         } else {
-            document.documentElement.classList.remove('dark-theme');
+            document.documentElement.classList.remove('dark');
         }
     }, [theme]);
 
@@ -50,6 +50,15 @@ const Layout: React.FC = () => {
         }
         ${isCollapsed ? 'justify-center' : ''}
     `;
+
+    const mainContentRef = React.useRef<HTMLDivElement>(null);
+
+    // Scroll to top on route change
+    useEffect(() => {
+        if (mainContentRef.current) {
+            mainContentRef.current.scrollTop = 0;
+        }
+    }, [location.pathname]);
 
     return (
         <div className={`flex h-screen font-sans ${mainBgClass} transition-colors duration-300`}>
@@ -163,7 +172,7 @@ const Layout: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-auto relative">
+            <div ref={mainContentRef} className="flex-1 overflow-auto relative">
                 <div className={`p-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500`}>
                     <Outlet />
                 </div>

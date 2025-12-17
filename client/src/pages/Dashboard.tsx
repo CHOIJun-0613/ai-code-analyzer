@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, FileCode, Clock, Folder, ArrowUpRight, Activity } from 'lucide-react';
+import { LayoutDashboard, FileCode, Clock, Folder, ArrowUpRight } from 'lucide-react';
 
 interface Project {
     name: string;
@@ -28,10 +28,7 @@ const Dashboard: React.FC = () => {
         fetchProjects();
     }, []);
 
-    // Calculate stats
-    const totalProjects = projects.length;
-    const totalFiles = projects.reduce((acc, curr) => acc + curr.number_of_files, 0);
-    const recentActivity = projects.length > 0 ? new Date(projects[0].updated_at).toLocaleDateString() : 'N/A';
+
 
     const handleProjectClick = (projectName: string) => {
         navigate(`/projects/${encodeURIComponent(projectName)}`);
@@ -41,8 +38,8 @@ const Dashboard: React.FC = () => {
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900">Dashboard Overview</h1>
-                    <p className="text-slate-500 mt-1">Welcome back to your AI Code Analyzer workspace</p>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard Overview</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">Welcome back to your AI Code Analyzer workspace</p>
                 </div>
                 <div className="flex gap-3">
                     <span className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 shadow-sm flex items-center gap-2">
@@ -52,54 +49,13 @@ const Dashboard: React.FC = () => {
                 </div>
             </div>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-indigo-50 rounded-xl">
-                            <Folder className="w-6 h-6 text-indigo-600" />
-                        </div>
-                        <span className="flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
-                            <ArrowUpRight className="w-3 h-3 mr-1" />
-                            Active
-                        </span>
-                    </div>
-                    <h3 className="text-slate-500 text-sm font-medium">Total Projects</h3>
-                    <p className="text-3xl font-bold text-slate-900 mt-1">{totalProjects}</p>
-                </div>
 
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-blue-50 rounded-xl">
-                            <FileCode className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <span className="flex items-center text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
-                            Files Analyzed
-                        </span>
-                    </div>
-                    <h3 className="text-slate-500 text-sm font-medium">Total Files</h3>
-                    <p className="text-3xl font-bold text-slate-900 mt-1">{totalFiles}</p>
-                </div>
-
-                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
-                    <div className="flex justify-between items-start mb-4">
-                        <div className="p-3 bg-purple-50 rounded-xl">
-                            <Activity className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <span className="flex items-center text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">
-                            Latest
-                        </span>
-                    </div>
-                    <h3 className="text-slate-500 text-sm font-medium">Recent Activity</h3>
-                    <p className="text-3xl font-bold text-slate-900 mt-1">{recentActivity}</p>
-                </div>
-            </div>
 
             {/* Projects Section */}
             <div>
-                <h2 className="text-xl font-bold text-slate-900 mb-6 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                     <LayoutDashboard className="w-5 h-5 text-slate-400" />
-                    Recent Projects
+                    Recent Projects <span className="text-slate-400 font-normal text-lg">({projects.length})</span>
                 </h2>
 
                 {isLoading ? (
@@ -133,11 +89,11 @@ const Dashboard: React.FC = () => {
                                     <div className="space-y-2">
                                         <div className="flex items-center text-sm text-slate-500">
                                             <FileCode className="w-4 h-4 mr-2 text-slate-400" />
-                                            {project.number_of_files} files processed
+                                            {project.number_of_files.toLocaleString()} files processed
                                         </div>
                                         <div className="flex items-center text-sm text-slate-500">
                                             <Clock className="w-4 h-4 mr-2 text-slate-400" />
-                                            Updated {new Date(project.updated_at).toLocaleDateString()}
+                                            Updated {new Date(project.updated_at).toLocaleString()}
                                         </div>
                                     </div>
 

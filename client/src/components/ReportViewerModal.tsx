@@ -91,6 +91,47 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
 
     // --- Export Functions ---
 
+    /**
+     * Prepares a clone of the report content with specific adjustments for export.
+     * - Forces Mermaid diagrams to 100% zoom/width.
+     * - Returns the cloned element and a cleanup function.
+     */
+    const prepareContentForExport = () => {
+        if (!reportRef.current) return null;
+
+        const original = reportRef.current;
+        const clone = original.cloneNode(true) as HTMLElement;
+
+        // Force styles on the clone to ensure invisible rendering but correct layout
+        Object.assign(clone.style, {
+            position: 'absolute',
+            top: '-9999px',
+            left: '-9999px',
+            width: `${original.offsetWidth}px`, // Match original width
+            height: 'auto',
+            overflow: 'visible', // Ensure everything renders
+            backgroundColor: '#ffffff'
+        });
+
+        // Reset Mermaid diagrams to 100% in the clone
+        const diagrams = clone.querySelectorAll('.mermaid-diagram');
+        diagrams.forEach((el) => {
+            const div = el as HTMLDivElement;
+            // Force 100% width to reset zoom
+            div.style.width = '100%';
+            div.style.zoom = '1'; // Just in case old property is present
+        });
+
+        document.body.appendChild(clone);
+
+        return {
+            element: clone,
+            cleanup: () => {
+                document.body.removeChild(clone);
+            }
+        };
+    };
+
     const handleDownloadMarkdown = () => {
         const blob = new Blob([content], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
@@ -105,8 +146,12 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
 
     const handleExportPDF = async () => {
         if (!reportRef.current) return;
+
+        const prepared = prepareContentForExport();
+        if (!prepared) return;
+        const { element, cleanup } = prepared;
+
         try {
-            const element = reportRef.current;
             const canvas = await html2canvas(element, {
                 scale: 2,
                 logging: false,
@@ -140,6 +185,8 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
         } catch (err) {
             console.error('PDF export failed', err);
             alert('Failed to export PDF');
+        } finally {
+            cleanup();
         }
     };
 
@@ -215,8 +262,12 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
     const handleExportSVG = async () => {
         if (!reportRef.current) return;
 
+        const prepared = prepareContentForExport();
+        if (!prepared) return;
+        const { element, cleanup } = prepared;
+
         try {
-            const dataUrl = await toSvg(reportRef.current, { backgroundColor: '#ffffff' });
+            const dataUrl = await toSvg(element, { backgroundColor: '#ffffff' });
             const link = document.createElement('a');
             link.download = `${title.replace(/\s+/g, '_')}.svg`;
             link.href = dataUrl;
@@ -224,15 +275,17 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
         } catch (err) {
             console.error('SVG export failed', err);
             alert('Failed to export SVG');
+        } finally {
+            cleanup();
         }
     };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 text-slate-900 dark:text-slate-900">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-100">
-                    <h2 className="text-lg font-bold text-slate-900">{title}</h2>
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-900">{title}</h2>
                     <div className="flex items-center gap-1">
                         <button
                             onClick={handleDownloadMarkdown}
@@ -353,8 +406,8 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
                         </div>
                     ) : (
                         // Markdown Mode (Existing logic)
-                        <div className="flex-1 overflow-y-auto p-8 bg-white custom-scrollbar">
-                            <div ref={reportRef} className="prose prose-slate prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-slate-600 prose-li:text-slate-600 max-w-none bg-white p-4">
+                        <div className="flex-1 overflow-y-auto p-8 bg-white dark:bg-white custom-scrollbar">
+                            <div ref={reportRef} className="prose prose-slate prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-slate-900 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-slate-700 dark:prose-p:text-slate-700 prose-li:text-slate-700 dark:prose-li:text-slate-700 prose-blockquote:text-slate-900 dark:prose-blockquote:text-slate-900 prose-strong:text-slate-900 dark:prose-strong:text-slate-900 max-w-none bg-white dark:bg-white p-4">
                                 <Markdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{

@@ -247,7 +247,7 @@ const ProjectDetails: React.FC = () => {
             <div>
                 <button
                     onClick={() => navigate('/')}
-                    className="flex items-center text-slate-500 hover:text-indigo-600 mb-4 transition-colors group"
+                    className="flex items-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-4 transition-colors group"
                 >
                     <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
                     Back to Dashboard
@@ -260,8 +260,8 @@ const ProjectDetails: React.FC = () => {
                         <div>
                             {stats && (
                                 <>
-                                    <h1 className="text-3xl font-bold text-slate-900">{stats.project.name}</h1>
-                                    <p className="text-slate-500">Last updated: {new Date(stats.project.updated_at).toLocaleString()}</p>
+                                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.project.name}</h1>
+                                    <p className="text-slate-500 dark:text-slate-400">Last updated: {new Date(stats.project.updated_at).toLocaleString()}</p>
                                 </>
                             )}
                         </div>

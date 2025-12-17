@@ -100,22 +100,28 @@ class ClassReportService(ReverseImpactMixin):
         # sequence.py uses: pool = get_connection_pool(); with pool.connection() as conn: generator = SequenceDiagramGenerator(conn.driver...)
         
         # In service layer, get_db() is typically the pool.
+        # DEBUG LOGGING
+        print(f"DEBUG: Generating sequence diagram for {class_name} in {project_name}")
         pool = get_db()
         with pool.connection() as conn:
             generator = SequenceDiagramGenerator(conn.driver, format='mermaid', database=conn.database)
             result = generator.generate_content(class_name=class_name, project_name=project_name, include_external_calls=False)
+            print(f"DEBUG: Generator result keys: {result.keys()}")
+            if "error" in result:
+                print(f"DEBUG: Generator error: {result['error']}")
 
         if "error" in result:
              return f"# Sequence Diagram\n\nError: {result['error']}"
 
         lines = []
         lines.append(f"# Sequence Diagrams: {class_name}")
-        lines.append("> Diagrams for public methods")
+        lines.append("**Diagrams for public methods**")
         lines.append("")
         
         if result["type"] == "class":
             for item in result["items"]:
                 lines.append(f"## ` {item['method_name']}() `")
+                lines.append("")
                 lines.append("```mermaid")
                 lines.append(item['content'])
                 lines.append("```")

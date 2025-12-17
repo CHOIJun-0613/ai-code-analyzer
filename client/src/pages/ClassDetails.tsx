@@ -196,7 +196,7 @@ const ClassDetails: React.FC = () => {
                 <div className="flex items-center justify-between mb-2">
                     <button
                         onClick={() => navigate(`/projects/${projectName}`)}
-                        className="flex items-center text-slate-500 hover:text-indigo-600 transition-colors group"
+                        className="flex items-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
                     >
                         <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
                         Back to Project
@@ -243,10 +243,10 @@ const ClassDetails: React.FC = () => {
                         {classData.type === 'interface' ? <FileCode className="w-8 h-8" /> : <Code2 className="w-8 h-8" />}
                     </div>
                     <div className="flex-1">
-                        <p className="text-slate-500 font-mono text-sm mb-1">{classData.package_name}</p>
+                        <p className="text-slate-500 dark:text-slate-400 font-mono text-sm mb-1">{classData.package_name}</p>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-bold text-slate-900">{classData.name}</h1>
+                                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{classData.name}</h1>
                                 <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${classData.type === 'interface' ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-indigo-100 text-indigo-900 border-indigo-200'}`}>
                                     {classData.type}
                                 </span>
@@ -264,7 +264,7 @@ const ClassDetails: React.FC = () => {
                         </div>
                         {/* Logical Name */}
                         {classData.logical_name && (
-                            <p className="text-slate-600 text-sm mt-1">{classData.logical_name}</p>
+                            <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">{classData.logical_name}</p>
                         )}
                     </div>
                 </div>
