@@ -1,13 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { LayoutDashboard, FileCode, Users, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileCode, Users, LogOut, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import AnimatedLogo from './AnimatedLogo';
+import SettingsModal, { Theme } from './SettingsModal';
 
 const Layout: React.FC = () => {
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
     const location = useLocation();
+
+    // -- State --
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [theme, setTheme] = useState<Theme>('normal');
+
+    // -- Theme Effect --
+    useEffect(() => {
+        // Apply theme classes to body or a root element if needed, 
+        // but for now we'll handle it via wrapper classes in this component
+        // or simple logic.
+        // If we wanted global distinct modes, we might set a class on body.
+        if (theme === 'dark-modern') {
+            document.documentElement.classList.add('dark-theme');
+        } else {
+            document.documentElement.classList.remove('dark-theme');
+        }
+    }, [theme]);
 
     const handleLogout = () => {
         logout();
@@ -17,57 +36,84 @@ const Layout: React.FC = () => {
     const isActive = (path: string) => location.pathname === path;
     const isGroupActive = (path: string) => location.pathname.startsWith(path);
 
+    // -- Dynamic Styles --
+    // Base bg color changes based on theme
+    const mainBgClass = theme === 'dark-modern' ? 'bg-[#1e1e1e] text-[#d4d4d4]' : 'bg-slate-50 text-slate-900';
+    const sidebarWidthClass = isCollapsed ? 'w-20' : 'w-72';
+
+    // Sidebar items styling
+    const getLinkClass = (path: string) => `
+        flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative
+        ${isActive(path)
+            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20'
+            : 'hover:bg-slate-800 hover:text-white text-slate-400'
+        }
+        ${isCollapsed ? 'justify-center' : ''}
+    `;
+
     return (
-        <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
+        <div className={`flex h-screen font-sans ${mainBgClass} transition-colors duration-300`}>
+
             {/* Sidebar */}
-            <div className="w-72 bg-slate-900 text-slate-300 flex flex-col shadow-2xl z-10 transition-all duration-300">
-                <div className="p-6 flex items-center gap-3 border-b border-slate-800/50">
-                    <AnimatedLogo className="w-8 h-8" />
-                    <span className="text-xl font-bold text-white tracking-tight">AI Code Analyzer</span>
+            <div
+                className={`${sidebarWidthClass} bg-slate-900 flex flex-col shadow-2xl z-20 transition-all duration-300 relative shrink-0`}
+            >
+                {/* Expand/Collapse Button (Absolute positioned on the border) */}
+                <button
+                    onClick={() => setIsCollapsed(!isCollapsed)}
+                    className="absolute -right-3 top-8 bg-slate-800 text-slate-400 border border-slate-700 rounded-full p-1 shadow-md hover:text-white hover:bg-slate-700 transition-colors z-30"
+                    title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                >
+                    {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+                </button>
+
+                {/* Logo Area */}
+                <div className="p-6 flex items-center gap-3 border-b border-slate-800/50 h-[88px] overflow-hidden whitespace-nowrap">
+                    <AnimatedLogo className="w-8 h-8 shrink-0" />
+                    <span
+                        className={`text-xl font-bold text-white tracking-tight transition-opacity duration-200 ${isCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}
+                    >
+                        AI Code Analyzer
+                    </span>
                 </div>
 
-                <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto custom-scrollbar">
-                    <div className="mb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                {/* Nav Items */}
+                <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto custom-scrollbar overflow-x-hidden">
+
+                    {/* Main Label */}
+                    <div className={`px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'mb-2 opacity-100'}`}>
                         Main
                     </div>
-                    <Link
-                        to="/"
-                        className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${isActive('/')
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20'
-                            : 'hover:bg-slate-800 hover:text-white'
-                            }`}
-                    >
-                        <LayoutDashboard className={`mr-3 w-5 h-5 ${isActive('/') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                        <span className="font-medium">Dashboard</span>
-                    </Link>
-                    <Link
-                        to="/analysis"
-                        className={`flex items-center px-4 py-3 rounded-xl transition-all duration-200 group ${isActive('/analysis')
-                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20'
-                            : 'hover:bg-slate-800 hover:text-white'
-                            }`}
-                    >
-                        <FileCode className={`mr-3 w-5 h-5 ${isActive('/analysis') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                        <span className="font-medium">Analysis</span>
+
+                    <Link to="/" className={getLinkClass('/')} title={isCollapsed ? "Dashboard" : ""}>
+                        <LayoutDashboard className={`shrink-0 w-5 h-5 transition-colors ${isActive('/') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                        <span className={`ml-3 font-medium whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
+                            Dashboard
+                        </span>
                     </Link>
 
-                    <div className="mt-8 mb-2 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <Link to="/analysis" className={getLinkClass('/analysis')} title={isCollapsed ? "Analysis" : ""}>
+                        <FileCode className={`shrink-0 w-5 h-5 transition-colors ${isActive('/analysis') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                        <span className={`ml-3 font-medium whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
+                            Analysis
+                        </span>
+                    </Link>
+
+                    {/* Admin Section */}
+                    <div className={`mt-8 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'mb-2 opacity-100'}`}>
                         Administration
                     </div>
 
-                    <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/admin') ? 'bg-slate-800/50' : ''}`}>
-                        <Link
-                            to="/admin"
-                            className={`flex items-center px-4 py-3 transition-all duration-200 group ${isActive('/admin')
-                                ? 'text-white'
-                                : 'hover:text-white'
-                                }`}
-                        >
-                            <Users className={`mr-3 w-5 h-5 ${isActive('/admin') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
-                            <span className="font-medium flex-1">Admin Overview</span>
+                    <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/admin') && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
+                        <Link to="/admin" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isActive('/admin') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? "Admin Overview" : ""}>
+                            <Users className={`shrink-0 w-5 h-5 transition-colors ${isActive('/admin') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
+                            <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
+                                Admin Overview
+                            </span>
                         </Link>
 
-                        <div className="pl-11 pr-4 pb-2 space-y-1">
+                        {/* Submenu - Only show when expanded */}
+                        <div className={`pl-11 pr-4 pb-2 space-y-1 ${isCollapsed ? 'hidden' : 'block'}`}>
                             <Link
                                 to="/admin/users"
                                 className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/admin/users')
@@ -76,7 +122,7 @@ const Layout: React.FC = () => {
                                     }`}
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                User Management
+                                <span className="whitespace-nowrap">User Management</span>
                             </Link>
                             <Link
                                 to="/admin/groups"
@@ -86,32 +132,53 @@ const Layout: React.FC = () => {
                                     }`}
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                Group Management
+                                <span className="whitespace-nowrap">Group Management</span>
                             </Link>
                         </div>
                     </div>
                 </nav>
 
-                <div className="p-4 border-t border-slate-800/50">
+                {/* Footer Actions */}
+                <div className="p-4 border-t border-slate-800/50 space-y-2">
+                    {/* Settings Button */}
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className={`flex items-center w-full px-4 py-3 text-slate-400 hover:text-white hover:bg-indigo-500/10 hover:border-indigo-500/20 border border-transparent rounded-xl transition-all duration-200 group ${isCollapsed ? 'justify-center' : ''}`}
+                        title="Settings"
+                    >
+                        <Settings className="shrink-0 w-5 h-5 group-hover:text-indigo-400 transition-colors" />
+                        <span className={`ml-3 font-medium group-hover:text-indigo-400 transition-colors whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>Settings</span>
+                    </button>
+
+                    {/* Logout Button */}
                     <button
                         onClick={handleLogout}
-                        className="flex items-center w-full px-4 py-3 text-slate-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 border border-transparent rounded-xl transition-all duration-200 group"
+                        className={`flex items-center w-full px-4 py-3 text-slate-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 border border-transparent rounded-xl transition-all duration-200 group ${isCollapsed ? 'justify-center' : ''}`}
+                        title="Logout"
                     >
-                        <LogOut className="mr-3 w-5 h-5 group-hover:text-red-400 transition-colors" />
-                        <span className="font-medium group-hover:text-red-400 transition-colors">Logout</span>
+                        <LogOut className="shrink-0 w-5 h-5 group-hover:text-red-400 transition-colors" />
+                        <span className={`ml-3 font-medium group-hover:text-red-400 transition-colors whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>Logout</span>
                     </button>
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 overflow-auto bg-slate-50 relative">
-                {/* Header/Top bar could go here if needed */}
-                <div className="p-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="flex-1 overflow-auto relative">
+                <div className={`p-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500`}>
                     <Outlet />
                 </div>
             </div>
+
+            {/* Settings Modal */}
+            <SettingsModal
+                isOpen={isSettingsOpen}
+                onClose={() => setIsSettingsOpen(false)}
+                currentTheme={theme}
+                onThemeChange={setTheme}
+            />
         </div>
     );
 };
 
 export default Layout;
+

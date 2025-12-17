@@ -96,6 +96,7 @@ def fetch_call_chain(
         target.logical_name AS target_method_logical_name,
         target.return_type AS target_return_type,
         COALESCE(target_class_node.name, rel.target_class) AS target_class,
+        target_class_node.logical_name AS target_class_logical_name,
         COALESCE(target_class_node.package_name, rel.target_package) AS target_package,
         target_class_node.project_name AS target_project
     ORDER BY call_order, line_number, target_method
@@ -337,6 +338,7 @@ def fetch_call_chain(
                 "source_method": method_info["method_name"],
                 "source_project": method_info["project_name"],
                 "target_class": target_class,
+                "target_class_logical_name": record.get("target_class_logical_name") or "",
                 "target_package": record["target_package"] or "",
                 "target_method": target_method,
                 "target_method_logical_name": record["target_method_logical_name"],

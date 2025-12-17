@@ -4,7 +4,7 @@ import os
 import subprocess
 import tempfile
 from datetime import datetime
-from typing import List, Dict, Set, Optional
+from typing import List, Dict, Set, Optional, Any
 from neo4j import Driver
 from csa.utils.logger import get_logger
 from csa.diagrams.sequence.repository import (
@@ -271,13 +271,19 @@ class MermaidDiagramGenerator:
         project_name: Optional[str],
     ) -> str:
         """Generate Mermaid sequence diagram with proper activation lifecycle management."""
-        main_class_name = class_info['name']
-        main_class_package = class_info.get('package_name', '')
+        main_class_name = self._sanitize_string(class_info['name'])
+        main_class_package = self._sanitize_string(class_info.get('package_name', ''))
+        
+        logger.info(f"DEBUG: main_class={main_class_name}, package={main_class_package}")
+        
         all_calls = [call for flow in flows.values() for call in flow]
 
-        participant_packages: Dict[str, str] = {}
+        participant_details: Dict[str, Dict[str, str]] = {}
         if main_class_package:
-            participant_packages[main_class_name] = main_class_package
+            participant_details[main_class_name] = {
+                'package': main_class_package,
+                'logical_name': self._sanitize_string(class_info.get('logical_name', ''))
+            }
 
         sql_participant_required = False
         sql_display_label: Optional[str] = None
@@ -285,39 +291,50 @@ class MermaidDiagramGenerator:
 
         for call in all_calls:
             call_type = call.get('call_type', 'method')
-            source_class = call.get('source_class', '')
-            source_package = call.get('source_package', '')
-            target_class = call.get('target_class', '')
-            target_package = call.get('target_package', '')
+            source_class = self._sanitize_string(call.get('source_class', ''))
+            source_package = self._sanitize_string(call.get('source_package', ''))
+            target_class = self._sanitize_string(call.get('target_class', ''))
+            target_package = self._sanitize_string(call.get('target_package', ''))
+            target_logical_name = self._sanitize_string(call.get('target_class_logical_name', ''))
 
             if source_class and source_class not in {'Client', 'SQL'} and call_type != 'table':
-                if source_package:
-                    participant_packages.setdefault(source_class, source_package)
+                if source_class not in participant_details:
+                    participant_details[source_class] = {'package': source_package, 'logical_name': ''}
+                elif not participant_details[source_class]['package'] and source_package:
+                    participant_details[source_class]['package'] = source_package
 
             if call_type == 'sql':
                 sql_participant_required = True
-                # Mapper participant 표시: <<namespace>><br/>MapperName.file_extension
-                mapper_name = call.get('mapper_name') or 'SQL'
-                mapper_namespace = call.get('mapper_namespace') or ''
-                mapper_file_extension = call.get('mapper_file_extension') or 'xml'
+                # Mapper participant 표시: <<namespace>><br/>MapperName.file_extension -> MapperName.file_extension
+                mapper_name = self._sanitize_string(call.get('mapper_name') or 'SQL')
+                mapper_namespace = self._sanitize_string(call.get('mapper_namespace') or '')
+                mapper_file_extension = self._sanitize_string(call.get('mapper_file_extension') or 'xml')
                 if mapper_namespace:
-                    sql_display_label = f"<<{mapper_namespace}>><br/>{mapper_name}.{mapper_file_extension}"
+                    sql_display_label = f'"{mapper_namespace}<br/>{mapper_name}.{mapper_file_extension}"'
                 else:
-                    sql_display_label = f"{mapper_name}.{mapper_file_extension}"
+                    sql_display_label = f'"{mapper_name}.{mapper_file_extension}"'
             elif call_type == 'table':
                 if target_class:
-                    schema_value = call.get('table_schema') or target_package or ''
-                    display_value = call.get('table_display') or (f"{schema_value}.{target_class}" if schema_value else target_class)
+                    schema_value = self._sanitize_string(call.get('table_schema') or target_package or '')
+                    display_value = self._sanitize_string(call.get('table_display') or '') or (f"{schema_value}.{target_class}" if schema_value else target_class)
                     table_participants.setdefault(target_class, {'schema': schema_value, 'display': display_value})
             else:
                 if target_class and target_class not in {'Client', 'SQL'}:
-                    if target_package:
-                        participant_packages.setdefault(target_class, target_package)
+                    if target_class not in participant_details:
+                         participant_details[target_class] = {'package': target_package, 'logical_name': target_logical_name}
+                    else:
+                        if not participant_details[target_class]['package'] and target_package:
+                            participant_details[target_class]['package'] = target_package
+                        if not participant_details[target_class]['logical_name'] and target_logical_name:
+                            participant_details[target_class]['logical_name'] = target_logical_name
+
 
         ordered_participants = ['Client', main_class_name]
         seen_participants = set(ordered_participants)
 
-        for participant, package_name in participant_packages.items():
+        logger.info(f"DEBUG: participant_details={participant_details}")
+
+        for participant in participant_details.keys():
             if participant and participant not in seen_participants:
                 ordered_participants.append(participant)
                 seen_participants.add(participant)
@@ -334,15 +351,11 @@ class MermaidDiagramGenerator:
         final_participants = [p for p in ordered_participants if p and p != 'Unknown']
 
         if start_method:
-            title = f"{main_class_name}.{start_method}()"
+            title = f"{main_class_name}.{self._sanitize_string(start_method)}()"
         else:
             title = f"{main_class_name} Class Methods"
 
         diagram_lines = [
-            "```mermaid",
-            "---",
-            f"title: {title}",
-            "---",
             "sequenceDiagram",
             "",
         ]
@@ -351,19 +364,27 @@ class MermaidDiagramGenerator:
             if participant == 'Client':
                 diagram_lines.append(f"    actor {participant}")
             elif participant == 'SQL':
-                label = sql_display_label or 'SQL statement'
+                label = sql_display_label or '"SQL statement"'
                 diagram_lines.append(f"    participant {participant} as {label}")
             elif participant in table_participants:
                 display_value = table_participants[participant]['display']
-                # Database Table 스테레오타입 표시: <<Data Base>>
-                diagram_lines.append(f"    participant {participant} as <<Data Base>><br/>{display_value}")
+                # Database Table: [Data Base] <br/> Schema.Table
+                diagram_lines.append(f"    participant {participant} as \"[Data Base]<br/>{display_value}\"")
             else:
-                package_info = participant_packages.get(participant, '')
+                details = participant_details.get(participant, {'package': '', 'logical_name': ''})
+                package_info = details.get('package', '')
+                logical_name = details.get('logical_name', '')
+                
+                # Format: [Package] <br/> Class <br/> <Logical Name>
+                label_parts = []
                 if package_info:
-                    # 패키지명 위, 클래스명 아래 표시
-                    diagram_lines.append(f"    participant {participant} as <<{package_info}>><br/>{participant}")
-                else:
-                    diagram_lines.append(f"    participant {participant}")
+                     label_parts.append(f"[{package_info}]")
+                label_parts.append(participant)
+                if logical_name:
+                     label_parts.append(f"<{logical_name}>")
+                
+                label = "<br/>".join(label_parts)
+                diagram_lines.append(f"    participant {participant} as \"{label}\"")
 
         diagram_lines.append("")
 
@@ -384,18 +405,21 @@ class MermaidDiagramGenerator:
             for event in activation_events:
                 if event.get('type') == 'call':
                     call_details = event.get('call', {}) or {}
-                    event.setdefault('source', call_details.get('source_class', main_class_name))
-                    event.setdefault('target', call_details.get('target_class'))
-                    event.setdefault('method', call_details.get('target_method'))
-                    event.setdefault('return_type', call_details.get('return_type', 'void'))
+                    event.setdefault('source', self._sanitize_string(call_details.get('source_class', main_class_name)))
+                    event.setdefault('target', self._sanitize_string(call_details.get('target_class', '')))
+                    event.setdefault('method', self._sanitize_string(call_details.get('target_method', '')))
+                    event.setdefault('return_type', self._sanitize_string(call_details.get('return_type', 'void')))
                     event.setdefault('call_type', call_details.get('call_type', 'method'))
-                    event.setdefault('table_display', call_details.get('table_display'))
+                    event.setdefault('table_display', self._sanitize_string(call_details.get('table_display', '')))
                     event.setdefault('sql_type', call_details.get('sql_type'))
-                    event.setdefault('sql_logical_name', call_details.get('sql_logical_name'))
-                    event.setdefault('sql_display', call_details.get('sql_display'))
+                    event.setdefault('sql_logical_name', self._sanitize_string(call_details.get('sql_logical_name', '')))
+                    event.setdefault('sql_display', self._sanitize_string(call_details.get('sql_display', '')))
 
             activation_stack: List[Dict[str, str]] = []
-            active_participants = {main_class_name}
+            # active_participants 대신 activation depth 사용 (재귀 호출 지원)
+            from collections import defaultdict
+            participant_activation_depth = defaultdict(int)
+            participant_activation_depth[main_class_name] = 1
 
             for event in activation_events:
                 if event['type'] == 'call':
@@ -417,27 +441,27 @@ class MermaidDiagramGenerator:
                             icon = '📊'
                         else:
                             icon = '🛠️'
-                        # SQL 호출 표시: sql_id<<logical_name>>
+                        # SQL 호출 표시: sql_id<logical_name>
                         sql_id = method
-                        sql_logical_name = call_details.get('sql_logical_name') or ''
+                        sql_logical_name = self._sanitize_string(call_details.get('sql_logical_name') or '')
                         if sql_logical_name:
-                            label = f"{sql_id}<<{sql_logical_name}>>"
+                            label = f"{sql_id}<{sql_logical_name}>"
                         else:
                             label = sql_id
                         call_str = f"    {source}->>{target}: {icon} {label}"
                         activate_target = True
                     elif call_type == 'table':
-                        # SQL -> Table 호출 표시: sql_id<<sql_type>>
-                        sql_id = call_details.get('source_method') or 'SQL'
+                        # SQL -> Table 호출 표시: sql_id<sql_type>
+                        sql_id = self._sanitize_string(call_details.get('source_method') or 'SQL')
                         sql_type = (call_details.get('sql_type') or 'QUERY').upper()
-                        call_str = f"    {source}->>{target}: {sql_id}<<{sql_type}>>"
+                        call_str = f"    {source}->>{target}: {sql_id}<{sql_type}>"
                         activate_target = True
                     else:
                         is_external_library = self._is_external_library_call(call_details)
-                        # 메서드 호출 표시: method_name()<<logical_name>>
-                        method_logical_name = call_details.get('target_method_logical_name') or ''
+                        # 메서드 호출 표시: method_name() <logical_name>
+                        method_logical_name = self._sanitize_string(call_details.get('target_method_logical_name') or '')
                         if method_logical_name:
-                            method_display = f"{method}()<<{method_logical_name}>>"
+                            method_display = f"{method}() <{method_logical_name}>"
                         else:
                             method_display = f"{method}()"
 
@@ -452,7 +476,7 @@ class MermaidDiagramGenerator:
                     if activate_target:
                         diagram_lines.append(f"    activate {target}")
                         activation_stack.append({'participant': target, 'method': method, 'source': source, 'return_type': return_type})
-                        active_participants.add(target)
+                        participant_activation_depth[target] += 1
 
                 elif event['type'] == 'return':
                     source = event['source']
@@ -467,31 +491,45 @@ class MermaidDiagramGenerator:
                             break
 
                     # return 명령과 deactivate 명령 생성
-                    if source in active_participants:
+                    # depth가 0보다 클 때만 deactivate 수행 (이미 비활성화된 경우 방지)
+                    if participant_activation_depth[source] > 0:
                         diagram_lines.append(f"    {source}-->>{target}: return ({return_type})")
                         diagram_lines.append(f"    deactivate {source}")
-                        active_participants.discard(source)
+                        participant_activation_depth[source] -= 1
 
-            # 남은 활성 참여자들을 모두 반환 처리
-            remaining_active = [p for p in active_participants if p != main_class_name]
+            # 남은 활성 참여자들을 모두 반환 처리 (Main 클래스 제외)
+            remaining_active = [p for p, depth in participant_activation_depth.items() if p != main_class_name and depth > 0]
+            # 정렬 로직 유지
             remaining_active.sort(key=lambda x: final_participants.index(x) if x in final_participants else 999)
 
             for participant in remaining_active:
-                diagram_lines.append(f"    {participant}-->>{main_class_name}: return (void)")
-                diagram_lines.append(f"    deactivate {participant}")
-                active_participants.discard(participant)
+                # depth만큼 deactivate 반복
+                current_depth = participant_activation_depth[participant]
+                for _ in range(current_depth):
+                    diagram_lines.append(f"    {participant}-->>{main_class_name}: return (void)")
+                    diagram_lines.append(f"    deactivate {participant}")
+                participant_activation_depth[participant] = 0
 
             # 메인 클래스의 리턴은 항상 표시
             final_return_type = top_method_return_type or 'void'
             diagram_lines.append(f"    {main_class_name}-->>Client: return ({final_return_type})")
             diagram_lines.append(f"    deactivate {main_class_name}")
-            active_participants.discard(main_class_name)
+            participant_activation_depth[main_class_name] -= 1
 
             if not is_single_method_flow and not is_focused_method:
                 diagram_lines.append("    end")
 
-        diagram_lines.append("```")
         return "\n".join(diagram_lines)
+
+    def _sanitize_string(self, text: Optional[str]) -> str:
+        """Sanitize string to prevent mermaid syntax errors (e.g. newlines, double quotes)"""
+        if text is None:
+            return ""
+        # Remove newlines, carriage returns, and escape double quotes
+        # Ensure we convert to string first, then replace characters
+        sanitized = str(text).replace('\n', ' ').replace('\r', '').replace('"', "'")
+        return sanitized.strip()
+
     def _build_activation_aware_flow(self, calls: List[Dict], main_class_name: str, top_method: str, top_method_return_type: str = "void") -> List[Dict]:
         return build_activation_aware_flow(calls, main_class_name, top_method, top_method_return_type)
 

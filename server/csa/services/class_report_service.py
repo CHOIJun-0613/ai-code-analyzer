@@ -120,6 +120,8 @@ class ClassReportService(ReverseImpactMixin):
                 lines.append(item['content'])
                 lines.append("```")
                 lines.append("")
+                lines.append("---")
+                lines.append("")
         elif result["type"] == "method": 
              # Should not happen for class level call unless only one method?
              lines.append("```mermaid")

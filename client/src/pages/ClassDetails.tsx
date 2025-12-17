@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ReportViewerModal from '../components/ReportViewerModal';
 import {
     ArrowLeft, Code2, FileCode, Braces,
@@ -7,6 +8,7 @@ import {
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import axios from '../api/client';
 
 interface Field {
     name: string;
@@ -60,7 +62,7 @@ const ClassDetails: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'info' | 'source' | 'methods' | 'fields'>('info');
     const [isCopied, setIsCopied] = useState(false);
-    const codeRef = React.useRef<HTMLPreElement>(null);
+    const codeRef = useRef<HTMLPreElement>(null);
 
     // Reports State
     const [reportModal, setReportModal] = useState<{
@@ -95,7 +97,7 @@ const ClassDetails: React.FC = () => {
         setReportModal({ isOpen: true, title: 'Generating Report...', content: '', isLoading: true });
         setShowReportMenu(false);
         try {
-            const response = await axios.get(`/api/v1/projects/${projectName}/classes/${className}/reports/${type}`);
+            const response = await axios.get(`/projects/${projectName}/classes/${className}/reports/${type}`);
             let title = '';
             switch (type) {
                 case 'spec': title = 'Class Specification'; break;
@@ -147,7 +149,7 @@ const ClassDetails: React.FC = () => {
             if (!projectName || !className || !packageName) return;
             setIsLoading(true);
             try {
-                const { data } = await axios.get(`/api/v1/projects/${projectName}/classes/${className}`, {
+                const { data } = await axios.get(`/projects/${projectName}/classes/${className}`, {
                     params: { package: packageName }
                 });
                 setClassData(data);
@@ -579,6 +581,14 @@ const ClassDetails: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Report Viewer Modal */}
+            <ReportViewerModal
+                isOpen={reportModal.isOpen}
+                onClose={() => setReportModal({ ...reportModal, isOpen: false })}
+                title={reportModal.title}
+                content={reportModal.content}
+            />
         </div >
     );
 };

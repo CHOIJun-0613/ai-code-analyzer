@@ -362,7 +362,14 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
                                             const { children, className, node, ...rest } = props;
                                             const match = /language-(\w+)/.exec(className || '');
                                             if (match && match[1] === 'mermaid') {
-                                                return <MermaidDiagram definition={String(children).replace(/\n$/, '')} />;
+                                                // Robustly remove ```mermaid prefix and ``` suffix
+                                                // Handle potential leading/trailing newlines or spaces
+                                                let mermaidCode = String(children);
+                                                mermaidCode = mermaidCode.replace(/^```mermaid\s*/i, ''); // Remove start tag
+                                                mermaidCode = mermaidCode.replace(/```\s*$/, '');         // Remove end tag
+                                                mermaidCode = mermaidCode.trim();
+
+                                                return <MermaidDiagram definition={mermaidCode} />;
                                             }
                                             return (
                                                 <code {...rest} className={className}>
