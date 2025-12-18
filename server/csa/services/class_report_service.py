@@ -114,13 +114,22 @@ class ClassReportService(ReverseImpactMixin):
              return f"# Sequence Diagram\n\nError: {result['error']}"
 
         lines = []
-        lines.append(f"# Sequence Diagrams: {class_name}")
+        lines = []
+        class_logical_name = result.get('class_logical_name', '')
+        if class_logical_name:
+            lines.append(f"# Sequence Diagrams: {class_name} <{class_logical_name}>")
+        else:
+            lines.append(f"# Sequence Diagrams: {class_name}")
         lines.append("**Diagrams for public methods**")
         lines.append("")
         
         if result["type"] == "class":
             for item in result["items"]:
-                lines.append(f"## ` {item['method_name']}() `")
+                method_logical_name = item.get('logical_name', '')
+                if method_logical_name:
+                    lines.append(f"## ` {item['method_name']}() ` <{method_logical_name}>")
+                else:
+                    lines.append(f"## ` {item['method_name']}() `")
                 lines.append("")
                 lines.append("```mermaid")
                 lines.append(item['content'])

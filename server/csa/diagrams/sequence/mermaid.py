@@ -145,6 +145,7 @@ class MermaidDiagramGenerator:
                     items = []
                     for method in methods:
                         m_name = method['name']
+                        m_logical_name = method.get('logical_name', '')
                         call_chain = self._fetch_call_chain(session, class_name, m_name, max_depth, project_name)
                         if call_chain:
                             flows = self._build_flows(call_chain, m_name)
@@ -152,9 +153,14 @@ class MermaidDiagramGenerator:
                                 diagram = self._generate_mermaid_diagram(session, class_info, flows, include_external_calls, m_name, actual_project_name)
                                 items.append({
                                     "method_name": m_name,
+                                    "logical_name": m_logical_name,
                                     "content": diagram
                                 })
-                    return {"type": "class", "items": items}
+                    return {
+                        "type": "class", 
+                        "items": items,
+                        "class_logical_name": class_info.get('logical_name', '')
+                    }
                 else:
                     # Method level
                     call_chain = self._fetch_call_chain(session, class_name, method_name, max_depth, project_name)

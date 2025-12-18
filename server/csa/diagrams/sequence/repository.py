@@ -16,7 +16,7 @@ def get_class_info(session, class_name: str, project_name: Optional[str]) -> Opt
     query = """
     MATCH (c:Class {name: $class_name})
     WHERE ($project_name IS NULL OR c.project_name = $project_name)
-    RETURN c.name as name, c.package_name as package_name, c.project_name as project_name
+    RETURN c.name as name, c.package_name as package_name, c.project_name as project_name, c.logical_name as logical_name
     """
     result = session.run(query, class_name=class_name, project_name=project_name)
     record = result.single()
