@@ -122,6 +122,12 @@ def analyze_project(
     update: bool,
     logger,
     use_ai: bool = False,  # backward compatibility
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
+    scope: str = 'all',
+    ai_options: Optional[Dict] = None,
+    source_options: Optional[Dict] = None,
+    use_ai_analysis: bool = False,
 ) -> Dict[str, object]:
     """Analyze project artifacts and optionally persist them into Neo4j."""
     overall_start_time = datetime.now()
@@ -139,6 +145,12 @@ def analyze_project(
             fallback_project_name = candidate
     effective_project_name = project_name or fallback_project_name or ""
     timestamp = overall_start_time.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+    
+    # Configuration from options
+    seq_packages = ""
+    if source_options and 'sequence_diagram_include_packages' in source_options:
+        seq_packages = source_options['sequence_diagram_include_packages'] or ""
+
     project_entity = Project(
         name=effective_project_name,
         description="",
@@ -148,6 +160,7 @@ def analyze_project(
         path=project_path,
         created_at=timestamp,
         updated_at=timestamp,
+        sequence_diagram_include_packages=seq_packages,
     )
     project_name = project_entity.name
 
@@ -185,6 +198,9 @@ def analyze_project(
                 project_name,
                 logger,
                 graph_db=db,  # 스트리밍 모드를 위해 graph_db 전달
+                ai_options=ai_options,
+                source_options=source_options,
+                use_ai_analysis=use_ai_analysis,
             )
 
             if final_project_name:

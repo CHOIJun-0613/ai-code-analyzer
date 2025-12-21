@@ -17,6 +17,9 @@ def analyze_full_project_java(
     project_name: Optional[str],
     logger,
     graph_db: Optional[GraphDB] = None,
+    ai_options: dict = None,
+    source_options: dict = None,
+    use_ai_analysis: bool = False,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     Parse Java sources and resolve the effective project name.
@@ -26,19 +29,25 @@ def analyze_full_project_java(
         project_name: 프로젝트명 (선택사항)
         logger: 로거 인스턴스
         graph_db: Neo4j GraphDB 인스턴스 (스트리밍 모드에 필요)
-
+        ai_options: AI 분석 옵션 (provider, api_key 등)
+        source_options: 소스 분석 고급 옵션 (streaming, workers, timeout 등)
+        use_ai_analysis: AI 분석 시스템 활성화 여부
+        
     Returns:
         Tuple[JavaAnalysisArtifacts, str]: 분석 결과 및 프로젝트명
 
     Environment Variables:
         USE_STREAMING_PARSE: 'true'로 설정 시 스트리밍 모드 사용 (기본값: 'false')
     """
-    # 스트리밍 모드 확인
-    use_streaming = os.getenv("USE_STREAMING_PARSE", "false").lower() == "true"
+    # 스트리밍 모드 확인 (source_options 우선)
+    if source_options and 'use_streaming_parse' in source_options:
+        use_streaming = source_options['use_streaming_parse']
+    else:
+        use_streaming = os.getenv("USE_STREAMING_PARSE", "false").lower() == "true"
 
     if use_streaming:
         logger.info("Using STREAMING parsing mode (memory efficient)")
-        return _analyze_with_streaming(java_source_folder, project_name, graph_db, logger)
+        return _analyze_with_streaming(java_source_folder, project_name, graph_db, logger, ai_options, source_options, use_ai_analysis)
     else:
         logger.info("Using BATCH parsing mode (traditional)")
         return _analyze_with_batch(java_source_folder, project_name, logger)
@@ -49,6 +58,9 @@ def _analyze_with_streaming(
     project_name: Optional[str],
     graph_db: Optional[GraphDB],
     logger,
+    ai_options: dict = None,
+    source_options: dict = None,
+    use_ai_analysis: bool = False,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     스트리밍 방식으로 Java 프로젝트 분석.
@@ -60,6 +72,9 @@ def _analyze_with_streaming(
         project_name: 프로젝트명 (선택사항)
         graph_db: Neo4j GraphDB 인스턴스 (필수)
         logger: 로거 인스턴스
+        ai_options: AI 분석 옵션
+        source_options: 소스 분석 고급 옵션
+        use_ai_analysis: AI 분석 시스템 활성화 여부
 
     Returns:
         Tuple[JavaAnalysisArtifacts, str]: 분석 결과 및 프로젝트명
@@ -85,6 +100,9 @@ def _analyze_with_streaming(
         java_source_folder,
         graph_db,
         final_project_name,
+        ai_options=ai_options,
+        source_options=source_options,
+        use_ai_analysis=use_ai_analysis,
     )
 
     # 종료 시간 기록

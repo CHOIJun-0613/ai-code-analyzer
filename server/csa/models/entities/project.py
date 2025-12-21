@@ -28,3 +28,6 @@ class Project(BaseModel):
     total_PLOC: int = 0  # 프로젝트에 속한 모든 자바 파일의 모든 라인 수 합계
     total_LLOC: int = 0  # 프로젝트에 속한 모든 자바 파일의 실제 실행 가능한 구문 수 합계
     total_CLOC: int = 0  # 프로젝트에 속한 모든 자바 파일의 주석라인 수 합계
+    
+    # Configuration
+    sequence_diagram_include_packages: str = "" # 시퀀스 다이어그램 생성 시 포함할 외부 패키지 목록

@@ -42,7 +42,8 @@ class ProjectMixin:
             "p.total_etc_file_count = $total_etc_file_count, "
             "p.total_PLOC = $total_PLOC, "
             "p.total_LLOC = $total_LLOC, "
-            "p.total_CLOC = $total_CLOC"
+            "p.total_CLOC = $total_CLOC, "
+            "p.sequence_diagram_include_packages = $sequence_diagram_include_packages"
         )
         tx.run(
             project_query,
@@ -67,6 +68,7 @@ class ProjectMixin:
             total_PLOC=int(project.total_PLOC or 0),
             total_LLOC=int(project.total_LLOC or 0),
             total_CLOC=int(project.total_CLOC or 0),
+            sequence_diagram_include_packages=project.sequence_diagram_include_packages or "",
         )
 
     def add_package(self, package_node: Package, project_name: str) -> None:

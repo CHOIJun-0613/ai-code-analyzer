@@ -60,9 +60,10 @@ class BaseAIProvider(ABC):
 class GoogleAIProvider(BaseAIProvider):
     """Google Gemini AI Provider (google-genai 라이브러리 사용)"""
 
-    def __init__(self):
-        self.api_key = ai_config.google_api_key
-        self.model_name = ai_config.gemini_model_name
+    def __init__(self, config=None):
+        _config = config or ai_config
+        self.api_key = _config.google_api_key
+        self.model_name = _config.gemini_model_name
 
     def create_llm(self):
         """Google Gemini LLM을 생성합니다."""
@@ -110,9 +111,10 @@ class GoogleAIProvider(BaseAIProvider):
 class GroqAIProvider(BaseAIProvider):
     """Groq AI Provider"""
 
-    def __init__(self):
-        self.api_key = ai_config.groq_api_key
-        self.model_name = ai_config.groq_model_name
+    def __init__(self, config=None):
+        _config = config or ai_config
+        self.api_key = _config.groq_api_key
+        self.model_name = _config.groq_model_name
 
     def create_llm(self):
         """Groq LLM을 생성합니다."""
@@ -155,9 +157,10 @@ class GroqAIProvider(BaseAIProvider):
 class LMStudioAIProvider(BaseAIProvider):
     """LM Studio AI Provider"""
 
-    def __init__(self):
-        self.base_url = ai_config.lmstudio_base_url
-        self.model_name = ai_config.lmstudio_model_name
+    def __init__(self, config=None):
+        _config = config or ai_config
+        self.base_url = _config.lmstudio_base_url
+        self.model_name = _config.lmstudio_model_name
 
     def create_llm(self):
         """LM Studio LLM을 생성합니다."""
@@ -202,10 +205,11 @@ class LMStudioAIProvider(BaseAIProvider):
 class OpenAIProvider(BaseAIProvider):
     """OpenAI AI Provider"""
 
-    def __init__(self):
-        self.api_key = ai_config.openai_api_key
-        self.model_name = ai_config.openai_model_name
-        self.base_url = ai_config.openai_base_url
+    def __init__(self, config=None):
+        _config = config or ai_config
+        self.api_key = _config.openai_api_key
+        self.model_name = _config.openai_model_name
+        self.base_url = _config.openai_base_url
 
     def create_llm(self):
         """OpenAI LLM을 생성합니다."""
@@ -251,14 +255,15 @@ class OpenAIProvider(BaseAIProvider):
 class AIProviderManager:
     """AI Provider 관리자"""
     
-    def __init__(self):
+    def __init__(self, config=None):
+        self.ai_config = config or ai_config
         self.providers = {
-            "google": GoogleAIProvider(),
-            "groq": GroqAIProvider(),
-            "lmstudio": LMStudioAIProvider(),
-            "openai": OpenAIProvider()
+            "google": GoogleAIProvider(self.ai_config),
+            "groq": GroqAIProvider(self.ai_config),
+            "lmstudio": LMStudioAIProvider(self.ai_config),
+            "openai": OpenAIProvider(self.ai_config)
         }
-        self.current_provider_name = ai_config.get_current_provider()
+        self.current_provider_name = self.ai_config.get_current_provider()
 
     def get_current_provider(self, provider_name: Optional[str] = None) -> BaseAIProvider:
         """

@@ -82,6 +82,7 @@ class ClassMixin:
                 UNWIND $classes AS c
                 MERGE (cls:Class {name: c.name, package_name: c.package_name})
                 SET cls.file_path = c.file_path,
+                    cls.file_extension = c.file_extension,
                     cls.type = c.type,
                     cls.sub_type = c.sub_type,
                     cls.source = c.source,

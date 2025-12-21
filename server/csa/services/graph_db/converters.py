@@ -32,6 +32,7 @@ def build_class_base_record(class_node: Class, package_name: str, project_name: 
     return {
         "name": class_node.name,
         "file_path": class_node.file_path,
+        "file_extension": class_node.file_extension,
         "type": class_node.type,
         "sub_type": class_node.sub_type or "",
         "source": class_node.source,

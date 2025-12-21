@@ -62,11 +62,14 @@ from .utils import (
 
 # AI 분석 서비스
 try:
-    from csa.aiwork.ai_analyzer import get_ai_analyzer
+    from csa.aiwork.ai_analyzer import get_ai_analyzer, AIAnalyzer
+    from csa.aiwork.ai_config import AIConfig
     AI_ANALYZER_AVAILABLE = True
 except ImportError:
     AI_ANALYZER_AVAILABLE = False
     get_ai_analyzer = None
+    AIAnalyzer = None
+    AIConfig = None
 
 def extract_inner_class_source(inner_class_declaration: javalang.tree.ClassDeclaration, file_content: str) -> str:
     """
@@ -226,6 +229,7 @@ def parse_inner_classes(
                 name=inner_class_full_name,
                 logical_name=inner_class_logical_name if inner_class_logical_name else "",
                 file_path=file_path,
+                file_extension=os.path.splitext(file_path)[1],
                 type="class",
                 sub_type="inner_class",
                 source=inner_source,
@@ -403,7 +407,7 @@ def parse_inner_classes(
     return inner_classes
 
 
-def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None) -> tuple[Package, Class, list[Class], str]:
+def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None) -> tuple[Package, Class, list[Class], str]:
     """Parse a single Java file and return parsed entities."""
     logger = get_logger(__name__)
     
@@ -454,14 +458,25 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         from csa.parsers.java.description import extract_class_description_from_annotations
         class_description = extract_class_description_from_annotations(class_annotations) or ""
 
-        # AI 분석 수행 (오류 시 빈 문자열 반환)
-        ai_description = ""
         # AI 분석 수행 (USE_AI_ANALYSIS 환경변수 확인, 기본값: 비활성화)
         use_ai = os.getenv("USE_AI_ANALYSIS", "false").lower() == "true"
+        
+        # ai_options가 있으면 우선 사용
+        if ai_options:
+            use_ai = True
+            
         if use_ai and AI_ANALYZER_AVAILABLE:
             try:
-                analyzer = get_ai_analyzer()
-                if analyzer.is_available():
+                analyzer = None
+                if ai_options and AIAnalyzer and AIConfig:
+                    # worker-specific analyzer
+                    config = AIConfig(ai_options)
+                    analyzer = AIAnalyzer(config)
+                else:
+                    # global analyzer
+                    analyzer = get_ai_analyzer()
+                    
+                if analyzer and analyzer.is_available():
                     ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
                 logger.warning(f"AI Class 분석 실패 ({class_name}): {e}")
@@ -482,6 +497,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             name=class_name,
             logical_name=class_logical_name if class_logical_name else "",
             file_path=file_path,
+            file_extension=os.path.splitext(file_path)[1],
             type=class_type,
             sub_type=sub_type,
             source=class_source,
@@ -1350,7 +1366,7 @@ def is_dto_class(class_name: str, file_path: str = None) -> bool:
     return False
 
 
-def _parse_single_file_wrapper(file_path: str, project_name: str) -> tuple:
+def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None) -> tuple:
     """
     병렬 처리용 파싱 래퍼 함수 (Neo4j 연결 없이 파싱만 수행)
 
@@ -1367,7 +1383,7 @@ def _parse_single_file_wrapper(file_path: str, project_name: str) -> tuple:
 
     try:
         package_node, class_node, inner_classes, package_name = parse_single_java_file(
-            file_path, project_name, None  # graph_db=None for parsing only
+            file_path, project_name, None, ai_options  # graph_db=None for parsing only
         )
 
         # 처리 시간 계산 및 로깅
@@ -1389,6 +1405,9 @@ def parse_java_project_streaming(
     graph_db: GraphDB,
     project_name: str,
     parallel_workers: int = 8,
+    ai_options: dict = None,
+    source_options: dict = None,
+    use_ai_analysis: bool = False,
 ) -> dict:
     """
     스트리밍 방식 Java 프로젝트 파싱
@@ -1467,7 +1486,12 @@ def parse_java_project_streaming(
     file_complexities = [(f, estimate_file_complexity(f)) for f in java_files]
 
     # 복잡도 임계값 설정 (환경 변수로 제어 가능, 기본값: 50000)
-    complexity_threshold = int(os.getenv("JAVA_COMPLEXITY_THRESHOLD", "50000"))
+    # 복잡도 임계값 설정 (source_options > 환경 변수 > 기본값 50000)
+    default_complexity = 50000
+    if source_options and 'java_complexity_threshold' in source_options:
+        complexity_threshold = source_options['java_complexity_threshold']
+    else:
+        complexity_threshold = int(os.getenv("JAVA_COMPLEXITY_THRESHOLD", str(default_complexity)))
 
     # 극단적으로 복잡한 파일 필터링
     skipped_files = []
@@ -1509,7 +1533,11 @@ def parse_java_project_streaming(
     # 기본값: max(4, CPU 코어수 - 2) - 최소 4개, 최대 (코어수-2)개
     cpu_count = multiprocessing.cpu_count()
     default_workers = max(4, cpu_count - 2)
-    parallel_workers = int(os.getenv("JAVA_PARSE_WORKERS", str(default_workers)))
+    environment_workers = int(os.getenv("JAVA_PARSE_WORKERS", str(default_workers)))
+    if source_options and 'java_parse_workers' in source_options:
+        parallel_workers = source_options['java_parse_workers']
+    else:
+        parallel_workers = environment_workers
     initial_batch_size = int(os.getenv("NEO4J_BATCH_SIZE", "50"))  # 초기 배치 크기
 
     # 동적 배치 크기 조정기 초기화
@@ -1558,13 +1586,21 @@ def parse_java_project_streaming(
     batch_save_interval = 10.0  # 10초마다 배치 저장 (버퍼에 데이터가 있을 경우)
 
     # 타임아웃 설정 (환경 변수로 제어 가능, 기본값: 60초)
-    file_timeout = float(os.getenv("JAVA_FILE_PARSE_TIMEOUT", "60.0"))
+    # 타임아웃 설정 (source_options > 환경 변수 > 기본값 60초)
+    default_timeout = 120.0
+    if source_options and 'java_file_parse_timeout' in source_options:
+        file_timeout = source_options['java_file_parse_timeout']
+    else:
+        file_timeout = float(os.getenv("JAVA_FILE_PARSE_TIMEOUT", "60.0"))
     logger.info(f"파일 파싱 타임아웃: {file_timeout}초")
+    
+    # AI 옵션 필터링
+    effective_ai_options = ai_options if use_ai_analysis else None
 
     with ThreadPoolExecutor(max_workers=parallel_workers) as executor:
         # 모든 파일을 병렬로 파싱 제출
         future_to_file = {
-            executor.submit(_parse_single_file_wrapper, file_path, project_name): file_path
+            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options): file_path
             for file_path in java_files
         }
 

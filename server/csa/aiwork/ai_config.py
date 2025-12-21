@@ -14,7 +14,7 @@ load_dotenv()
 class AIConfig:
     """AI Provider 설정 클래스"""
     
-    def __init__(self):
+    def __init__(self, options: dict = None):
         # AI 분석 시스템 활성화 여부 설정
         self.ai_use_analysis = os.getenv("USE_AI_ANALYSIS", "false").lower() == "true"
 
@@ -38,6 +38,37 @@ class AIConfig:
         self.openai_api_key = os.getenv("OPENAI_API_KEY")
         self.openai_model_name = os.getenv("OPENAI_MODEL_NAME", "gpt-oss:20b")
         self.openai_base_url = os.getenv("OPENAI_BASE_URL", "http://devlab.skax.co.kr/ollama/v1")
+        
+        if options:
+            self.configure(options)
+
+    def configure(self, options: dict):
+        """Update configuration from dictionary options."""
+        if not options:
+            return
+            
+        provider = options.get("provider")
+        api_key = options.get("api_key")
+        model_name = options.get("model_name")
+        api_endpoint = options.get("api_endpoint")
+        
+        if provider:
+            self.ai_provider = provider
+        
+        if self.ai_provider == "google":
+            if api_key: self.google_api_key = api_key
+            if model_name: self.gemini_model_name = model_name
+        elif self.ai_provider == "groq":
+            if api_key: self.groq_api_key = api_key
+            if model_name: self.groq_model_name = model_name
+        elif self.ai_provider == "lmstudio":
+            if api_endpoint: self.lmstudio_base_url = api_endpoint
+            if model_name: self.lmstudio_model_name = model_name
+        elif self.ai_provider == "openai":
+            if api_key: self.openai_api_key = api_key
+            if model_name: self.openai_model_name = model_name
+            if api_endpoint: self.openai_base_url = api_endpoint
+            
     def get_current_provider(self) -> str:
         """현재 설정된 AI Provider를 반환합니다."""
         return self.ai_provider

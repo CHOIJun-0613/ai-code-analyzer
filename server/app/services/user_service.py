@@ -198,3 +198,31 @@ class UserService:
         
         with pool.session() as session:
             session.run(query, {"user_id": user_id, "group_id": group_id})
+
+    @staticmethod
+    def get_user_preferences(username: str) -> str:
+        pool = get_db()
+        query = """
+        MATCH (u:User {username: $username})
+        RETURN u.preferences as preferences
+        """
+        
+        with pool.session() as session:
+            result = session.run(query, {"username": username})
+            record = result.single()
+            if not record:
+                return "{}"
+            
+            return record["preferences"] or "{}"
+
+    @staticmethod
+    def update_user_preferences(username: str, preferences: str):
+        pool = get_db()
+        query = """
+        MATCH (u:User {username: $username})
+        SET u.preferences = $preferences
+        RETURN u
+        """
+        
+        with pool.session() as session:
+            session.run(query, {"username": username, "preferences": preferences})

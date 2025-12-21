@@ -8,8 +8,8 @@ import logging
 import re
 import time
 
-from .ai_config import ai_config
-from .ai_providers import ai_provider_manager
+from .ai_config import ai_config, AIConfig
+from .ai_providers import AIProviderManager, ai_provider_manager
 from .prompt import get_prompt
 
 logger = logging.getLogger(__name__)
@@ -18,23 +18,34 @@ logger = logging.getLogger(__name__)
 class AIAnalyzer:
     """AI 기반 코드 분석 서비스"""
 
-    def __init__(self):
-        """AI Analyzer 초기화"""
-        self.config = ai_config
-        self.provider_manager = ai_provider_manager
+    def __init__(self, config: AIConfig = None):
+        """
+        AI Analyzer 초기화
+        
+        Args:
+            config: Optional AIConfig instance. If None, uses global default.
+        """
+        self.ai_config = config or ai_config
+        # Use specific config for provider manager if config provides, otherwise fallback to global manager's logic (which is global config)
+        # However, to be safe, we always create a new manager if we have a specific config, or reuse global?
+        # Creating new manager is cheap.
+        if config:
+            self.provider_manager = AIProviderManager(self.ai_config)
+        else:
+            self.provider_manager = ai_provider_manager
+            
         self._llm = None
         self._is_available = False
 
         # AI 분석 시스템 활성화 여부 확인
-        if not self.config.ai_use_analysis:
+        if not self.ai_config.ai_use_analysis:
             logger.info("AI 분석이 비활성화되어 있습니다 (USE_AI_ANALYSIS=false)")
             return
 
         # LLM 초기화 시도
         try:
-            self._llm = self.provider_manager.create_llm()
             self._is_available = True
-            logger.info(f"AI 분석 초기화 완료: {self.config.ai_provider} / {self.config.get_current_model_name()}")
+            logger.info(f"AI 분석 초기화 완료: {self.ai_config.ai_provider} / {self.ai_config.get_current_model_name()}")
         except Exception as e:
             logger.warning(f"AI 분석 초기화 실패: {e}")
             self._is_available = False

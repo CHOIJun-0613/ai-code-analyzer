@@ -80,6 +80,7 @@ class Class(BaseModel):
     name: str
     logical_name: str = ""
     file_path: str
+    file_extension: str = ""
     type: Literal["class", "interface", "enum"] = "class"
     sub_type: str = ""  # controller, service, util, dto, config, mapper, repository, entity, exception, client
     methods: list[Method] = []

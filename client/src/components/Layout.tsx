@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
 import { LayoutDashboard, FileCode, Users, LogOut, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
 import AnimatedLogo from './AnimatedLogo';
@@ -9,6 +10,7 @@ const Layout: React.FC = () => {
     const logout = useAuthStore((state) => state.logout);
     const navigate = useNavigate();
     const location = useLocation();
+    const { t } = useTranslation();
 
     // -- State --
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -91,33 +93,33 @@ const Layout: React.FC = () => {
 
                     {/* Main Label */}
                     <div className={`px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'mb-2 opacity-100'}`}>
-                        Main
+                        {t('layout.main')}
                     </div>
 
-                    <Link to="/" className={getLinkClass('/')} title={isCollapsed ? "Dashboard" : ""}>
+                    <Link to="/" className={getLinkClass('/')} title={isCollapsed ? t('layout.dashboard') : ""}>
                         <LayoutDashboard className={`shrink-0 w-5 h-5 transition-colors ${isActive('/') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                         <span className={`ml-3 font-medium whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                            Dashboard
+                            {t('layout.dashboard')}
                         </span>
                     </Link>
 
-                    <Link to="/analysis" className={getLinkClass('/analysis')} title={isCollapsed ? "Analysis" : ""}>
+                    <Link to="/analysis" className={getLinkClass('/analysis')} title={isCollapsed ? t('layout.analysis') : ""}>
                         <FileCode className={`shrink-0 w-5 h-5 transition-colors ${isActive('/analysis') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                         <span className={`ml-3 font-medium whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                            Analysis
+                            {t('layout.analysis')}
                         </span>
                     </Link>
 
                     {/* Admin Section */}
                     <div className={`mt-8 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'mb-2 opacity-100'}`}>
-                        Administration
+                        {t('layout.administration')}
                     </div>
 
                     <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/admin') && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
-                        <Link to="/admin" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isActive('/admin') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? "Admin Overview" : ""}>
+                        <Link to="/admin" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isActive('/admin') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.adminOverview') : ""}>
                             <Users className={`shrink-0 w-5 h-5 transition-colors ${isActive('/admin') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
                             <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                                Admin Overview
+                                {t('layout.adminOverview')}
                             </span>
                         </Link>
 
@@ -131,7 +133,7 @@ const Layout: React.FC = () => {
                                     }`}
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                <span className="whitespace-nowrap">User Management</span>
+                                <span className="whitespace-nowrap">{t('layout.userManagement')}</span>
                             </Link>
                             <Link
                                 to="/admin/groups"
@@ -141,7 +143,7 @@ const Layout: React.FC = () => {
                                     }`}
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                <span className="whitespace-nowrap">Group Management</span>
+                                <span className="whitespace-nowrap">{t('layout.groupManagement')}</span>
                             </Link>
                         </div>
                     </div>
@@ -153,20 +155,20 @@ const Layout: React.FC = () => {
                     <button
                         onClick={() => setIsSettingsOpen(true)}
                         className={`flex items-center w-full px-4 py-3 text-slate-400 hover:text-white hover:bg-indigo-500/10 hover:border-indigo-500/20 border border-transparent rounded-xl transition-all duration-200 group ${isCollapsed ? 'justify-center' : ''}`}
-                        title="Settings"
+                        title={t('layout.settings')}
                     >
                         <Settings className="shrink-0 w-5 h-5 group-hover:text-indigo-400 transition-colors" />
-                        <span className={`ml-3 font-medium group-hover:text-indigo-400 transition-colors whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>Settings</span>
+                        <span className={`ml-3 font-medium group-hover:text-indigo-400 transition-colors whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>{t('layout.settings')}</span>
                     </button>
 
                     {/* Logout Button */}
                     <button
                         onClick={handleLogout}
                         className={`flex items-center w-full px-4 py-3 text-slate-400 hover:text-white hover:bg-red-500/10 hover:border-red-500/20 border border-transparent rounded-xl transition-all duration-200 group ${isCollapsed ? 'justify-center' : ''}`}
-                        title="Logout"
+                        title={t('layout.logout')}
                     >
                         <LogOut className="shrink-0 w-5 h-5 group-hover:text-red-400 transition-colors" />
-                        <span className={`ml-3 font-medium group-hover:text-red-400 transition-colors whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>Logout</span>
+                        <span className={`ml-3 font-medium group-hover:text-red-400 transition-colors whitespace-nowrap ${isCollapsed ? 'hidden' : 'block'}`}>{t('layout.logout')}</span>
                     </button>
                 </div>
             </div>
