@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
+from app.api import deps
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from app.core.database import get_db
@@ -44,15 +45,29 @@ def update_project(project_name: str, update_data: ProjectUpdate):
         return dict(result["p"])
 
 @router.get("/", response_model=List[Dict[str, Any]])
-def get_projects():
+def get_projects(current_user: Any = Depends(deps.get_current_user)):
     pool = get_db()
-    query = """
-    MATCH (p:Project)
-    RETURN p
-    ORDER BY p.updated_at DESC
-    """
+    
+    # Check if user is in 'Administrators' group
+    is_admin = any(g.name == "Administrators" for g in current_user.groups)
+    
+    if is_admin:
+        query = """
+        MATCH (p:Project)
+        RETURN p
+        ORDER BY p.updated_at DESC
+        """
+        params = {}
+    else:
+        query = """
+        MATCH (u:User {username: $username})-[:BELONGS_TO]->(g:Group)-[:HAS_ACCESS_TO]->(p:Project)
+        RETURN DISTINCT p
+        ORDER BY p.updated_at DESC
+        """
+        params = {"username": current_user.username}
+
     with pool.session() as session:
-        result = session.run(query)
+        result = session.run(query, **params)
         projects = [dict(record["p"]) for record in result]
     return projects
 

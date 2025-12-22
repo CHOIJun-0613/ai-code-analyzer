@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import client from '../api/client';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { LayoutDashboard, FileCode, Clock, Folder, ArrowUpRight } from 'lucide-react';
 
 interface Project {
@@ -10,6 +11,7 @@ interface Project {
 }
 
 const Dashboard: React.FC = () => {
+    const { t } = useTranslation();
     const [projects, setProjects] = useState<Project[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
@@ -17,7 +19,7 @@ const Dashboard: React.FC = () => {
     useEffect(() => {
         const fetchProjects = async () => {
             try {
-                const response = await axios.get('/api/v1/projects/');
+                const response = await client.get('/projects/');
                 setProjects(response.data);
             } catch (error) {
                 console.error("Failed to fetch projects", error);
@@ -38,13 +40,13 @@ const Dashboard: React.FC = () => {
         <div className="space-y-8">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard Overview</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">Welcome back to your AI Code Analyzer workspace</p>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('dashboard.title')}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">{t('dashboard.subtitle')}</p>
                 </div>
                 <div className="flex gap-3">
                     <span className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 shadow-sm flex items-center gap-2">
                         <Clock className="w-4 h-4" />
-                        Last updated: {new Date().toLocaleTimeString()}
+                        {t('dashboard.lastUpdated')}: {new Date().toLocaleTimeString()}
                     </span>
                 </div>
             </div>
@@ -55,7 +57,7 @@ const Dashboard: React.FC = () => {
             <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                     <LayoutDashboard className="w-5 h-5 text-slate-400" />
-                    Recent Projects <span className="text-slate-400 font-normal text-lg">({projects.length})</span>
+                    {t('dashboard.recentProjects')} <span className="text-slate-400 font-normal text-lg">({projects.length})</span>
                 </h2>
 
                 {isLoading ? (
@@ -89,17 +91,17 @@ const Dashboard: React.FC = () => {
                                     <div className="space-y-2">
                                         <div className="flex items-center text-sm text-slate-500">
                                             <FileCode className="w-4 h-4 mr-2 text-slate-400" />
-                                            {project.number_of_files.toLocaleString()} files processed
+                                            {project.number_of_files.toLocaleString()} {t('dashboard.filesProcessed')}
                                         </div>
                                         <div className="flex items-center text-sm text-slate-500">
                                             <Clock className="w-4 h-4 mr-2 text-slate-400" />
-                                            Updated {new Date(project.updated_at).toLocaleString()}
+                                            {t('dashboard.updated')} {new Date(project.updated_at).toLocaleString()}
                                         </div>
                                     </div>
 
                                     <div className="mt-6 pt-4 border-t border-slate-50 flex justify-end">
                                         <span className="text-sm font-medium text-indigo-600 opacity-0 group-hover:opacity-100 transform translate-x-2 group-hover:translate-x-0 transition-all duration-300 flex items-center">
-                                            View Details <ArrowUpRight className="w-4 h-4 ml-1" />
+                                            {t('dashboard.viewDetails')} <ArrowUpRight className="w-4 h-4 ml-1" />
                                         </span>
                                     </div>
                                 </div>
@@ -111,8 +113,8 @@ const Dashboard: React.FC = () => {
                                 <div className="p-4 bg-slate-50 rounded-full mb-4">
                                     <Folder className="w-8 h-8 text-slate-400" />
                                 </div>
-                                <h3 className="text-lg font-semibold text-slate-900">No projects found</h3>
-                                <p className="text-slate-500 mt-1">Start by uploading a new project for analysis</p>
+                                <h3 className="text-lg font-semibold text-slate-900">{t('dashboard.noProjects')}</h3>
+                                <p className="text-slate-500 mt-1">{t('dashboard.startUpload')}</p>
                             </div>
                         )}
                     </div>

@@ -11,6 +11,8 @@ const Layout: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { t } = useTranslation();
+    const user = useAuthStore((state) => state.user);
+    const isAdmin = user?.groups?.some(g => g.name === 'Administrators') ?? false;
 
     // -- State --
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -29,6 +31,11 @@ const Layout: React.FC = () => {
             document.documentElement.classList.remove('dark');
         }
     }, [theme]);
+
+    // -- Fetch User Effect --
+    useEffect(() => {
+        useAuthStore.getState().fetchUser();
+    }, []);
 
     const handleLogout = () => {
         logout();
@@ -103,50 +110,56 @@ const Layout: React.FC = () => {
                         </span>
                     </Link>
 
-                    <Link to="/analysis" className={getLinkClass('/analysis')} title={isCollapsed ? t('layout.analysis') : ""}>
-                        <FileCode className={`shrink-0 w-5 h-5 transition-colors ${isActive('/analysis') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                        <span className={`ml-3 font-medium whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                            {t('layout.analysis')}
-                        </span>
-                    </Link>
-
-                    {/* Admin Section */}
-                    <div className={`mt-8 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'mb-2 opacity-100'}`}>
-                        {t('layout.administration')}
-                    </div>
-
-                    <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/admin') && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
-                        <Link to="/admin" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isActive('/admin') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.adminOverview') : ""}>
-                            <Users className={`shrink-0 w-5 h-5 transition-colors ${isActive('/admin') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
-                            <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                                {t('layout.adminOverview')}
+                    {isAdmin && (
+                        <Link to="/analysis" className={getLinkClass('/analysis')} title={isCollapsed ? t('layout.analysis') : ""}>
+                            <FileCode className={`shrink-0 w-5 h-5 transition-colors ${isActive('/analysis') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                            <span className={`ml-3 font-medium whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
+                                {t('layout.analysis')}
                             </span>
                         </Link>
+                    )}
 
-                        {/* Submenu - Only show when expanded */}
-                        <div className={`pl-11 pr-4 pb-2 space-y-1 ${isCollapsed ? 'hidden' : 'block'}`}>
-                            <Link
-                                to="/admin/users"
-                                className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/admin/users')
-                                    ? 'bg-indigo-500/10 text-indigo-400'
-                                    : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
-                                    }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                <span className="whitespace-nowrap">{t('layout.userManagement')}</span>
-                            </Link>
-                            <Link
-                                to="/admin/groups"
-                                className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/admin/groups')
-                                    ? 'bg-indigo-500/10 text-indigo-400'
-                                    : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
-                                    }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                <span className="whitespace-nowrap">{t('layout.groupManagement')}</span>
-                            </Link>
-                        </div>
-                    </div>
+                    {isAdmin && (
+                        <>
+                            {/* Admin Section */}
+                            <div className={`mt-8 px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider transition-all duration-300 ${isCollapsed ? 'opacity-0 h-0 overflow-hidden' : 'mb-2 opacity-100'}`}>
+                                {t('layout.administration')}
+                            </div>
+
+                            <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/admin') && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
+                                <Link to="/admin" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isActive('/admin') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.adminOverview') : ""}>
+                                    <Users className={`shrink-0 w-5 h-5 transition-colors ${isActive('/admin') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
+                                    <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
+                                        {t('layout.adminOverview')}
+                                    </span>
+                                </Link>
+
+                                {/* Submenu - Only show when expanded */}
+                                <div className={`pl-11 pr-4 pb-2 space-y-1 ${isCollapsed ? 'hidden' : 'block'}`}>
+                                    <Link
+                                        to="/admin/users"
+                                        className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/admin/users')
+                                            ? 'bg-indigo-500/10 text-indigo-400'
+                                            : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                                            }`}
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
+                                        <span className="whitespace-nowrap">{t('layout.userManagement')}</span>
+                                    </Link>
+                                    <Link
+                                        to="/admin/groups"
+                                        className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/admin/groups')
+                                            ? 'bg-indigo-500/10 text-indigo-400'
+                                            : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                                            }`}
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
+                                        <span className="whitespace-nowrap">{t('layout.groupManagement')}</span>
+                                    </Link>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </nav>
 
                 {/* Footer Actions */}

@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { userApi, Group } from '../../api/userApi';
-import { Plus, Shield, Check, X, Edit2, Users } from 'lucide-react';
-
-const AVAILABLE_PERMISSIONS = [
-    { value: 'manage_users', label: 'Manage Users' },
-    { value: 'analyze_code', label: 'Analyze Code' },
-    { value: 'view_project', label: 'View Project' },
-    { value: 'manage_project', label: 'Manage Project' },
-];
+import client from '../../api/client';
+import { Plus, Shield, Check, X, Edit2, Users, Folder } from 'lucide-react';
 
 const GroupManagement = () => {
+    const { t } = useTranslation();
+
+    const AVAILABLE_PERMISSIONS = [
+        { value: 'manage_users', label: t('groupManagement.perm.manage_users') },
+        { value: 'analyze_code', label: t('groupManagement.perm.analyze_code') },
+        { value: 'view_project', label: t('groupManagement.perm.view_project') },
+        { value: 'manage_project', label: t('groupManagement.perm.manage_project') },
+    ];
+
     const [groups, setGroups] = useState<Group[]>([]);
+    const [projects, setProjects] = useState<any[]>([]); // List of available projects
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newGroup, setNewGroup] = useState({ name: '', permissions: [] as string[] });
+    const [newGroup, setNewGroup] = useState({ name: '', permissions: [] as string[], projects: [] as string[] });
     const [editingGroup, setEditingGroup] = useState<Group | null>(null);
 
     useEffect(() => {
         loadGroups();
+        loadProjects();
     }, []);
 
     const loadGroups = async () => {
@@ -28,12 +34,29 @@ const GroupManagement = () => {
         }
     };
 
+    const loadProjects = async () => {
+        try {
+            const res = await client.get('/projects/');
+            setProjects(res.data);
+        } catch (error) {
+            console.error('Failed to load projects:', error);
+        }
+    };
+
     const handleCreateGroup = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            await userApi.createGroup(newGroup);
+            const created = await userApi.createGroup(newGroup);
+            // If we have permissions or projects, we might need separate calls or modify createGroup to handle them if backend supports it.
+            // Backend create_group now supports permissions. But projects usually need update_group_projects call if create doesn't handle it?
+            // Wait, backend create_group only takes name and permissions. 
+            // So we need to call updateGroupProjects after creation.
+            if (newGroup.projects.length > 0 && created.id) {
+                await userApi.updateGroupProjects(created.id, newGroup.projects);
+            }
+
             setShowAddModal(false);
-            setNewGroup({ name: '', permissions: [] });
+            setNewGroup({ name: '', permissions: [], projects: [] });
             loadGroups();
         } catch (error) {
             console.error('Failed to create group:', error);
@@ -41,14 +64,18 @@ const GroupManagement = () => {
         }
     };
 
-    const handleUpdatePermissions = async (group: Group, permissions: string[]) => {
+    const handleUpdatePermissions = async () => {
+        if (!editingGroup) return;
         try {
-            await userApi.updateGroupPermissions(group.id, permissions);
+            await userApi.updateGroupPermissions(editingGroup.id, editingGroup.permissions);
+            if (editingGroup.projects) {
+                await userApi.updateGroupProjects(editingGroup.id, editingGroup.projects);
+            }
             setEditingGroup(null);
             loadGroups();
         } catch (error) {
-            console.error('Failed to update permissions:', error);
-            alert('Failed to update permissions');
+            console.error('Failed to update group:', error);
+            alert('Failed to update group');
         }
     };
 
@@ -62,17 +89,17 @@ const GroupManagement = () => {
                                 <Shield className="w-8 h-8 text-white" />
                             </div>
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">
-                                Group & Permission Management
+                                {t('groupManagement.title')}
                             </span>
                         </h1>
-                        <p className="mt-2 text-slate-500 text-lg">Manage user groups and their access levels</p>
+                        <p className="mt-2 text-slate-500 text-lg">{t('groupManagement.subtitle')}</p>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
                         className="group flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-md hover:shadow-xl hover:-translate-y-0.5"
                     >
                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
-                        <span className="font-medium">Create New Group</span>
+                        <span className="font-medium">{t('groupManagement.createNewGroup')}</span>
                     </button>
                 </div>
 
@@ -95,7 +122,7 @@ const GroupManagement = () => {
                                     <button
                                         onClick={() => setEditingGroup(group)}
                                         className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all duration-200"
-                                        title="Edit Permissions"
+                                        title={t('groupManagement.editPermissions')}
                                     >
                                         <Edit2 className="w-4 h-4" />
                                     </button>
@@ -103,7 +130,7 @@ const GroupManagement = () => {
 
                                 <div className="space-y-3">
                                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                                        Active Permissions
+                                        {t('groupManagement.activePermissions')}
                                         <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px]">
                                             {group.permissions.length}
                                         </span>
@@ -121,7 +148,7 @@ const GroupManagement = () => {
                                         {group.permissions.length === 0 && (
                                             <span className="text-sm text-slate-400 italic flex items-center gap-2 py-1">
                                                 <Shield className="w-4 h-4" />
-                                                No permissions assigned
+                                                {t('groupManagement.noPermissions')}
                                             </span>
                                         )}
                                     </div>
@@ -136,7 +163,7 @@ const GroupManagement = () => {
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                <h2 className="text-xl font-bold text-slate-800">Create New Group</h2>
+                                <h2 className="text-xl font-bold text-slate-800">{t('groupManagement.modalTitle')}</h2>
                                 <button
                                     onClick={() => setShowAddModal(false)}
                                     className="text-slate-400 hover:text-slate-600 transition-colors"
@@ -147,25 +174,25 @@ const GroupManagement = () => {
 
                             <form onSubmit={handleCreateGroup} className="p-6 space-y-6">
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Group Name</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('groupManagement.groupName')}</label>
                                     <input
                                         type="text"
                                         required
-                                        placeholder="e.g. Content Moderators"
+                                        placeholder={t('groupManagement.groupNamePlaceholder')}
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400"
                                         value={newGroup.name}
                                         onChange={e => setNewGroup({ ...newGroup, name: e.target.value })}
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-3">Assign Permissions</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-3">{t('groupManagement.assignPermissions')}</label>
                                     <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
                                         {AVAILABLE_PERMISSIONS.map(perm => (
                                             <label
                                                 key={perm.value}
                                                 className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${newGroup.permissions.includes(perm.value)
-                                                        ? 'border-indigo-200 bg-indigo-50/50'
-                                                        : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                                    ? 'border-indigo-200 bg-indigo-50/50'
+                                                    : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
                                                     }`}
                                             >
                                                 <input
@@ -186,19 +213,54 @@ const GroupManagement = () => {
                                     </div>
                                 </div>
 
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-3">{t('groupManagement.assignProjects') || 'Assign Projects'}</label>
+                                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                                        {projects.map(proj => (
+                                            <label
+                                                key={proj.name}
+                                                className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${newGroup.projects.includes(proj.name)
+                                                    ? 'border-indigo-200 bg-indigo-50/50'
+                                                    : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                    checked={newGroup.projects.includes(proj.name)}
+                                                    onChange={e => {
+                                                        if (e.target.checked) {
+                                                            setNewGroup({ ...newGroup, projects: [...newGroup.projects, proj.name] });
+                                                        } else {
+                                                            setNewGroup({ ...newGroup, projects: newGroup.projects.filter(p => p !== proj.name) });
+                                                        }
+                                                    }}
+                                                />
+                                                <span className="ml-3 text-sm font-medium text-slate-700 flex items-center gap-2">
+                                                    <Folder className="w-4 h-4 text-slate-400" />
+                                                    {proj.name}
+                                                </span>
+                                            </label>
+                                        ))}
+                                        {projects.length === 0 && (
+                                            <p className="text-sm text-slate-400 italic">No projects available</p>
+                                        )}
+                                    </div>
+                                </div>
+
                                 <div className="flex justify-end gap-3 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setShowAddModal(false)}
                                         className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
                                     >
-                                        Create Group
+                                        {t('groupManagement.createGroup')}
                                     </button>
                                 </div>
                             </form>
@@ -212,8 +274,8 @@ const GroupManagement = () => {
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                                 <div>
-                                    <h2 className="text-xl font-bold text-slate-800">Edit Permissions</h2>
-                                    <p className="text-sm text-slate-500 mt-0.5">for {editingGroup.name}</p>
+                                    <h2 className="text-xl font-bold text-slate-800">{t('groupManagement.editModalTitle')}</h2>
+                                    <p className="text-sm text-slate-500 mt-0.5">{t('groupManagement.for')} {editingGroup.name}</p>
                                 </div>
                                 <button
                                     onClick={() => setEditingGroup(null)}
@@ -229,8 +291,8 @@ const GroupManagement = () => {
                                         <label
                                             key={perm.value}
                                             className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${editingGroup.permissions.includes(perm.value)
-                                                    ? 'border-indigo-200 bg-indigo-50/50'
-                                                    : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                                ? 'border-indigo-200 bg-indigo-50/50'
+                                                : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
                                                 }`}
                                         >
                                             <input
@@ -251,20 +313,51 @@ const GroupManagement = () => {
                                     ))}
                                 </div>
 
+                                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar border-t border-slate-100 pt-4">
+                                    <h4 className="text-sm font-semibold text-slate-700 mb-2">{t('groupManagement.assignProjects') || 'Assign Projects'}</h4>
+                                    {projects.map(proj => (
+                                        <label
+                                            key={proj.name}
+                                            className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${editingGroup.projects?.includes(proj.name)
+                                                ? 'border-indigo-200 bg-indigo-50/50'
+                                                : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                                }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                checked={editingGroup.projects?.includes(proj.name) || false}
+                                                onChange={e => {
+                                                    const currentProjects = editingGroup.projects || [];
+                                                    if (e.target.checked) {
+                                                        setEditingGroup({ ...editingGroup, projects: [...currentProjects, proj.name] });
+                                                    } else {
+                                                        setEditingGroup({ ...editingGroup, projects: currentProjects.filter(p => p !== proj.name) });
+                                                    }
+                                                }}
+                                            />
+                                            <span className="ml-3 text-sm font-medium text-slate-700 flex items-center gap-2">
+                                                <Folder className="w-4 h-4 text-slate-400" />
+                                                {proj.name}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+
                                 <div className="flex justify-end gap-3 pt-4">
                                     <button
                                         type="button"
                                         onClick={() => setEditingGroup(null)}
                                         className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={() => handleUpdatePermissions(editingGroup, editingGroup.permissions)}
+                                        onClick={handleUpdatePermissions}
                                         className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
                                     >
-                                        Save Changes
+                                        {t('groupManagement.saveChanges')}
                                     </button>
                                 </div>
                             </div>

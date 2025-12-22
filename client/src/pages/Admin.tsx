@@ -1,13 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Users, Shield, Settings, ChevronRight, UserPlus, ShieldCheck } from 'lucide-react';
 
 const Admin: React.FC = () => {
+    const { t } = useTranslation();
+
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-bold text-slate-900">Administration</h1>
-                <p className="text-slate-500 mt-1">Manage users, groups, and system settings</p>
+                <h1 className="text-3xl font-bold text-slate-900">{t('admin.title')}</h1>
+                <p className="text-slate-500 mt-1">{t('admin.subtitle')}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -20,13 +23,13 @@ const Admin: React.FC = () => {
                             <Users className="w-6 h-6" />
                         </div>
 
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">User Management</h3>
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">{t('admin.userManagement')}</h3>
                         <p className="text-slate-500 mb-6 line-clamp-2">
-                            Create, edit, and manage user accounts. Assign roles and monitor user activity.
+                            {t('admin.userManagementDesc')}
                         </p>
 
                         <div className="flex items-center text-indigo-600 font-medium group-hover:translate-x-2 transition-transform duration-300">
-                            Manage Users <ChevronRight className="w-4 h-4 ml-1" />
+                            {t('admin.manageUsers')} <ChevronRight className="w-4 h-4 ml-1" />
                         </div>
                     </div>
                 </Link>
@@ -40,13 +43,13 @@ const Admin: React.FC = () => {
                             <Shield className="w-6 h-6" />
                         </div>
 
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">Group Management</h3>
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">{t('admin.groupManagement')}</h3>
                         <p className="text-slate-500 mb-6 line-clamp-2">
-                            Organize users into groups. Configure permissions and access controls for different teams.
+                            {t('admin.groupManagementDesc')}
                         </p>
 
                         <div className="flex items-center text-blue-600 font-medium group-hover:translate-x-2 transition-transform duration-300">
-                            Manage Groups <ChevronRight className="w-4 h-4 ml-1" />
+                            {t('admin.manageGroups')} <ChevronRight className="w-4 h-4 ml-1" />
                         </div>
                     </div>
                 </Link>
@@ -60,13 +63,13 @@ const Admin: React.FC = () => {
                             <Settings className="w-6 h-6" />
                         </div>
 
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">System Settings</h3>
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">{t('admin.systemSettings')}</h3>
                         <p className="text-slate-500 mb-6 line-clamp-2">
-                            Configure global application settings, integrations, and security policies.
+                            {t('admin.systemSettingsDesc')}
                         </p>
 
                         <div className="flex items-center text-slate-400 font-medium">
-                            Coming Soon
+                            {t('admin.comingSoon')}
                         </div>
                     </div>
                 </div>
@@ -74,15 +77,15 @@ const Admin: React.FC = () => {
 
             {/* Quick Actions */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h2 className="text-lg font-bold text-slate-900 mb-4">Quick Actions</h2>
+                <h2 className="text-lg font-bold text-slate-900 mb-4">{t('admin.quickActions')}</h2>
                 <div className="flex flex-wrap gap-4">
                     <Link to="/admin/users" className="flex items-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-lg hover:bg-indigo-100 transition-colors font-medium">
                         <UserPlus className="w-4 h-4" />
-                        Add New User
+                        {t('admin.addNewUser')}
                     </Link>
                     <Link to="/admin/groups" className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium">
                         <ShieldCheck className="w-4 h-4" />
-                        Create New Group
+                        {t('admin.createNewGroup')}
                     </Link>
                 </div>
             </div>

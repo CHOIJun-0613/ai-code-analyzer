@@ -82,5 +82,71 @@
         "noAnalysisRunning": "No analysis running",
         "proTip": "Pro Tip",
         "proTipContent": "For large projects, using the Server Path option is faster as it avoids uploading large files through the browser."
+    },
+    "dashboard": {
+        "title": "Dashboard Overview",
+        "subtitle": "Welcome back to your AI Code Analyzer workspace",
+        "lastUpdated": "Last updated",
+        "recentProjects": "Recent Projects",
+        "filesProcessed": "files processed",
+        "updated": "Updated",
+        "viewDetails": "View Details",
+        "noProjects": "No projects found",
+        "startUpload": "Start by uploading a new project for analysis"
+    },
+    "admin": {
+        "title": "Administration",
+        "subtitle": "Manage users, groups, and system settings",
+        "userManagement": "User Management",
+        "userManagementDesc": "Create, edit, and manage user accounts. Assign roles and monitor user activity.",
+        "manageUsers": "Manage Users",
+        "groupManagement": "Group Management",
+        "groupManagementDesc": "Organize users into groups. Configure permissions and access controls for different teams.",
+        "manageGroups": "Manage Groups",
+        "systemSettings": "System Settings",
+        "systemSettingsDesc": "Configure global application settings, integrations, and security policies.",
+        "comingSoon": "Coming Soon",
+        "quickActions": "Quick Actions",
+        "addNewUser": "Add New User",
+        "createNewGroup": "Create New Group"
+    },
+    "userManagement": {
+        "title": "User Management",
+        "subtitle": "Manage system users and their group assignments",
+        "addNewUser": "Add New User",
+        "searchPlaceholder": "Search users by name or email...",
+        "active": "Active",
+        "inactive": "Inactive",
+        "groups": "Groups",
+        "noGroups": "No groups assigned",
+        "modalTitle": "Add New User",
+        "username": "Username",
+        "email": "Email",
+        "password": "Password",
+        "assignGroups": "Assign Groups",
+        "selectMultiple": "to select multiple",
+        "createUser": "Create User"
+    },
+    "groupManagement": {
+        "title": "Group & Permission Management",
+        "subtitle": "Manage user groups and their access levels",
+        "createNewGroup": "Create New Group",
+        "editPermissions": "Edit Permissions",
+        "activePermissions": "Active Permissions",
+        "noPermissions": "No permissions assigned",
+        "modalTitle": "Create New Group",
+        "groupName": "Group Name",
+        "groupNamePlaceholder": "e.g. Content Moderators",
+        "assignPermissions": "Assign Permissions",
+        "createGroup": "Create Group",
+        "editModalTitle": "Edit Permissions",
+        "for": "for",
+        "saveChanges": "Save Changes",
+        "perm": {
+            "manage_users": "Manage Users",
+            "analyze_code": "Analyze Code",
+            "view_project": "View Project",
+            "manage_project": "Manage Project"
+        }
     }
 }

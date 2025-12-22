@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { userApi, User, Group } from '../../api/userApi';
 import { Plus, User as UserIcon, Shield, Mail, CheckCircle, XCircle, Search, MoreVertical, X } from 'lucide-react';
 
 const UserManagement = () => {
+    const { t } = useTranslation();
     const [users, setUsers] = useState<User[]>([]);
     const [groups, setGroups] = useState<Group[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
@@ -54,17 +56,17 @@ const UserManagement = () => {
                                 <UserIcon className="w-8 h-8 text-white" />
                             </div>
                             <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600">
-                                User Management
+                                {t('userManagement.title')}
                             </span>
                         </h1>
-                        <p className="mt-2 text-slate-500 text-lg">Manage system users and their group assignments</p>
+                        <p className="mt-2 text-slate-500 text-lg">{t('userManagement.subtitle')}</p>
                     </div>
                     <button
                         onClick={() => setShowAddModal(true)}
                         className="group flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-md hover:shadow-xl hover:-translate-y-0.5"
                     >
                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
-                        <span className="font-medium">Add New User</span>
+                        <span className="font-medium">{t('userManagement.addNewUser')}</span>
                     </button>
                 </div>
 
@@ -76,7 +78,7 @@ const UserManagement = () => {
                     <input
                         type="text"
                         className="block w-full pl-10 pr-3 py-3 border border-slate-200 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-200 shadow-sm"
-                        placeholder="Search users by name or email..."
+                        placeholder={t('userManagement.searchPlaceholder')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -101,20 +103,20 @@ const UserManagement = () => {
                                     {user.email}
                                 </div>
                                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.is_active
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : 'bg-red-100 text-red-800'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : 'bg-red-100 text-red-800'
                                     }`}>
                                     {user.is_active ? (
-                                        <><CheckCircle className="w-3 h-3 mr-1" /> Active</>
+                                        <><CheckCircle className="w-3 h-3 mr-1" /> {t('userManagement.active')}</>
                                     ) : (
-                                        <><XCircle className="w-3 h-3 mr-1" /> Inactive</>
+                                        <><XCircle className="w-3 h-3 mr-1" /> {t('userManagement.inactive')}</>
                                     )}
                                 </span>
                             </div>
 
                             <div className="border-t border-slate-100 pt-4">
                                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    Groups
+                                    {t('userManagement.groups')}
                                     <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px]">
                                         {user.groups.length}
                                     </span>
@@ -127,7 +129,7 @@ const UserManagement = () => {
                                         </span>
                                     ))}
                                     {user.groups.length === 0 && (
-                                        <span className="text-sm text-slate-400 italic">No groups assigned</span>
+                                        <span className="text-sm text-slate-400 italic">{t('userManagement.noGroups')}</span>
                                     )}
                                 </div>
                             </div>
@@ -139,7 +141,7 @@ const UserManagement = () => {
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                                <h2 className="text-xl font-bold text-slate-800">Add New User</h2>
+                                <h2 className="text-xl font-bold text-slate-800">{t('userManagement.modalTitle')}</h2>
                                 <button
                                     onClick={() => setShowAddModal(false)}
                                     className="text-slate-400 hover:text-slate-600 transition-colors"
@@ -150,7 +152,7 @@ const UserManagement = () => {
 
                             <form onSubmit={handleCreateUser} className="p-6 space-y-5">
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Username</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.username')}</label>
                                     <input
                                         type="text"
                                         required
@@ -160,7 +162,7 @@ const UserManagement = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Email</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
                                     <input
                                         type="email"
                                         required
@@ -170,7 +172,7 @@ const UserManagement = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.password')}</label>
                                     <input
                                         type="password"
                                         required
@@ -180,7 +182,7 @@ const UserManagement = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">Assign Groups</label>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
                                     <select
                                         multiple
                                         className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
@@ -195,7 +197,7 @@ const UserManagement = () => {
                                         <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
                                         or
                                         <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
-                                        to select multiple
+                                        {t('userManagement.selectMultiple')}
                                     </p>
                                 </div>
 
@@ -205,13 +207,13 @@ const UserManagement = () => {
                                         onClick={() => setShowAddModal(false)}
                                         className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
                                     >
-                                        Cancel
+                                        {t('common.cancel')}
                                     </button>
                                     <button
                                         type="submit"
                                         className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
                                     >
-                                        Create User
+                                        {t('userManagement.createUser')}
                                     </button>
                                 </div>
                             </form>

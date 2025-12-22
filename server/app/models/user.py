@@ -11,6 +11,7 @@ class Permission(str, Enum):
 class GroupBase(BaseModel):
     name: str
     permissions: List[Permission] = []
+    projects: List[str] = []  # List of project names or IDs
 
 class GroupCreate(GroupBase):
     pass

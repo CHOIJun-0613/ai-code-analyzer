@@ -10,6 +10,7 @@ export interface Group {
     id: string;
     name: string;
     permissions: string[];
+    projects?: string[];
 }
 
 export interface User {
@@ -46,6 +47,10 @@ export const userApi = {
     },
     addUserToGroup: async (groupId: string, userId: string) => {
         const response = await client.post(`/groups/${groupId}/users/${userId}`);
+        return response.data;
+    },
+    updateGroupProjects: async (groupId: string, projects: string[]) => {
+        const response = await client.put(`/groups/${groupId}/projects`, projects);
         return response.data;
     },
 };

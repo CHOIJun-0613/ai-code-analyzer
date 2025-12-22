@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { X, Printer, FileSpreadsheet, FileImage, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { toSvg } from 'html-to-image';
 import MermaidDiagram from './MermaidDiagram';
 
@@ -190,29 +190,23 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
         }
     };
 
-    const handleExportExcel = () => {
+    const handleExportExcel = async () => {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'AI Code Analyzer';
+        workbook.created = new Date();
+
         if (isGrid && gridData) {
-            // Export FULL data for Grid mode
-            const wb = XLSX.utils.book_new();
+            // --- Grid Mode Export ---
+            const worksheet = workbook.addWorksheet('Data');
 
-            // Create stats sheet if summary exists
-            if (gridData.summary) {
-                const summaryData = Object.entries(gridData.summary).map(([k, v]) => ({ Metric: k, Value: v }));
-                const wsSummary = XLSX.utils.json_to_sheet(summaryData);
-                XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
-            }
-
-            // Data Sheet
-            // Determine headers order: Priority keys first
-            // CRUD Matrix: package_name, class_name
-            // Class List: package, name
+            // Determine headers order
             const priorityKeys = ['package_name', 'class_name', 'package', 'name', 'logical_name', 'type', 'sub_type'];
 
             // Collect all unique keys from rows
             let allKeys = new Set<string>();
             gridData.rows.forEach(row => Object.keys(row).forEach(k => allKeys.add(k)));
 
-            // Sort keys: priority keys first (in order), then others (alphabetically or preserved)
+            // Sort keys
             const sortedKeys = Array.from(allKeys).sort((a, b) => {
                 const idxA = priorityKeys.indexOf(a);
                 const idxB = priorityKeys.indexOf(b);
@@ -223,40 +217,79 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
                 return a.localeCompare(b);
             });
 
-            const wsData = XLSX.utils.json_to_sheet(gridData.rows, { header: sortedKeys });
+            // Add Header Row
+            const headerRow = worksheet.addRow(sortedKeys);
+            headerRow.font = { bold: true };
+            headerRow.commit();
 
-            // Freeze Panes
-            // xSplit: number of columns to freeze from left
-            // ySplit: number of rows to freeze from top
-            // Freeze first 2 columns (Package, Class) and first 1 row (Header) if enough columns exist
+            // Add Data Rows
+            gridData.rows.forEach(row => {
+                const rowValues = sortedKeys.map(key => row[key] ?? '');
+                worksheet.addRow(rowValues);
+            });
+
+            // Freeze Panes: Top 1 row, Left 2 columns if enough cols
             if (sortedKeys.length >= 2) {
-                wsData['!freeze'] = { xSplit: 2, ySplit: 1, topLeftCell: "C2", activeCell: "A1", state: "frozen" };
+                worksheet.views = [
+                    { state: 'frozen', xSplit: 2, ySplit: 1, topLeftCell: 'C2', activeCell: 'C2' }
+                ];
             } else {
-                wsData['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: "A2", activeCell: "A1", state: "frozen" };
+                worksheet.views = [
+                    { state: 'frozen', xSplit: 0, ySplit: 1, topLeftCell: 'A2', activeCell: 'A2' }
+                ];
             }
 
-            XLSX.utils.book_append_sheet(wb, wsData, "Data");
+            // Summary Sheet
+            if (gridData.summary) {
+                const summarySheet = workbook.addWorksheet('Summary');
+                const summaryHeader = summarySheet.addRow(['Metric', 'Value']);
+                summaryHeader.font = { bold: true };
 
-            XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}.xlsx`);
-            return;
+                Object.entries(gridData.summary).forEach(([k, v]) => {
+                    summarySheet.addRow([k, v]);
+                });
+            }
+
+        } else {
+            // --- Markdown Table Mode Export ---
+            if (!reportRef.current) return;
+            const tables = reportRef.current.querySelectorAll('table');
+            if (tables.length === 0) {
+                alert('No tables found to export to Excel.');
+                return;
+            }
+
+            tables.forEach((table, index) => {
+                const sheetName = `Table ${index + 1}`;
+                const worksheet = workbook.addWorksheet(sheetName);
+                const rows = table.querySelectorAll('tr');
+
+                rows.forEach(tr => {
+                    const rowData: string[] = [];
+                    tr.querySelectorAll('th, td').forEach(cell => {
+                        rowData.push(cell.textContent?.trim() || '');
+                    });
+                    worksheet.addRow(rowData);
+                });
+            });
         }
 
-        // Fallback to existing DOM-scraping logic for Markdown mode
-        if (!reportRef.current) return;
-        const tables = reportRef.current.querySelectorAll('table');
-        if (tables.length === 0) {
-            alert('No tables found to export to Excel.');
-            return;
+        // Write and Download
+        try {
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${title.replace(/\s+/g, '_')}.xlsx`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        } catch (error) {
+            console.error('Excel export failed:', error);
+            alert('Failed to export Excel file.');
         }
-
-        const wb = XLSX.utils.book_new();
-        tables.forEach((table: HTMLTableElement, index: number) => {
-            const ws = XLSX.utils.table_to_sheet(table);
-            const sheetName = `Table ${index + 1}`;
-            XLSX.utils.book_append_sheet(wb, ws, sheetName);
-        });
-
-        XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}.xlsx`);
     };
 
     const handleExportSVG = async () => {

@@ -24,6 +24,15 @@ def list_users():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@router.get("/me", response_model=User)
+def read_user_me(
+    current_user: UserInDB = Depends(deps.get_current_user),
+):
+    """
+    Get current user.
+    """
+    return current_user
+
 @router.get("/me/preferences", response_model=Dict[str, Any])
 def read_user_preferences(
     current_user: UserInDB = Depends(deps.get_current_user),
@@ -42,3 +51,5 @@ def update_user_preferences(
     prefs_str = json.dumps(preferences)
     UserService.update_user_preferences(current_user.username, prefs_str)
     return preferences
+
+

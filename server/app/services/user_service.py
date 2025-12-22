@@ -136,10 +136,16 @@ class UserService:
                 raise Exception("Failed to create group")
             
             g = record["g"]
+            
+            # If projects are provided, create HAS_ACCESS_TO relationships
+            if group.projects:
+                 UserService.update_group_projects(g["id"], group.projects)
+
             return Group(
                 id=g["id"],
                 name=g["name"],
-                permissions=[Permission(p) for p in g.get("permissions", [])]
+                permissions=[Permission(p) for p in g.get("permissions", [])],
+                projects=group.projects
             )
 
     @staticmethod
@@ -155,10 +161,19 @@ class UserService:
             result = session.run(query)
             for record in result:
                 g = record["g"]
+                # Fetch associated projects for each group
+                projects_query = """
+                MATCH (g:Group {id: $group_id})-[:HAS_ACCESS_TO]->(p:Project)
+                RETURN collect(p.name) as projects
+                """
+                projects_result = session.run(projects_query, {"group_id": g["id"]}).single()
+                projects = projects_result["projects"] if projects_result else []
+
                 groups.append(Group(
                     id=g["id"],
                     name=g["name"],
-                    permissions=[Permission(p) for p in g.get("permissions", [])]
+                    permissions=[Permission(p) for p in g.get("permissions", [])],
+                    projects=projects
                 ))
         return groups
 
@@ -226,3 +241,27 @@ class UserService:
         
         with pool.session() as session:
             session.run(query, {"username": username, "preferences": preferences})
+
+    @staticmethod
+    def update_group_projects(group_id: str, project_names: List[str]):
+        pool = get_db()
+        
+        # 1. Remove existing relationships
+        delete_query = """
+        MATCH (g:Group {id: $group_id})
+        MATCH (g)-[r:HAS_ACCESS_TO]->(:Project)
+        DELETE r
+        """
+        
+        # 2. Create new relationships
+        create_query = """
+        MATCH (g:Group {id: $group_id})
+        UNWIND $project_names as project_name
+        MATCH (p:Project {name: project_name})
+        MERGE (g)-[:HAS_ACCESS_TO]->(p)
+        """
+        
+        with pool.session() as session:
+            session.run(delete_query, {"group_id": group_id})
+            if project_names:
+                session.run(create_query, {"group_id": group_id, "project_names": project_names})
