@@ -81,7 +81,7 @@ class ClassMixin:
                 """
                 UNWIND $classes AS c
                 MERGE (cls:Class {name: c.name, package_name: c.package_name})
-                SET cls.file_path = c.file_path,
+                SET cls:Analysis, cls.file_path = c.file_path,
                     cls.file_extension = c.file_extension,
                     cls.type = c.type,
                     cls.sub_type = c.sub_type,
@@ -168,7 +168,7 @@ class ClassMixin:
                 """
                 UNWIND $imports AS imp
                 MERGE (imported:Class {name: imp.import_class, package_name: ''})
-                SET imported.is_external = true
+                SET imported:Analysis, imported.is_external = true
                 WITH imp, imported
                 MATCH (c:Class {name: imp.class_name, package_name: imp.package_name})
                 MERGE (c)-[:IMPORTS]->(imported)
@@ -181,7 +181,7 @@ class ClassMixin:
                 """
                 UNWIND $imports AS imp
                 MERGE (imported:Class {name: imp.import_name, package_name: imp.import_package})
-                SET imported.is_external = false
+                SET imported:Analysis, imported.is_external = false
                 WITH imp, imported
                 MATCH (c:Class {name: imp.class_name, package_name: imp.package_name})
                 MERGE (c)-[:IMPORTS]->(imported)
@@ -205,6 +205,7 @@ class ClassMixin:
                 UNWIND $annotations AS ann
                 MATCH (c:Class {name: ann.class_name})
                 MERGE (a:Annotation {name: ann.annotation_name})
+                SET a:Analysis
                 MERGE (c)-[:ANNOTATED_WITH]->(a)
                 """,
                 annotations=annotation_records
@@ -235,7 +236,7 @@ class ClassMixin:
                 """
                 UNWIND $supers AS sup
                 MERGE (super:Class {name: sup.superclass, package_name: ''})
-                SET super.is_external = true
+                SET super:Analysis, super.is_external = true
                 WITH sup, super
                 MATCH (c:Class {name: sup.class_name, package_name: sup.package_name})
                 MERGE (c)-[:EXTENDS]->(super)
@@ -248,7 +249,7 @@ class ClassMixin:
                 """
                 UNWIND $supers AS sup
                 MERGE (super:Class {name: sup.superclass, package_name: sup.super_package})
-                SET super.is_external = false
+                SET super:Analysis, super.is_external = false
                 WITH sup, super
                 MATCH (c:Class {name: sup.class_name, package_name: sup.package_name})
                 MERGE (c)-[:EXTENDS]->(super)
@@ -270,6 +271,7 @@ class ClassMixin:
                 """
                 UNWIND $interfaces AS iface
                 MERGE (i:Interface {name: iface.interface})
+                SET i:Analysis
                 WITH iface, i
                 MATCH (c:Class {name: iface.class_name})
                 MERGE (c)-[:IMPLEMENTS]->(i)
@@ -307,7 +309,7 @@ class ClassMixin:
                 UNWIND $methods AS m
                 MATCH (c:Class {name: m.class_name, package_name: m.package_name})
                 MERGE (meth:Method {name: m.method_name, class_name: m.class_name})
-                SET meth.return_type = m.return_type,
+                SET meth:Analysis, meth.return_type = m.return_type,
                     meth.parameters = m.parameters_json,
                     meth.annotations = m.annotations_json,
                     meth.visibility = m.visibility,
@@ -333,6 +335,7 @@ class ClassMixin:
                 UNWIND $items AS item
                 MATCH (m:Method {name: item.method_name, class_name: item.class_name})
                 MERGE (a:Annotation {name: item.annotation_name})
+                SET a:Analysis
                 MERGE (m)-[:ANNOTATED_WITH]->(a)
                 """,
                 items=all_method_annotation_records,
@@ -344,6 +347,7 @@ class ClassMixin:
                 UNWIND $throws AS t
                 MATCH (m:Method {name: t.method_name, class_name: t.class_name})
                 MERGE (e:Exception {name: t.exception})
+                SET e:Analysis
                 MERGE (m)-[:THROWS]->(e)
                 """,
                 throws=all_throws_records,
@@ -355,7 +359,7 @@ class ClassMixin:
                 UNWIND $params AS p
                 MATCH (m:Method {name: p.method_name, class_name: p.class_name})
                 MERGE (par:Parameter {name: p.param_name, method_name: p.method_name, class_name: p.class_name})
-                SET par.type = p.param_type,
+                SET par:Analysis, par.type = p.param_type,
                     par.description = p.param_description,
                     par.ai_description = p.param_ai_description,
                     par.package_name = p.package_name,
@@ -372,7 +376,7 @@ class ClassMixin:
                 UNWIND $returns AS r
                 MATCH (m:Method {name: r.method_name, class_name: r.class_name})
                 MERGE (ret:ReturnType {name: r.return_type, method_name: r.method_name, class_name: r.class_name})
-                SET ret.description = r.return_description,
+                SET ret:Analysis, ret.description = r.return_description,
                 ret.ai_description = r.return_ai_description,
                 ret.package_name = r.package_name,
                 ret.project_name = r.project_name,
@@ -388,7 +392,7 @@ class ClassMixin:
                 UNWIND $statements AS s
                 MATCH (m:Method {name: s.method_name, class_name: s.class_name})
                 MERGE (st:Statement {index: s.statement_index, method_name: s.method_name, class_name: s.class_name})
-                SET st.type = s.statement_type,
+                SET st:Analysis, st.type = s.statement_type,
                     st.content = s.statement_content,
                     st.updated_at = s.updated_at
                 MERGE (m)-[:HAS_STATEMENT]->(st)
@@ -409,7 +413,7 @@ class ClassMixin:
                 UNWIND $fields AS f
                 MATCH (c:Class {name: f.class_name})
                 MERGE (p:Field {name: f.prop_name, class_name: f.class_name, project_name: f.project_name})
-                SET p.type = f.prop_type,
+                SET p:Analysis, p.type = f.prop_type,
                     p.logical_name = f.prop_logical_name,
                     p.modifiers_json = f.prop_modifiers_json,
                     p.annotations_json = f.prop_annotations_json,
@@ -487,9 +491,10 @@ class ClassMixin:
                 """
                 UNWIND $calls AS call
                 MERGE (tc:Class {name: call.target_class, package_name: ''})
-                SET tc.is_external = true
+                SET tc:Analysis, tc.is_external = true
                 WITH call, tc
                 MERGE (tm:Method {name: call.target_method, class_name: call.target_class})
+                SET tm:Analysis
                 MERGE (tc)-[:HAS_METHOD]->(tm)
                 WITH call, tm
                 MATCH (sm:Method {name: call.source_method, class_name: call.source_class})
@@ -527,9 +532,10 @@ class ClassMixin:
                 """
                 UNWIND $calls AS call
                 MERGE (tc:Class {name: call.target_class, package_name: call.actual_target_package})
-                SET tc.is_external = false, tc.is_inner_class = true
+                SET tc:Analysis, tc.is_external = false, tc.is_inner_class = true
                 WITH call, tc
                 MERGE (tm:Method {name: call.target_method, class_name: call.target_class})
+                SET tm:Analysis
                 MERGE (tc)-[:HAS_METHOD]->(tm)
                 WITH call, tm
                 MATCH (sm:Method {name: call.source_method, class_name: call.source_class})
@@ -552,9 +558,10 @@ class ClassMixin:
                 """
                 UNWIND $calls AS call
                 MERGE (tc:Class {name: call.target_class, package_name: call.target_package})
-                SET tc.is_external = false
+                SET tc:Analysis, tc.is_external = false
                 WITH call, tc
                 MERGE (tm:Method {name: call.target_method, class_name: call.target_class})
+                SET tm:Analysis
                 MERGE (tc)-[:HAS_METHOD]->(tm)
                 WITH call, tm
                 MATCH (sm:Method {name: call.source_method, class_name: call.source_class})

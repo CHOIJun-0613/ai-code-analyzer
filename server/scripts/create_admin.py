@@ -6,6 +6,10 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.services.user_service import UserService
 from app.models.user import UserCreate, Permission, GroupCreate
+from dotenv import load_dotenv
+
+env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), '.env')
+load_dotenv(env_path)
 
 def create_initial_data():
     try:
@@ -21,7 +25,7 @@ def create_initial_data():
             ]
         )
         try:
-            group = UserService.create_group(admin_group)
+            group = UserService.create_group(admin_group.name, [p.value for p in admin_group.permissions])
             print(f"Admin group created with ID: {group.id}")
             group_id = group.id
         except Exception as e:
@@ -40,8 +44,10 @@ def create_initial_data():
         print("Creating Admin user...")
         admin_user = UserCreate(
             username="admin",
+            name="Administrator",
             email="admin@example.com",
             password="password123",
+            phone_number="010-0000-0000",
             group_ids=[group_id]
         )
         
@@ -50,6 +56,7 @@ def create_initial_data():
             print(f"Admin user created successfully.")
             print(f"Username: {user.username}")
             print(f"Password: password123")
+            print(f"Created At: {user.created_at}")
         except Exception as e:
             print(f"User creation failed: {e}")
 

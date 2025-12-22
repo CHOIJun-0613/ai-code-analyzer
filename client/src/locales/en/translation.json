@@ -7,6 +7,8 @@
         "edit": "Edit",
         "loading": "Loading...",
         "error": "Error",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
         "success": "Success"
     },
     "layout": {
@@ -112,6 +114,7 @@
     },
     "userManagement": {
         "title": "User Management",
+        "editUserTitle": "Edit User",
         "subtitle": "Manage system users and their group assignments",
         "addNewUser": "Add New User",
         "searchPlaceholder": "Search users by name or email...",
@@ -120,12 +123,17 @@
         "groups": "Groups",
         "noGroups": "No groups assigned",
         "modalTitle": "Add New User",
-        "username": "Username",
+        "userId": "User ID",
+        "userName": "User Name",
+        "phoneNumber": "Phone Number",
         "email": "Email",
         "password": "Password",
         "assignGroups": "Assign Groups",
         "selectMultiple": "to select multiple",
-        "createUser": "Create User"
+        "createUser": "Create User",
+        "checkDuplicate": "Duplicate Check",
+        "idAvailable": "User ID is available",
+        "idExists": "User ID already exists"
     },
     "groupManagement": {
         "title": "Group & Permission Management",

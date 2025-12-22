@@ -7,7 +7,12 @@
         "edit": "수정",
         "loading": "로딩 중...",
         "error": "오류",
-        "success": "성공"
+        "success": "성공",
+        "search": "검색",
+        "selectAll": "전체 선택",
+        "deselectAll": "전체 해제",
+        "noResults": "검색 결과가 없습니다",
+        "noData": "데이터가 없습니다"
     },
     "layout": {
         "main": "메인",
@@ -120,12 +125,18 @@
         "groups": "그룹",
         "noGroups": "할당된 그룹 없음",
         "modalTitle": "새 사용자 추가",
-        "username": "사용자명",
+        "userId": "사용자 ID",
+        "userName": "사용자명",
         "email": "이메일",
         "password": "비밀번호",
         "assignGroups": "그룹 할당",
         "selectMultiple": "다중 선택",
-        "createUser": "사용자 생성"
+        "createUser": "사용자 생성",
+        "updateUser": "사용자 수정",
+        "deleteUser": "사용자 삭제",
+        "editUserTitle": "사용자 정보 수정",
+        "deleteUserConfirm": "정말로 이 사용자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+        "actions": "작업"
     },
     "groupManagement": {
         "title": "그룹 및 권한 관리",
@@ -138,6 +149,7 @@
         "groupName": "그룹명",
         "groupNamePlaceholder": "예: 콘텐츠 모더레이터",
         "assignPermissions": "권한 할당",
+        "assignProjects": "프로젝트 할당",
         "createGroup": "그룹 생성",
         "editModalTitle": "권한 수정",
         "for": "대상",

@@ -8,7 +8,13 @@ router = APIRouter()
 @router.post("/", response_model=Group)
 def create_group(group: GroupCreate):
     try:
-        return UserService.create_group(group)
+        new_group = UserService.create_group(group.name, [p.value for p in group.permissions])
+        if group.projects:
+            UserService.update_group_projects(new_group.id, group.projects)
+            new_group.projects = group.projects
+        return new_group
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

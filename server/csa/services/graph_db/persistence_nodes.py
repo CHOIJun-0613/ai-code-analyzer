@@ -88,7 +88,7 @@ class PersistenceMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         mapper_query = (
             "MERGE (m:MyBatisMapper {name: $name, project_name: $project_name}) "
-            "SET m.logical_name = $logical_name, m.type = $type, m.file_extension = $file_extension, "
+            "SET m:Analysis, m.logical_name = $logical_name, m.type = $type, m.file_extension = $file_extension, "
             "m.namespace = $namespace, m.methods = $methods, "
             "m.sql_statements = $sql_statements, m.file_path = $file_path, "
             "m.package_name = $package_name, m.description = $description, m.ai_description = $ai_description, "
@@ -116,7 +116,7 @@ class PersistenceMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         entity_query = (
             "MERGE (e:JpaEntity {name: $name}) "
-            "SET e.table_name = $table_name, e.columns = $columns, "
+            "SET e:Analysis, e.table_name = $table_name, e.columns = $columns, "
             "e.relationships = $relationships, e.annotations = $annotations, "
             "e.package_name = $package_name, e.file_path = $file_path, "
             "e.project_name = $project_name, e.description = $description, e.ai_description = $ai_description, "
@@ -142,7 +142,7 @@ class PersistenceMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         repository_query = (
             "MERGE (r:JpaRepository {name: $name}) "
-            "SET r.entity_type = $entity_type, r.methods = $methods, "
+            "SET r:Analysis, r.entity_type = $entity_type, r.methods = $methods, "
             "r.annotations = $annotations, r.package_name = $package_name, "
             "r.file_path = $file_path, r.project_name = $project_name, "
             "r.description = $description, r.ai_description = $ai_description, "
@@ -167,7 +167,7 @@ class PersistenceMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         query_query = (
             "MERGE (q:JpaQuery {name: $name, project_name: $project_name}) "
-            "SET q.query_type = $query_type, q.query_content = $query_content, "
+            "SET q:Analysis, q.query_type = $query_type, q.query_content = $query_content, "
             "q.return_type = $return_type, q.parameters = $parameters, "
             "q.repository_name = $repository_name, q.method_name = $method_name, "
             "q.annotations = $annotations, q.description = $description, "
@@ -194,7 +194,7 @@ class PersistenceMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         sql_query = (
             "MERGE (s:SqlStatement {id: $id, mapper_name: $mapper_name}) "
-            "SET s.logical_name = $logical_name, s.sql_type = $sql_type, s.sql_content = $sql_content, "
+            "SET s:Analysis, s.logical_name = $logical_name, s.sql_type = $sql_type, s.sql_content = $sql_content, "
             "s.parameter_type = $parameter_type, s.result_type = $result_type, "
             "s.result_map = $result_map, s.annotations = $annotations, "
             "s.project_name = $project_name, s.description = $description, s.ai_description = $ai_description, "
@@ -280,7 +280,7 @@ class PersistenceMixin:
         mapper_query = (
             "UNWIND $mappers AS m "
             "MERGE (mapper:MyBatisMapper {name: m.name, project_name: m.project_name}) "
-            "SET mapper.logical_name = m.logical_name, "
+            "SET mapper:Analysis, mapper.logical_name = m.logical_name, "
             "mapper.type = m.type, "
             "mapper.file_extension = m.file_extension, "
             "mapper.namespace = m.namespace, "
@@ -319,7 +319,7 @@ class PersistenceMixin:
         entity_query = (
             "UNWIND $entities AS e "
             "MERGE (entity:JpaEntity {name: e.name}) "
-            "SET entity.table_name = e.table_name, "
+            "SET entity:Analysis, entity.table_name = e.table_name, "
             "entity.columns = e.columns, "
             "entity.relationships = e.relationships, "
             "entity.annotations = e.annotations, "
@@ -355,7 +355,7 @@ class PersistenceMixin:
         repository_query = (
             "UNWIND $repositories AS r "
             "MERGE (repo:JpaRepository {name: r.name}) "
-            "SET repo.entity_type = r.entity_type, "
+            "SET repo:Analysis, repo.entity_type = r.entity_type, "
             "repo.methods = r.methods, "
             "repo.annotations = r.annotations, "
             "repo.package_name = r.package_name, "
@@ -389,7 +389,7 @@ class PersistenceMixin:
         query_query = (
             "UNWIND $queries AS q "
             "MERGE (query:JpaQuery {name: q.name, project_name: q.project_name}) "
-            "SET query.query_type = q.query_type, "
+            "SET query:Analysis, query.query_type = q.query_type, "
             "query.query_content = q.query_content, "
             "query.return_type = q.return_type, "
             "query.parameters = q.parameters, "
@@ -424,9 +424,9 @@ class PersistenceMixin:
         """배치로 여러 SQL Statement를 한 번의 트랜잭션에 저장"""
         current_timestamp = GraphDBBase._get_current_timestamp()
         sql_query = (
-            "UNWIND $statements AS s "
-            "MERGE (stmt:SqlStatement {id: s.id, mapper_name: s.mapper_name}) "
-            "SET stmt.logical_name = s.logical_name, "
+                "UNWIND $statements AS s "
+                "MERGE (stmt:SqlStatement {id: s.id, mapper_name: s.mapper_name}) "
+                "SET stmt:Analysis, stmt.logical_name = s.logical_name, "
             "stmt.sql_type = s.sql_type, "
             "stmt.sql_content = s.sql_content, "
             "stmt.parameter_type = s.parameter_type, "

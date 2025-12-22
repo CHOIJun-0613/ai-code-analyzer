@@ -23,7 +23,7 @@ class ProjectMixin:
         created_at = project.created_at if project.created_at else current_timestamp
         project_query = (
             "MERGE (p:Project {name: $name}) "
-            "SET p.description = $description, "
+            "SET p:Analysis, p.description = $description, "
             "p.ai_description = $ai_description, "
             "p.application_name = $application_name, "
             "p.number_of_files = $number_of_files, "
@@ -115,7 +115,7 @@ class ProjectMixin:
                 """
                 UNWIND $packages AS pkg
                 MERGE (p:Package {name: pkg.name})
-                SET p.project_name = pkg.project_name,
+                SET p:Analysis, p.project_name = pkg.project_name,
                     p.description = pkg.description,
                     p.ai_description = pkg.ai_description,
                     p.updated_at = pkg.updated_at

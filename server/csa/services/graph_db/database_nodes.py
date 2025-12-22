@@ -34,7 +34,7 @@ class DatabaseMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         database_query = (
             "MERGE (d:Database {name: $name}) "
-            "SET d.version = $version, d.environment = $environment, "
+            "SET d:Analysis, d.version = $version, d.environment = $environment, "
             "d.description = $description, "
             "d.ai_description = $ai_description, d.updated_at = $updated_at"
         )
@@ -53,7 +53,7 @@ class DatabaseMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         table_query = (
             "MERGE (t:Table {name: $name}) "
-            "SET t.schema = $schema_name, t.database_name = $database_name, "
+            "SET t:Analysis, t.schema = $schema_name, t.database_name = $database_name, "
             "t.comment = $comment, "
             "t.ai_description = $ai_description, t.updated_at = $updated_at"
         )
@@ -82,7 +82,7 @@ class DatabaseMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         column_query = (
             "MERGE (c:Column {name: $name, table_name: $table_name}) "
-            "SET c.data_type = $data_type, c.nullable = $nullable, "
+            "SET c:Analysis, c.data_type = $data_type, c.nullable = $nullable, "
             "c.unique = $unique, c.primary_key = $primary_key, "
             "c.default_value = $default_value, c.constraints = $constraints, "
             "c.comment = $comment, "
@@ -118,7 +118,7 @@ class DatabaseMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         index_query = (
             "MERGE (i:Index {name: $name, table_name: $table_name}) "
-            "SET i.type = $type, i.columns = $columns, "
+            "SET i:Analysis, i.type = $type, i.columns = $columns, "
             "i.description = $description, "
             "i.ai_description = $ai_description, i.updated_at = $updated_at"
         )
@@ -148,7 +148,7 @@ class DatabaseMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         constraint_query = (
             "MERGE (c:Constraint {name: $name, table_name: $table_name}) "
-            "SET c.type = $type, c.columns = $columns, c.reference_table = $reference_table, "
+            "SET c:Analysis, c.type = $type, c.columns = $columns, c.reference_table = $reference_table, "
             "c.reference_columns = $reference_columns, "
             "c.description = $description, c.ai_description = $ai_description, "
             "c.updated_at = $updated_at"

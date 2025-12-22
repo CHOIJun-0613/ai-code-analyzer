@@ -15,7 +15,7 @@ def debug_admin_groups():
     
     # Check if 'Administrators' group exists
     with pool.session() as session:
-        res = session.run("MATCH (g:Group {name: 'Administrators'}) RETURN g").single()
+        res = session.run("MATCH (g:UserGroup {name: 'Administrators'}) RETURN g").single()
         if res:
             print("Administrators group found in DB")
         else:

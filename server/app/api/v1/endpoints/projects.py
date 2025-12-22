@@ -60,7 +60,7 @@ def get_projects(current_user: Any = Depends(deps.get_current_user)):
         params = {}
     else:
         query = """
-        MATCH (u:User {username: $username})-[:BELONGS_TO]->(g:Group)-[:HAS_ACCESS_TO]->(p:Project)
+        MATCH (u:User {username: $username})-[:BELONGS_TO]->(g:UserGroup)-[:HAS_ACCESS_TO]->(p:Project)
         RETURN DISTINCT p
         ORDER BY p.updated_at DESC
         """

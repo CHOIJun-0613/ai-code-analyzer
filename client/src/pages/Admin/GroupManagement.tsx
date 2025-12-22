@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { userApi, Group } from '../../api/userApi';
 import client from '../../api/client';
-import { Plus, Shield, Check, X, Edit2, Users, Folder } from 'lucide-react';
+import { Plus, Shield, Check, X, Edit2, Users } from 'lucide-react';
+import ProjectSelector from '../../components/ProjectSelector';
 
 const GroupManagement = () => {
     const { t } = useTranslation();
@@ -214,38 +215,11 @@ const GroupManagement = () => {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-3">{t('groupManagement.assignProjects') || 'Assign Projects'}</label>
-                                    <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                                        {projects.map(proj => (
-                                            <label
-                                                key={proj.name}
-                                                className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${newGroup.projects.includes(proj.name)
-                                                    ? 'border-indigo-200 bg-indigo-50/50'
-                                                    : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
-                                                    }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                    checked={newGroup.projects.includes(proj.name)}
-                                                    onChange={e => {
-                                                        if (e.target.checked) {
-                                                            setNewGroup({ ...newGroup, projects: [...newGroup.projects, proj.name] });
-                                                        } else {
-                                                            setNewGroup({ ...newGroup, projects: newGroup.projects.filter(p => p !== proj.name) });
-                                                        }
-                                                    }}
-                                                />
-                                                <span className="ml-3 text-sm font-medium text-slate-700 flex items-center gap-2">
-                                                    <Folder className="w-4 h-4 text-slate-400" />
-                                                    {proj.name}
-                                                </span>
-                                            </label>
-                                        ))}
-                                        {projects.length === 0 && (
-                                            <p className="text-sm text-slate-400 italic">No projects available</p>
-                                        )}
-                                    </div>
+                                    <ProjectSelector
+                                        projects={projects}
+                                        selected={newGroup.projects}
+                                        onChange={(projects) => setNewGroup({ ...newGroup, projects })}
+                                    />
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-4">
@@ -313,35 +287,12 @@ const GroupManagement = () => {
                                     ))}
                                 </div>
 
-                                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar border-t border-slate-100 pt-4">
-                                    <h4 className="text-sm font-semibold text-slate-700 mb-2">{t('groupManagement.assignProjects') || 'Assign Projects'}</h4>
-                                    {projects.map(proj => (
-                                        <label
-                                            key={proj.name}
-                                            className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${editingGroup.projects?.includes(proj.name)
-                                                ? 'border-indigo-200 bg-indigo-50/50'
-                                                : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
-                                                }`}
-                                        >
-                                            <input
-                                                type="checkbox"
-                                                className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                checked={editingGroup.projects?.includes(proj.name) || false}
-                                                onChange={e => {
-                                                    const currentProjects = editingGroup.projects || [];
-                                                    if (e.target.checked) {
-                                                        setEditingGroup({ ...editingGroup, projects: [...currentProjects, proj.name] });
-                                                    } else {
-                                                        setEditingGroup({ ...editingGroup, projects: currentProjects.filter(p => p !== proj.name) });
-                                                    }
-                                                }}
-                                            />
-                                            <span className="ml-3 text-sm font-medium text-slate-700 flex items-center gap-2">
-                                                <Folder className="w-4 h-4 text-slate-400" />
-                                                {proj.name}
-                                            </span>
-                                        </label>
-                                    ))}
+                                <div className="pt-4 border-t border-slate-100">
+                                    <ProjectSelector
+                                        projects={projects}
+                                        selected={editingGroup.projects || []}
+                                        onChange={(projects) => setEditingGroup({ ...editingGroup, projects })}
+                                    />
                                 </div>
 
                                 <div className="flex justify-end gap-3 pt-4">

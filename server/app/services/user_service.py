@@ -1,7 +1,7 @@
-import uuid
 from typing import List, Optional
+from datetime import datetime, timezone
 from app.core.database import get_db
-from app.models.user import User, UserCreate, Group, GroupCreate, Permission, UserInDB
+from app.models.user import User, UserCreate, UserUpdate, Group, GroupCreate, Permission, UserInDB
 from app.core.security import get_password_hash
 
 class UserService:
@@ -9,15 +9,23 @@ class UserService:
     def create_user(user: UserCreate) -> User:
         pool = get_db()
         hashed_password = get_password_hash(user.password)
-        user_id = str(uuid.uuid4())
+        # Use username as ID
+        user_id = user.username
+        now = datetime.now(timezone.utc)
         
+        if UserService.get_user_by_username(user.username):
+            raise Exception("User ID already exists")
+
         query = """
-        CREATE (u:User {
+        CREATE (u:User:System {
             id: $id,
-            username: $username,
+            name: $name,
             email: $email,
             password: $password,
-            is_active: $is_active
+            is_active: $is_active,
+            phone_number: $phone_number,
+            created_at: $created_at,
+            updated_at: $updated_at
         })
         RETURN u
         """
@@ -25,10 +33,13 @@ class UserService:
         with pool.session() as session:
             result = session.run(query, {
                 "id": user_id,
-                "username": user.username,
+                "name": user.name,
                 "email": user.email,
                 "password": hashed_password,
-                "is_active": user.is_active
+                "is_active": user.is_active,
+                "phone_number": user.phone_number,
+                "created_at": now.isoformat(),
+                "updated_at": now.isoformat()
             })
             record = result.single()
             if not record:
@@ -44,9 +55,10 @@ class UserService:
     @staticmethod
     def get_user_by_username(username: str) -> Optional[UserInDB]:
         pool = get_db()
+        # Query ID as it is the username now
         query = """
-        MATCH (u:User {username: $username})
-        OPTIONAL MATCH (u)-[:BELONGS_TO]->(g:Group)
+        MATCH (u:User {id: $username})
+        OPTIONAL MATCH (u)-[:BELONGS_TO]->(g:UserGroup)
         RETURN u, collect(g) as groups
         """
         
@@ -70,11 +82,15 @@ class UserService:
             
             return UserInDB(
                 id=user_node["id"],
-                username=user_node["username"],
+                username=user_node["id"], # Map ID back to username
+                name=user_node.get("name"),
                 email=user_node["email"],
                 is_active=user_node["is_active"],
+                phone_number=user_node.get("phone_number"),
                 groups=groups,
-                password=user_node["password"]
+                password=user_node["password"],
+                created_at=datetime.fromisoformat(user_node["created_at"]) if user_node.get("created_at") else None,
+                updated_at=datetime.fromisoformat(user_node["updated_at"]) if user_node.get("updated_at") else None
             )
 
     @staticmethod
@@ -82,7 +98,7 @@ class UserService:
         pool = get_db()
         query = """
         MATCH (u:User)
-        OPTIONAL MATCH (u)-[:BELONGS_TO]->(g:Group)
+        OPTIONAL MATCH (u)-[:BELONGS_TO]->(g:UserGroup)
         RETURN u, collect(g) as groups
         """
         
@@ -104,21 +120,167 @@ class UserService:
                 
                 users.append(User(
                     id=user_node["id"],
-                    username=user_node["username"],
+                    username=user_node["id"], # Map ID back to username
+                    name=user_node.get("name"),
                     email=user_node["email"],
                     is_active=user_node["is_active"],
-                    groups=groups
+                    phone_number=user_node.get("phone_number"),
+                    groups=groups,
+                    created_at=datetime.fromisoformat(user_node["created_at"]) if user_node.get("created_at") else None,
+                    updated_at=datetime.fromisoformat(user_node["updated_at"]) if user_node.get("updated_at") else None
                 ))
         return users
 
     @staticmethod
-    def create_group(group: GroupCreate) -> Group:
+    def update_user(user_id: str, user_update: UserUpdate) -> User:
         pool = get_db()
-        group_id = str(uuid.uuid4())
+        
+        # Prepare SET clause dynamically
+        set_clauses = []
+        params = {"user_id": user_id}
+
+        if user_update.name is not None:
+            set_clauses.append("u.name = $name")
+            params["name"] = user_update.name
+        
+        if user_update.email is not None:
+            set_clauses.append("u.email = $email")
+            params["email"] = user_update.email
+            
+        if user_update.is_active is not None:
+            set_clauses.append("u.is_active = $is_active")
+            params["is_active"] = user_update.is_active
+
+        if user_update.phone_number is not None:
+            set_clauses.append("u.phone_number = $phone_number")
+            params["phone_number"] = user_update.phone_number
+            
+        if user_update.password:
+            set_clauses.append("u.password = $password")
+            params["password"] = get_password_hash(user_update.password)
+
+        # Update updated_at
+        set_clauses.append("u.updated_at = $updated_at")
+        params["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        if not set_clauses and user_update.group_ids is None:
+             # Nothing to update
+             user = UserService.get_user_by_id(user_id)
+             if not user:
+                 raise Exception("User not found")
+             return user
+
+        with pool.session() as session:
+             if set_clauses:
+                 query = f"""
+                 MATCH (u:User {{id: $user_id}})
+                 SET {', '.join(set_clauses)}
+                 RETURN u
+                 """
+                 result = session.run(query, params)
+                 if not result.single():
+                     raise Exception("User not found")
+
+             # Handle group updates if provided
+             if user_update.group_ids is not None:
+                 # Remove all existing group relationships
+                 delete_groups_query = """
+                 MATCH (u:User {id: $user_id})-[r:BELONGS_TO]->(:UserGroup)
+                 DELETE r
+                 """
+                 session.run(delete_groups_query, {"user_id": user_id})
+                 
+                 # Add to new groups
+                 for group_id in user_update.group_ids:
+                     UserService.add_user_to_group(user_id, group_id)
+
+        return UserService.get_user_by_id(user_id)
+
+    @staticmethod
+    def delete_user(user_id: str):
+        pool = get_db()
+        query = """
+        MATCH (u:User {id: $user_id})
+        DETACH DELETE u
+        """
+        with pool.session() as session:
+            session.run(query, {"user_id": user_id})
+
+    @staticmethod
+    def get_user_by_id(user_id: str) -> Optional[User]:
+        pool = get_db()
+        query = """
+        MATCH (u:User {id: $user_id})
+        OPTIONAL MATCH (u)-[:BELONGS_TO]->(g:UserGroup)
+        RETURN u, collect(g) as groups
+        """
+        with pool.session() as session:
+            result = session.run(query, {"user_id": user_id})
+            record = result.single()
+            if not record:
+                return None
+            
+            user_node = record["u"]
+            group_nodes = record["groups"]
+            
+            groups = []
+            for g in group_nodes:
+                if g:
+                    groups.append(Group(
+                        id=g["id"],
+                        name=g["name"],
+                        permissions=[Permission(p) for p in g.get("permissions", [])]
+                    ))
+            
+            
+            return User(
+                id=user_node["id"],
+                username=user_node["id"],
+                name=user_node.get("name"),
+                email=user_node["email"],
+                is_active=user_node["is_active"],
+                phone_number=user_node.get("phone_number"),
+                groups=groups,
+            created_at=datetime.fromisoformat(user_node["created_at"]) if user_node.get("created_at") else None,
+                updated_at=datetime.fromisoformat(user_node["updated_at"]) if user_node.get("updated_at") else None
+            )
+
+    @staticmethod
+    def get_group_by_id(group_id: str) -> Optional[Group]:
+        pool = get_db()
+        query = """
+        MATCH (g:UserGroup {id: $group_id})
+        RETURN g
+        """
+        
+        with pool.session() as session:
+            result = session.run(query, {"group_id": group_id})
+            record = result.single()
+            if not record:
+                return None
+            
+            g = record["g"]
+            return Group(
+                id=g["id"],
+                name=g["name"],
+                permissions=[Permission(p) for p in g.get("permissions", [])],
+                projects=[] # Projects are fetched separately if needed or we can optimize later
+            )
+
+    @staticmethod
+    def create_group(name: str, permissions: List[str]) -> Group:
+        pool = get_db()
+        
+        # Check if group already exists
+        # Since ID is name, we check by name (which is passed as ID/Name)
+        if UserService.get_group_by_id(name):
+             raise ValueError(f"Group with name '{name}' already exists")
+
+        # 이름 유효성 검사 등 필요한 로직 추가 가능
         
         query = """
-        CREATE (g:Group {
-            id: $id,
+        CREATE (g:UserGroup:System {
+            id: $name,
             name: $name,
             permissions: $permissions
         })
@@ -127,9 +289,8 @@ class UserService:
         
         with pool.session() as session:
             result = session.run(query, {
-                "id": group_id,
-                "name": group.name,
-                "permissions": [p.value for p in group.permissions]
+                "name": name,
+                "permissions": permissions
             })
             record = result.single()
             if not record:
@@ -137,22 +298,18 @@ class UserService:
             
             g = record["g"]
             
-            # If projects are provided, create HAS_ACCESS_TO relationships
-            if group.projects:
-                 UserService.update_group_projects(g["id"], group.projects)
-
             return Group(
                 id=g["id"],
                 name=g["name"],
                 permissions=[Permission(p) for p in g.get("permissions", [])],
-                projects=group.projects
+                projects=[]
             )
 
     @staticmethod
     def list_groups() -> List[Group]:
         pool = get_db()
         query = """
-        MATCH (g:Group)
+        MATCH (g:UserGroup)
         RETURN g
         """
         
@@ -163,7 +320,7 @@ class UserService:
                 g = record["g"]
                 # Fetch associated projects for each group
                 projects_query = """
-                MATCH (g:Group {id: $group_id})-[:HAS_ACCESS_TO]->(p:Project)
+                MATCH (g:UserGroup {id: $group_id})-[:HAS_ACCESS_TO]->(p:Project)
                 RETURN collect(p.name) as projects
                 """
                 projects_result = session.run(projects_query, {"group_id": g["id"]}).single()
@@ -181,7 +338,7 @@ class UserService:
     def update_group_permissions(group_id: str, permissions: List[Permission]) -> Group:
         pool = get_db()
         query = """
-        MATCH (g:Group {id: $group_id})
+        MATCH (g:UserGroup {id: $group_id})
         SET g.permissions = $permissions
         RETURN g
         """
@@ -207,7 +364,7 @@ class UserService:
         pool = get_db()
         query = """
         MATCH (u:User {id: $user_id})
-        MATCH (g:Group {id: $group_id})
+        MATCH (g:UserGroup {id: $group_id})
         MERGE (u)-[:BELONGS_TO]->(g)
         """
         
@@ -248,14 +405,14 @@ class UserService:
         
         # 1. Remove existing relationships
         delete_query = """
-        MATCH (g:Group {id: $group_id})
+        MATCH (g:UserGroup {id: $group_id})
         MATCH (g)-[r:HAS_ACCESS_TO]->(:Project)
         DELETE r
         """
         
         # 2. Create new relationships
         create_query = """
-        MATCH (g:Group {id: $group_id})
+        MATCH (g:UserGroup {id: $group_id})
         UNWIND $project_names as project_name
         MATCH (p:Project {name: project_name})
         MERGE (g)-[:HAS_ACCESS_TO]->(p)

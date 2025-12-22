@@ -53,7 +53,7 @@ class ApplicationMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         bean_query = (
             "MERGE (b:Bean {name: $name}) "
-            "SET b.type = $type, b.scope = $scope, b.class_name = $class_name, "
+            "SET b:Analysis, b.type = $type, b.scope = $scope, b.class_name = $class_name, "
             "b.package_name = $package_name, b.annotation_names = $annotation_names, "
             "b.method_count = $method_count, b.property_count = $property_count, "
             "b.project_name = $project_name, b.description = $description, b.ai_description = $ai_description, "
@@ -82,7 +82,7 @@ class ApplicationMixin:
         bean_query = (
             "UNWIND $beans AS bean "
             "MERGE (b:Bean {name: bean.name}) "
-            "SET b.type = bean.type, b.scope = bean.scope, b.class_name = bean.class_name, "
+            "SET b:Analysis, b.type = bean.type, b.scope = bean.scope, b.class_name = bean.class_name, "
             "b.package_name = bean.package_name, b.annotation_names = bean.annotation_names, "
             "b.method_count = bean.method_count, b.property_count = bean.property_count, "
             "b.project_name = bean.project_name, b.description = bean.description, "
@@ -134,7 +134,7 @@ class ApplicationMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         endpoint_query = (
             "MERGE (e:Endpoint {path: $path, method: $method}) "
-            "SET e.controller_class = $controller_class, e.handler_method = $handler_method, "
+            "SET e:Analysis, e.controller_class = $controller_class, e.handler_method = $handler_method, "
             "e.endpoint_parameters = $endpoint_parameters, e.return_type = $return_type, "
             "e.annotations = $annotations, e.full_path = $full_path, "
             "e.project_name = $project_name, e.description = $description, e.ai_description = $ai_description, "
@@ -161,7 +161,7 @@ class ApplicationMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         config_query = (
             "MERGE (c:ConfigFile {name: $name}) "
-            "SET c.file_path = $file_path, c.file_type = $file_type, "
+            "SET c:Analysis, c.file_path = $file_path, c.file_type = $file_type, "
             "c.properties = $properties, c.sections = $sections, "
             "c.profiles = $profiles, c.environment = $environment, "
             "c.description = $description, c.ai_description = $ai_description, "
@@ -186,7 +186,7 @@ class ApplicationMixin:
         current_timestamp = GraphDBBase._get_current_timestamp()
         test_query = (
             "MERGE (t:TestClass {name: $name}) "
-            "SET t.package_name = $package_name, t.test_framework = $test_framework, "
+            "SET t:Analysis, t.package_name = $package_name, t.test_framework = $test_framework, "
             "t.test_type = $test_type, t.annotations = $annotations, "
             "t.test_methods = $test_methods, t.setup_methods = $setup_methods, "
             "t.mock_dependencies = $mock_dependencies, t.test_configurations = $test_configurations, "
@@ -219,7 +219,7 @@ class ApplicationMixin:
         endpoint_query = (
             "UNWIND $endpoints AS ep "
             "MERGE (e:Endpoint {path: ep.path, method: ep.method}) "
-            "SET e.controller_class = ep.controller_class, "
+            "SET e:Analysis, e.controller_class = ep.controller_class, "
             "e.handler_method = ep.handler_method, "
             "e.endpoint_parameters = ep.endpoint_parameters, "
             "e.return_type = ep.return_type, "
@@ -256,7 +256,7 @@ class ApplicationMixin:
         test_query = (
             "UNWIND $tests AS t "
             "MERGE (tc:TestClass {name: t.name}) "
-            "SET tc.package_name = t.package_name, "
+            "SET tc:Analysis, tc.package_name = t.package_name, "
             "tc.test_framework = t.test_framework, "
             "tc.test_type = t.test_type, "
             "tc.annotations = t.annotations, "
