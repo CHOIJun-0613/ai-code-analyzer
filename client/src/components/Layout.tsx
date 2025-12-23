@@ -12,7 +12,7 @@ const Layout: React.FC = () => {
     const location = useLocation();
     const { t } = useTranslation();
     const user = useAuthStore((state) => state.user);
-    const isAdmin = user?.groups?.some(g => g.name === 'Administrators') ?? false;
+    const isAdmin = user?.groups?.some(g => g.name.toLowerCase() === 'administrators') ?? false;
 
     // -- State --
     const [isCollapsed, setIsCollapsed] = useState(false);

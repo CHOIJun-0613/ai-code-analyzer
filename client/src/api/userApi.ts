@@ -69,4 +69,16 @@ export const userApi = {
         const response = await client.put(`/groups/${groupId}/projects`, projects);
         return response.data;
     },
+    checkGroupExists: async (groupId: string) => {
+        const response = await client.get<{ exists: boolean }>(`/groups/check/${groupId}`);
+        return response.data.exists;
+    },
+    updateGroup: async (groupId: string, group: any) => {
+        const response = await client.put(`/groups/${groupId}`, group);
+        return response.data;
+    },
+    deleteGroup: async (groupId: string) => {
+        const response = await client.delete(`/groups/${groupId}`);
+        return response.data;
+    },
 };

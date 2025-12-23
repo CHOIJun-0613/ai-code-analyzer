@@ -8,13 +8,20 @@ router = APIRouter()
 @router.post("/", response_model=Group)
 def create_group(group: GroupCreate):
     try:
-        new_group = UserService.create_group(group.name, [p.value for p in group.permissions])
+        new_group = UserService.create_group(group.id, group.name, [p.value for p in group.permissions])
         if group.projects:
             UserService.update_group_projects(new_group.id, group.projects)
             new_group.projects = group.projects
         return new_group
     except ValueError as e:
         raise HTTPException(status_code=409, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/check/{group_id}")
+def check_group_exists(group_id: str):
+    try:
+        return {"exists": UserService.check_group_exists(group_id)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -53,5 +60,30 @@ def update_group_projects(group_id: str, projects: List[str]):
         # UserService.list_groups() is available.
         # Let's just return a success message and change response_model to dict.
         return {"message": "Group projects updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.put("/{group_id}", response_model=Group)
+def update_group(group_id: str, group_update: GroupCreate):
+    try:
+        # Update Name
+        updated_group = UserService.update_group(group_id, group_update.name)
+        
+        # Update Permissions if provided
+        UserService.update_group_permissions(group_id, group_update.permissions)
+        
+        # Update Projects if provided
+        if group_update.projects is not None:
+             UserService.update_group_projects(group_id, group_update.projects)
+        
+        return updated_group
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/{group_id}")
+def delete_group(group_id: str):
+    try:
+        UserService.delete_group(group_id)
+        return {"message": "Group deleted successfully"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

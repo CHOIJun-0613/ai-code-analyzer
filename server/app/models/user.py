@@ -15,7 +15,7 @@ class GroupBase(BaseModel):
     projects: List[str] = []  # List of project names or IDs
 
 class GroupCreate(GroupBase):
-    pass
+    id: str
 
 class Group(GroupBase):
     id: str

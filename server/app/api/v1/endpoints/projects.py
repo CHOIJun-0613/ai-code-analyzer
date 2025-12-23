@@ -49,7 +49,8 @@ def get_projects(current_user: Any = Depends(deps.get_current_user)):
     pool = get_db()
     
     # Check if user is in 'Administrators' group
-    is_admin = any(g.name == "Administrators" for g in current_user.groups)
+    # Check if user is in 'Administrators' group (case-insensitive)
+    is_admin = any(g.name.lower() == "administrators" for g in current_user.groups)
     
     if is_admin:
         query = """
@@ -60,7 +61,7 @@ def get_projects(current_user: Any = Depends(deps.get_current_user)):
         params = {}
     else:
         query = """
-        MATCH (u:User {username: $username})-[:BELONGS_TO]->(g:UserGroup)-[:HAS_ACCESS_TO]->(p:Project)
+        MATCH (u:User {id: $username})-[:BELONGS_TO]->(g:UserGroup)-[:HAS_ACCESS_TO]->(p:Project)
         RETURN DISTINCT p
         ORDER BY p.updated_at DESC
         """

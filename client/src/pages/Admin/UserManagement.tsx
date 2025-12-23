@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { userApi, User, Group } from '../../api/userApi';
-import { Plus, User as UserIcon, Shield, Mail, CheckCircle, XCircle, Search, MoreVertical, X, Eye, EyeOff, Edit, Trash2 } from 'lucide-react';
+import { Plus, User as UserIcon, Mail, Search, MoreVertical, X, Eye, EyeOff, Edit, Trash2 } from 'lucide-react';
 
 const UserManagement = () => {
     const { t } = useTranslation();
@@ -238,8 +238,8 @@ const UserManagement = () => {
                 {/* Create/Edit User Modal */}
                 {showModal && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
+                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
                                 <h2 className="text-xl font-bold text-slate-800">
                                     {isEditing ? t('userManagement.editUserTitle') : t('userManagement.modalTitle')}
                                 </h2>
@@ -251,113 +251,115 @@ const UserManagement = () => {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="p-6 space-y-5">
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userId')}</label>
-                                    <div className="flex gap-2">
+                            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+                                <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userId')}</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                required
+                                                disabled={isEditing}
+                                                className={`flex-1 px-4 py-2.5 rounded-xl border border-slate-200 outline-none text-slate-800 transition-all ${isEditing ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
+                                                value={currentUser.username}
+                                                onChange={e => setCurrentUser({ ...currentUser, username: e.target.value })}
+                                                placeholder={t('userManagement.userId')}
+                                            />
+                                            {!isEditing && (
+                                                <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                        if (!currentUser.username) return;
+                                                        const exists = await userApi.checkUserExists(currentUser.username);
+                                                        if (exists) {
+                                                            alert(t('userManagement.idExists'));
+                                                        } else {
+                                                            alert(t('userManagement.idAvailable'));
+                                                        }
+                                                    }}
+                                                    className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium text-sm whitespace-nowrap"
+                                                >
+                                                    {t('userManagement.checkDuplicate')}
+                                                </button>
+                                            )}
+                                        </div>
+                                        {isEditing && <p className="text-xs text-slate-400 mt-1">User ID cannot be changed</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userName')}</label>
                                         <input
                                             type="text"
-                                            required
-                                            disabled={isEditing}
-                                            className={`flex-1 px-4 py-2.5 rounded-xl border border-slate-200 outline-none text-slate-800 transition-all ${isEditing ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                                            value={currentUser.username}
-                                            onChange={e => setCurrentUser({ ...currentUser, username: e.target.value })}
-                                            placeholder={t('userManagement.userId')}
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                            value={currentUser.name}
+                                            onChange={e => setCurrentUser({ ...currentUser, name: e.target.value })}
+                                            placeholder={t('userManagement.userName')}
                                         />
-                                        {!isEditing && (
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.phoneNumber')}</label>
+                                        <input
+                                            type="tel"
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                            value={currentUser.phone_number}
+                                            onChange={e => setCurrentUser({ ...currentUser, phone_number: e.target.value })}
+                                            placeholder={t('userManagement.phoneNumber')}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                            value={currentUser.email}
+                                            onChange={e => setCurrentUser({ ...currentUser, email: e.target.value })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                            {t('userManagement.password')}
+                                            {isEditing && <span className="text-xs font-normal text-slate-400 ml-2">(Create new to change)</span>}
+                                        </label>
+                                        <div className="relative">
+                                            <input
+                                                type={showPassword ? 'text' : 'password'}
+                                                required={!isEditing}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                value={currentUser.password}
+                                                onChange={e => setCurrentUser({ ...currentUser, password: e.target.value })}
+                                                placeholder={isEditing ? '••••••••' : ''}
+                                            />
                                             <button
                                                 type="button"
-                                                onClick={async () => {
-                                                    if (!currentUser.username) return;
-                                                    const exists = await userApi.checkUserExists(currentUser.username);
-                                                    if (exists) {
-                                                        alert(t('userManagement.idExists'));
-                                                    } else {
-                                                        alert(t('userManagement.idAvailable'));
-                                                    }
-                                                }}
-                                                className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium text-sm whitespace-nowrap"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                                             >
-                                                {t('userManagement.checkDuplicate')}
+                                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
-                                        )}
+                                        </div>
                                     </div>
-                                    {isEditing && <p className="text-xs text-slate-400 mt-1">User ID cannot be changed</p>}
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userName')}</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                        value={currentUser.name}
-                                        onChange={e => setCurrentUser({ ...currentUser, name: e.target.value })}
-                                        placeholder={t('userManagement.userName')}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.phoneNumber')}</label>
-                                    <input
-                                        type="tel"
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                        value={currentUser.phone_number}
-                                        onChange={e => setCurrentUser({ ...currentUser, phone_number: e.target.value })}
-                                        placeholder={t('userManagement.phoneNumber')}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                        value={currentUser.email}
-                                        onChange={e => setCurrentUser({ ...currentUser, email: e.target.value })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">
-                                        {t('userManagement.password')}
-                                        {isEditing && <span className="text-xs font-normal text-slate-400 ml-2">(Create new to change)</span>}
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type={showPassword ? 'text' : 'password'}
-                                            required={!isEditing}
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                            value={currentUser.password}
-                                            onChange={e => setCurrentUser({ ...currentUser, password: e.target.value })}
-                                            placeholder={isEditing ? '••••••••' : ''}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                    <div>
+                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
+                                        <select
+                                            multiple
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
+                                            value={currentUser.group_ids}
+                                            onChange={e => setCurrentUser({ ...currentUser, group_ids: Array.from(e.target.selectedOptions, option => option.value) })}
                                         >
-                                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                        </button>
+                                            {groups.map(group => (
+                                                <option key={group.id} value={group.id} className="py-1">{group.id}({group.name})</option>
+                                            ))}
+                                        </select>
+                                        <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                                            <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
+                                            or
+                                            <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
+                                            {t('userManagement.selectMultiple')}
+                                        </p>
                                     </div>
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
-                                    <select
-                                        multiple
-                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
-                                        value={currentUser.group_ids}
-                                        onChange={e => setCurrentUser({ ...currentUser, group_ids: Array.from(e.target.selectedOptions, option => option.value) })}
-                                    >
-                                        {groups.map(group => (
-                                            <option key={group.id} value={group.id} className="py-1">{group.name}</option>
-                                        ))}
-                                    </select>
-                                    <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                                        <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
-                                        or
-                                        <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
-                                        {t('userManagement.selectMultiple')}
-                                    </p>
                                 </div>
 
-                                <div className="flex justify-end gap-3 pt-4">
+                                <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white flex-shrink-0">
                                     <button
                                         type="button"
                                         onClick={() => setShowModal(false)}

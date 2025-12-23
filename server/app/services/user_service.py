@@ -268,19 +268,27 @@ class UserService:
             )
 
     @staticmethod
-    def create_group(name: str, permissions: List[str]) -> Group:
+    def check_group_exists(group_id: str) -> bool:
+        pool = get_db()
+        query = "OPTIONAL MATCH (g:UserGroup {id: $group_id}) RETURN g"
+        with pool.session() as session:
+            result = session.run(query, {"group_id": group_id}).single()
+            return result["g"] is not None
+
+    @staticmethod
+    def create_group(group_id: str, name: str, permissions: List[str]) -> Group:
         pool = get_db()
         
-        # Check if group already exists
-        # Since ID is name, we check by name (which is passed as ID/Name)
-        if UserService.get_group_by_id(name):
-             raise ValueError(f"Group with name '{name}' already exists")
+        # Check if group already exists by ID
+        if UserService.check_group_exists(group_id):
+             raise ValueError(f"Group with ID '{group_id}' already exists")
 
-        # 이름 유효성 검사 등 필요한 로직 추가 가능
-        
+        # Check if group name is already taken (Optional requirement: usually ID is unique, name can be duplicate but better not)
+        # For now, following plan: ID is unique.
+
         query = """
         CREATE (g:UserGroup:System {
-            id: $name,
+            id: $id,
             name: $name,
             permissions: $permissions
         })
@@ -289,6 +297,7 @@ class UserService:
         
         with pool.session() as session:
             result = session.run(query, {
+                "id": group_id,
                 "name": name,
                 "permissions": permissions
             })
@@ -303,6 +312,38 @@ class UserService:
                 name=g["name"],
                 permissions=[Permission(p) for p in g.get("permissions", [])],
                 projects=[]
+            )
+
+    @staticmethod
+    def delete_group(group_id: str):
+        pool = get_db()
+        query = """
+        MATCH (g:UserGroup {id: $group_id})
+        DETACH DELETE g
+        """
+        with pool.session() as session:
+            session.run(query, {"group_id": group_id})
+
+    @staticmethod
+    def update_group(group_id: str, name: str) -> Group:
+        pool = get_db()
+        query = """
+        MATCH (g:UserGroup {id: $group_id})
+        SET g.name = $name
+        RETURN g
+        """
+        with pool.session() as session:
+            result = session.run(query, {"group_id": group_id, "name": name})
+            record = result.single()
+            if not record:
+                raise Exception("Group not found")
+            g = record["g"]
+            return Group(
+                id=g["id"],
+                name=g["name"],
+                permissions=[Permission(p) for p in g.get("permissions", [])],
+                # Re-fetch or pass through permissions/projects if needed, but for now returned object needs to be valid
+                projects=[] # Ideally we should fetch full group, but for update_group response this might suffice or we fetch full
             )
 
     @staticmethod

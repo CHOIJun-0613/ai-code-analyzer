@@ -42,6 +42,7 @@ interface ClassData {
     superclass?: string;
     interfaces?: string[];
     annotations?: string[];
+    extension?: string;
     PLOC?: number;
     LLOC?: number;
     CLOC?: number;
@@ -246,7 +247,10 @@ const ClassDetails: React.FC = () => {
                         <p className="text-slate-500 dark:text-slate-400 font-mono text-sm mb-1">{classData.package_name}</p>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{classData.name}</h1>
+                                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                                    {classData.name}
+                                    {classData.extension ? (classData.extension.startsWith('.') ? classData.extension : `.${classData.extension}`) : ''}
+                                </h1>
                                 <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${classData.type === 'interface' ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-indigo-100 text-indigo-900 border-indigo-200'}`}>
                                     {classData.type}
                                 </span>
