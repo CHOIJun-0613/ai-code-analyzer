@@ -120,35 +120,26 @@ class MaintenanceMixin:
         """
         with self._driver.session(database=self._database) as session:
             if project_name:
-                # 프로젝트별 삭제
-                session.run("MATCH (n:Package {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:Class {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:Method {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:Field {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:Bean {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:Endpoint {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:MyBatisMapper {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:SqlStatement {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:JpaEntity {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:JpaRepository {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:JpaQuery {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:ConfigFile {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
-                session.run("MATCH (n:TestClass {project_name: $project_name}) DETACH DELETE n", project_name=project_name)
+                # 프로젝트별 삭제 (Analysis 라벨 활용 + Batch Transaction)
+                # 대부분의 분석 객체(Class, Method, Field 등)는 Analysis 라벨을 가지고 있음
+                query = """
+                MATCH (n:Analysis {project_name: $project_name})
+                CALL {
+                    WITH n
+                    DETACH DELETE n
+                } IN TRANSACTIONS OF 5000 ROWS
+                """
+                session.run(query, project_name=project_name)
             else:
-                # 전체 삭제 (기존 로직)
-                session.run("MATCH (n:Package) DETACH DELETE n")
-                session.run("MATCH (n:Class) DETACH DELETE n")
-                session.run("MATCH (n:Method) DETACH DELETE n")
-                session.run("MATCH (n:Field) DETACH DELETE n")
-                session.run("MATCH (n:Bean) DETACH DELETE n")
-                session.run("MATCH (n:Endpoint) DETACH DELETE n")
-                session.run("MATCH (n:MyBatisMapper) DETACH DELETE n")
-                session.run("MATCH (n:SqlStatement) DETACH DELETE n")
-                session.run("MATCH (n:JpaEntity) DETACH DELETE n")
-                session.run("MATCH (n:JpaRepository) DETACH DELETE n")
-                session.run("MATCH (n:JpaQuery) DETACH DELETE n")
-                session.run("MATCH (n:ConfigFile) DETACH DELETE n")
-                session.run("MATCH (n:TestClass) DETACH DELETE n")
+                # 전체 삭제 (Analysis 라벨 활용 + Batch Transaction)
+                query = """
+                MATCH (n:Analysis)
+                CALL {
+                    WITH n
+                    DETACH DELETE n
+                } IN TRANSACTIONS OF 5000 ROWS
+                """
+                session.run(query)
 
     def clean_db_objects(self, project_name: Optional[str] = None) -> None:
         """
@@ -174,13 +165,13 @@ class MaintenanceMixin:
                 project_name
             )
 
-        # 전체 삭제 (프로젝트 구분 없음)
+        # 전체 삭제 (프로젝트 구분 없음) - Batch Transaction 적용
         with self._driver.session(database=self._database) as session:
-            session.run("MATCH (n:Database) DETACH DELETE n")
-            session.run("MATCH (n:Table) DETACH DELETE n")
-            session.run("MATCH (n:Column) DETACH DELETE n")
-            session.run("MATCH (n:Index) DETACH DELETE n")
-            session.run("MATCH (n:Constraint) DETACH DELETE n")
+            session.run("MATCH (n:Database) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")
+            session.run("MATCH (n:Table) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")
+            session.run("MATCH (n:Column) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")
+            session.run("MATCH (n:Index) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")
+            session.run("MATCH (n:Constraint) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")
 
     def clean_database(self, project_name: Optional[str] = None) -> None:
         """
@@ -192,12 +183,12 @@ class MaintenanceMixin:
         """
         with self._driver.session(database=self._database) as session:
             if project_name:
-                # 프로젝트별 삭제 - Project 노드와 연결된 모든 노드 삭제
-                session.run("""
-                    MATCH (proj:Project {name: $project_name})
-                    OPTIONAL MATCH (proj)-[*]-(n)
-                    DETACH DELETE proj, n
-                """, project_name=project_name)
+                # 프로젝트별 삭제 - Batch Transaction 적용
+                # 1. Project 노드 삭제
+                session.run("MATCH (n:Project {name: $project_name}) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS", project_name=project_name)
+                
+                # 2. Project와 연관된 모든 노드 삭제 (project_name 속성 기반)
+                session.run("MATCH (n {project_name: $project_name}) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS", project_name=project_name)
             else:
-                # 전체 삭제 (기존 로직)
-                session.run("MATCH (n) DETACH DELETE n")
+                # 전체 삭제 (기존 로직) - Batch Transaction 적용
+                session.run("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")

@@ -50,7 +50,7 @@ def analyze_full_project_java(
         return _analyze_with_streaming(java_source_folder, project_name, graph_db, logger, ai_options, source_options, use_ai_analysis)
     else:
         logger.info("Using BATCH parsing mode (traditional)")
-        return _analyze_with_batch(java_source_folder, project_name, logger)
+        return _analyze_with_batch(java_source_folder, project_name, logger, source_options=source_options)
 
 
 def _analyze_with_streaming(
@@ -154,6 +154,7 @@ def _analyze_with_batch(
     java_source_folder: str,
     project_name: Optional[str],
     logger,
+    source_options: dict = None,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     배치 방식으로 Java 프로젝트 분석 (기존 방식).
@@ -164,6 +165,7 @@ def _analyze_with_batch(
         java_source_folder: Java 소스 디렉토리 경로
         project_name: 프로젝트명 (선택사항)
         logger: 로거 인스턴스
+        source_options: 소스 분석 고급 옵션
 
     Returns:
         Tuple[JavaAnalysisArtifacts, str]: 분석 결과 및 프로젝트명
@@ -184,7 +186,7 @@ def _analyze_with_batch(
         test_classes,
         sql_statements,
         detected_project_name,
-    ) = parse_java_project_full(java_source_folder)
+    ) = parse_java_project_full(java_source_folder, source_options=source_options)
 
     final_project_name = determine_project_name(project_name, detected_project_name, logger)
     logger.info("Project name: %s", final_project_name)

@@ -416,7 +416,7 @@ class UserService:
     def get_user_preferences(username: str) -> str:
         pool = get_db()
         query = """
-        MATCH (u:User {username: $username})
+        MATCH (u:User {id: $username})
         RETURN u.preferences as preferences
         """
         
@@ -432,7 +432,7 @@ class UserService:
     def update_user_preferences(username: str, preferences: str):
         pool = get_db()
         query = """
-        MATCH (u:User {username: $username})
+        MATCH (u:User {id: $username})
         SET u.preferences = $preferences
         RETURN u
         """

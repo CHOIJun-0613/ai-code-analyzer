@@ -156,45 +156,52 @@ def _log_quick_summary(
     overall_start_time: datetime,
     java_stats: Optional[JavaAnalysisStats],
     db_stats: Optional[DatabaseAnalysisStats],
+    summary_lines: Optional[list[str]] = None,
 ) -> None:
     """Emit a concise analysis summary to the logger."""
     logger = get_logger(__name__, command="analyze")
     overall_end_time = datetime.now()
     overall_duration = (overall_end_time - overall_start_time).total_seconds()
 
-    logger.info("")
-    logger.info("=" * 80)
-    logger.info("ANALYSIS SUMMARY")
-    logger.info("=" * 80)
+    def _log(msg: str, *args):
+        formatted_msg = msg % args if args else msg
+        logger.info(formatted_msg)
+        if summary_lines is not None:
+            summary_lines.append(formatted_msg)
+
+    _log("")
+    _log("=" * 80)
+    _log("ANALYSIS SUMMARY")
+    _log("=" * 80)
 
     if java_stats:
-        logger.info("Java Analysis:")
-        logger.info(f"  - Packages: {java_stats.packages}")
-        logger.info(f"  - Classes: {java_stats.classes}")
-        logger.info(f"  - Methods: {java_stats.methods}")
-        logger.info(f"  - Fields: {java_stats.fields}")
-        logger.info(f"  - Spring Beans: {java_stats.beans}")
-        logger.info(f"  - REST Endpoints: {java_stats.endpoints}")
-        logger.info(f"  - MyBatis Mappers: {java_stats.mybatis_mappers}")
-        logger.info(f"  - JPA Entities: {java_stats.jpa_entities}")
-        logger.info(f"  - JPA Repositories: {java_stats.jpa_repositories}")
-        logger.info(f"  - JPA Queries: {java_stats.jpa_queries}")
-        logger.info(f"  - Config Files: {java_stats.config_files}")
-        logger.info(f"  - Test Classes: {java_stats.test_classes}")
-        logger.info(f"  - SQL Statements: {java_stats.sql_statements}")
+        _log("Java Analysis:")
+        _log(f"  - Packages: {java_stats.packages}")
+        _log(f"  - Classes: {java_stats.classes}")
+        _log(f"  - Methods: {java_stats.methods}")
+        _log(f"  - Fields: {java_stats.fields}")
+        _log(f"  - Spring Beans: {java_stats.beans}")
+        _log(f"  - REST Endpoints: {java_stats.endpoints}")
+        _log(f"  - MyBatis Mappers: {java_stats.mybatis_mappers}")
+        _log(f"  - JPA Entities: {java_stats.jpa_entities}")
+        _log(f"  - JPA Repositories: {java_stats.jpa_repositories}")
+        _log(f"  - JPA Queries: {java_stats.jpa_queries}")
+        _log(f"  - Config Files: {java_stats.config_files}")
+        _log(f"  - Test Classes: {java_stats.test_classes}")
+        _log(f"  - SQL Statements: {java_stats.sql_statements}")
 
     if db_stats:
-        logger.info("Database Analysis:")
-        logger.info(f"  - Databases: {db_stats.databases}")
-        logger.info(f"  - Tables: {db_stats.tables}")
-        logger.info(f"  - Columns: {db_stats.columns}")
-        logger.info(f"  - Indexes: {db_stats.indexes}")
-        logger.info(f"  - Constraints: {db_stats.constraints}")
+        _log("Database Analysis:")
+        _log(f"  - Databases: {db_stats.databases}")
+        _log(f"  - Tables: {db_stats.tables}")
+        _log(f"  - Columns: {db_stats.columns}")
+        _log(f"  - Indexes: {db_stats.indexes}")
+        _log(f"  - Constraints: {db_stats.constraints}")
 
-    logger.info(f"Total Analysis Time: {format_duration(overall_duration)}")
-    logger.info("=" * 80)
-    logger.info("====== analyze 작업 종료 ======")
-    logger.info("")
+    _log(f"Total Analysis Time: {format_duration(overall_duration)}")
+    _log("=" * 80)
+    _log("====== analyze 작업 종료 ======")
+    _log("")
 
 
 def print_analysis_summary(
@@ -205,43 +212,49 @@ def print_analysis_summary(
     dry_run: bool,
     graph_db=None,
     project_name: Optional[str] = None,
-) -> None:
+) -> str:
     """
-    Print a detailed summary of the analysis execution.
+    Print a detailed summary of the analysis execution and return the full summary text.
     """
     logger = get_logger(__name__, command="analyze")
+    summary_lines = []
+
+    def _log(msg: str, *args):
+        formatted_msg = msg % args if args else msg
+        logger.info(formatted_msg)
+        summary_lines.append(formatted_msg)
 
     title = "분석 작업 결과 [dry-run 모드]" if dry_run else "분석 작업 결과"
     total_duration = (overall_end_time - overall_start_time).total_seconds()
 
-    logger.info("=" * 80)
-    logger.info(f"                          {title}")
-    logger.info("=" * 80)
-    logger.info("")
-    logger.info(
+    _log("=" * 80)
+    _log(f"                          {title}")
+    _log("=" * 80)
+    _log("")
+    _log(
         "전체 작업 시간: %s ~ %s",
         overall_start_time.strftime("%Y-%m-%d %H:%M:%S"),
         overall_end_time.strftime("%Y-%m-%d %H:%M:%S"),
     )
-    logger.info("총 소요 시간: %s", format_duration(total_duration))
-    logger.info("")
+    _log("총 소요 시간: %s", format_duration(total_duration))
+    _log("")
 
     if java_stats:
         duration = java_stats.duration_seconds
-        logger.info("-" * 80)
-        logger.info("[Java Object 분석 결과]")
-        logger.info("-" * 80)
+        _log("-" * 80)
+        _log("[Java Object 분석 결과]")
+        _log("-" * 80)
         if java_stats.start_time and java_stats.end_time:
-            logger.info(
+            _log(
                 "작업 시간: %s ~ %s",
                 java_stats.start_time.strftime("%Y-%m-%d %H:%M:%S"),
                 java_stats.end_time.strftime("%Y-%m-%d %H:%M:%S"),
             )
         if duration is not None:
-            logger.info("소요 시간: %s", format_duration(duration))
-        logger.info("")
-        logger.info("분석 결과:")
-        logger.info("  - Project: %s", java_stats.project_name or "N/A")
+            _log("소요 시간: %s", format_duration(duration))
+        _log("")
+        _log("분석 결과:")
+        _log("  - Project: %s", java_stats.project_name or "N/A")
 
         if java_stats.total_files > 0:
             success_rate = (
@@ -249,88 +262,92 @@ def print_analysis_summary(
                 if java_stats.total_files
                 else 0.0
             )
-            logger.info(
+            _log(
                 "  - Java 파일: %s/%s개 (성공률: %.1f%%)",
                 format_number(java_stats.processed_files),
                 format_number(java_stats.total_files),
                 success_rate,
             )
             if java_stats.error_files > 0:
-                logger.info(
+                _log(
                     "  - 오류 파일: %s개",
                     format_number(java_stats.error_files),
                 )
 
-        logger.info("  - Packages: %s개", format_number(java_stats.packages))
-        logger.info("  - Classes: %s개", format_number(java_stats.classes))
-        logger.info("  - Methods: %s개", format_number(java_stats.methods))
-        logger.info("  - Fields: %s개", format_number(java_stats.fields))
-        logger.info("  - Spring Beans: %s개", format_number(java_stats.beans))
-        logger.info("  - REST Endpoints: %s개", format_number(java_stats.endpoints))
-        logger.info("  - MyBatis Mappers: %s개", format_number(java_stats.mybatis_mappers))
-        logger.info("  - JPA Entities: %s개", format_number(java_stats.jpa_entities))
-        logger.info("  - JPA Repositories: %s개", format_number(java_stats.jpa_repositories))
-        logger.info("  - SQL Statements: %s개", format_number(java_stats.sql_statements))
+        _log("  - Packages: %s개", format_number(java_stats.packages))
+        _log("  - Classes: %s개", format_number(java_stats.classes))
+        _log("  - Methods: %s개", format_number(java_stats.methods))
+        _log("  - Fields: %s개", format_number(java_stats.fields))
+        _log("  - Spring Beans: %s개", format_number(java_stats.beans))
+        _log("  - REST Endpoints: %s개", format_number(java_stats.endpoints))
+        _log("  - MyBatis Mappers: %s개", format_number(java_stats.mybatis_mappers))
+        _log("  - JPA Entities: %s개", format_number(java_stats.jpa_entities))
+        _log("  - JPA Repositories: %s개", format_number(java_stats.jpa_repositories))
+        _log("  - SQL Statements: %s개", format_number(java_stats.sql_statements))
 
     if db_stats:
-        logger.info("")
-        logger.info("-" * 80)
-        logger.info("[Database Object 분석 결과]")
-        logger.info("-" * 80)
+        _log("")
+        _log("-" * 80)
+        _log("[Database Object 분석 결과]")
+        _log("-" * 80)
         if db_stats.start_time and db_stats.end_time:
-            logger.info(
+            _log(
                 "작업 시간: %s ~ %s",
                 db_stats.start_time.strftime("%Y-%m-%d %H:%M:%S"),
                 db_stats.end_time.strftime("%Y-%m-%d %H:%M:%S"),
             )
             duration = db_stats.duration_seconds
             if duration is not None:
-                logger.info("소요 시간: %s", format_duration(duration))
+                _log("소요 시간: %s", format_duration(duration))
 
-        logger.info("  - DDL 파일: %s개", format_number(db_stats.ddl_files))
-        logger.info("  - Databases: %s개", format_number(db_stats.databases))
-        logger.info("  - Tables: %s개", format_number(db_stats.tables))
-        logger.info("  - Columns: %s개", format_number(db_stats.columns))
-        logger.info("  - Indexes: %s개", format_number(db_stats.indexes))
-        logger.info("  - Constraints: %s개", format_number(db_stats.constraints))
+        _log("  - DDL 파일: %s개", format_number(db_stats.ddl_files))
+        _log("  - Databases: %s개", format_number(db_stats.databases))
+        _log("  - Tables: %s개", format_number(db_stats.tables))
+        _log("  - Columns: %s개", format_number(db_stats.columns))
+        _log("  - Indexes: %s개", format_number(db_stats.indexes))
+        _log("  - Constraints: %s개", format_number(db_stats.constraints))
 
     # Neo4j 실제 저장 통계 출력
     if graph_db and not dry_run:
-        logger.info("")
-        logger.info("-" * 80)
-        logger.info("[Neo4j Database 저장 현황]")
-        logger.info("-" * 80)
+        _log("")
+        _log("-" * 80)
+        _log("[Neo4j Database 저장 현황]")
+        _log("-" * 80)
 
         try:
             # 전체 DB 통계 조회
             all_stats = graph_db.get_database_statistics(None)
 
-            logger.info("전체 데이터베이스 저장 객체:")
-            logger.info("  - 총 노드 수: %s개", format_number(all_stats["total_nodes"]))
-            logger.info("  - 총 관계 수: %s개", format_number(all_stats["total_relationships"]))
+            _log("전체 데이터베이스 저장 객체:")
+            _log("  - 총 노드 수: %s개", format_number(all_stats["total_nodes"]))
+            _log("  - 총 관계 수: %s개", format_number(all_stats["total_relationships"]))
 
             # 프로젝트별 통계가 의미있는 경우에만 추가 표시
             if project_name:
                 project_stats = graph_db.get_database_statistics(project_name)
                 if project_stats["total_nodes"] > 0:
-                    logger.info("")
-                    logger.info(f"현재 프로젝트({project_name}) 저장 객체:")
-                    logger.info("  - 노드 수: %s개", format_number(project_stats["total_nodes"]))
-                    logger.info("  - 관계 수: %s개", format_number(project_stats["total_relationships"]))
+                    _log("")
+                    _log(f"현재 프로젝트({project_name}) 저장 객체:")
+                    _log("  - 노드 수: %s개", format_number(project_stats["total_nodes"]))
+                    _log("  - 관계 수: %s개", format_number(project_stats["total_relationships"]))
 
             if all_stats["node_counts_by_label"]:
-                logger.info("")
-                logger.info("라벨별 노드 수 (전체):")
+                _log("")
+                _log("라벨별 노드 수 (전체):")
                 for label, count in all_stats["node_counts_by_label"].items():
-                    logger.info("  - %s: %s개", label, format_number(count))
+                    _log("  - %s: %s개", label, format_number(count))
 
             if all_stats["relationship_counts_by_type"]:
-                logger.info("")
-                logger.info("관계 타입별 수 (전체):")
+                _log("")
+                _log("관계 타입별 수 (전체):")
                 for rel_type, count in all_stats["relationship_counts_by_type"].items():
-                    logger.info("  - %s: %s개", rel_type, format_number(count))
+                    _log("  - %s: %s개", rel_type, format_number(count))
 
         except Exception as e:  # pylint: disable=broad-except
             logger.warning("Neo4j 통계 조회 실패: %s", str(e))
+            # 오류 메시지도 요약에 포함할지 여부: 로그엔 남기지만 요약엔... 일단 남기는 게 좋음
+            summary_lines.append(f"Neo4j 통계 조회 실패: {str(e)}")
 
-    _log_quick_summary(overall_start_time, java_stats, db_stats)
+    _log_quick_summary(overall_start_time, java_stats, db_stats, summary_lines)
+
+    return "\n".join(summary_lines)

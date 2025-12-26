@@ -28,7 +28,7 @@ except ImportError:
     get_ai_analyzer = None
 
 
-def extract_sql_statements_from_mappers(mybatis_mappers: list[MyBatisMapper], project_name: str) -> list[SqlStatement]:
+def extract_sql_statements_from_mappers(mybatis_mappers: list[MyBatisMapper], project_name: str, use_ai: bool = False) -> list[SqlStatement]:
     """
     MyBatis mappers에서 SQL statements를 추출하고 SQL 파서를 사용하여 분석합니다.
     
@@ -52,9 +52,13 @@ def extract_sql_statements_from_mappers(mybatis_mappers: list[MyBatisMapper], pr
                 sql_analysis = sql_parser.parse_sql_statement(sql_content, sql_type)
             
             # AI 분석 수행 (오류 시 빈 문자열 반환)
-            # AI 분석 수행 (USE_AI_ANALYSIS 환경변수 확인, 기본값: 비활성화)
+            # AI 분석 수행 (오류 시 빈 문자열 반환)
+            # AI 분석 수행 (파라미터로 전달된 use_ai 값 우선 사용)
             sql_ai_description = ""
-            use_ai = os.getenv("USE_AI_ANALYSIS", "false").lower() == "true"
+            # os.getenv check is redundant if use_ai is passed correctly, but keeping as fallback or removing?
+            # Instructions said "use this argument instead of just os.getenv".
+            # If use_ai is passed as False (default), it should NOT run.
+            
             if use_ai and AI_ANALYZER_AVAILABLE and sql_content:
                 try:
                     analyzer = get_ai_analyzer()

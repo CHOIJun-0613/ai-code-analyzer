@@ -11,4 +11,14 @@ def get_client_id() -> str:
 
 def set_client_id(client_id: str):
     """현재 컨텍스트의 클라이언트 ID 설정"""
-    client_id_ctx.set(client_id)
+
+# 작업 ID 저장을 위한 ContextVar
+job_id_ctx: ContextVar[Optional[str]] = ContextVar("job_id", default=None)
+
+def get_job_id() -> str:
+    """현재 컨텍스트의 작업 ID를 반환 (없으면 빈 문자열)"""
+    return job_id_ctx.get() or ""
+
+def set_job_id(job_id: str):
+    """현재 컨텍스트의 작업 ID 설정"""
+    job_id_ctx.set(job_id)

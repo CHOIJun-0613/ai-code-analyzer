@@ -105,6 +105,10 @@ class IndexManager:
         if result: created_count += 1
         else: skipped_count += 1
 
+        # 20. Analysis 노드 (project_name)
+        if self._create_index("Analysis", ["project_name"], unique=False, index_name="idx_analysis_project_name"): created_count += 1
+        else: skipped_count += 1
+
         if created_count > 0:
             self.logger.info(f"인덱스 생성: {created_count}개 생성, {skipped_count}개 기존 유지")
         else:

@@ -8,6 +8,7 @@ from csa.services.graph_db.maintenance import MaintenanceMixin
 from csa.services.graph_db.persistence_nodes import PersistenceMixin
 from csa.services.graph_db.project_nodes import ProjectMixin
 from csa.services.graph_db.class_nodes import ClassMixin
+from csa.services.graph_db.analysis_history import AnalysisHistoryMixin
 
 
 class GraphDB(
@@ -19,6 +20,7 @@ class GraphDB(
     DatabaseMixin,
     AnalyticsMixin,
     MaintenanceMixin,
+    AnalysisHistoryMixin,
 ):
     """Facade that composes all graph database features."""
 

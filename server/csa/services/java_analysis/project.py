@@ -407,7 +407,7 @@ def parse_inner_classes(
     return inner_classes
 
 
-def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None) -> tuple[Package, Class, list[Class], str]:
+def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None) -> tuple[Package, Class, list[Class], str]:
     """Parse a single Java file and return parsed entities."""
     logger = get_logger(__name__)
     
@@ -458,13 +458,21 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         from csa.parsers.java.description import extract_class_description_from_annotations
         class_description = extract_class_description_from_annotations(class_annotations) or ""
 
-        # AI 분석 수행 (USE_AI_ANALYSIS 환경변수 확인, 기본값: 비활성화)
-        use_ai = os.getenv("USE_AI_ANALYSIS", "false").lower() == "true"
+        # AI 분석 활성화 여부 결정
+        use_ai_env = os.getenv("USE_AI_ANALYSIS", "false").lower() == "true"
         
-        # ai_options가 있으면 우선 사용
-        if ai_options:
-            use_ai = True
+        should_use_ai = False
+        if use_ai is not None:
+            should_use_ai = use_ai
+        elif ai_options:
+            should_use_ai = True
+        else:
+            should_use_ai = use_ai_env
             
+        use_ai = should_use_ai
+        
+        ai_description = ""
+
         if use_ai and AI_ANALYZER_AVAILABLE:
             try:
                 analyzer = None
@@ -650,8 +658,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
     
                 # AI 분석 수행 (오류 시 빈 문자열 반환)
                 method_ai_description = ""
-                # USE_AI_ANALYSIS 환경 변수 확인 (기본값: 비활성화)
-                use_ai = os.getenv("USE_AI_ANALYSIS", "false").lower() == "true"
+                # USE_AI_ANALYSIS 결정 로직은 위에서 계산된 use_ai 사용
                 if use_ai and AI_ANALYZER_AVAILABLE and method_source:
                     analyzer = get_ai_analyzer()
                     if analyzer.is_available():
@@ -794,7 +801,15 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         logger.error(f"Error parsing file: {e}")
         return None, None, [], ""
 
-def parse_java_project_full(directory: str, graph_db: GraphDB = None) -> tuple[list[Package], list[Class], dict[str, str], list[Bean], list[BeanDependency], list[Endpoint], list[MyBatisMapper], list[JpaEntity], list[JpaRepository], list[JpaQuery], list[ConfigFile], list[TestClass], list[SqlStatement], str]:
+def parse_java_project_full(
+    directory: str,
+    graph_db: GraphDB = None,
+    source_options: dict = None
+) -> tuple[
+    list[Package], list[Class], dict[str, str], list[Bean], list[BeanDependency],
+    list[Endpoint], list[MyBatisMapper], list[JpaEntity], list[JpaRepository],
+    list[JpaQuery], list[ConfigFile], list[TestClass], list[SqlStatement], str
+]:
     """Parse Java project and return parsed entities."""
     logger = get_logger(__name__)
     
@@ -815,8 +830,14 @@ def parse_java_project_full(directory: str, graph_db: GraphDB = None) -> tuple[l
     last_logged_percent = 0
     
     # 모든 .java 파일 수집 (.csaignore 필터 포함)
+    exclude_patterns = []
+    if source_options and 'exclude_patterns' in source_options:
+        exclude_patterns = source_options['exclude_patterns']
+        if isinstance(exclude_patterns, str):
+            exclude_patterns = [p.strip() for p in exclude_patterns.splitlines() if p.strip()]
+
     logger.info("Java 파일 수집 중...")
-    java_files = _collect_java_files_with_csaignore(directory)
+    java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns)
     logger.info(f"총 {len(java_files)}개 Java 파일 발견")
 
     # 먼저 전체 클래스 개수를 계산
@@ -1366,7 +1387,7 @@ def is_dto_class(class_name: str, file_path: str = None) -> bool:
     return False
 
 
-def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None) -> tuple:
+def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None) -> tuple:
     """
     병렬 처리용 파싱 래퍼 함수 (Neo4j 연결 없이 파싱만 수행)
 
@@ -1383,7 +1404,7 @@ def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: di
 
     try:
         package_node, class_node, inner_classes, package_name = parse_single_java_file(
-            file_path, project_name, None, ai_options  # graph_db=None for parsing only
+            file_path, project_name, None, ai_options, use_ai=use_ai  # graph_db=None for parsing only
         )
 
         # 처리 시간 계산 및 로깅
@@ -1473,8 +1494,14 @@ def parse_java_project_streaming(
     progress_lock = Lock()
 
     # 1회 스캔: 모든 .java 파일 경로 수집
+    exclude_patterns = []
+    if source_options and 'exclude_patterns' in source_options:
+        exclude_patterns = source_options['exclude_patterns']
+        if isinstance(exclude_patterns, str):
+            exclude_patterns = [p.strip() for p in exclude_patterns.splitlines() if p.strip()]
+
     logger.info("Java 파일 수집 중...")
-    java_files = _collect_java_files_with_csaignore(directory)
+    java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns)
 
     total_files = len(java_files)
     stats['total_files'] = total_files
@@ -1540,11 +1567,15 @@ def parse_java_project_streaming(
         parallel_workers = environment_workers
     initial_batch_size = int(os.getenv("NEO4J_BATCH_SIZE", "50"))  # 초기 배치 크기
 
+    # 배치 크기 설정 (환경 변수 또는 기본값)
+    # 메모리 오류 방지를 위해 기본 최대값을 200 -> 50으로 보수적으로 조정
+    max_batch_size = int(os.getenv("NEO4J_BATCH_MAX_SIZE", "50"))
+    
     # 동적 배치 크기 조정기 초기화
     batch_sizer = AdaptiveBatchSizer(
         initial_size=initial_batch_size,
-        min_size=20,
-        max_size=200
+        min_size=10,
+        max_size=max_batch_size
     )
 
     logger.info(f"병렬 파싱 워커 수: {parallel_workers} (CPU 코어: {cpu_count}, 기본값: {default_workers}), 초기 배치 크기: {initial_batch_size} (동적 조정 활성화)")
@@ -1600,7 +1631,7 @@ def parse_java_project_streaming(
     with ThreadPoolExecutor(max_workers=parallel_workers) as executor:
         # 모든 파일을 병렬로 파싱 제출
         future_to_file = {
-            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options): file_path
+            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis): file_path
             for file_path in java_files
         }
 
@@ -1795,7 +1826,7 @@ def parse_java_project_streaming(
             stats['mybatis_mappers'] += 1
 
             # XML mapper의 SQL statements 즉시 추출 및 저장
-            sql_statements = extract_sql_statements_from_mappers([mapper], project_name)
+            sql_statements = extract_sql_statements_from_mappers([mapper], project_name, use_ai=use_ai_analysis)
             if sql_statements:
                 relationships = []
                 for sql_statement in sql_statements:
@@ -1874,12 +1905,13 @@ def parse_java_project_streaming(
     return stats
 
 
-def _collect_java_files_with_csaignore(directory: str) -> list[str]:
+def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[str] = None) -> list[str]:
     """
     디렉터리에서 .java 파일을 수집하고 .csaignore 필터를 적용합니다.
 
     Args:
         directory: Java 소스 디렉터리 경로
+        exclude_patterns: 추가 제외 패턴 목록
 
     Returns:
         list[str]: 필터링된 Java 파일 경로 목록
@@ -1894,7 +1926,10 @@ def _collect_java_files_with_csaignore(directory: str) -> list[str]:
                 java_files.append(os.path.join(root, file))
 
     # .csaignore 필터 적용
-    csaignore_filter = load_csaignore_filter(os.getcwd())
+    csaignore_filter = load_csaignore_filter(
+        os.getcwd(),
+        additional_patterns=exclude_patterns
+    )
     if csaignore_filter.has_patterns():
         logger.info(".csaignore 패턴 적용 중...")
         original_count = len(java_files)

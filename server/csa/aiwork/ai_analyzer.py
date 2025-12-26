@@ -44,6 +44,7 @@ class AIAnalyzer:
 
         # LLM 초기화 시도
         try:
+            self._llm = self.provider_manager.create_llm()
             self._is_available = True
             logger.info(f"AI 분석 초기화 완료: {self.ai_config.ai_provider} / {self.ai_config.get_current_model_name()}")
         except Exception as e:

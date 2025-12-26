@@ -7,6 +7,8 @@ import os
 from datetime import datetime
 from typing import Dict, Optional
 
+from csa.utils.context import get_client_id, get_job_id
+
 from csa.models.analysis import AnalysisResult, DatabaseAnalysisStats, JavaAnalysisStats
 from csa.models.graph_entities import Project
 from csa.services.analysis.db_pipeline import analyze_full_project_db
@@ -145,6 +147,11 @@ def analyze_project(
             fallback_project_name = candidate
     effective_project_name = project_name or fallback_project_name or ""
     timestamp = overall_start_time.strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+
+    # Analysis History Tracking
+    analysis_status = "Failed"  # Default status
+    job_id = get_job_id() or "Server CLI analysis"
+    user_id = get_client_id() or "Server CLI"
     
     # Configuration from options
     seq_packages = ""
@@ -223,7 +230,7 @@ def analyze_project(
         # 인덱스는 이미 데이터 저장 전에 생성됨
 
         overall_end_time = datetime.now()
-        print_analysis_summary(overall_start_time, overall_end_time, java_stats, db_stats, dry_run, db, project_name)
+        summary_text = print_analysis_summary(overall_start_time, overall_end_time, java_stats, db_stats, dry_run, db, project_name)
 
         result = AnalysisResult(
             success=True,
@@ -231,6 +238,8 @@ def analyze_project(
             db_stats=db_stats,
             message="Analysis completed successfully",
         )
+        analysis_status = "Completed"
+
         return {
             "success": True,
             "message": result.message,
@@ -240,11 +249,67 @@ def analyze_project(
             },
         }
 
+    except KeyboardInterrupt:
+        analysis_status = "Canceled"
+        summary_text = "Analysis canceled by user."
+        raise
     except Exception as exc:  # pylint: disable=broad-except
+        analysis_status = "Failed"
+        summary_text = f"Analysis failed: {exc}"
         logger.error("Analysis error: %s", exc)
         return {"success": False, "error": str(exc)}
     finally:
         if db:
+            try:
+                overall_end_time = datetime.now()
+                duration_delta = overall_end_time - overall_start_time
+                total_seconds = int(duration_delta.total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                duration_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+                if not summary_text:
+                     # Exception 상황에서 초기화 안되었을 경우 대비
+                     summary_text = f"Analysis {analysis_status}."
+
+                # Construct preferences JSON
+                import json
+                preferences_dict = {
+                    "clean": clean,
+                    "dry_run": dry_run,
+                    "scope": scope,
+                    "java_object": java_object,
+                    "db_object": db_object,
+                    "all_objects": all_objects,
+                    "use_ai": use_ai,  # backward compatibility
+                    "use_ai_analysis": use_ai_analysis,
+                    "ai_options": ai_options,
+                    "source_options": source_options,
+                }
+                
+                # Filter out None values for cleaner JSON
+                preferences_dict = {k: v for k, v in preferences_dict.items() if v is not None}
+                
+                try:
+                    preferences_json = json.dumps(preferences_dict, ensure_ascii=False)
+                except Exception:
+                    preferences_json = "{}"
+
+                db.save_analysis_history(
+                    job_id=job_id,
+                    start_time=overall_start_time,
+                    end_time=overall_end_time,
+                    duration=duration_str,
+                    file_count=project_entity.number_of_files,
+                    result=analysis_status,
+                    user_id=user_id,
+                    summary=summary_text,
+                    project_name=project_entity.name,
+                    preferences=preferences_json,
+                )
+            except Exception as history_exc:
+                logger.error(f"Failed to save analysis history: {history_exc}")
+
             db.close()
 
 

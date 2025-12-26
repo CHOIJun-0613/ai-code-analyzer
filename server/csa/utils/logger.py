@@ -4,7 +4,7 @@ import glob
 import threading
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
-from csa.utils.context import get_client_id
+from csa.utils.context import get_client_id, get_job_id
 
 # Load environment variables
 load_dotenv()
@@ -68,7 +68,22 @@ def _get_log_level_char(level: int) -> str:
         logging.ERROR: 'E',
         logging.CRITICAL: 'C'
     }
+
     return level_mapping.get(level, 'I')
+
+class JobIdFilter(logging.Filter):
+    """
+    Context의 Job ID와 파일 핸들러의 Target Job ID가 일치하는지 검사하는 필터
+    """
+    def __init__(self, target_job_id: str):
+        super().__init__()
+        self.target_job_id = target_job_id
+
+    def filter(self, record):
+        # 현재 실행 컨텍스트의 Job ID
+        current_job_id = get_job_id()
+        # 일치할 때만 True (로그 기록)
+        return current_job_id == self.target_job_id
 
 class CustomFormatter(logging.Formatter):
     """커스텀 로그 포맷터"""
@@ -183,8 +198,8 @@ def setup_logger(name: str = None, command: str = None) -> logging.Logger:
         logger.addHandler(console_handler)
         print(f"Warning: Could not create file handler: {e}")
     
-    # 부모 로거로 전파하지 않음 (중복 출력 방지)
-    logger.propagate = False
+    # 부모 로거로 전파 (JobLogHandler 등 상위 핸들러 지원)
+    logger.propagate = True
     
     return logger
 

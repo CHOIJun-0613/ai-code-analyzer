@@ -23,56 +23,64 @@ class CSAIgnoreFilter:
     .csaignore 파일을 파싱하여 파일/폴더 필터링 기능을 제공하는 클래스
     """
 
-    def __init__(self, project_root: str | Path):
+    def __init__(self, project_root: str | Path, additional_patterns: Optional[List[str]] = None):
         """
         Args:
             project_root: 프로젝트 루트 디렉터리 (.csaignore 파일이 위치한 곳)
+            additional_patterns: 추가로 적용할 제외 패턴 목록 (UI 등에서 전달됨)
         """
         self.project_root = Path(project_root)
         self.csaignore_path = self.project_root / ".csaignore"
         self.spec: Optional[pathspec.PathSpec] = None
         self.patterns: List[str] = []
+        self.additional_patterns = additional_patterns or []
 
         self._load_csaignore()
 
     def _load_csaignore(self) -> None:
         """
-        .csaignore 파일을 로드하고 파싱합니다.
+        .csaignore 파일을 로드하고 추가 패턴과 합쳐서 파싱합니다.
         """
         if not PATHSPEC_AVAILABLE:
             logger.warning(".csaignore 지원을 위해 pathspec 라이브러리가 필요합니다. pip install pathspec")
             return
 
-        if not self.csaignore_path.exists():
+        patterns = []
+
+        # 1. 파일에서 로드
+        if self.csaignore_path.exists():
+            try:
+                with open(self.csaignore_path, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+
+                for line in lines:
+                    line = line.strip()
+                    # 빈 줄이나 주석 제외
+                    if line and not line.startswith("#"):
+                        patterns.append(line)
+            except Exception as e:
+                logger.error(f".csaignore 파일 로드 실패: {e}")
+        else:
             logger.debug(f".csaignore 파일이 없습니다: {self.csaignore_path}")
-            return
 
-        try:
-            with open(self.csaignore_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
+        # 2. 추가 패턴 병합
+        if self.additional_patterns:
+            logger.info(f"UI/옵션에서 전달된 제외 패턴 {len(self.additional_patterns)}개 적용")
+            patterns.extend(self.additional_patterns)
 
-            # 주석과 빈 줄 제거
-            patterns = []
-            for line in lines:
-                line = line.strip()
-                # 빈 줄이나 주석 제외
-                if line and not line.startswith("#"):
-                    patterns.append(line)
-
-            if patterns:
-                self.patterns = patterns
-                # pathspec으로 GitIgnore 스타일 패턴 생성
-                self.spec = pathspec.PathSpec.from_lines(
-                    pathspec.patterns.GitWildMatchPattern,
-                    patterns
-                )
-                logger.info(f".csaignore 로드 완료: {len(patterns)}개 패턴")
-                logger.debug(f"제외 패턴: {patterns}")
-            else:
-                logger.debug(".csaignore 파일이 비어 있습니다.")
-
-        except Exception as e:
-            logger.error(f".csaignore 파일 로드 실패: {e}")
+        # 3. PathSpec 생성
+        if patterns:
+            # 중복 제거
+            patterns = list(set(patterns))
+            self.patterns = patterns
+            self.spec = pathspec.PathSpec.from_lines(
+                pathspec.patterns.GitWildMatchPattern,
+                patterns
+            )
+            logger.info(f"제외 패턴 로드 완료: 총 {len(patterns)}개")
+            logger.debug(f"적용된 패턴: {patterns}")
+        else:
+            logger.debug("적용할 제외 패턴이 없습니다.")
 
     def should_ignore(self, file_path: str | Path) -> bool:
         """
@@ -145,12 +153,13 @@ class CSAIgnoreFilter:
         return bool(self.spec and self.patterns)
 
 
-def load_csaignore_filter(project_root: Optional[str | Path] = None) -> CSAIgnoreFilter:
+def load_csaignore_filter(project_root: Optional[str | Path] = None, additional_patterns: Optional[List[str]] = None) -> CSAIgnoreFilter:
     """
     .csaignore 필터를 로드합니다.
 
     Args:
         project_root: 프로젝트 루트 디렉터리 (None이면 현재 작업 디렉터리)
+        additional_patterns: 추가로 적용할 제외 패턴 목록 (UI 등에서 전달됨)
 
     Returns:
         CSAIgnoreFilter 인스턴스
@@ -158,7 +167,7 @@ def load_csaignore_filter(project_root: Optional[str | Path] = None) -> CSAIgnor
     if project_root is None:
         project_root = os.getcwd()
 
-    return CSAIgnoreFilter(project_root)
+    return CSAIgnoreFilter(project_root, additional_patterns)
 
 
 __all__ = ["CSAIgnoreFilter", "load_csaignore_filter"]

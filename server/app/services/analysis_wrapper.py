@@ -2,8 +2,12 @@ import threading
 import uuid
 from typing import Dict, Optional
 from csa.services.analyze_service import analyze_project
-from csa.utils.logger import get_logger
+from csa.services.analyze_service import analyze_project
+from csa.utils.logger import get_logger, JobIdFilter
+from csa.utils.context import get_client_id, set_job_id, set_client_id
 from app.core.config import settings
+import datetime
+import random
 
 logger = get_logger(__name__)
 
@@ -28,7 +32,12 @@ class JobLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-def run_analysis_task(job_id: str, params: dict):
+def run_analysis_task(job_id: str, params: dict, user_id: str):
+    # Set job context
+    set_job_id(job_id)
+    # Set client context for this thread using the passed user_id
+    set_client_id(user_id)
+
     jobs[job_id]["status"] = "running"
     
     # Setup log capture
@@ -40,9 +49,27 @@ def run_analysis_task(job_id: str, params: dict):
     root_logger = logging.getLogger()
     root_logger.addHandler(log_handler)
     
-    # Also attach to csa logger specifically to be sure
-    csa_logger = logging.getLogger("csa")
-    csa_logger.addHandler(log_handler)
+    
+    # Also attach to csa logger specifically to be sure - REMOVED to avoid double logging with propagate=True
+    # csa_logger = logging.getLogger("csa")
+    # csa_logger.addHandler(log_handler)
+    
+    # Job-specific File Handler
+    analysis_log_file = f"../logs/analysis-{job_id}.log" 
+    # Adjust path relative to execution or use absolute path logic like setup_logger
+    # setup_logger uses: current_dir = os.path.dirname(os.path.abspath(__file__)) ... project_root/logs
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    project_root = os.path.dirname(os.path.dirname(current_dir)) # server root (app/services -> app -> server)
+    logs_dir = os.path.join(project_root, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    analysis_log_path = os.path.join(logs_dir, f"analysis-{job_id}.log")
+    
+    analysis_file_handler = logging.FileHandler(analysis_log_path, encoding='utf-8')
+    analysis_file_handler.setFormatter(formatter)
+    analysis_file_handler.addFilter(JobIdFilter(job_id))
+    
+    root_logger.addHandler(analysis_file_handler)
     
     try:
         # Initial log
@@ -56,7 +83,7 @@ def run_analysis_task(job_id: str, params: dict):
             neo4j_uri=settings.NEO4J_URI,
             neo4j_user=settings.NEO4J_USER,
             neo4j_password=settings.NEO4J_PASSWORD,
-            neo4j_database="neo4j", # TODO: Make configurable
+            neo4j_database=settings.NEO4J_DATABASE or "neo4j",
             clean=params.get("clean", False),
             dry_run=params.get("dry_run", False),
             java_object=params.get("java_object", False),
@@ -82,21 +109,50 @@ def run_analysis_task(job_id: str, params: dict):
     finally:
         # Clean up handlers
         root_logger.removeHandler(log_handler)
-        csa_logger.removeHandler(log_handler)
+        root_logger.removeHandler(analysis_file_handler)
         log_handler.close()
+        analysis_file_handler.close()
 
-def start_analysis(params: dict) -> str:
-    job_id = str(uuid.uuid4())
+def start_analysis(params: dict, user_id: str = None) -> str:
+    # YYYYMMDD-HHMMSS-mmm-USERID-RAND5
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y%m%d-%H%M%S")
+    millis = f"{int(now.microsecond / 1000):03d}"
+    
+    if not user_id:
+        user_id = get_client_id()
+    
+    if not user_id:
+        user_id = "unknown"
+        
+    rand = f"{random.randint(0, 99999):05d}"
+    
+    job_id = f"{timestamp}-{millis}-{user_id}-{rand}"
+    
     jobs[job_id] = {
         "id": job_id,
+        "user_id": user_id,
         "status": "pending",
         "params": params,
         "logs": [],
         "created_at": str(uuid.uuid1()) # timestamp
     }
-    thread = threading.Thread(target=run_analysis_task, args=(job_id, params))
+    thread = threading.Thread(target=run_analysis_task, args=(job_id, params, user_id))
     thread.start()
     return job_id
 
 def get_job_status(job_id: str) -> Optional[dict]:
     return jobs.get(job_id)
+
+def get_active_job(user_id: str) -> Optional[dict]:
+    """Find the most recent running or pending job for a user."""
+    user_jobs = [
+        job for job in jobs.values() 
+        if job.get("user_id") == user_id and job.get("status") in ["pending", "running"]
+    ]
+    # Sort by ID (which starts with timestamp) descending
+    user_jobs.sort(key=lambda x: x["id"], reverse=True)
+    
+    if user_jobs:
+        return user_jobs[0]
+    return None
