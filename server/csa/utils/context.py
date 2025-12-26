@@ -11,6 +11,7 @@ def get_client_id() -> str:
 
 def set_client_id(client_id: str):
     """현재 컨텍스트의 클라이언트 ID 설정"""
+    client_id_ctx.set(client_id)
 
 # 작업 ID 저장을 위한 ContextVar
 job_id_ctx: ContextVar[Optional[str]] = ContextVar("job_id", default=None)
