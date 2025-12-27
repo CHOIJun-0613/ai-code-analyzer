@@ -831,13 +831,24 @@ def parse_java_project_full(
     
     # 모든 .java 파일 수집 (.csaignore 필터 포함)
     exclude_patterns = []
+    use_csaignore_file = True
+
     if source_options and 'exclude_patterns' in source_options:
-        exclude_patterns = source_options['exclude_patterns']
-        if isinstance(exclude_patterns, str):
-            exclude_patterns = [p.strip() for p in exclude_patterns.splitlines() if p.strip()]
+        # UI/API에서 명시적으로 exclude_patterns가 전달된 경우 (빈 문자열 포함)
+        # .csaignore 파일을 무시하고 전달된 패턴만 적용 (또는 없으면 적용 안함)
+        raw_patterns = source_options['exclude_patterns']
+        
+        if raw_patterns is not None:
+            use_csaignore_file = False
+            if isinstance(raw_patterns, str):
+                exclude_patterns = [p.strip() for p in raw_patterns.splitlines() if p.strip()]
+            elif isinstance(raw_patterns, list):
+                exclude_patterns = raw_patterns
+            else:
+                exclude_patterns = []
 
     logger.info("Java 파일 수집 중...")
-    java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns)
+    java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
     logger.info(f"총 {len(java_files)}개 Java 파일 발견")
 
     # 먼저 전체 클래스 개수를 계산
@@ -1495,13 +1506,24 @@ def parse_java_project_streaming(
 
     # 1회 스캔: 모든 .java 파일 경로 수집
     exclude_patterns = []
+    use_csaignore_file = True
+
     if source_options and 'exclude_patterns' in source_options:
-        exclude_patterns = source_options['exclude_patterns']
-        if isinstance(exclude_patterns, str):
-            exclude_patterns = [p.strip() for p in exclude_patterns.splitlines() if p.strip()]
+        # UI/API에서 명시적으로 exclude_patterns가 전달된 경우
+        # .csaignore 파일을 무시하고 전달된 패턴만 적용
+        raw_patterns = source_options['exclude_patterns']
+        
+        if raw_patterns is not None:
+            use_csaignore_file = False
+            if isinstance(raw_patterns, str):
+                exclude_patterns = [p.strip() for p in raw_patterns.splitlines() if p.strip()]
+            elif isinstance(raw_patterns, list):
+                exclude_patterns = raw_patterns
+            else:
+                exclude_patterns = []
 
     logger.info("Java 파일 수집 중...")
-    java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns)
+    java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
 
     total_files = len(java_files)
     stats['total_files'] = total_files
@@ -1905,13 +1927,14 @@ def parse_java_project_streaming(
     return stats
 
 
-def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[str] = None) -> list[str]:
+def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[str] = None, use_csaignore_file: bool = True) -> list[str]:
     """
     디렉터리에서 .java 파일을 수집하고 .csaignore 필터를 적용합니다.
 
     Args:
         directory: Java 소스 디렉터리 경로
         exclude_patterns: 추가 제외 패턴 목록
+        use_csaignore_file: .csaignore 파일 사용 여부
 
     Returns:
         list[str]: 필터링된 Java 파일 경로 목록
@@ -1928,7 +1951,8 @@ def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[st
     # .csaignore 필터 적용
     csaignore_filter = load_csaignore_filter(
         os.getcwd(),
-        additional_patterns=exclude_patterns
+        additional_patterns=exclude_patterns,
+        use_file=use_csaignore_file
     )
     if csaignore_filter.has_patterns():
         logger.info(".csaignore 패턴 적용 중...")

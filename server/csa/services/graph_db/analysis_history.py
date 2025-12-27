@@ -16,6 +16,7 @@ class AnalysisHistoryMixin:
         summary: str,
         project_name: str,
         preferences: str,
+        preferences_ai: str = "{}",
     ) -> None:
         """
         Record the analysis history to Neo4j.
@@ -30,7 +31,10 @@ class AnalysisHistoryMixin:
             user_id: User ID or 'Server CLI'.
             summary: Textual summary of the analysis.
             project_name: Name of the analyzed project.
-            preferences: JSON string of analysis options.
+            summary: Textual summary of the analysis.
+            project_name: Name of the analyzed project.
+            preferences: JSON string of static analysis options.
+            preferences_ai: JSON string of AI analysis options.
         """
         query = """
         CREATE (h:AnalysisHistory:System)
@@ -44,6 +48,7 @@ class AnalysisHistoryMixin:
             h.summary = $summary,
             h.project_name = $project_name,
             h.preferences = $preferences,
+            h.preferences_ai = $preferences_ai,
             h.created_at = datetime()
         """
         
@@ -62,6 +67,7 @@ class AnalysisHistoryMixin:
             "summary": summary,
             "project_name": project_name,
             "preferences": preferences,
+            "preferences_ai": preferences_ai,
         }
         
         try:
@@ -92,7 +98,7 @@ class AnalysisHistoryMixin:
         query = """
         MATCH (h:AnalysisHistory)
         OPTIONAL MATCH (u:User {id: h.user_id})
-        RETURN h, elementId(h) as id, u.name as user_name
+        RETURN h, elementId(h) as id, u.name as user_name, h.preferences_ai as preferences_ai
         ORDER BY h.created_at DESC
         LIMIT $limit
         """
@@ -105,6 +111,7 @@ class AnalysisHistoryMixin:
                 item = dict(node)
                 item["id"] = record["id"]
                 item["user_name"] = record["user_name"]
+                item["preferences_ai"] = record["preferences_ai"] or "{}"
                 
                 # Aggressively convert non-primitive types to string to avoid serialization errors
                 for key, value in item.items():

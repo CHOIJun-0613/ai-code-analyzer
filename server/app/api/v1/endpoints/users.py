@@ -63,6 +63,25 @@ def update_user_preferences(
     UserService.update_user_preferences(current_user.username, prefs_str)
     return preferences
 
+@router.get("/me/preferences/ai", response_model=Dict[str, Any])
+def read_user_ai_preferences(
+    current_user: UserInDB = Depends(deps.get_current_user),
+):
+    prefs_str = UserService.get_user_ai_preferences(current_user.username)
+    try:
+        return json.loads(prefs_str)
+    except json.JSONDecodeError:
+        return {}
+
+@router.put("/me/preferences/ai", response_model=Dict[str, Any])
+def update_user_ai_preferences(
+    preferences: Dict[str, Any],
+    current_user: UserInDB = Depends(deps.get_current_user),
+):
+    prefs_str = json.dumps(preferences)
+    UserService.update_user_ai_preferences(current_user.username, prefs_str)
+    return preferences
+
 
 @router.put("/{user_id}", response_model=User)
 def update_user(user_id: str, user_update: UserUpdate):

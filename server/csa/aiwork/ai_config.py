@@ -23,7 +23,7 @@ class AIConfig:
 
         # Google Gemini 설정
         self.google_api_key = os.getenv("GOOGLE_API_KEY")
-        self.gemini_model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-1.5-flash")
+        self.gemini_model_name = os.getenv("GEMINI_MODEL_NAME", "gemini-2.0-flash")
 
         # Groq 설정
         self.groq_api_key = os.getenv("GROQ_API_KEY")

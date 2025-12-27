@@ -290,10 +290,26 @@ def analyze_project(
                 # Filter out None values for cleaner JSON
                 preferences_dict = {k: v for k, v in preferences_dict.items() if v is not None}
                 
+                # Separate Static and AI Options
+                ai_config_keys = [
+                    "ai_options",
+                    "use_ai",
+                    "use_ai_analysis"
+                ]
+
+                preferences_static = {k: v for k, v in preferences_dict.items() if k not in ai_config_keys}
+                preferences_ai = {k: v for k, v in preferences_dict.items() if k in ai_config_keys}
+                
+                # If specific AI options are provided in 'ai_options' dictionary, merge them up (optional, but keeps clean)
+                # But 'ai_options' usually contains 'provider', 'model_name' etc.
+                # So we can just keep 'ai_options' inside 'preferences_ai'
+
                 try:
-                    preferences_json = json.dumps(preferences_dict, ensure_ascii=False)
+                    preferences_json = json.dumps(preferences_static, ensure_ascii=False)
+                    preferences_ai_json = json.dumps(preferences_ai, ensure_ascii=False)
                 except Exception:
                     preferences_json = "{}"
+                    preferences_ai_json = "{}"
 
                 db.save_analysis_history(
                     job_id=job_id,
@@ -306,6 +322,7 @@ def analyze_project(
                     summary=summary_text,
                     project_name=project_entity.name,
                     preferences=preferences_json,
+                    preferences_ai=preferences_ai_json,
                 )
             except Exception as history_exc:
                 logger.error(f"Failed to save analysis history: {history_exc}")

@@ -23,17 +23,19 @@ class CSAIgnoreFilter:
     .csaignore 파일을 파싱하여 파일/폴더 필터링 기능을 제공하는 클래스
     """
 
-    def __init__(self, project_root: str | Path, additional_patterns: Optional[List[str]] = None):
+    def __init__(self, project_root: str | Path, additional_patterns: Optional[List[str]] = None, use_file: bool = True):
         """
         Args:
             project_root: 프로젝트 루트 디렉터리 (.csaignore 파일이 위치한 곳)
             additional_patterns: 추가로 적용할 제외 패턴 목록 (UI 등에서 전달됨)
+            use_file: .csaignore 파일 사용 여부 (False면 파일 무시하고 additional_patterns만 사용)
         """
         self.project_root = Path(project_root)
         self.csaignore_path = self.project_root / ".csaignore"
         self.spec: Optional[pathspec.PathSpec] = None
         self.patterns: List[str] = []
         self.additional_patterns = additional_patterns or []
+        self.use_file = use_file
 
         self._load_csaignore()
 
@@ -47,21 +49,24 @@ class CSAIgnoreFilter:
 
         patterns = []
 
-        # 1. 파일에서 로드
-        if self.csaignore_path.exists():
-            try:
-                with open(self.csaignore_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
+        # 1. 파일에서 로드 (use_file=True일 때만)
+        if self.use_file:
+            if self.csaignore_path.exists():
+                try:
+                    with open(self.csaignore_path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
 
-                for line in lines:
-                    line = line.strip()
-                    # 빈 줄이나 주석 제외
-                    if line and not line.startswith("#"):
-                        patterns.append(line)
-            except Exception as e:
-                logger.error(f".csaignore 파일 로드 실패: {e}")
+                    for line in lines:
+                        line = line.strip()
+                        # 빈 줄이나 주석 제외
+                        if line and not line.startswith("#"):
+                            patterns.append(line)
+                except Exception as e:
+                    logger.error(f".csaignore 파일 로드 실패: {e}")
+            else:
+                logger.debug(f".csaignore 파일이 없습니다: {self.csaignore_path}")
         else:
-            logger.debug(f".csaignore 파일이 없습니다: {self.csaignore_path}")
+            logger.debug(".csaignore 파일 로드 건너뜀 (CLI/UI 옵션 우선 적용)")
 
         # 2. 추가 패턴 병합
         if self.additional_patterns:
@@ -153,13 +158,14 @@ class CSAIgnoreFilter:
         return bool(self.spec and self.patterns)
 
 
-def load_csaignore_filter(project_root: Optional[str | Path] = None, additional_patterns: Optional[List[str]] = None) -> CSAIgnoreFilter:
+def load_csaignore_filter(project_root: Optional[str | Path] = None, additional_patterns: Optional[List[str]] = None, use_file: bool = True) -> CSAIgnoreFilter:
     """
     .csaignore 필터를 로드합니다.
 
     Args:
         project_root: 프로젝트 루트 디렉터리 (None이면 현재 작업 디렉터리)
         additional_patterns: 추가로 적용할 제외 패턴 목록 (UI 등에서 전달됨)
+        use_file: .csaignore 파일 사용 여부 (False면 파일 무시하고 additional_patterns만 사용)
 
     Returns:
         CSAIgnoreFilter 인스턴스
@@ -167,7 +173,7 @@ def load_csaignore_filter(project_root: Optional[str | Path] = None, additional_
     if project_root is None:
         project_root = os.getcwd()
 
-    return CSAIgnoreFilter(project_root, additional_patterns)
+    return CSAIgnoreFilter(project_root, additional_patterns, use_file)
 
 
 __all__ = ["CSAIgnoreFilter", "load_csaignore_filter"]

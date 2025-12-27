@@ -24,6 +24,8 @@ class UserService:
             password: $password,
             is_active: $is_active,
             phone_number: $phone_number,
+            preferences: '{}',
+            preferences_ai: '{}',
             created_at: $created_at,
             updated_at: $updated_at
         })
@@ -439,6 +441,34 @@ class UserService:
         
         with pool.session() as session:
             session.run(query, {"username": username, "preferences": preferences})
+
+    @staticmethod
+    def get_user_ai_preferences(username: str) -> str:
+        pool = get_db()
+        query = """
+        MATCH (u:User {id: $username})
+        RETURN u.preferences_ai as preferences_ai
+        """
+        
+        with pool.session() as session:
+            result = session.run(query, {"username": username})
+            record = result.single()
+            if not record:
+                return "{}"
+            
+            return record["preferences_ai"] or "{}"
+
+    @staticmethod
+    def update_user_ai_preferences(username: str, preferences_ai: str):
+        pool = get_db()
+        query = """
+        MATCH (u:User {id: $username})
+        SET u.preferences_ai = $preferences_ai
+        RETURN u
+        """
+        
+        with pool.session() as session:
+            session.run(query, {"username": username, "preferences_ai": preferences_ai})
 
     @staticmethod
     def update_group_projects(group_id: str, project_names: List[str]):

@@ -129,7 +129,17 @@ const Layout: React.FC = () => {
                                         }`}
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                    <span className="whitespace-nowrap">{t('layout.analysis') || "Code Analysis"}</span>
+                                    <span className="whitespace-nowrap">{t('layout.codeStaticAnalysis') || "Code Static Analysis"}</span>
+                                </Link>
+                                <Link
+                                    to="/analysis/ai"
+                                    className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/analysis/ai')
+                                        ? 'bg-indigo-500/10 text-indigo-400'
+                                        : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                                        }`}
+                                >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
+                                    <span className="whitespace-nowrap">{t('layout.codeAiAnalysis') || "Code AI Analysis"}</span>
                                 </Link>
                                 <Link
                                     to="/analysis/history"

@@ -15,7 +15,8 @@ interface AnalysisHistory {
     work_time: string;
     file_count: number;
     summary: string;
-    preferences: string; // JSON string
+    preferences: string; // JSON string of Static options
+    preferences_ai?: string; // JSON string of AI options
     created_at: string;
 }
 
@@ -36,7 +37,7 @@ const AnalysisHistoryList: React.FC = () => {
 
     // Modal State
     const [selectedSummary, setSelectedSummary] = useState<{ id: string, content: string } | null>(null);
-    const [selectedOptions, setSelectedOptions] = useState<{ id: string, content: string } | null>(null);
+    const [selectedOptions, setSelectedOptions] = useState<{ id: string, content: string, title: string } | null>(null);
 
     const fetchHistory = async () => {
         setIsLoading(true);
@@ -68,16 +69,16 @@ const AnalysisHistoryList: React.FC = () => {
         }
     };
 
-    const handleViewOptions = (item: AnalysisHistory) => {
-        let formatted = item.preferences;
+    const handleViewOptions = (id: string, contentStr: string, title: string) => {
+        let formatted = contentStr;
         try {
             // Try to format JSON prettily
-            const parsed = JSON.parse(item.preferences);
+            const parsed = JSON.parse(contentStr);
             formatted = JSON.stringify(parsed, null, 2);
         } catch (e) {
             // If not valid JSON, leave as is
         }
-        setSelectedOptions({ id: item.job_id, content: formatted });
+        setSelectedOptions({ id, content: formatted, title });
     };
 
     const handleSort = (key: SortKey) => {
@@ -183,7 +184,8 @@ const AnalysisHistoryList: React.FC = () => {
                                 {renderSortableHeader(t('analysis.startedAt') || "Started At", 'start_time')}
                                 {renderSortableHeader(t('analysis.duration') || "Duration", 'work_time')}
                                 <th className="px-6 py-4 whitespace-nowrap">{t('analysis.resultSummary') || "Result Summary"}</th>
-                                <th className="px-6 py-4 whitespace-nowrap">{t('analysis.analysisOptions') || "Analysis Options"}</th>
+                                <th className="px-6 py-4 whitespace-nowrap">{t('analysis.staticAnalysisOptions') || "Static Analysis Options"}</th>
+                                <th className="px-6 py-4 whitespace-nowrap">{t('analysis.aiAnalysisOptions') || "AI Analysis Options"}</th>
                                 <th className="px-6 py-4 text-right">{t('analysis.actions') || "Actions"}</th>
                             </tr>
                         </thead>
@@ -240,12 +242,25 @@ const AnalysisHistoryList: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <button
-                                                onClick={() => handleViewOptions(item)}
+                                                onClick={() => handleViewOptions(item.job_id, item.preferences, t('analysis.staticAnalysisOptions') || "Static Analysis Options")}
                                                 className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded hover:text-indigo-600 hover:border-indigo-200 transition-colors"
                                             >
                                                 <Settings className="w-3.5 h-3.5" />
                                                 {t('analysis.view') || "View"}
                                             </button>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {item.preferences_ai && item.preferences_ai !== "{}" ? (
+                                                <button
+                                                    onClick={() => handleViewOptions(item.job_id, item.preferences_ai!, t('analysis.aiAnalysisOptions') || "AI Analysis Options")}
+                                                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded hover:text-indigo-600 hover:border-indigo-200 transition-colors"
+                                                >
+                                                    <Settings className="w-3.5 h-3.5" />
+                                                    {t('analysis.view') || "View"}
+                                                </button>
+                                            ) : (
+                                                <span className="text-slate-400 text-xs">-</span>
+                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button
@@ -265,74 +280,78 @@ const AnalysisHistoryList: React.FC = () => {
             </div>
 
             {/* Summary Modal */}
-            {selectedSummary && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
-                            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-indigo-600" />
-                                {t('analysis.resultSummary') || "Result Summary"}
-                                <span className="text-xs font-normal text-slate-500 ml-2 font-mono">({selectedSummary.id})</span>
-                            </h3>
-                            <button
-                                onClick={() => setSelectedSummary(null)}
-                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-auto p-6 bg-slate-50">
-                            <pre className="whitespace-pre-wrap font-mono text-sm text-slate-700 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                {selectedSummary.content || "No summary available."}
-                            </pre>
-                        </div>
-                        <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
-                            <button
-                                onClick={() => setSelectedSummary(null)}
-                                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium transition-colors"
-                            >
-                                {t('analysis.close') || "Close"}
-                            </button>
+            {
+                selectedSummary && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-indigo-600" />
+                                    {t('analysis.resultSummary') || "Result Summary"}
+                                    <span className="text-xs font-normal text-slate-500 ml-2 font-mono">({selectedSummary.id})</span>
+                                </h3>
+                                <button
+                                    onClick={() => setSelectedSummary(null)}
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-auto p-6 bg-slate-50">
+                                <pre className="whitespace-pre-wrap font-mono text-sm text-slate-700 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                                    {selectedSummary.content || "No summary available."}
+                                </pre>
+                            </div>
+                            <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
+                                <button
+                                    onClick={() => setSelectedSummary(null)}
+                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium transition-colors"
+                                >
+                                    {t('analysis.close') || "Close"}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Options Modal */}
-            {selectedOptions && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
-                            <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                <Settings className="w-5 h-5 text-indigo-600" />
-                                {t('analysis.analysisOptions') || "Analysis Options"}
-                                <span className="text-xs font-normal text-slate-500 ml-2 font-mono">({selectedOptions.id})</span>
-                            </h3>
-                            <button
-                                onClick={() => setSelectedOptions(null)}
-                                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                            >
-                                <X className="w-5 h-5" />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-auto p-0 bg-slate-900">
-                            <pre className="whitespace-pre-wrap font-mono text-xs md:text-sm text-emerald-400 p-6">
-                                {selectedOptions.content || "{}"}
-                            </pre>
-                        </div>
-                        <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
-                            <button
-                                onClick={() => setSelectedOptions(null)}
-                                className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium transition-colors"
-                            >
-                                {t('analysis.close') || "Close"}
-                            </button>
+            {
+                selectedOptions && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+                            <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                    <Settings className="w-5 h-5 text-indigo-600" />
+                                    {selectedOptions.title}
+                                    <span className="text-xs font-normal text-slate-500 ml-2 font-mono">({selectedOptions.id})</span>
+                                </h3>
+                                <button
+                                    onClick={() => setSelectedOptions(null)}
+                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                >
+                                    <X className="w-5 h-5" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-auto p-0 bg-slate-900">
+                                <pre className="whitespace-pre-wrap font-mono text-xs md:text-sm text-emerald-400 p-6">
+                                    {selectedOptions.content || "{}"}
+                                </pre>
+                            </div>
+                            <div className="p-4 border-t border-slate-100 bg-white flex justify-end">
+                                <button
+                                    onClick={() => setSelectedOptions(null)}
+                                    className="px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 text-sm font-medium transition-colors"
+                                >
+                                    {t('analysis.close') || "Close"}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
-        </div>
+        </div >
     );
 };
 

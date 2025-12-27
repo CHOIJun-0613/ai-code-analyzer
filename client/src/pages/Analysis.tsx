@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
-import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, Settings, ChevronDown, ChevronUp, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download } from 'lucide-react';
+import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database } from 'lucide-react';
 
 const Tooltip: React.FC<{ text: string, position?: string, arrowPosition?: string }> = ({ text, position = "left-1/2 -translate-x-1/2", arrowPosition = "left-1/2 -translate-x-1/2" }) => (
     <div className="group relative flex items-center ml-1">
@@ -17,6 +17,7 @@ const Analysis: React.FC = () => {
     const { t } = useTranslation();
     const [file, setFile] = useState<File | null>(null);
     const [sourcePath, setSourcePath] = useState('');
+    const [dbScriptPath, setDbScriptPath] = useState('');
     const [projectName, setProjectName] = useState('');
     const [jobId, setJobId] = useState('');
     const [status, setStatus] = useState('');
@@ -27,18 +28,12 @@ const Analysis: React.FC = () => {
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-    // AI Configuration State
-    const [aiProvider, setAiProvider] = useState('google');
-    const [apiKey, setApiKey] = useState('');
-    const [modelName, setModelName] = useState('');
-    const [apiEndpoint, setApiEndpoint] = useState('');
+    // Standard Options
     const [skipDtoSource, setSkipDtoSource] = useState(true);
     const [skipDtoMethods, setSkipDtoMethods] = useState(true);
     const [scope, setScope] = useState('all');
-    const [showAdvanced, setShowAdvanced] = useState(false);
 
     // Advanced Source Options
-    const [useStreamingParse, setUseStreamingParse] = useState(true);
     const [javaParseWorkers, setJavaParseWorkers] = useState(8);
     const [javaFileParseTimeout, setJavaFileParseTimeout] = useState(120.0);
     const [javaComplexityThreshold, setJavaComplexityThreshold] = useState(50000);
@@ -47,11 +42,6 @@ const Analysis: React.FC = () => {
     const [logLevel, setLogLevel] = useState('INFO');
     const [analysisTarget, setAnalysisTarget] = useState<'all' | 'program' | 'db'>('all');
     const [saveStrategy, setSaveStrategy] = useState<'delete' | 'update'>('delete');
-
-    // Advanced AI Options
-    const [useAiAnalysis, setUseAiAnalysis] = useState(true);
-    const [concurrentAiRequests, setConcurrentAiRequests] = useState(15);
-    const [aiEnrichmentBatchSize, setAiEnrichmentBatchSize] = useState(50);
 
     const logsEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -64,12 +54,6 @@ const Analysis: React.FC = () => {
         try {
             const res = await client.get('/users/me/preferences');
             if (res.data) {
-                // String fields - check for undefined to allow empty strings
-                if (res.data.ai_provider !== undefined) setAiProvider(res.data.ai_provider);
-                if (res.data.api_key !== undefined) setApiKey(res.data.api_key);
-                if (res.data.model_name !== undefined) setModelName(res.data.model_name);
-                if (res.data.api_endpoint !== undefined) setApiEndpoint(res.data.api_endpoint);
-
                 // Boolean fields - check for undefined
                 if (res.data.skip_dto_source !== undefined) setSkipDtoSource(res.data.skip_dto_source);
                 if (res.data.skip_dto_methods !== undefined) setSkipDtoMethods(res.data.skip_dto_methods);
@@ -78,21 +62,14 @@ const Analysis: React.FC = () => {
                 if (res.data.scope !== undefined) setScope(res.data.scope);
 
                 // Advanced Source Options
-                if (res.data.use_streaming_parse !== undefined) setUseStreamingParse(res.data.use_streaming_parse);
                 if (res.data.java_parse_workers !== undefined) setJavaParseWorkers(res.data.java_parse_workers);
                 if (res.data.java_file_parse_timeout !== undefined) setJavaFileParseTimeout(res.data.java_file_parse_timeout);
                 if (res.data.java_complexity_threshold !== undefined) setJavaComplexityThreshold(res.data.java_complexity_threshold);
                 if (res.data.sequence_diagram_include_packages !== undefined) setSequenceDiagramIncludePackages(res.data.sequence_diagram_include_packages);
                 if (res.data.exclude_patterns !== undefined) setExcludePatterns(res.data.exclude_patterns);
-                if (res.data.exclude_patterns !== undefined) setExcludePatterns(res.data.exclude_patterns);
                 if (res.data.log_level !== undefined) setLogLevel(res.data.log_level);
                 if (res.data.analysis_target !== undefined) setAnalysisTarget(res.data.analysis_target);
                 if (res.data.save_strategy !== undefined) setSaveStrategy(res.data.save_strategy);
-
-                // Advanced AI Options
-                if (res.data.use_ai_analysis !== undefined) setUseAiAnalysis(res.data.use_ai_analysis);
-                if (res.data.concurrent_ai_requests !== undefined) setConcurrentAiRequests(res.data.concurrent_ai_requests);
-                if (res.data.ai_enrichment_batch_size !== undefined) setAiEnrichmentBatchSize(res.data.ai_enrichment_batch_size);
             }
         } catch (err) {
             console.error("Failed to fetch preferences", err);
@@ -216,23 +193,15 @@ const Analysis: React.FC = () => {
 
         // Preferences object
         const preferences = {
-            ai_provider: aiProvider,
-            api_key: apiKey,
-            model_name: modelName,
-            api_endpoint: apiEndpoint,
             skip_dto_source: skipDtoSource,
             skip_dto_methods: skipDtoMethods,
             scope: scope,
-            use_streaming_parse: useStreamingParse,
             java_parse_workers: javaParseWorkers,
             java_file_parse_timeout: javaFileParseTimeout,
             java_complexity_threshold: javaComplexityThreshold,
             sequence_diagram_include_packages: sequenceDiagramIncludePackages,
             exclude_patterns: excludePatterns,
             log_level: logLevel,
-            use_ai_analysis: useAiAnalysis,
-            concurrent_ai_requests: concurrentAiRequests,
-            ai_enrichment_batch_size: aiEnrichmentBatchSize,
             analysis_target: analysisTarget,
             save_strategy: saveStrategy
         };
@@ -274,7 +243,7 @@ const Analysis: React.FC = () => {
                 }
 
                 // Advanced Source Options
-                formData.append('use_streaming_parse', String(useStreamingParse));
+                formData.append('use_streaming_parse', 'true');
                 formData.append('java_parse_workers', String(javaParseWorkers));
                 formData.append('java_file_parse_timeout', String(javaFileParseTimeout));
                 formData.append('java_complexity_threshold', String(javaComplexityThreshold));
@@ -282,19 +251,9 @@ const Analysis: React.FC = () => {
                 if (excludePatterns) formData.append('exclude_patterns', excludePatterns);
                 formData.append('log_level', logLevel);
 
-                // Advanced AI Options
-                formData.append('use_ai_analysis', String(useAiAnalysis));
-                if (useAiAnalysis) {
-                    formData.append('use_ai', 'true'); // Backward compatibility
-                    formData.append('ai_provider', aiProvider);
-                    formData.append('concurrent_ai_requests', String(concurrentAiRequests));
-                    formData.append('ai_enrichment_batch_size', String(aiEnrichmentBatchSize));
-                    if (apiKey) formData.append('api_key', apiKey);
-                    if (modelName) formData.append('model_name', modelName);
-                    if (apiEndpoint) formData.append('api_endpoint', apiEndpoint);
-                } else {
-                    formData.append('use_ai', 'false');
-                }
+                // Advanced AI Options - DISABLING AI
+                formData.append('use_ai_analysis', 'false');
+                formData.append('use_ai', 'false');
 
                 // Standard Options
                 formData.append('skip_dto_source', String(skipDtoSource));
@@ -306,6 +265,7 @@ const Analysis: React.FC = () => {
                 const payload: any = {
                     source_folder: sourcePath,
                     project_name: projectName,
+                    db_script_path: dbScriptPath,
 
                     // Save Strategy
                     clean: saveStrategy === 'delete',
@@ -317,7 +277,7 @@ const Analysis: React.FC = () => {
                     all_objects: analysisTarget === 'all',
 
                     // Advanced Source Options
-                    use_streaming_parse: useStreamingParse,
+                    use_streaming_parse: true,
                     java_parse_workers: javaParseWorkers,
                     java_file_parse_timeout: javaFileParseTimeout,
                     java_complexity_threshold: javaComplexityThreshold,
@@ -325,24 +285,15 @@ const Analysis: React.FC = () => {
                     exclude_patterns: excludePatterns,
                     log_level: logLevel,
 
-                    // Advanced AI Options
-                    use_ai_analysis: useAiAnalysis,
-                    use_ai: useAiAnalysis, // Backward compatibility
+                    // Advanced AI Options - DISABLING AI
+                    use_ai_analysis: false,
+                    use_ai: false, // Backward compatibility
 
                     // Standard Options
                     skip_dto_source: skipDtoSource,
                     skip_dto_methods: skipDtoMethods,
                     scope: scope
                 };
-
-                if (useAiAnalysis) {
-                    payload.ai_provider = aiProvider;
-                    payload.concurrent_ai_requests = concurrentAiRequests;
-                    payload.ai_enrichment_batch_size = aiEnrichmentBatchSize;
-                    if (apiKey) payload.api_key = apiKey;
-                    if (modelName) payload.model_name = modelName;
-                    if (apiEndpoint) payload.api_endpoint = apiEndpoint;
-                }
 
                 response = await client.post('/analysis/analyze', payload);
             }
@@ -571,7 +522,7 @@ const Analysis: React.FC = () => {
                         ) : (
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.serverSourcePath')}</label>
-                                <div className="relative">
+                                <div className="relative mb-4">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Terminal className="h-5 w-5 text-slate-400" />
                                     </div>
@@ -580,6 +531,19 @@ const Analysis: React.FC = () => {
                                         placeholder={t('analysis.serverSourcePathPlaceholder')}
                                         value={sourcePath}
                                         onChange={(e) => setSourcePath(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 font-mono text-sm"
+                                    />
+                                </div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.dbScriptPath')}</label>
+                                <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <Database className="h-5 w-5 text-slate-400" />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        placeholder={t('analysis.dbScriptPathPlaceholder')}
+                                        value={dbScriptPath}
+                                        onChange={(e) => setDbScriptPath(e.target.value)}
                                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 font-mono text-sm"
                                     />
                                 </div>
@@ -616,23 +580,15 @@ const Analysis: React.FC = () => {
                                             e.stopPropagation();
                                             try {
                                                 await client.put('/users/me/preferences', {
-                                                    ai_provider: aiProvider,
-                                                    api_key: apiKey,
-                                                    model_name: modelName,
-                                                    api_endpoint: apiEndpoint,
                                                     skip_dto_source: skipDtoSource,
                                                     skip_dto_methods: skipDtoMethods,
                                                     scope: scope,
-                                                    use_streaming_parse: useStreamingParse,
                                                     java_parse_workers: javaParseWorkers,
                                                     java_file_parse_timeout: javaFileParseTimeout,
                                                     java_complexity_threshold: javaComplexityThreshold,
                                                     sequence_diagram_include_packages: sequenceDiagramIncludePackages,
                                                     exclude_patterns: excludePatterns,
                                                     log_level: logLevel,
-                                                    use_ai_analysis: useAiAnalysis,
-                                                    concurrent_ai_requests: concurrentAiRequests,
-                                                    ai_enrichment_batch_size: aiEnrichmentBatchSize,
                                                     analysis_target: analysisTarget,
                                                     save_strategy: saveStrategy
                                                 });
@@ -727,26 +683,6 @@ const Analysis: React.FC = () => {
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
-                                        checked={useAiAnalysis}
-                                        onChange={(e) => setUseAiAnalysis(e.target.checked)}
-                                        className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                                    />
-                                    <span className="text-sm text-slate-700">{t('analysis.enableAiAnalysis')}</span>
-                                    <Tooltip text={t('analysis.enableAiAnalysisTooltip')} />
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
-                                        checked={useStreamingParse}
-                                        onChange={(e) => setUseStreamingParse(e.target.checked)}
-                                        className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
-                                    />
-                                    <span className="text-sm text-slate-700">{t('analysis.useStreamingParse')}</span>
-                                    <Tooltip text={t('analysis.useStreamingParseTooltip')} position="right-0" arrowPosition="right-2" />
-                                </label>
-                                <label className="flex items-center gap-2 cursor-pointer">
-                                    <input
-                                        type="checkbox"
                                         checked={skipDtoSource}
                                         onChange={(e) => setSkipDtoSource(e.target.checked)}
                                         className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
@@ -764,6 +700,20 @@ const Analysis: React.FC = () => {
                                     <span className="text-sm text-slate-700">{t('analysis.skipDtoMethods')}</span>
                                     <Tooltip text={t('analysis.skipDtoMethodsTooltip')} position="right-0" arrowPosition="right-2" />
                                 </label>
+                            </div>
+
+                            {/* Exclude Patterns */}
+                            <div className="pt-4 border-t border-slate-50">
+                                <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
+                                    {t('analysis.excludePatterns')} <Tooltip text={t('analysis.excludePatternsTooltip')} />
+                                </label>
+                                <textarea
+                                    value={excludePatterns}
+                                    onChange={(e) => setExcludePatterns(e.target.value)}
+                                    placeholder={t('analysis.excludePatternsPlaceholder')}
+                                    rows={3}
+                                    className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm font-mono h-[86px]"
+                                />
                             </div>
 
                             {/* Advanced Numerical Inputs */}
@@ -803,22 +753,8 @@ const Analysis: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Exclude Patterns */}
-                            <div className="pt-4 border-t border-slate-50">
-                                <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
-                                    {t('analysis.excludePatterns')} <Tooltip text={t('analysis.excludePatternsTooltip')} />
-                                </label>
-                                <textarea
-                                    value={excludePatterns}
-                                    onChange={(e) => setExcludePatterns(e.target.value)}
-                                    placeholder={t('analysis.excludePatternsPlaceholder')}
-                                    rows={3}
-                                    className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm font-mono h-[86px]"
-                                />
-                            </div>
-
                             {/* Sequence Packages & Log Level */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50 pt-4">
                                 <div>
                                     <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
                                         {t('analysis.includePackages')} <Tooltip text={t('analysis.includePackagesTooltip')} />
@@ -850,103 +786,7 @@ const Analysis: React.FC = () => {
 
                         </div>
 
-                        {/* AI Configuration Section */}
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
-                            <button
-                                type="button"
-                                onClick={() => setShowAdvanced(!showAdvanced)}
-                                className="flex items-center gap-2 font-semibold text-slate-700 hover:text-indigo-600 transition-colors"
-                            >
-                                <Settings className="w-5 h-5 text-indigo-600" />
-                                <span>{t('analysis.aiAnalysisConfiguration')}</span>
-                                {showAdvanced ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
-                            </button>
 
-                            {showAdvanced && (
-                                <div className="pt-4 space-y-4 border-t border-slate-100">
-                                    <div className="space-y-4">
-                                        {/* Row 1: Provider & Model */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('analysis.aiProvider')}</label>
-                                                <select
-                                                    value={aiProvider}
-                                                    onChange={(e) => setAiProvider(e.target.value)}
-                                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                                                >
-                                                    <option value="google">Google Gemini</option>
-                                                    <option value="groq">Groq</option>
-                                                    <option value="lmstudio">LM Studio</option>
-                                                    <option value="openai">OpenAI</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('analysis.modelName')}</label>
-                                                <input
-                                                    type="text"
-                                                    value={modelName}
-                                                    onChange={(e) => setModelName(e.target.value)}
-                                                    placeholder={aiProvider === 'google' ? 'gemini-1.5-flash' : 'Default Model'}
-                                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        {/* Row 2: API Key */}
-                                        {(aiProvider !== 'lmstudio') && (
-                                            <div>
-                                                <label className="block text-sm font-medium text-slate-700 mb-1">{t('analysis.apiKey')}</label>
-                                                <input
-                                                    type="text"
-                                                    value={apiKey}
-                                                    onChange={(e) => setApiKey(e.target.value)}
-                                                    placeholder={t('analysis.apiKeyPlaceholder')}
-                                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Row 3: Endpoint */}
-                                        <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">{t('analysis.apiEndpoint')}</label>
-                                            <input
-                                                type="text"
-                                                value={apiEndpoint}
-                                                onChange={(e) => setApiEndpoint(e.target.value)}
-                                                placeholder={aiProvider === 'lmstudio' ? "http://localhost:1234/v1" : "Optional (Default used if empty)"}
-                                                className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                                            />
-                                        </div>
-
-                                        {/* Row 4: Performance */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1">
-                                                    {t('analysis.concurrentRequests')} <Tooltip text={t('analysis.concurrentRequestsTooltip')} />
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    value={concurrentAiRequests}
-                                                    onChange={(e) => setConcurrentAiRequests(parseInt(e.target.value) || 15)}
-                                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1">
-                                                    {t('analysis.enrichmentBatchSize')} <Tooltip text={t('analysis.enrichmentBatchSizeTooltip')} position="right-0" arrowPosition="right-2" />
-                                                </label>
-                                                <input
-                                                    type="number"
-                                                    value={aiEnrichmentBatchSize}
-                                                    onChange={(e) => setAiEnrichmentBatchSize(parseInt(e.target.value) || 50)}
-                                                    className="w-full px-3 py-2 rounded-lg border border-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
 
 
                         <button
@@ -963,8 +803,6 @@ const Analysis: React.FC = () => {
                         </button>
                     </form>
                 </div>
-
-
             </div>
 
             {/* Confirmation Modal */}
@@ -1004,7 +842,7 @@ const Analysis: React.FC = () => {
             )}
 
             {/* Status Panel */}
-            < div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6" >
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <ActivityIcon className="w-5 h-5 text-indigo-600" />
                     {t('analysis.analysisStatus')}
@@ -1085,8 +923,9 @@ const Analysis: React.FC = () => {
                         </div>
                     )
                 }
-            </div >
-        </div >
+            </div>
+        </div>
+
     );
 };
 
