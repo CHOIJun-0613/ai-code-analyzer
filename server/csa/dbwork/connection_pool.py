@@ -47,17 +47,19 @@ class Neo4jConnectionPool:
             with cls._lock:
                 if cls._instance is None:
                     cls._instance = super().__new__(cls)
+                    cls._instance._initialize_singleton()
         return cls._instance
 
-    def __init__(self) -> None:
-        if hasattr(self, "_initialized"):
-            return
-
-        self._initialized = True
+    def _initialize_singleton(self) -> None:
+        """Initialize the singleton instance attributes."""
         self._pool: "queue.Queue[_ConnectionWrapper]" = queue.Queue()
         self._all_connections: list[_ConnectionWrapper] = []
         self._config: Optional[Neo4jPoolConfig] = None
         self.logger = get_logger(__name__)
+
+    def __init__(self) -> None:
+        """Initialization is handled in __new__ for strict singleton behavior."""
+        pass
 
     # --------------------------------------------------------------------- #
     # Pool lifecycle                                                        #

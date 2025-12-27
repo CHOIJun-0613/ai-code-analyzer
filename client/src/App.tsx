@@ -11,6 +11,7 @@ import Analysis from './pages/Analysis';
 import Admin from './pages/Admin';
 import UserManagement from './pages/Admin/UserManagement';
 import GroupManagement from './pages/Admin/GroupManagement';
+import AnalysisHistoryList from './pages/AnalysisHistoryList';
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     const token = useAuthStore((state: AuthState) => state.token);
@@ -30,6 +31,7 @@ function App() {
                     <Route path="projects/:projectName" element={<ProjectDetails />} />
                     <Route path="projects/:projectName/classes/:className" element={<ClassDetails />} />
                     <Route path="analysis" element={<Analysis />} />
+                    <Route path="analysis/history" element={<AnalysisHistoryList />} />
                     <Route path="admin" element={<Admin />} />
                     <Route path="admin/users" element={<UserManagement />} />
                     <Route path="admin/groups" element={<GroupManagement />} />

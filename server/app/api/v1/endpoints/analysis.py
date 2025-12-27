@@ -11,6 +11,10 @@ from app.api.deps import get_current_user
 from app.models.user import UserInDB
 from csa.utils.context import set_client_id
 
+from app.core.database import get_db
+from csa.services.graph_db import GraphDB
+from app.core.config import settings
+
 router = APIRouter()
 
 class AnalysisRequest(BaseModel):
@@ -85,7 +89,8 @@ def get_active_analysis(
     """Get the current active analysis job for the user."""
     job = get_active_job(current_user.username)
     if not job:
-        raise HTTPException(status_code=404, detail="No active analysis found")
+        # Return empty response (200 OK) instead of 404 to avoid log spam
+        return None
     
     # Return limited info to avoid huge logs payload if not needed
     return {
@@ -197,4 +202,65 @@ def upload_and_analyze(
     except Exception as e:
         shutil.rmtree(temp_dir, ignore_errors=True)
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/history")
+def get_analysis_history(
+    limit: int = 100,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Retrieve list of past analysis jobs."""
+    # Optional: check if user is admin
+    # if not any(g.name == 'Administrators' for g in current_user.groups):
+    #     raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # db = get_db()  <-- Incorrect, returns Neo4jConnectionPool
+    db = GraphDB(settings.NEO4J_URI, settings.NEO4J_USER, settings.NEO4J_PASSWORD, settings.NEO4J_DATABASE)
+    try:
+        history = db.get_analysis_history(limit=limit)
+        return history
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to fetch history: {str(e)}")
+    finally:
+        db.close()
+
+
+@router.delete("/history/{history_id}")
+def delete_analysis_history(
+    history_id: str,
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Delete an analysis history record."""
+    # Check admin permission
+    is_admin = False
+    if current_user.groups:
+        for group in current_user.groups:
+             # Dictionary or object? It's likely Pydantic model or dict from UserInDB
+             # UserInDB definition in app/models/user.py says groups is List[UserGroup]
+             # Let's assume attribute access.
+             if hasattr(group, 'name') and group.name == 'Administrators':
+                 is_admin = True
+                 break
+             elif isinstance(group, dict) and group.get('name') == 'Administrators':
+                 is_admin = True
+                 break
+                 
+    if not is_admin:
+        raise HTTPException(status_code=403, detail="Only administrators can delete history")
+
+    # db = get_db()
+    db = GraphDB(settings.NEO4J_URI, settings.NEO4J_USER, settings.NEO4J_PASSWORD, settings.NEO4J_DATABASE)
+    try:
+        deleted = db.delete_analysis_history(history_id)
+        if not deleted:
+            raise HTTPException(status_code=404, detail="History record not found")
+        return {"success": True, "message": "History record deleted"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete history: {str(e)}")
+    finally:
+        db.close()
 

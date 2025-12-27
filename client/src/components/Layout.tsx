@@ -111,12 +111,38 @@ const Layout: React.FC = () => {
                     </Link>
 
                     {isAdmin && (
-                        <Link to="/analysis" className={getLinkClass('/analysis')} title={isCollapsed ? t('layout.analysis') : ""}>
-                            <FileCode className={`shrink-0 w-5 h-5 transition-colors ${isActive('/analysis') ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
-                            <span className={`ml-3 font-medium whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                                {t('layout.analysis')}
-                            </span>
-                        </Link>
+                        <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/analysis') && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
+                            <Link to="#" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isGroupActive('/analysis') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.analysisManagement') : ""}>
+                                <FileCode className={`shrink-0 w-5 h-5 transition-colors ${isGroupActive('/analysis') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
+                                <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
+                                    {t('layout.analysisManagement') || "Code Analysis Management"}
+                                </span>
+                            </Link>
+
+                            {/* Submenu - Only show when expanded */}
+                            <div className={`pl-11 pr-4 pb-2 space-y-1 ${isCollapsed ? 'hidden' : 'block'}`}>
+                                <Link
+                                    to="/analysis"
+                                    className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/analysis')
+                                        ? 'bg-indigo-500/10 text-indigo-400'
+                                        : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                                        }`}
+                                >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
+                                    <span className="whitespace-nowrap">{t('layout.analysis') || "Code Analysis"}</span>
+                                </Link>
+                                <Link
+                                    to="/analysis/history"
+                                    className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/analysis/history')
+                                        ? 'bg-indigo-500/10 text-indigo-400'
+                                        : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                                        }`}
+                                >
+                                    <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
+                                    <span className="whitespace-nowrap">{t('layout.analysisHistory') || "Analysis Log Management"}</span>
+                                </Link>
+                            </div>
+                        </div>
                     )}
 
                     {isAdmin && (

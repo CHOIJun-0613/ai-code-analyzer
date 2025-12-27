@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 class AnalysisHistoryMixin:
     """Manage Analysis Job History logging."""
@@ -80,3 +78,60 @@ class AnalysisHistoryMixin:
             # I'll print to stderr if it fails, or just re-raise.
             # Let's re-raise and let handlers.py handle it (it has broad except).
             raise e
+
+    def get_analysis_history(self, limit: int = 100) -> List[Dict[str, Any]]:
+        """
+        Retrieve analysis history records.
+        
+        Args:
+            limit: Maximum number of records to return.
+            
+        Returns:
+            List of history records.
+        """
+        query = """
+        MATCH (h:AnalysisHistory)
+        OPTIONAL MATCH (u:User {id: h.user_id})
+        RETURN h, elementId(h) as id, u.name as user_name
+        ORDER BY h.created_at DESC
+        LIMIT $limit
+        """
+        
+        history_list = []
+        with self._driver.session(database=self._database) as session:
+            result = session.run(query, limit=limit)
+            for record in result:
+                node = record["h"]
+                item = dict(node)
+                item["id"] = record["id"]
+                item["user_name"] = record["user_name"]
+                
+                # Aggressively convert non-primitive types to string to avoid serialization errors
+                for key, value in item.items():
+                    if not isinstance(value, (str, int, float, bool, list, dict, type(None))):
+                        item[key] = str(value)
+                        
+                history_list.append(item)
+                
+        return history_list
+
+    def delete_analysis_history(self, node_id: str) -> bool:
+        """
+        Delete an analysis history record by its ID.
+        
+        Args:
+            node_id: The Neo4j elementId of the history node.
+            
+        Returns:
+            True if deleted, False otherwise.
+        """
+        query = """
+        MATCH (h:AnalysisHistory)
+        WHERE elementId(h) = $node_id
+        DETACH DELETE h
+        """
+        
+        with self._driver.session(database=self._database) as session:
+            result = session.run(query, node_id=node_id)
+            consume_result = result.consume()
+            return consume_result.counters.nodes_deleted > 0
