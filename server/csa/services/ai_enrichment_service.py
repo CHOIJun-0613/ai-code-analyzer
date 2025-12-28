@@ -340,9 +340,11 @@ class AIEnrichmentService:
         self.logger.info(f"Processing {total} Class nodes with {concurrent_requests} concurrent requests...")
 
         semaphore = asyncio.Semaphore(concurrent_requests)
+        processed_count = 0  # Shared counter for monotonic progress logging
 
         async def process_class(record, index):
             """Single Class node processing"""
+            nonlocal processed_count
             async with semaphore:
                 class_name_val = record["name"]
                 source = record["source"]
@@ -350,17 +352,25 @@ class AIEnrichmentService:
 
                 try:
                     ai_description = await self.analyzer.analyze_class_async(source, class_name_val)
+                    
+                    # Update counter and log AFTER processing
+                    processed_count += 1
+                    current_count = processed_count
+                    percent = current_count * 100 // total
 
                     if ai_description:
                         self._update_node_ai_description(node_id, ai_description)
-                        self.logger.info(f"[{index}/{total}] Class enriched: {class_name_val}")
+                        self.logger.info(f"[{current_count}/{total}] ({percent}%) Class enriched: {class_name_val}")
                         return {"status": "success"}
                     else:
-                        self.logger.warning(f"[{index}/{total}] Class AI analysis returned empty: {class_name_val}")
+                        self.logger.warning(f"[{current_count}/{total}] ({percent}%) Class AI analysis returned empty: {class_name_val}")
                         return {"status": "failed"}
 
                 except Exception as exc:
-                    self.logger.error(f"[{index}/{total}] Class enrichment failed ({class_name_val}): {exc}")
+                    processed_count += 1
+                    current_count = processed_count
+                    percent = current_count * 100 // total
+                    self.logger.error(f"[{current_count}/{total}] ({percent}%) Class enrichment failed ({class_name_val}): {exc}")
                     return {"status": "failed"}
 
         tasks = [process_class(record, i + 1) for i, record in enumerate(classes)]
@@ -373,7 +383,7 @@ class AIEnrichmentService:
             else:
                 stats["failed"] += 1
 
-        self.logger.info(f"Completed: {total}/{total} (100%) - Success: {stats['success']}, Failed: {stats['failed']}")
+        self.logger.info(f"Completed: {total}/{total} (100%) - Success: {stats['success']}, Failed: {stats['failed']}") # [total/total] (100%) format for final log
         return stats
 
 
@@ -430,9 +440,11 @@ class AIEnrichmentService:
 
         batch_size = 5
         semaphore = asyncio.Semaphore(concurrent_requests)
+        processed_count = 0 # Monotonic counter for batches
 
         async def process_method_batch(batch_records, batch_start_index):
             """Process a batch of Method nodes."""
+            nonlocal processed_count
             async with semaphore:
                 method_items = []
                 node_id_map = {}
@@ -506,11 +518,20 @@ class AIEnrichmentService:
                     except Exception as exc:
                         self.logger.error(f"Method batch enrichment failed (batch {batch_start_index}): {exc}")
                         batch_stats["failed"] += len(method_items)
-
-                batch_end_index = batch_start_index + len(batch_records)
+                
+                # Update monotonic counter
+                processed_count += len(batch_records)
+                current_count = processed_count
+                percent = current_count * 100 // total
+                
+                # batch_end_index is now mostly relevant for debugging which original batch it was, 
+                # but for progress bar consistency we use current_count.
+                # However, original logs used [batch_end/total]. 
+                # Let's use [current_count/total] for consistency.
+                
                 self.logger.info(
-                    f"[{batch_start_index}-{batch_end_index}/{total}] "
-                    f"Batch processed: Success={batch_stats['success']}, Failed={batch_stats['failed']}, Skipped={batch_stats['skipped']}"
+                    f"[{current_count}/{total}] ({percent}%) "
+                    f"Batch processed ({batch_start_index}-{batch_start_index + len(batch_records) - 1}): Success={batch_stats['success']}, Failed={batch_stats['failed']}, Skipped={batch_stats['skipped']}"
                 )
 
                 return batch_stats
@@ -654,9 +675,11 @@ class AIEnrichmentService:
 
         batch_size = 5
         semaphore = asyncio.Semaphore(concurrent_requests)
+        processed_count = 0 # Monotonic counter
 
         async def process_sql_batch(batch_records, batch_start_index):
             """Process a batch of SQL nodes."""
+            nonlocal processed_count
             async with semaphore:
                 sql_items = []
                 node_id_map = {}
@@ -696,15 +719,21 @@ class AIEnrichmentService:
                     missing_count = len(sql_items) - len(batch_results)
                     batch_stats["failed"] += missing_count
 
-                    batch_end_index = batch_start_index + len(batch_records)
+                    processed_count += len(batch_records)
+                    current_count = processed_count
+                    percent = current_count * 100 // total
+                    
                     self.logger.info(
-                        f"[{batch_start_index}-{batch_end_index}/{total}] "
-                        f"Batch processed: Success={batch_stats['success']}, Failed={batch_stats['failed']}"
+                        f"[{current_count}/{total}] ({percent}%) "
+                        f"Batch processed ({batch_start_index}-{batch_start_index + len(batch_records) - 1}): Success={batch_stats['success']}, Failed={batch_stats['failed']}"
                     )
 
                     return batch_stats
 
                 except Exception as exc:
+                    processed_count += len(batch_records)
+                    current_count = processed_count
+                    percent = current_count * 100 // total
                     self.logger.error(f"SQL batch enrichment failed (batch {batch_start_index}): {exc}")
                     return {"success": 0, "failed": len(batch_records)}
 

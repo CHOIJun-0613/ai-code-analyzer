@@ -75,6 +75,8 @@ class GoogleAIProvider(BaseAIProvider):
 
         # 환경변수 설정 (genai.Client가 자동으로 읽음)
         os.environ["GEMINI_API_KEY"] = self.api_key
+        os.environ["GOOGLE_API_KEY"] = self.api_key # Ensure library picks up this key if it prefers GOOGLE_API_KEY
+        os.environ["GOOGLE_GENAI_USE_VERTEXAI"] = "FALSE"
 
         # Google GenAI Wrapper 클래스
         class GoogleGenAIWrapper:
