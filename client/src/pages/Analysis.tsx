@@ -19,6 +19,7 @@ const Analysis: React.FC = () => {
     const [sourcePath, setSourcePath] = useState('');
     const [dbScriptPath, setDbScriptPath] = useState('');
     const [projectName, setProjectName] = useState('');
+    const [applicationName, setApplicationName] = useState('');
     const [jobId, setJobId] = useState('');
     const [status, setStatus] = useState('');
     const [mode, setMode] = useState<'upload' | 'path'>('path');
@@ -219,6 +220,7 @@ const Analysis: React.FC = () => {
                 const formData = new FormData();
                 formData.append('file', file);
                 if (projectName) formData.append('project_name', projectName);
+                if (applicationName) formData.append('application_name', applicationName);
 
                 // Save Strategy
                 if (saveStrategy === 'delete') {
@@ -265,6 +267,7 @@ const Analysis: React.FC = () => {
                 const payload: any = {
                     source_folder: sourcePath,
                     project_name: projectName,
+                    application_name: applicationName,
                     db_script_path: dbScriptPath,
 
                     // Save Strategy
@@ -489,15 +492,28 @@ const Analysis: React.FC = () => {
                     </div>
 
                     <form onSubmit={handleConfirmation} className="p-6 space-y-6">
-                        <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.projectName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
-                            <input
-                                type="text"
-                                placeholder={t('analysis.projectNamePlaceholder')}
-                                value={projectName}
-                                onChange={(e) => setProjectName(e.target.value)}
-                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                            />
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.projectName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
+                                <input
+                                    type="text"
+                                    placeholder={t('analysis.projectNamePlaceholder')}
+                                    value={projectName}
+                                    onChange={(e) => setProjectName(e.target.value)}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.applicationName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
+                                <input
+                                    type="text"
+                                    placeholder={t('analysis.applicationNamePlaceholder')}
+                                    value={applicationName}
+                                    onChange={(e) => setApplicationName(e.target.value)}
+                                    maxLength={30}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                />
+                            </div>
                         </div>
 
                         {mode === 'upload' ? (

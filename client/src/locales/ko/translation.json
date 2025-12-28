@@ -50,6 +50,8 @@
         "projectName": "프로젝트 이름",
         "optional": "(선택사항)",
         "projectNamePlaceholder": "예: 나의 멋진 프로젝트",
+        "applicationName": "어플리케이션 이름",
+        "applicationNamePlaceholder": "예: MyApp",
         "sourceFile": "소스 파일",
         "clickToUpload": "클릭하여 업로드하거나 드래그 앤 드롭하세요",
         "zipFilesOnly": "ZIP 파일만 가능",

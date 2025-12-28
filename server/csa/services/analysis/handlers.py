@@ -186,6 +186,10 @@ def analyze_project(
             logger,
         )
 
+        # [FIX] Streaming 모드에서 Package/Class 저장 시 Project 노드가 존재해야 관계가 생성됨
+        if db and not dry_run:
+            db.add_project(project_entity)
+
         # DB 분석을 먼저 수행하여 스키마 정보를 Neo4j에 저장
         if all_objects or db_object:
             if resolved_db_folder:

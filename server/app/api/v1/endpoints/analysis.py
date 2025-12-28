@@ -117,6 +117,7 @@ def get_analysis_logs(job_id: str):
 def upload_and_analyze(
     file: UploadFile = File(...),
     project_name: Optional[str] = Form(None),
+    application_name: Optional[str] = Form(None),
     clean: bool = Form(False),
     use_ai: bool = Form(False),
     skip_dto_source: bool = Form(True),
@@ -179,6 +180,7 @@ def upload_and_analyze(
         data = {
             "source_folder": extract_path,
             "project_name": project_name or file.filename,
+            "application_name": application_name,
             "clean": clean,
             "use_ai": use_ai,
             "skip_dto_source": skip_dto_source,
