@@ -22,7 +22,9 @@ import {
     Download,
     X,
     CheckCircle,
-    FileCode
+    FileCode,
+    Square,
+    XCircle
 } from 'lucide-react';
 
 // Shared styling classes
@@ -85,7 +87,7 @@ const CodeAiAnalysis: React.FC = () => {
 
     // System State
     const [projects, setProjects] = useState<Project[]>([]);
-    const [status, setStatus] = useState<'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'success' | 'error'>('idle');
+    const [status, setStatus] = useState<'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'success' | 'error' | 'cancelled' | 'cancelling'>('idle');
     // Unified status: 'idle', 'pending', 'running', 'completed' (backend), 'failed' (backend)
     // Legacy mapping: 'success' -> 'completed', 'error' -> 'failed' if needed
 
@@ -96,6 +98,10 @@ const CodeAiAnalysis: React.FC = () => {
     // Modals
     const [showLogModal, setShowLogModal] = useState(false);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
+
+    // Stop Analysis Confirmation State
+    const [stopConfirming, setStopConfirming] = useState(false);
+    const stopConfirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -265,6 +271,33 @@ const CodeAiAnalysis: React.FC = () => {
             console.error("Analysis failed", error);
             setStatus('failed');
             alert(t('aiAnalysis.analysisStartFail', { error: error.response?.data?.detail || error.message }));
+        }
+    };
+
+    const handleStopAnalysis = async () => {
+        if (!jobId) return;
+
+        if (!stopConfirming) {
+            setStopConfirming(true);
+            // Reset confirmation after 3 seconds
+            if (stopConfirmTimeoutRef.current) clearTimeout(stopConfirmTimeoutRef.current);
+            stopConfirmTimeoutRef.current = setTimeout(() => {
+                setStopConfirming(false);
+            }, 3000);
+            return;
+        }
+
+        // Second click: Confirm stop
+        if (stopConfirmTimeoutRef.current) clearTimeout(stopConfirmTimeoutRef.current);
+        setStopConfirming(false);
+
+        try {
+            console.log(`Requesting cancellation for job: ${jobId}`);
+            await client.post(`/ai/${jobId}/cancel`);
+            alert("작업 중지 요청이 전송되었습니다.");
+        } catch (error) {
+            console.error("Failed to stop analysis", error);
+            alert("작업 중지 요청 실패");
         }
     };
 
@@ -560,22 +593,36 @@ const CodeAiAnalysis: React.FC = () => {
             <div className="grid grid-cols-1 gap-6">
                 {/* Execution Card */}
                 <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-lg flex flex-col justify-between min-h-[200px]">
-                    <div>
-                        <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
-                            <Play className="w-6 h-6" />
-                            {t('aiAnalysis.runAnalysis')}
-                        </h2>
-                        <p className="text-indigo-100 opacity-90">
-                            {t('aiAnalysis.target')}: {scope.projectName} ({scope.nodeType.toUpperCase()})
-                        </p>
-                        <div className="flex gap-2 mt-2 flex-wrap">
-                            <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
-                                {aiConfig.provider}
-                            </span>
-                            <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
-                                {aiConfig.concurrent_requests} Concurrent
-                            </span>
+                    <div className="flex justify-between items-start">
+                        <div>
+                            <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
+                                <Play className="w-6 h-6" />
+                                {t('aiAnalysis.runAnalysis')}
+                            </h2>
+                            <p className="text-indigo-100 opacity-90">
+                                {t('aiAnalysis.target')}: {scope.projectName} ({scope.nodeType.toUpperCase()})
+                            </p>
+                            <div className="flex gap-2 mt-2 flex-wrap">
+                                <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
+                                    {aiConfig.provider}
+                                </span>
+                                <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
+                                    {aiConfig.concurrent_requests} Concurrent
+                                </span>
+                            </div>
                         </div>
+                        {status === 'running' && (
+                            <button
+                                onClick={handleStopAnalysis}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold backdrop-blur-sm shadow-sm border ${stopConfirming
+                                    ? "bg-amber-500/80 hover:bg-amber-600 border-amber-400 text-white animate-pulse"
+                                    : "bg-rose-500/20 hover:bg-rose-500/40 border-rose-400/50 text-rose-100"
+                                    }`}
+                            >
+                                <Square className="w-4 h-4 fill-current" />
+                                {stopConfirming ? "정말 중지할까요?" : t('aiAnalysis.stopAnalysis')}
+                            </button>
+                        )}
                     </div>
 
                     <button
@@ -613,6 +660,8 @@ const CodeAiAnalysis: React.FC = () => {
                                             <CheckCircle className="w-5 h-5 text-emerald-500" />
                                         ) : status === 'failed' || status === 'error' ? (
                                             <AlertCircle className="w-5 h-5 text-red-500" />
+                                        ) : status === 'cancelled' ? (
+                                            <XCircle className="w-5 h-5 text-slate-500" />
                                         ) : (
                                             <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
                                         )}

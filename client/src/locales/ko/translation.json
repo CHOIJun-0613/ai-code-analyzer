@@ -163,6 +163,7 @@
         "runAnalysis": "분석 실행 (Run Analysis)",
         "target": "대상",
         "startAnalysis": "분석 시작 (Start Analysis)",
+        "stopAnalysis": "작업 중지 (Stop Analysis)",
         "analyzing": "분석 진행 중...",
         "console": "실행 콘솔 (Console)",
         "started": "시작됨",

@@ -51,7 +51,7 @@ const Login: React.FC = () => {
                         AI Code Analyzer
                     </h1>
                     <p className="text-lg text-slate-200 whitespace-nowrap drop-shadow-md">
-                        AI와 그래프 데이터베이스 기술을 활용한 고급 정적 분석 플랫폼.
+                        Advanced Static Analysis Platform utilizing AI and Graph Database Technology
                     </p>
                 </div>
             </div>

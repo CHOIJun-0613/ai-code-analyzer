@@ -60,6 +60,15 @@ class JobLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
+def _get_cancel_flag_path(job_id: str) -> str:
+    """Get the path for the job cancellation flag file."""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Go up 4 levels: endpoints -> v1 -> api -> app -> server
+    server_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
+    logs_dir = os.path.join(server_root, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    return os.path.join(logs_dir, f"{job_id}.cancel")
+
 def run_enrichment_task(
     job_id: str,
     request: AIEnrichRequest,
@@ -155,6 +164,21 @@ def run_enrichment_task(
         target_class_name = request.class_name
         force_mode = bool(target_class_name)
         
+        def check_stop():
+            # 1. 파일 기반 확인 (멀티 프로세스 호환)
+            cancel_path = _get_cancel_flag_path(job_id)
+            if os.path.exists(cancel_path):
+                task_logger.warning(f"Cancellation flag file detected: {cancel_path}")
+                return True
+
+            # 2. 메모리 기반 확인 (fallback)
+            current_job = jobs.get(job_id, {})
+            status = current_job.get("status")
+            if status == "cancelling":
+                return True
+                
+            return False
+
         stats = service.enrich_project(
             project_name=request.project_name,
             node_type=request.node_type,
@@ -165,12 +189,27 @@ def run_enrichment_task(
             target_method_name=None,
             target_mapper_name=None, 
             target_sql_id=None,
-            force=force_mode
+
+            force=force_mode,
+            stop_check_callback=check_stop
         )
         
         if job_id in jobs:
-            jobs[job_id]["status"] = "completed"
-            jobs[job_id]["result"] = stats
+            current_status = jobs[job_id]["status"]
+            if current_status == "cancelling":
+                jobs[job_id]["status"] = "cancelled"
+                task_logger.warning("Job cancelled by user request.")
+            else:
+                jobs[job_id]["status"] = "completed"
+                jobs[job_id]["result"] = stats
+        
+        # Cleanup cancellation flag file
+        try:
+            cancel_path = _get_cancel_flag_path(job_id)
+            if os.path.exists(cancel_path):
+                os.remove(cancel_path)
+        except Exception:
+            pass
         
         # Summary log
         task_logger.info("========== AI ANALYSIS SUMMARY ==========")
@@ -191,9 +230,9 @@ def run_enrichment_task(
             db.close()
         # Clean up handlers
         task_logger.removeHandler(log_handler)
-        task_logger.removeHandler(file_handler)
-        log_handler.close()
-        file_handler.close()
+        if file_handler:
+             task_logger.removeHandler(file_handler)
+             file_handler.close()
 
 @router.post("/enrich", response_model=AIEnrichResponse)
 def trigger_ai_enrichment(
@@ -271,3 +310,23 @@ def get_job_logs(job_id: str):
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"logs": jobs[job_id].get("logs", [])}
+
+@router.post("/{job_id}/cancel")
+def cancel_job(job_id: str):
+    if job_id not in jobs:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Update status in memory (for current process visibility)
+    jobs[job_id]["status"] = "cancelling"
+    jobs[job_id]["result"] = {"status": "cancelling"}
+    
+    # Create cancellation flag file (for cross-process visibility)
+    try:
+        cancel_path = _get_cancel_flag_path(job_id)
+        with open(cancel_path, 'w') as f:
+            f.write(f"cancelled at {datetime.datetime.now()}")
+    except Exception as e:
+        logging.error(f"Failed to create cancellation flag file: {e}")
+        # Continue anyway, as we updated memory status
+        
+    return {"message": "Cancellation requested", "job_id": job_id}

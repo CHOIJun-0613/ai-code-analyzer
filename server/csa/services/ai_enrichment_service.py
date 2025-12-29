@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import asyncio
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Callable
 
 import click
 
@@ -23,6 +23,8 @@ class AIEnrichmentService:
         self.db = graph_db
         self.analyzer = ai_analyzer
         self.logger = logger
+
+
 
     def _clean_ai_descriptions(self, project_name: str, node_type: str) -> None:
         """Clear ai_description fields for the specified project/node type."""
@@ -89,6 +91,7 @@ class AIEnrichmentService:
         target_mapper_name: Optional[str] = None,
         target_sql_id: Optional[str] = None,
         force: bool = False,
+        stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, Any]:
         """
         Enrich nodes in a project with AI-generated descriptions (비동기 병렬 처리).
@@ -110,7 +113,7 @@ class AIEnrichmentService:
         """
         # 동시 요청 수 결정
         if concurrent_requests is None:
-            concurrent_requests = int(os.getenv("CONCURRENT_AI_REQUESTS", "10"))
+            concurrent_requests = int(os.getenv("CONCURRENT_AI_REQUESTS", "3"))
 
         stats = {
             "total_processed": 0,
@@ -143,7 +146,12 @@ class AIEnrichmentService:
                 limit,
                 class_name=target_class_name if node_type == "class" else None,
                 force=force if node_type == "class" and (target_class_name or target_specified) else False,
+                stop_check_callback=stop_check_callback,
             )
+            if class_stats.get("status") == "cancelled":
+                stats["status"] = "cancelled"
+                self.logger.warning(f"Project enrichment {project_name} stopped (Class cancelled)")
+                return stats
             stats["total_processed"] += class_stats["processed"]
             stats["success_count"] += class_stats["success"]
             stats["fail_count"] += class_stats["failed"]
@@ -158,7 +166,12 @@ class AIEnrichmentService:
                 class_name=target_class_name if target_method_name else None,
                 method_name=target_method_name,
                 force=force if node_type == "method" and (target_method_name or target_specified) else False,
+                stop_check_callback=stop_check_callback,
             )
+            if method_stats.get("status") == "cancelled":
+                stats["status"] = "cancelled"
+                self.logger.warning(f"Project enrichment {project_name} stopped (Method cancelled)")
+                return stats
             stats["total_processed"] += method_stats["processed"]
             stats["success_count"] += method_stats["success"]
             stats["fail_count"] += method_stats["failed"]
@@ -173,7 +186,12 @@ class AIEnrichmentService:
                 mapper_name=target_mapper_name if node_type == "sql" else None,
                 sql_id=target_sql_id if node_type == "sql" else None,
                 force=force if node_type == "sql" and (target_mapper_name or target_sql_id) else False,
+                stop_check_callback=stop_check_callback,
             )
+            if sql_stats.get("status") == "cancelled":
+                stats["status"] = "cancelled"
+                self.logger.warning(f"Project enrichment {project_name} stopped (SQL cancelled)")
+                return stats
             stats["total_processed"] += sql_stats["processed"]
             stats["success_count"] += sql_stats["success"]
             stats["fail_count"] += sql_stats["failed"]
@@ -195,6 +213,7 @@ class AIEnrichmentService:
         target_mapper_name: Optional[str] = None,
         target_sql_id: Optional[str] = None,
         force: bool = False,
+        stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, Any]:
         """
         Enrich nodes in a project with AI-generated descriptions (하위 호환성을 위한 동기 버전).
@@ -221,6 +240,7 @@ class AIEnrichmentService:
             target_mapper_name=target_mapper_name,
             target_sql_id=target_sql_id,
             force=force,
+            stop_check_callback=stop_check_callback,
         ))
 
     def _enrich_classes(
@@ -300,6 +320,7 @@ class AIEnrichmentService:
         limit: Optional[int],
         class_name: Optional[str] = None,
         force: bool = False,
+        stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, int]:
         """Enrich Class nodes with AI descriptions (비동기 병렬 처리)."""
         stats = {"processed": 0, "success": 0, "failed": 0, "skipped": 0}
@@ -346,12 +367,21 @@ class AIEnrichmentService:
             """Single Class node processing"""
             nonlocal processed_count
             async with semaphore:
+                # Check cancellation
+                if stop_check_callback and stop_check_callback():
+                    return {"status": "cancelled"}
+
                 class_name_val = record["name"]
                 source = record["source"]
                 node_id = record["node_id"]
 
                 try:
-                    ai_description = await self.analyzer.analyze_class_async(source, class_name_val)
+                    ai_description = await self.analyzer.analyze_class_async(
+                        source, 
+                        class_name_val, 
+                        stop_check_callback=stop_check_callback,
+                        logger=self.logger
+                    )
                     
                     # Update counter and log AFTER processing
                     processed_count += 1
@@ -377,6 +407,11 @@ class AIEnrichmentService:
         results = await asyncio.gather(*tasks)
 
         for result in results:
+            if result.get("status") == "cancelled":
+                self.logger.warning("Class enrichment cancelled by user request.")
+                stats["status"] = "cancelled"
+                break
+                
             stats["processed"] += 1
             if result["status"] == "success":
                 stats["success"] += 1
@@ -395,6 +430,7 @@ class AIEnrichmentService:
         class_name: Optional[str] = None,
         method_name: Optional[str] = None,
         force: bool = False,
+        stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, int]:
         """Enrich Method nodes with AI descriptions (배치 처리)."""
         stats = {"processed": 0, "success": 0, "failed": 0, "skipped": 0}
@@ -446,6 +482,10 @@ class AIEnrichmentService:
             """Process a batch of Method nodes."""
             nonlocal processed_count
             async with semaphore:
+                # Check cancellation
+                if stop_check_callback and stop_check_callback():
+                    return {"status": "cancelled", "success": 0, "failed": 0, "skipped": 0}
+
                 method_items = []
                 node_id_map = {}
                 skipped_methods = []
@@ -497,7 +537,11 @@ class AIEnrichmentService:
 
                 if method_items:
                     try:
-                        batch_results = await self.analyzer.analyze_method_batch_async(method_items)
+                        batch_results = await self.analyzer.analyze_method_batch_async(
+                            method_items, 
+                            stop_check_callback=stop_check_callback,
+                            logger=self.logger
+                        )
 
                         for method_id, ai_description in batch_results.items():
                             node_info = node_id_map.get(method_id)
@@ -544,6 +588,10 @@ class AIEnrichmentService:
         batch_results = await asyncio.gather(*batch_tasks)
 
         for batch_stat in batch_results:
+            if batch_stat.get("status") == "cancelled":
+                self.logger.warning("Method enrichment cancelled by user request.")
+                stats["status"] = "cancelled"
+                break
             stats["processed"] += batch_stat["success"] + batch_stat["failed"] + batch_stat.get("skipped", 0)
             stats["success"] += batch_stat["success"]
             stats["failed"] += batch_stat["failed"]
@@ -630,6 +678,7 @@ class AIEnrichmentService:
         mapper_name: Optional[str] = None,
         sql_id: Optional[str] = None,
         force: bool = False,
+        stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, int]:
         """Enrich SqlStatement nodes with AI descriptions (배치 처리)."""
         stats = {"processed": 0, "success": 0, "failed": 0, "skipped": 0}
@@ -681,6 +730,10 @@ class AIEnrichmentService:
             """Process a batch of SQL nodes."""
             nonlocal processed_count
             async with semaphore:
+                # Check cancellation
+                if stop_check_callback and stop_check_callback():
+                    return {"status": "cancelled", "success": 0, "failed": 0}
+
                 sql_items = []
                 node_id_map = {}
                 for record in batch_records:
@@ -698,7 +751,11 @@ class AIEnrichmentService:
                     }
 
                 try:
-                    batch_results = await self.analyzer.analyze_sql_batch_async(sql_items)
+                    batch_results = await self.analyzer.analyze_sql_batch_async(
+                        sql_items,
+                        stop_check_callback=stop_check_callback,
+                        logger=self.logger
+                    )
 
                     batch_stats = {"success": 0, "failed": 0}
 
@@ -745,6 +802,10 @@ class AIEnrichmentService:
         batch_results = await asyncio.gather(*batch_tasks)
 
         for batch_stat in batch_results:
+            if batch_stat.get("status") == "cancelled":
+                self.logger.warning("SQL enrichment cancelled by user request.")
+                stats["status"] = "cancelled"
+                break
             stats["processed"] += batch_stat["success"] + batch_stat["failed"]
             stats["success"] += batch_stat["success"]
             stats["failed"] += batch_stat["failed"]
