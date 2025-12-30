@@ -14,7 +14,7 @@ REM Config
 REM ==========================
 set CONTAINER=neo4j-db
 set IMAGE=neo4j:5-community
-set DB=csadb01
+set DB=refinerdb
 set DATA_VOL=neo4j_data
 set DUMPS_DIR=/data/dumps
 
