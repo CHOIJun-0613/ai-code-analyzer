@@ -456,10 +456,12 @@ const ClassDetails: React.FC = () => {
 
                             {(classData.description || classData.ai_description) && (
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-3">Description</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 mb-3">Overview</h3>
                                     <div className="space-y-4">
                                         {classData.description && (
-                                            <p className="text-slate-600 leading-relaxed">{classData.description}</p>
+                                            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed">
+                                                <Markdown remarkPlugins={[remarkGfm]}>{classData.description}</Markdown>
+                                            </div>
                                         )}
                                         <div className="prose prose-slate max-w-none text-slate-600 border border-slate-200 rounded-lg p-4 bg-slate-50/50 max-h-[600px] overflow-y-auto mt-4">
                                             {classData.ai_description ? (

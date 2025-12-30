@@ -17,6 +17,15 @@ from app.core.config import settings
 
 router = APIRouter()
 
+def _get_cancel_flag_path(job_id: str) -> str:
+    """Get the path for the job cancellation flag file."""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    # Go up 4 levels: endpoints -> v1 -> api -> app -> server
+    server_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
+    logs_dir = os.path.join(server_root, "logs")
+    os.makedirs(logs_dir, exist_ok=True)
+    return os.path.join(logs_dir, f"{job_id}.cancel")
+
 class AnalysisRequest(BaseModel):
     source_folder: str
     project_name: Optional[str] = None
@@ -112,6 +121,23 @@ def get_analysis_logs(job_id: str):
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
     return {"logs": job.get("logs", [])}
+
+@router.post("/analyze/{job_id}/cancel")
+def cancel_analysis(job_id: str):
+    job = get_job_status(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # Create cancellation flag file
+    try:
+        cancel_path = _get_cancel_flag_path(job_id)
+        with open(cancel_path, 'w') as f:
+            import datetime
+            f.write(f"cancelled at {datetime.datetime.now()}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create cancellation flag: {str(e)}")
+        
+    return {"message": "Cancellation requested", "job_id": job_id}
 
 @router.post("/analyze/upload")
 def upload_and_analyze(

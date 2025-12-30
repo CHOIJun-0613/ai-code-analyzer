@@ -128,10 +128,16 @@
         "saveSummary": "결과 저장",
     
         "close": "닫기",
-        "analysisConfirmTitle": "분석 시작 확인",
-        "analysisConfirmMessage": "소스 코드 분석 작업은 수분에서 수십분 정도 소요되는 작업입니다.\n분석작업을 정말로 시작하시겠습니까?",
+        "analysisConfirmTitle": "분석 프로세스 시작",
+        "analysisConfirmMessage": "대규모 프로젝트의 경우 분석에 상당한 시간이 소요될 수 있습니다.\n현재 설정으로 분석 프로세스를 시작하시겠습니까?",
         "confirm": "확인",
-        "cancel": "취소"
+        "cancel": "취소",
+        "runAnalysis": "분석 실행",
+        "stopAnalysis": "분석 중지",
+        "confirmStop": "중지 확인",
+        "analyzing": "분석 중...",
+        "analysisStopConfirmTitle": "분석 중지 확인",
+        "analysisStopConfirmMessage": "분석 작업을 중지하시겠습니까?\n진행 중인 작업 내용은 저장되지 않습니다."
     },
     "aiAnalysis": {
         "title": "코드 AI 분석",

@@ -7,9 +7,9 @@ import {
     Settings as SettingsIcon,
     BrainCircuit,
     Play,
-    Terminal,
+
     AlertCircle,
-    CheckCircle2,
+
     Database,
     Eraser,
     RefreshCw,
@@ -32,7 +32,7 @@ const cardClass = "bg-white p-6 rounded-2xl shadow-sm border border-slate-200 tr
 const labelClass = "block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2";
 const inputClass = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all duration-200 text-sm";
 const radioClass = "w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 focus:ring-indigo-500";
-const descriptionClass = "text-xs text-slate-500 mt-1 ml-1";
+
 const sectionTitleClass = "text-lg font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2";
 
 interface AiConfig {
@@ -106,23 +106,7 @@ const CodeAiAnalysis: React.FC = () => {
     const logsEndRef = useRef<HTMLDivElement>(null);
 
     // Standard local log adder (for client side actions)
-    const addLog = (message: string, type: 'info' | 'error' | 'success' = 'info') => {
-        // We only use this for initial setup logs or errors before job starts.
-        // Once job starts, we rely on server logs.
-        const timestamp = new Date().toLocaleTimeString();
-        // Since we are now polling server logs, mixed usage is tricky.
-        // We'll keep a separate local log state if needed, or just push to logs array if it's empty?
-        // Actually, let's keep it simple: "logs" state tracks SERVER logs when job is running.
-        // Before job, or for config actions, we can alert or use a separate notification system.
-        // For now, to minimize disruption, we'll append to logs but server polling will overwrite/append.
-        // We will separate "Client Logs" and "Server Logs"?
-        // Analysis.tsx only shows server logs.
-        // CodeAiAnalysis previously showed client side logs.
-        // We will try to append client logs to the same list, but server polling might reset it if we setLogs(res.data.logs).
-        // Best approach: "logs" is for Server Job Logs.
-        // Client feedback can use alerts or a separate tiny status area, but let's just use console/alert for client actions to simplify.
-        // Or we can just ignore client logs for now as Status Panel is robust.
-    };
+
 
     // Scroll to bottom of logs
     useEffect(() => {

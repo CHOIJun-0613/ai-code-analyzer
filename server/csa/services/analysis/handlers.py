@@ -132,6 +132,27 @@ def analyze_project(
     use_ai_analysis: bool = False,
 ) -> Dict[str, object]:
     """Analyze project artifacts and optionally persist them into Neo4j."""
+    
+    # Cancellation Check Helper
+    def check_cancellation(job_id: str, logger):
+        if not job_id: return
+        
+        # 1. Check flag file
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        # handlers.py -> analysis -> services -> csa -> server
+        server_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
+        logs_dir = os.path.join(server_root, "logs")
+        cancel_path = os.path.join(logs_dir, f"{job_id}.cancel")
+        
+        if os.path.exists(cancel_path):
+            logger.warning(f"Cancellation flag detected for job {job_id}")
+            # Cleanup flag
+            try:
+                os.remove(cancel_path)
+            except:
+                pass
+            raise KeyboardInterrupt("Analysis canceled by user request")
+
     overall_start_time = datetime.now()
     resolved_db_folder = _resolve_db_script_folder(db_script_folder, logger)
     java_stats: Optional[JavaAnalysisStats] = None
@@ -190,6 +211,9 @@ def analyze_project(
         if db and not dry_run:
             db.add_project(project_entity)
 
+        # Check Cancellation
+        check_cancellation(job_id, logger)
+
         # DB 분석을 먼저 수행하여 스키마 정보를 Neo4j에 저장
         if all_objects or db_object:
             if resolved_db_folder:
@@ -202,6 +226,9 @@ def analyze_project(
                 logger.warning("Database script folder not provided - skipping database analysis")
                 logger.info("To analyze database objects, use --db-script-folder option to specify the path to SQL script files")
 
+        # Check Cancellation
+        check_cancellation(job_id, logger)
+
         # Java 분석을 나중에 수행하여 DB 스키마와의 관계를 정확하게 연결
         if all_objects or java_object:
             artifacts, final_project_name = analyze_full_project_java(
@@ -213,6 +240,9 @@ def analyze_project(
                 source_options=source_options,
                 use_ai_analysis=use_ai_analysis,
             )
+            
+            # Check Cancellation
+            check_cancellation(job_id, logger)
 
             if final_project_name:
                 project_entity.name = final_project_name

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
-import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database } from 'lucide-react';
+import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database, Square, RotateCw, Rocket } from 'lucide-react';
 
 const Tooltip: React.FC<{ text: string, position?: string, arrowPosition?: string }> = ({ text, position = "left-1/2 -translate-x-1/2", arrowPosition = "left-1/2 -translate-x-1/2" }) => (
     <div className="group relative flex items-center ml-1">
@@ -28,6 +28,7 @@ const Analysis: React.FC = () => {
     const [showLogModal, setShowLogModal] = useState(false);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showStopConfirmModal, setShowStopConfirmModal] = useState(false);
 
     // Standard Options
     const [skipDtoSource, setSkipDtoSource] = useState(true);
@@ -207,6 +208,8 @@ const Analysis: React.FC = () => {
             save_strategy: saveStrategy
         };
 
+
+
         // Save preferences
         try {
             await client.put('/users/me/preferences', preferences);
@@ -307,6 +310,23 @@ const Analysis: React.FC = () => {
             alert("Failed to start analysis");
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const handleStopAnalysis = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (!jobId) return;
+        setShowStopConfirmModal(true);
+    };
+
+    const executeStopAnalysis = async () => {
+        if (!jobId) return;
+        try {
+            await client.post(`/analysis/analyze/${jobId}/cancel`);
+            setShowStopConfirmModal(false);
+        } catch (error) {
+            console.error("Failed to stop analysis", error);
+            alert("Failed to stop analysis");
         }
     };
 
@@ -805,52 +825,139 @@ const Analysis: React.FC = () => {
 
 
 
-                        <button
-                            type="submit"
-                            disabled={isLoading || status === 'running' || (mode === 'upload' && !file) || (mode === 'path' && !sourcePath)}
-                            className="w-full flex items-center justify-center py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl shadow-lg shadow-indigo-500/30 transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:translate-y-0"
-                        >
-                            {isLoading ? (
-                                <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                            ) : (
-                                <Play className="w-5 h-5 mr-2" />
-                            )}
-                            {isLoading ? t('analysis.startingAnalysis') : t('analysis.startAnalysis')}
-                        </button>
+                        <div className="mt-8 bg-indigo-600 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200">
+                            <div className="flex items-start justify-between mb-6">
+                                <div>
+                                    <h3 className="text-xl font-bold flex items-center gap-2 mb-2">
+                                        <Play className="w-6 h-6 fill-current" />
+                                        {t('analysis.runAnalysis')}
+                                    </h3>
+                                    <div className="flex flex-wrap gap-2 text-indigo-100 text-sm">
+                                        <span>Target: {analysisTarget.toUpperCase()}</span>
+                                        <span>•</span>
+                                        <span>Strategy: {saveStrategy.toUpperCase()}</span>
+                                        {projectName && (
+                                            <>
+                                                <span>•</span>
+                                                <span>Project: {projectName}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    <div className="flex gap-2 mt-3">
+                                        <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
+                                            {javaParseWorkers} Workers
+                                        </span>
+                                        <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
+                                            {mode === 'upload' ? 'Upload Mode' : 'Path Mode'}
+                                        </span>
+                                    </div>
+                                </div>
+                                {(status === 'running' || status === 'pending') && (
+                                    <button
+                                        onClick={handleStopAnalysis}
+                                        type="button"
+                                        className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold backdrop-blur-sm shadow-sm border bg-rose-500/20 hover:bg-rose-500/40 border-rose-400/50 text-rose-100"
+                                    >
+                                        <Square className="w-4 h-4 fill-current" />
+                                        {t('analysis.stopAnalysis')}
+                                    </button>
+                                )}
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={isLoading || status === 'running' || (mode === 'upload' && !file) || (mode === 'path' && !sourcePath)}
+                                className={`w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${isLoading || status === 'running' ? 'cursor-wait' : ''
+                                    }`}
+                            >
+                                {isLoading || status === 'running' ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <RotateCw className="w-5 h-5 animate-spin" />
+                                        {status === 'running' ? t('analysis.analyzing') : t('analysis.startingAnalysis')}
+                                    </span>
+                                ) : (
+                                    t('analysis.startAnalysis')
+                                )}
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
 
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6">
-                            <h3 className="text-lg font-medium leading-6 text-gray-900 flex items-center gap-2">
-                                <AlertCircle className="w-6 h-6 text-indigo-600" />
-                                {t('analysis.analysisConfirmTitle')}
-                            </h3>
-                            <div className="mt-4">
-                                <p className="text-sm text-gray-500 whitespace-pre-wrap leading-relaxed">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="p-8">
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-indigo-50/50">
+                                    <Rocket className="w-8 h-8 text-indigo-600" />
+                                </div>
+
+                                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                    {t('analysis.analysisConfirmTitle')}
+                                </h3>
+
+                                <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
                                     {t('analysis.analysisConfirmMessage')}
                                 </p>
-                            </div>
 
-                            <div className="mt-6 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    className="inline-flex justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors"
-                                    onClick={() => setShowConfirmModal(false)}
-                                >
-                                    {t('common.cancel')}
-                                </button>
-                                <button
-                                    type="button"
-                                    className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 transition-colors"
-                                    onClick={executeAnalysis}
-                                >
-                                    {t('analysis.confirm')}
-                                </button>
+                                <div className="flex gap-3 w-full">
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                        onClick={() => setShowConfirmModal(false)}
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-[0.98]"
+                                        onClick={executeAnalysis}
+                                    >
+                                        {t('analysis.confirm')}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Stop Confirmation Modal */}
+            {showStopConfirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="p-8">
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
+                                    <Square className="w-8 h-8 text-rose-500 fill-current" />
+                                </div>
+
+                                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                    {t('analysis.analysisStopConfirmTitle')}
+                                </h3>
+
+                                <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
+                                    {t('analysis.analysisStopConfirmMessage')}
+                                </p>
+
+                                <div className="flex gap-3 w-full">
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                        onClick={() => setShowStopConfirmModal(false)}
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-rose-600 text-white font-semibold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-700 hover:shadow-rose-300 transition-all active:scale-[0.98]"
+                                        onClick={executeStopAnalysis}
+                                    >
+                                        {t('analysis.confirm')}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -944,6 +1051,7 @@ const Analysis: React.FC = () => {
 
     );
 };
+
 
 
 

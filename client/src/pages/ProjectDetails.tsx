@@ -35,6 +35,7 @@ interface ProjectStats {
 interface ClassItem {
     name: string;
     logical_name?: string;
+    packageName?: string; // Added for global search context
 }
 
 interface HierarchyItem {
@@ -214,10 +215,22 @@ const ProjectDetails: React.FC = () => {
 
     const selectedHierarchyItem = hierarchy.find(h => h.package === selectedPackage);
 
-    const filteredClasses = selectedHierarchyItem?.classes.filter(cls =>
-        cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (cls.logical_name && cls.logical_name.toLowerCase().includes(searchQuery.toLowerCase()))
-    ) || [];
+    const filteredClasses = React.useMemo(() => {
+        if (!searchQuery) {
+            return selectedHierarchyItem?.classes.map(c => ({ ...c, packageName: selectedPackage || '' })) || [];
+        }
+
+        // Global search across all packages
+        const allMatches: ClassItem[] = [];
+        hierarchy.forEach(pkg => {
+            const matches = pkg.classes.filter(cls =>
+                cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (cls.logical_name && cls.logical_name.toLowerCase().includes(searchQuery.toLowerCase()))
+            );
+            matches.forEach(m => allMatches.push({ ...m, packageName: pkg.package }));
+        });
+        return allMatches;
+    }, [searchQuery, hierarchy, selectedHierarchyItem, selectedPackage]);
 
     if (isLoading) {
         return (
@@ -593,17 +606,22 @@ const ProjectDetails: React.FC = () => {
                             </div>
                         </div>
 
-                        {selectedHierarchyItem && (
+                        {selectedHierarchyItem && !searchQuery && (
                             <span className="text-xs font-medium px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-500 ml-4 whitespace-nowrap">
                                 {filteredClasses.length} / {selectedHierarchyItem.classes.length} items
                             </span>
                         )}
+                        {searchQuery && (
+                            <span className="text-xs font-medium px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-500 ml-4 whitespace-nowrap">
+                                {filteredClasses.length} results found
+                            </span>
+                        )}
                     </div>
                     <div className="flex-1 overflow-y-auto p-0">
-                        {!selectedPackage ? (
+                        {!selectedPackage && !searchQuery ? (
                             <div className="flex flex-col items-center justify-center h-full text-slate-400">
                                 <FolderOpen className="w-12 h-12 mb-2 opacity-20" />
-                                <p>Select a package to view its classes</p>
+                                <p>Select a package to view its classes or search globally</p>
                             </div>
                         ) : (
                             <div>
@@ -617,15 +635,16 @@ const ProjectDetails: React.FC = () => {
                                     <table className="w-full text-left border-collapse">
                                         <thead className="bg-slate-50 sticky top-0 z-10 text-xs font-semibold text-slate-500 uppercase tracking-wider">
                                             <tr>
-                                                <th className="px-6 py-3 border-b border-slate-100 w-1/2">Physical Name</th>
-                                                <th className="px-6 py-3 border-b border-slate-100 w-1/2">Logical Name</th>
+                                                <th className="px-6 py-3 border-b border-slate-100 w-1/3">Physical Name</th>
+                                                <th className="px-6 py-3 border-b border-slate-100 w-1/3">Logical Name</th>
+                                                {searchQuery && <th className="px-6 py-3 border-b border-slate-100 w-1/3">Package</th>}
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100">
                                             {filteredClasses.map((cls, idx) => (
                                                 <tr
                                                     key={idx}
-                                                    onClick={() => navigate(`/projects/${encodeURIComponent(projectName || '')}/classes/${encodeURIComponent(cls.name)}?package=${encodeURIComponent(selectedPackage || '')}`)}
+                                                    onClick={() => navigate(`/projects/${encodeURIComponent(projectName || '')}/classes/${encodeURIComponent(cls.name)}?package=${encodeURIComponent(cls.packageName || selectedPackage || '')}`)}
                                                     className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
                                                 >
                                                     <td className="px-6 py-3">
@@ -641,6 +660,13 @@ const ProjectDetails: React.FC = () => {
                                                             {cls.logical_name || '-'}
                                                         </span>
                                                     </td>
+                                                    {searchQuery && (
+                                                        <td className="px-6 py-3">
+                                                            <span className="text-slate-400 text-xs truncate max-w-[200px] block" title={cls.packageName}>
+                                                                {cls.packageName}
+                                                            </span>
+                                                        </td>
+                                                    )}
                                                 </tr>
                                             ))}
                                         </tbody>

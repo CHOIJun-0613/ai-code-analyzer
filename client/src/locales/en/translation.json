@@ -121,10 +121,16 @@
         "saveLog": "Save Log",
         "saveSummary": "Save Summary",
         "close": "Close",
-        "analysisConfirmTitle": "Start Analysis?",
-        "analysisConfirmMessage": "Source code analysis takes minutes to tens of minutes.\nDo you really want to start?",
+        "analysisConfirmTitle": "Initiate Analysis",
+        "analysisConfirmMessage": "Analysis may take a significant amount of time depending on the project size.\nDo you want to proceed with the analysis?",
         "confirm": "Confirm",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "runAnalysis": "Run Analysis",
+        "stopAnalysis": "Stop Analysis",
+        "confirmStop": "Confirm Stop",
+        "analyzing": "Analyzing...",
+        "analysisStopConfirmTitle": "Stop Analysis",
+        "analysisStopConfirmMessage": "Are you sure you want to stop the analysis? Progress will be lost."
     },
     "aiAnalysis": {
         "title": "AI Code Analysis",

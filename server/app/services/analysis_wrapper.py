@@ -102,6 +102,10 @@ def run_analysis_task(job_id: str, params: dict, user_id: str):
         jobs[job_id]["result"] = result
         logger.info(f"Analysis job {job_id} completed with status: {jobs[job_id]['status']}")
         
+    except KeyboardInterrupt:
+        logger.warning(f"Analysis job {job_id} canceled by user")
+        jobs[job_id]["status"] = "canceled"
+        jobs[job_id]["error"] = "Analysis canceled by user"
     except Exception as e:
         logger.error(f"Analysis failed: {e}")
         jobs[job_id]["status"] = "failed"
