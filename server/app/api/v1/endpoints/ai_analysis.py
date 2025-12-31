@@ -211,14 +211,7 @@ def run_enrichment_task(
         except Exception:
             pass
         
-        # Summary log
-        task_logger.info("========== AI ANALYSIS SUMMARY ==========")
-        task_logger.info(f"Project: {request.project_name}")
-        task_logger.info(f"Total Processed: {stats.get('total_processed', 0)}")
-        task_logger.info(f"Success: {stats.get('success_count', 0)}")
-        task_logger.info(f"Failed: {stats.get('fail_count', 0)}")
-        task_logger.info(f"Skipped: {stats.get('skipped_count', 0)}")
-        task_logger.info("=========================================")
+
 
     except Exception as e:
         task_logger.error(f"AI Enrichment task failed: {e}", exc_info=True)
@@ -227,6 +220,91 @@ def run_enrichment_task(
             jobs[job_id]["error"] = str(e)
     finally:
         if db:
+            try:
+                # Save Analysis History
+                end_time = datetime.datetime.now()
+                start_time = datetime.datetime.fromisoformat(jobs[job_id]["created_at"])
+                duration_delta = end_time - start_time
+                total_seconds = int(duration_delta.total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                duration_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+                status = jobs[job_id].get("status", "unknown")
+                if status == "completed":
+                    result_status = "Completed"
+                elif status == "cancelled" or status == "cancelling":
+                    result_status = "Canceled"
+                else:
+                    result_status = "Failed"
+
+                # Safe access to stats
+                s_total = stats.get('total_processed', 0) if 'stats' in locals() else 0
+                s_success = stats.get('success_count', 0) if 'stats' in locals() else 0
+                s_failed = stats.get('fail_count', 0) if 'stats' in locals() else 0
+                s_skipped = stats.get('skipped_count', 0) if 'stats' in locals() else 0
+                
+                summary_lines = [
+                    "========== AI ANALYSIS SUMMARY ==========",
+                    f"Project: {request.project_name}",
+                    f"Target Node Type: {request.node_type.upper()}",
+                    f"Status: {result_status}",
+                    f"Start Time: {start_time.strftime('%Y-%m-%d %H:%M:%S')}",
+                    f"End Time: {end_time.strftime('%Y-%m-%d %H:%M:%S')}",
+                    f"Duration: {duration_str}",
+                    "",
+                    f"AI Provider: {ai_options.get('provider', 'Unknown')}",
+                    f"Model Name: {ai_options.get('model_name', 'Unknown')}",
+                    "",
+                    f"Total Processed: {s_total}",
+                    f"Success: {s_success}",
+                    f"Failed: {s_failed}",
+                    f"Skipped: {s_skipped}",
+                    "========================================="
+                ]
+                
+                if result_status == "Failed":
+                     summary_lines.insert(3, f"Error: {jobs[job_id].get('error', 'Unknown error')}")
+                     
+                summary_text = "\n".join(summary_lines)
+                
+                # Log the unified summary to the file/task logger
+                task_logger.info(summary_text)
+
+                # Construct AI preferences JSON
+                ai_prefs_to_save = {
+                    "provider": ai_options.get("provider"),
+                    "model_name": ai_options.get("model_name"),
+                    "concurrent_requests": concurrent,
+                    "target_node_type": request.node_type,
+                    "clean": request.clean,
+                    "limit": request.limit,
+                    "class_name": request.class_name,
+                    "log_level": request.log_level
+                }
+                
+                try:
+                    preferences_ai_json = json.dumps(ai_prefs_to_save, ensure_ascii=False)
+                except:
+                    preferences_ai_json = "{}"
+
+                db.save_analysis_history(
+                    job_id=job_id,
+                    start_time=start_time,
+                    end_time=end_time,
+                    duration=duration_str,
+                    file_count=stats.get('total_processed', 0) if 'stats' in locals() else 0,
+                    result=result_status,
+                    user_id=user_id,
+                    summary=summary_text,
+                    project_name=request.project_name,
+                    preferences="{}", # Static options empty for AI-only run
+                    preferences_ai=preferences_ai_json,
+                    analysis_type="AI",
+                )
+            except Exception as history_exc:
+                task_logger.error(f"Failed to save analysis history: {history_exc}")
+
             db.close()
         # Clean up handlers
         task_logger.removeHandler(log_handler)

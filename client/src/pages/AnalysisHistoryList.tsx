@@ -17,6 +17,7 @@ interface AnalysisHistory {
     summary: string;
     preferences: string; // JSON string of Static options
     preferences_ai?: string; // JSON string of AI options
+    analysis_type?: string; // 'Static' or 'AI'
     created_at: string;
 }
 
@@ -178,14 +179,14 @@ const AnalysisHistoryList: React.FC = () => {
                         <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
                             <tr>
                                 {renderSortableHeader(t('analysis.jobId') || "Job ID", 'job_id')}
+                                <th className="px-6 py-4 whitespace-nowrap">{t('analysis.analysisType') || "Analysis Type"}</th>
                                 {renderSortableHeader(t('analysis.project') || "Project", 'project_name')}
                                 {renderSortableHeader(t('analysis.user') || "User", 'user_id')}
                                 {renderSortableHeader(t('analysis.status') || "Result", 'result')}
                                 {renderSortableHeader(t('analysis.startedAt') || "Started At", 'start_time')}
                                 {renderSortableHeader(t('analysis.duration') || "Duration", 'work_time')}
                                 <th className="px-6 py-4 whitespace-nowrap">{t('analysis.resultSummary') || "Result Summary"}</th>
-                                <th className="px-6 py-4 whitespace-nowrap">{t('analysis.staticAnalysisOptions') || "Static Analysis Options"}</th>
-                                <th className="px-6 py-4 whitespace-nowrap">{t('analysis.aiAnalysisOptions') || "AI Analysis Options"}</th>
+                                <th className="px-6 py-4 whitespace-nowrap">{t('analysis.analysisOptions') || "Analysis Options"}</th>
                                 <th className="px-6 py-4 text-right">{t('analysis.actions') || "Actions"}</th>
                             </tr>
                         </thead>
@@ -210,6 +211,14 @@ const AnalysisHistoryList: React.FC = () => {
                                     <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
                                         <td className="px-6 py-4 font-mono text-xs text-slate-600">
                                             {item.job_id}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${item.analysis_type === 'AI'
+                                                ? 'bg-purple-50 text-purple-700 border-purple-200'
+                                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                                                }`}>
+                                                {item.analysis_type === 'AI' ? (t('analysis.typeAi') || "AI") : (t('analysis.typeStatic') || "Static")}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4 font-medium text-slate-900">
                                             {item.project_name || '-'}
@@ -242,25 +251,17 @@ const AnalysisHistoryList: React.FC = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             <button
-                                                onClick={() => handleViewOptions(item.job_id, item.preferences, t('analysis.staticAnalysisOptions') || "Static Analysis Options")}
+                                                onClick={() => {
+                                                    const isAi = item.analysis_type === 'AI';
+                                                    const content = isAi ? (item.preferences_ai || "{}") : item.preferences;
+                                                    const title = t('analysis.analysisOptions') || "Analysis Options";
+                                                    handleViewOptions(item.job_id, content, title);
+                                                }}
                                                 className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded hover:text-indigo-600 hover:border-indigo-200 transition-colors"
                                             >
                                                 <Settings className="w-3.5 h-3.5" />
                                                 {t('analysis.view') || "View"}
                                             </button>
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            {item.preferences_ai && item.preferences_ai !== "{}" ? (
-                                                <button
-                                                    onClick={() => handleViewOptions(item.job_id, item.preferences_ai!, t('analysis.aiAnalysisOptions') || "AI Analysis Options")}
-                                                    className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded hover:text-indigo-600 hover:border-indigo-200 transition-colors"
-                                                >
-                                                    <Settings className="w-3.5 h-3.5" />
-                                                    {t('analysis.view') || "View"}
-                                                </button>
-                                            ) : (
-                                                <span className="text-slate-400 text-xs">-</span>
-                                            )}
                                         </td>
                                         <td className="px-6 py-4 text-right">
                                             <button

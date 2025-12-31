@@ -318,6 +318,9 @@ def analyze_project(
                     "java_object": java_object,
                     "db_object": db_object,
                     "all_objects": all_objects,
+                    "update": update,
+                    "skip_dto_source": skip_dto_source,
+                    "skip_dto_methods": skip_dto_methods,
                     "use_ai": use_ai,  # backward compatibility
                     "use_ai_analysis": use_ai_analysis,
                     "ai_options": ai_options,
@@ -348,6 +351,8 @@ def analyze_project(
                     preferences_json = "{}"
                     preferences_ai_json = "{}"
 
+                analysis_type = "AI" if use_ai_analysis else "Static"
+
                 db.save_analysis_history(
                     job_id=job_id,
                     start_time=overall_start_time,
@@ -360,6 +365,7 @@ def analyze_project(
                     project_name=project_entity.name,
                     preferences=preferences_json,
                     preferences_ai=preferences_ai_json,
+                    analysis_type=analysis_type,
                 )
             except Exception as history_exc:
                 logger.error(f"Failed to save analysis history: {history_exc}")

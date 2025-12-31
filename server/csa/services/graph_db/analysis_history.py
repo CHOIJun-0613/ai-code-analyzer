@@ -17,6 +17,7 @@ class AnalysisHistoryMixin:
         project_name: str,
         preferences: str,
         preferences_ai: str = "{}",
+        analysis_type: str = "Static",
     ) -> None:
         """
         Record the analysis history to Neo4j.
@@ -35,6 +36,7 @@ class AnalysisHistoryMixin:
             project_name: Name of the analyzed project.
             preferences: JSON string of static analysis options.
             preferences_ai: JSON string of AI analysis options.
+            analysis_type: Type of analysis ('Static' or 'AI').
         """
         query = """
         CREATE (h:AnalysisHistory:System)
@@ -49,6 +51,7 @@ class AnalysisHistoryMixin:
             h.project_name = $project_name,
             h.preferences = $preferences,
             h.preferences_ai = $preferences_ai,
+            h.analysis_type = $analysis_type,
             h.created_at = datetime()
         """
         
@@ -68,6 +71,7 @@ class AnalysisHistoryMixin:
             "project_name": project_name,
             "preferences": preferences,
             "preferences_ai": preferences_ai,
+            "analysis_type": analysis_type,
         }
         
         try:
@@ -98,7 +102,7 @@ class AnalysisHistoryMixin:
         query = """
         MATCH (h:AnalysisHistory)
         OPTIONAL MATCH (u:User {id: h.user_id})
-        RETURN h, elementId(h) as id, u.name as user_name, h.preferences_ai as preferences_ai
+        RETURN h, elementId(h) as id, u.name as user_name, h.preferences_ai as preferences_ai, h.analysis_type as analysis_type
         ORDER BY h.created_at DESC
         LIMIT $limit
         """
@@ -112,6 +116,7 @@ class AnalysisHistoryMixin:
                 item["id"] = record["id"]
                 item["user_name"] = record["user_name"]
                 item["preferences_ai"] = record["preferences_ai"] or "{}"
+                item["analysis_type"] = record["analysis_type"] or "Static"
                 
                 # Aggressively convert non-primitive types to string to avoid serialization errors
                 for key, value in item.items():

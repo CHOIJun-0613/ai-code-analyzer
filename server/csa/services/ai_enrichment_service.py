@@ -573,9 +573,12 @@ class AIEnrichmentService:
                 # However, original logs used [batch_end/total]. 
                 # Let's use [current_count/total] for consistency.
                 
+                processed_items_str = ", ".join([f"{item['class_name']}.{item['method_name']}" for item in method_items])
                 self.logger.info(
                     f"[{current_count}/{total}] ({percent}%) "
-                    f"Batch processed ({batch_start_index}-{batch_start_index + len(batch_records) - 1}): Success={batch_stats['success']}, Failed={batch_stats['failed']}, Skipped={batch_stats['skipped']}"
+                    f"Batch processed ({batch_start_index}-{batch_start_index + len(batch_records) - 1}): "
+                    f"Success={batch_stats['success']}, Failed={batch_stats['failed']}, Skipped={batch_stats['skipped']} "
+                    f"[{processed_items_str}]"
                 )
 
                 return batch_stats
@@ -780,9 +783,12 @@ class AIEnrichmentService:
                     current_count = processed_count
                     percent = current_count * 100 // total
                     
+                    processed_items_str = ", ".join([f"{item['mapper_name']}.{item['sql_id']}" for item in node_id_map.values()])
                     self.logger.info(
                         f"[{current_count}/{total}] ({percent}%) "
-                        f"Batch processed ({batch_start_index}-{batch_start_index + len(batch_records) - 1}): Success={batch_stats['success']}, Failed={batch_stats['failed']}"
+                        f"Batch processed ({batch_start_index}-{batch_start_index + len(batch_records) - 1}): "
+                        f"Success={batch_stats['success']}, Failed={batch_stats['failed']} "
+                        f"[{processed_items_str}]"
                     )
 
                     return batch_stats
