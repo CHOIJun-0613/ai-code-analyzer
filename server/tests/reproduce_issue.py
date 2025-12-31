@@ -55,6 +55,20 @@ public class TestClass {
         self.assertIn('System.out.println("Body")', method_newline.source)
         self.assertIn('}', method_newline.source)
         
+        # Verify Metadata logic
+        print("\n--- Metadata for testMethodWithBraceOnNewLine ---")
+        print(method_newline.metadata)
+        print("---------------------------------------------")
+        self.assertIn("/**", method_newline.metadata)
+        self.assertIn("* Metadata Comment", method_newline.metadata)
+        self.assertIn("@Override", method_newline.metadata)
+        
+        # Verify Source contains everything (metadata + signature + body)
+        self.assertIn("/**", method_newline.source)
+        self.assertIn("@Override", method_newline.source)
+        self.assertIn("public void testMethodWithBraceOnNewLine", method_newline.source)
+        self.assertIn('System.out.println("Body")', method_newline.source)
+        
         # Test Case 2: Brace on same line
         method_sameline = next((m for m in class_node.methods if m.name == "testMethodWithBraceOnSameLine"), None)
         self.assertIsNotNone(method_sameline)
@@ -64,6 +78,13 @@ public class TestClass {
         print("---------------------------------------------")
         
         self.assertIn('System.out.println("Body")', method_sameline.source)
+        
+        print("\n--- Metadata for testMethodWithBraceOnSameLine ---")
+        print(method_sameline.metadata)
+        print("---------------------------------------------")
+        self.assertIn("* Metadata Comment for Same Line", method_sameline.metadata)
+
+        print("\nAll tests passed!")
 
 if __name__ == "__main__":
     unittest.main()

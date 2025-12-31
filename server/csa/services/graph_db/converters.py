@@ -157,6 +157,7 @@ def build_method_records(
                 "ai_description": getattr(method, "ai_description", "") or "",
                 "logical_name": getattr(method, "logical_name", "") or "",
                 "source": getattr(method, "source", "") or "",
+                "metadata": getattr(method, "metadata", "") or "",
                 "PLOC": getattr(method, "PLOC", 0),
                 "LLOC": getattr(method, "LLOC", 0),
                 "CLOC": getattr(method, "CLOC", 0),

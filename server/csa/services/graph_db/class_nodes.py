@@ -317,6 +317,7 @@ class ClassMixin:
                     meth.ai_description = m.ai_description,
                     meth.logical_name = m.logical_name,
                     meth.source = m.source,
+                    meth.metadata = m.metadata,
                     meth.package_name = m.package_name,
                     meth.project_name = m.project_name,
                     meth.PLOC = m.PLOC,

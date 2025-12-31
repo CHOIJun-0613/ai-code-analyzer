@@ -28,6 +28,7 @@ class Method(BaseModel):
     parameters: list[Field] = []
     modifiers: list[str] = []
     source: str = ""
+    metadata: str = ""
     package_name: str = ""
     annotations: list[Annotation] = []
     description: str = ""  # Brief description of the method

@@ -616,24 +616,27 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 modifiers = list(declaration.modifiers)
                 method_annotations = parse_annotations(declaration.annotations, "method") if hasattr(declaration, 'annotations') else []
                 
-                method_source = ""
+                method_metadata = ""
                 if declaration.position:
                     lines = file_content.splitlines(keepends=True)
-                    start_line = declaration.position.line - 1
+                    original_start_line = declaration.position.line - 1
+                    start_line = original_start_line
                     
                     brace_count = 0
                     end_line = start_line
+                    found_opening_brace = False
                     for i in range(start_line, len(lines)):
                         line = lines[i]
                         for char in line:
                             if char == '{':
                                 brace_count += 1
+                                found_opening_brace = True
                             elif char == '}':
                                 brace_count -= 1
-                                if brace_count == 0:
+                                if found_opening_brace and brace_count == 0:
                                     end_line = i
                                     break
-                        if brace_count == 0:
+                        if found_opening_brace and brace_count == 0:
                             break
                     
                     # 어노테이션 위치 고려하여 시작 라인 조정
@@ -647,6 +650,10 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     start_line = _scan_for_preceding_comments(lines, start_line)
 
                     method_source = "".join(lines[start_line:end_line + 1])
+                    
+                    # Metadata 추출 (start_line ~ original_start_line)
+                    if start_line < original_start_line:
+                        method_metadata = "".join(lines[start_line:original_start_line])
                 
                 # 논리명 추출 시도 (rule001: @BxmCategory의 logicalName 파라미터에서 추출)
                 from csa.services.java_parser_addon_r001 import extract_method_logical_name_from_annotations
@@ -691,6 +698,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     parameters=params,
                     modifiers=modifiers,
                     source=method_source,
+                    metadata=method_metadata,
                     package_name=package_name,
                     annotations=method_annotations,
                     description=method_description if method_description else "",
