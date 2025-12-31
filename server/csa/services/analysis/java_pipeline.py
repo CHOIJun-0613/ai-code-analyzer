@@ -20,6 +20,7 @@ def analyze_full_project_java(
     ai_options: dict = None,
     source_options: dict = None,
     use_ai_analysis: bool = False,
+    stop_check_callback: callable = None,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     Parse Java sources and resolve the effective project name.
@@ -32,6 +33,7 @@ def analyze_full_project_java(
         ai_options: AI 분석 옵션 (provider, api_key 등)
         source_options: 소스 분석 고급 옵션 (streaming, workers, timeout 등)
         use_ai_analysis: AI 분석 시스템 활성화 여부
+        stop_check_callback: 분석 중단 확인 콜백 함수
         
     Returns:
         Tuple[JavaAnalysisArtifacts, str]: 분석 결과 및 프로젝트명
@@ -47,10 +49,10 @@ def analyze_full_project_java(
 
     if use_streaming:
         logger.info("Using STREAMING parsing mode (memory efficient)")
-        return _analyze_with_streaming(java_source_folder, project_name, graph_db, logger, ai_options, source_options, use_ai_analysis)
+        return _analyze_with_streaming(java_source_folder, project_name, graph_db, logger, ai_options, source_options, use_ai_analysis, stop_check_callback)
     else:
         logger.info("Using BATCH parsing mode (traditional)")
-        return _analyze_with_batch(java_source_folder, project_name, logger, source_options=source_options)
+        return _analyze_with_batch(java_source_folder, project_name, logger, source_options=source_options, stop_check_callback=stop_check_callback)
 
 
 def _analyze_with_streaming(
@@ -61,6 +63,7 @@ def _analyze_with_streaming(
     ai_options: dict = None,
     source_options: dict = None,
     use_ai_analysis: bool = False,
+    stop_check_callback: callable = None,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     스트리밍 방식으로 Java 프로젝트 분석.
@@ -103,6 +106,7 @@ def _analyze_with_streaming(
         ai_options=ai_options,
         source_options=source_options,
         use_ai_analysis=use_ai_analysis,
+        stop_check_callback=stop_check_callback,
     )
 
     # 종료 시간 기록
@@ -155,6 +159,7 @@ def _analyze_with_batch(
     project_name: Optional[str],
     logger,
     source_options: dict = None,
+    stop_check_callback: callable = None,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     배치 방식으로 Java 프로젝트 분석 (기존 방식).
@@ -186,7 +191,7 @@ def _analyze_with_batch(
         test_classes,
         sql_statements,
         detected_project_name,
-    ) = parse_java_project_full(java_source_folder, source_options=source_options)
+    ) = parse_java_project_full(java_source_folder, source_options=source_options, stop_check_callback=stop_check_callback)
 
     final_project_name = determine_project_name(project_name, detected_project_name, logger)
     logger.info("Project name: %s", final_project_name)

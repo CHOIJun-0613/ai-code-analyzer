@@ -8,4 +8,4 @@ trigger: always_on
 - 환경 변수는 `.env`와 헬퍼를 통해 주입하며, 서비스나 CLI 계층에 경로나 자격 증명을 하드코딩하지 않는다
 
 ## Server module을 실행할경우
-- 가상환경을 먼저 activation하고 나서 실행한
+- 가상환경을 먼저 activation하고 나서 실행할 

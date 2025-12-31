@@ -36,6 +36,15 @@ const Login: React.FC = () => {
 
     return (
         <div className="min-h-screen flex bg-slate-900 font-sans">
+            <style>{`
+                @keyframes marquee {
+                    0% { transform: translateX(100%); }
+                    100% { transform: translateX(-100%); }
+                }
+                .animate-marquee {
+                    animation: marquee 15s linear infinite;
+                }
+            `}</style>
             {/* Left Side - Visual */}
             <div className="hidden lg:flex lg:w-1/2 relative overflow-hidden bg-black">
                 <img
@@ -46,13 +55,15 @@ const Login: React.FC = () => {
                 <div className="absolute inset-0 bg-black/60" />
                 <MatrixRain className="absolute inset-0 w-full h-full opacity-40 mix-blend-screen" />
                 <div className="absolute inset-0 bg-gradient-to-r from-slate-900/10 to-slate-900/40" />
-                <div className="absolute bottom-0 left-0 p-12 w-full bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent">
-                    <h1 className="text-4xl font-bold text-white mb-4 drop-shadow-lg">
+                <div className="absolute bottom-0 left-0 p-12 w-full bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent overflow-hidden">
+                    <h1 className="text-4xl font-bold text-[#00FF00] mb-4 drop-shadow-[0_0_10px_rgba(0,255,0,0.5)]">
                         AI Code Analyzer
                     </h1>
-                    <p className="text-lg text-slate-200 whitespace-nowrap drop-shadow-md">
-                        Advanced Static Analysis Platform utilizing AI and Graph Database Technology
-                    </p>
+                    <div className="w-full overflow-hidden">
+                        <p className="text-lg text-slate-200 whitespace-nowrap drop-shadow-md animate-marquee inline-block">
+                            Advanced Static Analysis Platform utilizing AI and Graph Database Technology
+                        </p>
+                    </div>
                 </div>
             </div>
 
@@ -69,13 +80,13 @@ const Login: React.FC = () => {
                         <div className="flex justify-center mb-6">
                             <AnimatedLogo className="w-24 h-24" />
                         </div>
-                        <h2 className="text-3xl font-bold text-white tracking-tight">환영합니다</h2>
+                        <h2 className="text-3xl font-bold text-white tracking-tight">Welcome</h2>
                     </div>
 
                     <form onSubmit={handleSubmit} className="mt-8 space-y-6">
                         <div className="space-y-5">
                             <div className="relative group">
-                                <label className="text-sm font-medium text-slate-300 ml-1 mb-1 block">아이디</label>
+                                <label className="text-sm font-medium text-slate-300 ml-1 mb-1 block">Username</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <User className="h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
@@ -85,14 +96,14 @@ const Login: React.FC = () => {
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         className="block w-full pl-11 pr-4 py-3.5 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200"
-                                        placeholder="아이디를 입력하세요"
+                                        placeholder="Enter your username"
                                         required
                                     />
                                 </div>
                             </div>
 
                             <div className="relative group">
-                                <label className="text-sm font-medium text-slate-300 ml-1 mb-1 block">비밀번호</label>
+                                <label className="text-sm font-medium text-slate-300 ml-1 mb-1 block">Password</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                         <Lock className="h-5 w-5 text-slate-500 group-focus-within:text-indigo-400 transition-colors" />
@@ -102,7 +113,7 @@ const Login: React.FC = () => {
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
                                         className="block w-full pl-11 pr-12 py-3.5 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all duration-200"
-                                        placeholder="비밀번호를 입력하세요"
+                                        placeholder="Enter your password"
                                         required
                                     />
                                     <button
@@ -129,7 +140,7 @@ const Login: React.FC = () => {
                                 <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             ) : (
                                 <>
-                                    로그인
+                                    Login
                                     <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                 </>
                             )}
@@ -137,9 +148,9 @@ const Login: React.FC = () => {
 
                         <div className="text-center mt-6">
                             <p className="text-sm text-slate-400">
-                                계정이 없으신가요?{' '}
+                                No account?{' '}
                                 <button type="button" className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors">
-                                    관리자에게 문의
+                                    Contact administrator
                                 </button>
                             </p>
                         </div>

@@ -804,7 +804,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
 def parse_java_project_full(
     directory: str,
     graph_db: GraphDB = None,
-    source_options: dict = None
+    source_options: dict = None,
+    stop_check_callback: callable = None,
 ) -> tuple[
     list[Package], list[Class], dict[str, str], list[Bean], list[BeanDependency],
     list[Endpoint], list[MyBatisMapper], list[JpaEntity], list[JpaRepository],
@@ -868,6 +869,9 @@ def parse_java_project_full(
     logger.info(f"총 {total_classes}개 클래스 발견")
 
     for file_path in java_files:
+        if stop_check_callback:
+            stop_check_callback()
+            
         java_file_count += 1
         logger.debug(f"Processing Java file {java_file_count}: {file_path}")
 
@@ -1440,6 +1444,7 @@ def parse_java_project_streaming(
     ai_options: dict = None,
     source_options: dict = None,
     use_ai_analysis: bool = False,
+    stop_check_callback: callable = None,
 ) -> dict:
     """
     스트리밍 방식 Java 프로젝트 파싱
@@ -1658,174 +1663,184 @@ def parse_java_project_streaming(
         }
 
         # 완료된 순서대로 처리 (타임아웃 없음 - 개별 파일 타임아웃만 적용)
-        for future in as_completed(future_to_file):
-            file_path = future_to_file[future]
-            try:
-                # 파싱 결과 획득 (개별 파일 타임아웃 적용)
-                try:
-                    _, package_node, class_node, inner_classes, package_name = future.result(timeout=file_timeout)
-                except TimeoutError:
-                    # 파일명만 추출 (경로 제거)
-                    file_name = os.path.basename(file_path)
-                    with progress_lock:
-                        processed_classes += 1
-                        timeout_files += 1
-                        current_timeout = timeout_files
-                    logger.warning(f"⏱️  파싱 타임아웃 #{current_timeout} ({file_timeout}초 초과): {file_name}")
-                    continue
+        try:
+            for future in as_completed(future_to_file):
+                if stop_check_callback:
+                    stop_check_callback()
 
-                # 파싱 실패 시 (에러 메시지가 package_name에 담김)
-                if class_node is None:
+                file_path = future_to_file[future]
+                try:
+                    # 파싱 결과 획득 (개별 파일 타임아웃 적용)
+                    try:
+                        _, package_node, class_node, inner_classes, package_name = future.result(timeout=file_timeout)
+                    except TimeoutError:
+                        # 파일명만 추출 (경로 제거)
+                        file_name = os.path.basename(file_path)
+                        with progress_lock:
+                            processed_classes += 1
+                            timeout_files += 1
+                            current_timeout = timeout_files
+                        logger.warning(f"⏱️  파싱 타임아웃 #{current_timeout} ({file_timeout}초 초과): {file_name}")
+                        continue
+
+                    # 파싱 실패 시 (에러 메시지가 package_name에 담김)
+                    if class_node is None:
+                        file_name = os.path.basename(file_path)
+                        with progress_lock:
+                            processed_classes += 1
+                            failed_files += 1
+                            current_failed = failed_files
+                        if isinstance(package_name, str) and package_name:
+                            logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name} - {package_name}")
+                        else:
+                            logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name}")
+                        continue
+
+                    # 버퍼에 추가 및 배치 저장 여부 결정 (Lock 범위 최소화)
+                    batch_to_save = None
+                    should_log_progress = False
+                    current_percent = 0
+                    current_processed = 0
+
+                    with progress_lock:
+                        # Top-level 클래스와 Inner classes를 함께 저장
+                        parsed_buffer.append((package_node, class_node, inner_classes, package_name))
+                        processed_classes += 1
+                        current_processed = processed_classes
+
+                        # 진행 상황 로깅 체크 - 5초마다 또는 10% 단위
+                        current_percent = int((processed_classes / total_files) * 100) if total_files > 0 else 0
+                        current_time = time.time()  # Lock 안에서 시간 획득 (중복 출력 방지)
+                        time_since_last_log = current_time - last_logged_time
+
+                        # 5초 경과 또는 10% 단위 도달 또는 마지막 파일 시 로그 출력
+                        # (10% 단위는 정확히 한 번만 출력되도록 last_logged_percent로 제어)
+                        if time_since_last_log >= progress_interval:
+                            # 5초 경과: 항상 출력
+                            last_logged_time = current_time
+                            should_log_progress = True
+                        elif current_percent >= last_logged_percent + 10 and current_percent % 10 == 0:
+                            # 10% 단위 도달: 한 번만 출력
+                            last_logged_percent = current_percent
+                            last_logged_time = current_time
+                            should_log_progress = True
+                        elif processed_classes == total_files:
+                            # 마지막 파일: 반드시 출력
+                            last_logged_time = current_time
+                            should_log_progress = True
+
+                        # 배치 저장 조건: 크기 도달 OR 마지막 파일 OR 시간 경과
+                        time_since_last_save = current_time - last_batch_save_time
+                        current_batch_size = batch_sizer.get_current_size()
+                        should_save_batch = (
+                            len(parsed_buffer) >= current_batch_size or  # 동적 배치 크기 도달
+                            processed_classes == total_files or  # 마지막 파일
+                            (len(parsed_buffer) > 0 and time_since_last_save >= batch_save_interval)  # 시간 경과
+                        )
+
+                        if should_save_batch:
+                            # Lock 내에서는 복사만 수행 (최소 시간)
+                            batch_to_save = parsed_buffer.copy()
+                            parsed_buffer.clear()
+                            last_batch_save_time = current_time  # 마지막 저장 시간 갱신
+
+                    # Lock 밖에서 로깅 수행
+                    if should_log_progress:
+                        elapsed = time.time() - parse_start_time
+                        files_per_sec = current_processed / elapsed if elapsed > 0 else 0
+                        remaining = total_files - current_processed
+                        eta_seconds = remaining / files_per_sec if files_per_sec > 0 else 0
+                        eta_minutes = int(eta_seconds / 60)
+
+                        # 메모리 사용량 측정
+                        process = psutil.Process()
+                        memory_mb = process.memory_info().rss / 1024 / 1024
+
+                        # [mm:ss] 형식으로 경과 시간 표시
+                        elapsed_mm = int(elapsed / 60)
+                        elapsed_ss = int(elapsed % 60)
+                        logger.info(
+                            f"[{elapsed_mm:02d}:{elapsed_ss:02d}] "
+                            f"파싱 진행중 [{current_processed}/{total_files}] ({current_percent}%) "
+                            f"- {files_per_sec:.1f} files/sec, ETA: {eta_minutes}분, RAM: {memory_mb:.0f}MB"
+                        )
+
+                    # Lock 밖에서 Neo4j 저장 수행 (다른 스레드 블록 방지)
+                    if batch_to_save:
+                        try:
+                            batch_start_time = time.time()
+                            logger.info(f"  → 배치 저장 시작 ({len(batch_to_save)}개 클래스)")
+
+                            # Class 배치 저장 (Top-level + Inner classes)
+                            classes_to_save = []
+                            class_to_package = {}
+
+                            for package_node, class_node, inner_classes, package_name in batch_to_save:
+                                classes_to_save.append(class_node)
+                                class_to_package[class_node.name] = package_name
+
+                                # Inner classes도 저장
+                                for inner_class in inner_classes:
+                                    classes_to_save.append(inner_class)
+                                    class_to_package[inner_class.name] = package_name
+
+                            # 클래스 배치 저장 (성능 최적화)
+                            classes_batch_data = [
+                                (cls, class_to_package.get(cls.name, ""), project_name)
+                                for cls in classes_to_save
+                            ]
+                            graph_db.add_classes_batch(classes_batch_data)
+
+                            # Bean/Endpoint 등 배치 저장
+                            from csa.services.analysis.neo4j_writer import add_batch_class_objects_streaming
+                            batch_stats = add_batch_class_objects_streaming(
+                                graph_db, batch_to_save, project_name, logger
+                            )
+
+                            # 통계 누적 (Lock으로 보호)
+                            with progress_lock:
+                                stats['classes'] += len(classes_to_save)
+                                stats['beans'] += batch_stats.get('beans', 0)
+                                stats['endpoints'] += batch_stats.get('endpoints', 0)
+                                stats['jpa_entities'] += batch_stats.get('jpa_entities', 0)
+                                stats['jpa_repositories'] += batch_stats.get('jpa_repositories', 0)
+                                stats['jpa_queries'] += batch_stats.get('jpa_queries', 0)
+                                stats['test_classes'] += batch_stats.get('test_classes', 0)
+                                stats['mybatis_mappers'] += batch_stats.get('mybatis_mappers', 0)
+                                stats['sql_statements'] += batch_stats.get('sql_statements', 0)
+                                stats['processed_files'] += len(batch_to_save)
+
+                            batch_elapsed = time.time() - batch_start_time
+
+                            # 배치 크기 동적 조정
+                            new_batch_size = batch_sizer.adjust(batch_elapsed, len(batch_to_save))
+                            if new_batch_size != current_batch_size:
+                                logger.info(f"  📊 배치 크기 조정: {current_batch_size} → {new_batch_size}")
+
+                            logger.info(f"  ← 배치 저장 완료 ({batch_elapsed:.2f}초)")
+
+                            # 메모리 명시적 해제 (배치 저장 후)
+                            del batch_to_save
+                            gc.collect()
+
+                        except Exception as batch_error:
+                            logger.error(f"배치 저장 실패: {batch_error}")
+                            # 배치 저장 실패 시에도 계속 진행
+                            continue
+
+                except Exception as e:
                     file_name = os.path.basename(file_path)
+                    logger.error(f"❌ 예외 발생: {file_name} - {e}")
                     with progress_lock:
                         processed_classes += 1
                         failed_files += 1
-                        current_failed = failed_files
-                    if isinstance(package_name, str) and package_name:
-                        logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name} - {package_name}")
-                    else:
-                        logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name}")
                     continue
 
-                # 버퍼에 추가 및 배치 저장 여부 결정 (Lock 범위 최소화)
-                batch_to_save = None
-                should_log_progress = False
-                current_percent = 0
-                current_processed = 0
-
-                with progress_lock:
-                    # Top-level 클래스와 Inner classes를 함께 저장
-                    parsed_buffer.append((package_node, class_node, inner_classes, package_name))
-                    processed_classes += 1
-                    current_processed = processed_classes
-
-                    # 진행 상황 로깅 체크 - 5초마다 또는 10% 단위
-                    current_percent = int((processed_classes / total_files) * 100) if total_files > 0 else 0
-                    current_time = time.time()  # Lock 안에서 시간 획득 (중복 출력 방지)
-                    time_since_last_log = current_time - last_logged_time
-
-                    # 5초 경과 또는 10% 단위 도달 또는 마지막 파일 시 로그 출력
-                    # (10% 단위는 정확히 한 번만 출력되도록 last_logged_percent로 제어)
-                    if time_since_last_log >= progress_interval:
-                        # 5초 경과: 항상 출력
-                        last_logged_time = current_time
-                        should_log_progress = True
-                    elif current_percent >= last_logged_percent + 10 and current_percent % 10 == 0:
-                        # 10% 단위 도달: 한 번만 출력
-                        last_logged_percent = current_percent
-                        last_logged_time = current_time
-                        should_log_progress = True
-                    elif processed_classes == total_files:
-                        # 마지막 파일: 반드시 출력
-                        last_logged_time = current_time
-                        should_log_progress = True
-
-                    # 배치 저장 조건: 크기 도달 OR 마지막 파일 OR 시간 경과
-                    time_since_last_save = current_time - last_batch_save_time
-                    current_batch_size = batch_sizer.get_current_size()
-                    should_save_batch = (
-                        len(parsed_buffer) >= current_batch_size or  # 동적 배치 크기 도달
-                        processed_classes == total_files or  # 마지막 파일
-                        (len(parsed_buffer) > 0 and time_since_last_save >= batch_save_interval)  # 시간 경과
-                    )
-
-                    if should_save_batch:
-                        # Lock 내에서는 복사만 수행 (최소 시간)
-                        batch_to_save = parsed_buffer.copy()
-                        parsed_buffer.clear()
-                        last_batch_save_time = current_time  # 마지막 저장 시간 갱신
-
-                # Lock 밖에서 로깅 수행
-                if should_log_progress:
-                    elapsed = time.time() - parse_start_time
-                    files_per_sec = current_processed / elapsed if elapsed > 0 else 0
-                    remaining = total_files - current_processed
-                    eta_seconds = remaining / files_per_sec if files_per_sec > 0 else 0
-                    eta_minutes = int(eta_seconds / 60)
-
-                    # 메모리 사용량 측정
-                    process = psutil.Process()
-                    memory_mb = process.memory_info().rss / 1024 / 1024
-
-                    # [mm:ss] 형식으로 경과 시간 표시
-                    elapsed_mm = int(elapsed / 60)
-                    elapsed_ss = int(elapsed % 60)
-                    logger.info(
-                        f"[{elapsed_mm:02d}:{elapsed_ss:02d}] "
-                        f"파싱 진행중 [{current_processed}/{total_files}] ({current_percent}%) "
-                        f"- {files_per_sec:.1f} files/sec, ETA: {eta_minutes}분, RAM: {memory_mb:.0f}MB"
-                    )
-
-                # Lock 밖에서 Neo4j 저장 수행 (다른 스레드 블록 방지)
-                if batch_to_save:
-                    try:
-                        batch_start_time = time.time()
-                        logger.info(f"  → 배치 저장 시작 ({len(batch_to_save)}개 클래스)")
-
-                        # Class 배치 저장 (Top-level + Inner classes)
-                        classes_to_save = []
-                        class_to_package = {}
-
-                        for package_node, class_node, inner_classes, package_name in batch_to_save:
-                            classes_to_save.append(class_node)
-                            class_to_package[class_node.name] = package_name
-
-                            # Inner classes도 저장
-                            for inner_class in inner_classes:
-                                classes_to_save.append(inner_class)
-                                class_to_package[inner_class.name] = package_name
-
-                        # 클래스 배치 저장 (성능 최적화)
-                        classes_batch_data = [
-                            (cls, class_to_package.get(cls.name, ""), project_name)
-                            for cls in classes_to_save
-                        ]
-                        graph_db.add_classes_batch(classes_batch_data)
-
-                        # Bean/Endpoint 등 배치 저장
-                        from csa.services.analysis.neo4j_writer import add_batch_class_objects_streaming
-                        batch_stats = add_batch_class_objects_streaming(
-                            graph_db, batch_to_save, project_name, logger
-                        )
-
-                        # 통계 누적 (Lock으로 보호)
-                        with progress_lock:
-                            stats['classes'] += len(classes_to_save)
-                            stats['beans'] += batch_stats.get('beans', 0)
-                            stats['endpoints'] += batch_stats.get('endpoints', 0)
-                            stats['jpa_entities'] += batch_stats.get('jpa_entities', 0)
-                            stats['jpa_repositories'] += batch_stats.get('jpa_repositories', 0)
-                            stats['jpa_queries'] += batch_stats.get('jpa_queries', 0)
-                            stats['test_classes'] += batch_stats.get('test_classes', 0)
-                            stats['mybatis_mappers'] += batch_stats.get('mybatis_mappers', 0)
-                            stats['sql_statements'] += batch_stats.get('sql_statements', 0)
-                            stats['processed_files'] += len(batch_to_save)
-
-                        batch_elapsed = time.time() - batch_start_time
-
-                        # 배치 크기 동적 조정
-                        new_batch_size = batch_sizer.adjust(batch_elapsed, len(batch_to_save))
-                        if new_batch_size != current_batch_size:
-                            logger.info(f"  📊 배치 크기 조정: {current_batch_size} → {new_batch_size}")
-
-                        logger.info(f"  ← 배치 저장 완료 ({batch_elapsed:.2f}초)")
-
-                        # 메모리 명시적 해제 (배치 저장 후)
-                        del batch_to_save
-                        gc.collect()
-
-                    except Exception as batch_error:
-                        logger.error(f"배치 저장 실패: {batch_error}")
-                        # 배치 저장 실패 시에도 계속 진행
-                        continue
-
-            except Exception as e:
-                file_name = os.path.basename(file_path)
-                logger.error(f"❌ 예외 발생: {file_name} - {e}")
-                with progress_lock:
-                    processed_classes += 1
-                    failed_files += 1
-                continue
+        except KeyboardInterrupt:
+            logger.warning("Analysis canceled, cancelling pending tasks...")
+            for f in future_to_file:
+                f.cancel()
+            raise
 
     parse_elapsed = time.time() - parse_start_time
     success_files = total_files - failed_files - timeout_files

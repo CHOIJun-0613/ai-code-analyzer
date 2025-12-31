@@ -149,7 +149,7 @@ const Layout: React.FC = () => {
                                         }`}
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                    <span className="whitespace-nowrap">{t('layout.analysisHistory') || "Analysis Log Management"}</span>
+                                    <span className="whitespace-nowrap">{t('layout.analysisHistory') || "Analysis Log"}</span>
                                 </Link>
                             </div>
                         </div>

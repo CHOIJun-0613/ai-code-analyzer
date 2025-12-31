@@ -160,3 +160,11 @@ def get_active_job(user_id: str) -> Optional[dict]:
     if user_jobs:
         return user_jobs[0]
     return None
+
+def cancel_job_status(job_id: str):
+    """Update job status to cancelling."""
+    if job_id in jobs:
+        jobs[job_id]["status"] = "cancelling"
+        if "logs" not in jobs[job_id]:
+            jobs[job_id]["logs"] = []
+        jobs[job_id]["logs"].append("Cancellation requested by user...")

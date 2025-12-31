@@ -134,18 +134,20 @@ def analyze_project(
     """Analyze project artifacts and optionally persist them into Neo4j."""
     
     # Cancellation Check Helper
+    # Cancellation Check Helper
     def check_cancellation(job_id: str, logger):
         if not job_id: return
         
         # 1. Check flag file
         current_dir = os.path.dirname(os.path.abspath(__file__))
         # handlers.py -> analysis -> services -> csa -> server
-        server_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_dir))))
+        # We need to go up 3 levels to reach 'server' directory from 'server/csa/services/analysis'
+        server_root = os.path.dirname(os.path.dirname(os.path.dirname(current_dir)))
         logs_dir = os.path.join(server_root, "logs")
         cancel_path = os.path.join(logs_dir, f"{job_id}.cancel")
         
         if os.path.exists(cancel_path):
-            logger.warning(f"Cancellation flag detected for job {job_id}")
+            logger.warning(f"Cancellation flag detected for job {job_id} at {cancel_path}")
             # Cleanup flag
             try:
                 os.remove(cancel_path)
@@ -239,6 +241,7 @@ def analyze_project(
                 ai_options=ai_options,
                 source_options=source_options,
                 use_ai_analysis=use_ai_analysis,
+                stop_check_callback=lambda: check_cancellation(job_id, logger),
             )
             
             # Check Cancellation

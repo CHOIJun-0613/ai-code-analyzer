@@ -134,6 +134,11 @@ def cancel_analysis(job_id: str):
         with open(cancel_path, 'w') as f:
             import datetime
             f.write(f"cancelled at {datetime.datetime.now()}")
+            
+        # Update in-memory status
+        from app.services.analysis_wrapper import cancel_job_status
+        cancel_job_status(job_id)
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to create cancellation flag: {str(e)}")
         

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
-import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database, Square, RotateCw, Rocket } from 'lucide-react';
+import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database, Square, RotateCw, Rocket, XCircle } from 'lucide-react';
 
 const Tooltip: React.FC<{ text: string, position?: string, arrowPosition?: string }> = ({ text, position = "left-1/2 -translate-x-1/2", arrowPosition = "left-1/2 -translate-x-1/2" }) => (
     <div className="group relative flex items-center ml-1">
@@ -103,7 +103,7 @@ const Analysis: React.FC = () => {
     React.useEffect(() => {
         let intervalId: NodeJS.Timeout;
 
-        if (jobId && (status === 'pending' || status === 'running')) {
+        if (jobId && (status === 'pending' || status === 'running' || status === 'cancelling')) {
             intervalId = setInterval(async () => {
                 try {
                     // Fetch status
@@ -326,7 +326,6 @@ const Analysis: React.FC = () => {
             setShowStopConfirmModal(false);
         } catch (error) {
             console.error("Failed to stop analysis", error);
-            alert("Failed to stop analysis");
         }
     };
 
@@ -985,6 +984,8 @@ const Analysis: React.FC = () => {
                                         <CheckCircle className="w-5 h-5 text-emerald-500" />
                                     ) : status === 'failed' ? (
                                         <AlertCircle className="w-5 h-5 text-red-500" />
+                                    ) : status === 'canceled' || status === 'cancelled' || status === 'cancelling' ? (
+                                        <XCircle className="w-5 h-5 text-slate-500" />
                                     ) : (
                                         <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
                                     )}
@@ -996,7 +997,7 @@ const Analysis: React.FC = () => {
                             </div>
 
                             {/* Progress Bar */}
-                            {(status === 'running' || status === 'pending') && progress && (
+                            {(status === 'running' || status === 'pending' || status === 'cancelling') && progress && (
                                 <div className="w-full bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                                     <div className="flex justify-between text-xs text-slate-600 mb-2 font-medium">
                                         <div className="flex items-center gap-2">

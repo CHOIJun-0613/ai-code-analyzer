@@ -24,7 +24,7 @@
         "settings": "Settings",
         "logout": "Logout",
         "analysisManagement": "Code Analysis Management",
-        "analysisHistory": "Analysis Log Management"
+        "analysisHistory": "Analysis Log"
     },
     "settings": {
         "title": "Settings",
