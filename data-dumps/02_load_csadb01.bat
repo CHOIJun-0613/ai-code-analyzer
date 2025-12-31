@@ -90,6 +90,9 @@ if errorlevel 1 (
   exit /b 1
 )
 
+REM 덤프 디렉터리가 없으면 생성
+docker run --rm -v %DATA_VOL%:/data busybox mkdir -p %DUMPS_DIR%
+
 REM 항상 같은 파일명으로 넣어 load가 찾기 쉽게 함
 docker cp "%HOST_DUMP_FILE%" %TMP_IMPORT%:%DUMPS_DIR%/%DB%.dump
 if errorlevel 1 (
