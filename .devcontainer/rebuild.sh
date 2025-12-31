@@ -9,7 +9,7 @@ echo "🔧 Cleaning up old containers and images..."
 docker-compose -f .devcontainer/docker-compose.yml down --remove-orphans 2>/dev/null || true
 
 # 이미지 제거 (선택적)
-docker rmi csa-devcontainer:latest 2>/dev/null || true
+docker rmi refiner-devcontainer:latest 2>/dev/null || true
 
 echo "🏗️  Building dev container..."
 

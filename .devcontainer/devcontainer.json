@@ -1,5 +1,5 @@
 {
-  "name": "CSA Dev Container",
+  "name": "AI-Refiner Dev Container",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspace",
