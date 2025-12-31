@@ -98,10 +98,8 @@ const CodeAiAnalysis: React.FC = () => {
     // Modals
     const [showLogModal, setShowLogModal] = useState(false);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
-
-    // Stop Analysis Confirmation State
-    const [stopConfirming, setStopConfirming] = useState(false);
-    const stopConfirmTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [showStopConfirmModal, setShowStopConfirmModal] = useState(false);
 
     const logsEndRef = useRef<HTMLDivElement>(null);
 
@@ -220,12 +218,16 @@ const CodeAiAnalysis: React.FC = () => {
         fetchPreferences();
     };
 
-    const handleRunAnalysis = async () => {
+    const handleRunAnalysis = () => {
         if (!scope.projectName) {
             alert(t('aiAnalysis.selectProject'));
             return;
         }
+        setShowConfirmModal(true);
+    };
 
+    const executeAnalysis = async () => {
+        setShowConfirmModal(false);
         setStatus('running');
         setLogs([]); // Clear previous logs
         setJobId('');
@@ -258,27 +260,18 @@ const CodeAiAnalysis: React.FC = () => {
         }
     };
 
-    const handleStopAnalysis = async () => {
+    const handleStopAnalysis = () => {
         if (!jobId) return;
+        setShowStopConfirmModal(true);
+    };
 
-        if (!stopConfirming) {
-            setStopConfirming(true);
-            // Reset confirmation after 3 seconds
-            if (stopConfirmTimeoutRef.current) clearTimeout(stopConfirmTimeoutRef.current);
-            stopConfirmTimeoutRef.current = setTimeout(() => {
-                setStopConfirming(false);
-            }, 3000);
-            return;
-        }
-
-        // Second click: Confirm stop
-        if (stopConfirmTimeoutRef.current) clearTimeout(stopConfirmTimeoutRef.current);
-        setStopConfirming(false);
-
+    const executeStopAnalysis = async () => {
+        if (!jobId) return;
         try {
             console.log(`Requesting cancellation for job: ${jobId}`);
             await client.post(`/ai/${jobId}/cancel`);
             alert("작업 중지 요청이 전송되었습니다.");
+            setShowStopConfirmModal(false);
         } catch (error) {
             console.error("Failed to stop analysis", error);
             alert("작업 중지 요청 실패");
@@ -347,6 +340,90 @@ const CodeAiAnalysis: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Confirmation Modal */}
+            {showConfirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                <Play className="w-6 h-6 text-indigo-600" />
+                                {t('analysis.startAnalysis')}?
+                            </h3>
+                            <p className="text-slate-600 mb-6">
+                                {t('analysis.startConfirmation')}
+                            </p>
+
+                            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm mb-6">
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">{t('aiAnalysis.targetProject')}:</span>
+                                    <span className="font-semibold text-slate-800">{scope.projectName}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">{t('aiAnalysis.nodeType')}:</span>
+                                    <span className="font-semibold text-slate-800 uppercase">{scope.nodeType}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">{t('aiAnalysis.limit')}:</span>
+                                    <span className="font-semibold text-slate-800">{scope.limit > 0 ? scope.limit : 'Unlimited'}</span>
+                                </div>
+                                <div className="flex justify-between">
+                                    <span className="text-slate-500">{t('aiAnalysis.saveOptions')}:</span>
+                                    <span className={`font-semibold ${scope.clean ? 'text-rose-600' : 'text-indigo-600'}`}>
+                                        {scope.clean ? t('aiAnalysis.saveClean') : t('aiAnalysis.saveUpdate')}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowConfirmModal(false)}
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors"
+                                >
+                                    {t('analysis.cancel')}
+                                </button>
+                                <button
+                                    onClick={executeAnalysis}
+                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-md transition-colors"
+                                >
+                                    {t('analysis.confirmStart')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Stop Confirmation Modal */}
+            {showStopConfirmModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2 text-rose-600">
+                                <AlertCircle className="w-6 h-6" />
+                                {t('analysis.stopAnalysis')}?
+                            </h3>
+                            <p className="text-slate-600 mb-6">
+                                {t('analysis.stopConfirmation')}
+                            </p>
+                            <div className="flex justify-end gap-3">
+                                <button
+                                    onClick={() => setShowStopConfirmModal(false)}
+                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors"
+                                >
+                                    {t('analysis.cancel')}
+                                </button>
+                                <button
+                                    onClick={executeStopAnalysis}
+                                    className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 text-sm font-medium shadow-md transition-colors"
+                                >
+                                    {t('analysis.confirmStop')}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Layout Order: 1. Scope -> 3. Config -> 2. Run */}
 
@@ -598,13 +675,10 @@ const CodeAiAnalysis: React.FC = () => {
                         {status === 'running' && (
                             <button
                                 onClick={handleStopAnalysis}
-                                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold backdrop-blur-sm shadow-sm border ${stopConfirming
-                                    ? "bg-amber-500/80 hover:bg-amber-600 border-amber-400 text-white animate-pulse"
-                                    : "bg-rose-500/20 hover:bg-rose-500/40 border-rose-400/50 text-rose-100"
-                                    }`}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold backdrop-blur-sm shadow-sm border bg-rose-500/20 hover:bg-rose-500/40 border-rose-400/50 text-rose-100"
                             >
                                 <Square className="w-4 h-4 fill-current" />
-                                {stopConfirming ? "정말 중지할까요?" : t('aiAnalysis.stopAnalysis')}
+                                {t('aiAnalysis.stopAnalysis')}
                             </button>
                         )}
                     </div>
