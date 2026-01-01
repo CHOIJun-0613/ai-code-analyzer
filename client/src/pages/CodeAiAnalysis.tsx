@@ -7,9 +7,7 @@ import {
     Settings as SettingsIcon,
     BrainCircuit,
     Play,
-
     AlertCircle,
-
     Database,
     Eraser,
     RefreshCw,
@@ -24,8 +22,10 @@ import {
     CheckCircle,
     FileCode,
     Square,
-    XCircle
+    XCircle,
+    Rocket
 } from 'lucide-react';
+import { useAnalysisWebSocket } from '../hooks/useAnalysisWebSocket';
 
 // Shared styling classes
 const cardClass = "bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md";
@@ -120,32 +120,29 @@ const CodeAiAnalysis: React.FC = () => {
         checkActiveAnalysis();
     }, []);
 
-    // Polling
-    useEffect(() => {
-        let intervalId: NodeJS.Timeout;
-
-        if (jobId && (status === 'pending' || status === 'running')) {
-            intervalId = setInterval(async () => {
-                try {
-                    // Fetch status
-                    const statusRes = await client.get(`/ai/${jobId}`);
-                    setStatus(statusRes.data.status); // running, completed, failed
-
-                    // Fetch logs
-                    const logsRes = await client.get(`/ai/${jobId}/logs`);
-                    if (logsRes.data.logs) {
-                        setLogs(logsRes.data.logs);
-                    }
-                } catch (error) {
-                    console.error("Failed to poll status/logs", error);
-                }
-            }, 3000);
+    // WebSocket Hook for real-time monitoring
+    useAnalysisWebSocket({
+        jobId,
+        jobType: 'ai',
+        onLog: (log) => {
+            setLogs((prev) => [...prev, log]);
+        },
+        onStatus: (newStatus) => {
+            setStatus(newStatus as any); // Cast to match state type
+        },
+        onProgress: (progress) => {
+            // Progress is extracted from logs, no need to handle separately
+            console.debug('Progress:', progress);
+        },
+        onComplete: (data) => {
+            setStatus(data.status as any); // Cast to match state type
+            console.log('AI Analysis complete:', data);
+        },
+        onError: (error) => {
+            console.error('WebSocket error:', error);
+            // Continue using the app, error is logged
         }
-
-        return () => {
-            if (intervalId) clearInterval(intervalId);
-        };
-    }, [jobId, status]);
+    });
 
     const checkActiveAnalysis = async () => {
         try {
@@ -343,51 +340,38 @@ const CodeAiAnalysis: React.FC = () => {
 
             {/* Confirmation Modal */}
             {showConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6">
-                            <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                <Play className="w-6 h-6 text-indigo-600" />
-                                {t('analysis.startAnalysis')}?
-                            </h3>
-                            <p className="text-slate-600 mb-6">
-                                {t('analysis.startConfirmation')}
-                            </p>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="p-8">
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-indigo-50/50">
+                                    <Rocket className="w-8 h-8 text-indigo-600" />
+                                </div>
 
-                            <div className="space-y-3 bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm mb-6">
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">{t('aiAnalysis.targetProject')}:</span>
-                                    <span className="font-semibold text-slate-800">{scope.projectName}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">{t('aiAnalysis.nodeType')}:</span>
-                                    <span className="font-semibold text-slate-800 uppercase">{scope.nodeType}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">{t('aiAnalysis.limit')}:</span>
-                                    <span className="font-semibold text-slate-800">{scope.limit > 0 ? scope.limit : 'Unlimited'}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                    <span className="text-slate-500">{t('aiAnalysis.saveOptions')}:</span>
-                                    <span className={`font-semibold ${scope.clean ? 'text-rose-600' : 'text-indigo-600'}`}>
-                                        {scope.clean ? t('aiAnalysis.saveClean') : t('aiAnalysis.saveUpdate')}
-                                    </span>
-                                </div>
-                            </div>
+                                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                    {t('analysis.analysisConfirmTitle')}
+                                </h3>
 
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowConfirmModal(false)}
-                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors"
-                                >
-                                    {t('analysis.cancel')}
-                                </button>
-                                <button
-                                    onClick={executeAnalysis}
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-md transition-colors"
-                                >
-                                    {t('analysis.confirmStart')}
-                                </button>
+                                <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
+                                    {t('analysis.analysisConfirmMessage')}
+                                </p>
+
+                                <div className="flex gap-3 w-full">
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                        onClick={() => setShowConfirmModal(false)}
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-[0.98]"
+                                        onClick={executeAnalysis}
+                                    >
+                                        {t('analysis.confirm')}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -396,29 +380,38 @@ const CodeAiAnalysis: React.FC = () => {
 
             {/* Stop Confirmation Modal */}
             {showStopConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="p-6">
-                            <h3 className="text-xl font-bold text-slate-800 mb-2 flex items-center gap-2 text-rose-600">
-                                <AlertCircle className="w-6 h-6" />
-                                {t('analysis.stopAnalysis')}?
-                            </h3>
-                            <p className="text-slate-600 mb-6">
-                                {t('analysis.stopConfirmation')}
-                            </p>
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() => setShowStopConfirmModal(false)}
-                                    className="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors"
-                                >
-                                    {t('analysis.cancel')}
-                                </button>
-                                <button
-                                    onClick={executeStopAnalysis}
-                                    className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 text-sm font-medium shadow-md transition-colors"
-                                >
-                                    {t('analysis.confirmStop')}
-                                </button>
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="p-8">
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
+                                    <Square className="w-8 h-8 text-rose-500 fill-current" />
+                                </div>
+
+                                <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                    {t('analysis.analysisStopConfirmTitle')}
+                                </h3>
+
+                                <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
+                                    {t('analysis.analysisStopConfirmMessage')}
+                                </p>
+
+                                <div className="flex gap-3 w-full">
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                        onClick={() => setShowStopConfirmModal(false)}
+                                    >
+                                        {t('common.cancel')}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="flex-1 py-3 px-4 bg-rose-600 text-white font-semibold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-700 hover:shadow-rose-300 transition-all active:scale-[0.98]"
+                                        onClick={executeStopAnalysis}
+                                    >
+                                        {t('analysis.confirm')}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database, Square, RotateCw, Rocket, XCircle } from 'lucide-react';
+import { useAnalysisWebSocket } from '../hooks/useAnalysisWebSocket';
 
 const Tooltip: React.FC<{ text: string, position?: string, arrowPosition?: string }> = ({ text, position = "left-1/2 -translate-x-1/2", arrowPosition = "left-1/2 -translate-x-1/2" }) => (
     <div className="group relative flex items-center ml-1">
@@ -99,32 +100,29 @@ const Analysis: React.FC = () => {
         checkActiveAnalysis();
     }, []);
 
-    // Polling for status and logs
-    React.useEffect(() => {
-        let intervalId: NodeJS.Timeout;
-
-        if (jobId && (status === 'pending' || status === 'running' || status === 'cancelling')) {
-            intervalId = setInterval(async () => {
-                try {
-                    // Fetch status
-                    const statusRes = await client.get(`/analysis/analyze/${jobId}`);
-                    setStatus(statusRes.data.status);
-
-                    // Fetch logs
-                    const logsRes = await client.get(`/analysis/analyze/${jobId}/logs`);
-                    if (logsRes.data.logs) {
-                        setLogs(logsRes.data.logs);
-                    }
-                } catch (error) {
-                    console.error("Failed to poll status/logs", error);
-                }
-            }, 3000); // Poll every 3 seconds
+    // WebSocket Hook for real-time monitoring
+    useAnalysisWebSocket({
+        jobId,
+        jobType: 'analysis',
+        onLog: (log) => {
+            setLogs((prev) => [...prev, log]);
+        },
+        onStatus: (newStatus) => {
+            setStatus(newStatus);
+        },
+        onProgress: (progress) => {
+            // Progress is extracted from logs, no need to handle separately
+            console.debug('Progress:', progress);
+        },
+        onComplete: (data) => {
+            setStatus(data.status);
+            console.log('Analysis complete:', data);
+        },
+        onError: (error) => {
+            console.error('WebSocket error:', error);
+            // Continue using the app, error is logged
         }
-
-        return () => {
-            if (intervalId) clearInterval(intervalId);
-        };
-    }, [jobId, status]);
+    });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {

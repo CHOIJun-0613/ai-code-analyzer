@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, analysis, groups
+from app.api.v1.endpoints import auth, users, analysis, groups, websocket
 
 api_router = APIRouter()
 api_router.include_router(auth.router, tags=["login"])
@@ -11,4 +11,5 @@ api_router.include_router(projects.router, prefix="/projects", tags=["projects"]
 api_router.include_router(reports.router, tags=["reports"])
 api_router.include_router(class_reports.router, tags=["class-reports"])
 api_router.include_router(ai_analysis.router, prefix="/ai", tags=["ai-analysis"])
+api_router.include_router(websocket.router, tags=["websocket"])
 
