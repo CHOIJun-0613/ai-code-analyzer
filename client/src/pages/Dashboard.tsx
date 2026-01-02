@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { useQuery } from '@tanstack/react-query';
 import client from '../api/client';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -12,23 +13,25 @@ interface Project {
 
 const Dashboard: React.FC = () => {
     const { t } = useTranslation();
-    const [projects, setProjects] = useState<Project[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchProjects = async () => {
-            try {
-                const response = await client.get('/projects/');
-                setProjects(response.data);
-            } catch (error) {
-                console.error("Failed to fetch projects", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchProjects();
-    }, []);
+    // React Query로 프로젝트 목록 조회
+    const {
+        data: projects = [],
+        isLoading,
+        error
+    } = useQuery({
+        queryKey: ['projects'],
+        queryFn: async () => {
+            const response = await client.get<Project[]>('/projects/');
+            return response.data;
+        },
+    });
+
+    // 에러 처리
+    if (error) {
+        console.error("Failed to fetch projects", error);
+    }
 
 
 

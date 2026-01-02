@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import {
@@ -61,6 +62,7 @@ interface Project {
 
 const CodeAiAnalysis: React.FC = () => {
     const { t } = useTranslation();
+    const queryClient = useQueryClient();
 
     // AI Config State
     const [aiConfig, setAiConfig] = useState<AiConfig>({
@@ -86,14 +88,61 @@ const CodeAiAnalysis: React.FC = () => {
     const [showApiKey, setShowApiKey] = useState(false);
 
     // System State
-    const [projects, setProjects] = useState<Project[]>([]);
     const [status, setStatus] = useState<'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'success' | 'error' | 'cancelled' | 'cancelling'>('idle');
-    // Unified status: 'idle', 'pending', 'running', 'completed' (backend), 'failed' (backend)
-    // Legacy mapping: 'success' -> 'completed', 'error' -> 'failed' if needed
-
     const [jobId, setJobId] = useState<string>('');
     const [logs, setLogs] = useState<string[]>([]);
-    const [isSaving, setIsSaving] = useState(false);
+
+    // React Query: 프로젝트 목록 조회
+    const { data: projects = [] } = useQuery<Project[]>({
+        queryKey: ['projects'],
+        queryFn: async () => {
+            const response = await client.get<Project[]>('/projects/');
+            return response.data;
+        },
+    });
+
+    // 첫 번째 프로젝트 자동 선택 (useEffect로 처리)
+    React.useEffect(() => {
+        if (projects && projects.length > 0 && !scope.projectName) {
+            setScope(prev => ({ ...prev, projectName: projects[0].name }));
+        }
+    }, [projects, scope.projectName]);
+
+    // React Query: AI 설정 조회
+    useQuery({
+        queryKey: ['users', 'me', 'preferences', 'ai'],
+        queryFn: async () => {
+            const response = await client.get('/users/me/preferences/ai');
+            if (response.data) {
+                setAiConfig(prev => ({
+                    ...prev,
+                    use_analysis: true,
+                    provider: response.data.ai_provider || prev.provider,
+                    model_name: response.data.model_name || prev.model_name,
+                    api_key: response.data.api_key || prev.api_key,
+                    api_endpoint: response.data.api_endpoint || prev.api_endpoint,
+                    concurrent_requests: response.data.concurrent_ai_requests || prev.concurrent_requests,
+                    enrichment_batch_size: response.data.ai_enrichment_batch_size || prev.enrichment_batch_size
+                }));
+            }
+            return response.data;
+        },
+        staleTime: 1 * 60 * 1000, // 1분 캐싱
+    });
+
+    // React Query: 활성 AI 분석 작업 조회
+    useQuery({
+        queryKey: ['ai', 'active'],
+        queryFn: async () => {
+            const response = await client.get('/ai/active');
+            if (response.data && response.data.job_id) {
+                setJobId(response.data.job_id);
+                setStatus(response.data.status);
+            }
+            return response.data;
+        },
+        retry: false, // 활성 작업이 없을 수 있으므로 재시도 안 함
+    });
 
     // Modals
     const [showLogModal, setShowLogModal] = useState(false);
@@ -112,13 +161,6 @@ const CodeAiAnalysis: React.FC = () => {
             logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
     }, [logs, showLogModal]);
-
-    // Initial Data Fetch
-    useEffect(() => {
-        fetchProjects();
-        fetchPreferences();
-        checkActiveAnalysis();
-    }, []);
 
     // WebSocket Hook for real-time monitoring
     useAnalysisWebSocket({
@@ -144,75 +186,38 @@ const CodeAiAnalysis: React.FC = () => {
         }
     });
 
-    const checkActiveAnalysis = async () => {
-        try {
-            const res = await client.get('/ai/active');
-            if (res.data && res.data.job_id) {
-                setJobId(res.data.job_id);
-                setStatus(res.data.status);
-            }
-        } catch (error) {
-            // No active job
-        }
-    };
-
-    const fetchProjects = async () => {
-        try {
-            const projectsRes = await client.get('/projects/');
-            setProjects(projectsRes.data);
-            if (projectsRes.data.length > 0) {
-                setScope(prev => ({ ...prev, projectName: projectsRes.data[0].name }));
-            }
-        } catch (err) {
-            console.error("Failed to load projects", err);
-        }
-    };
-
-    const fetchPreferences = async () => {
-        try {
-            const prefsRes = await client.get('/users/me/preferences/ai');
-            if (prefsRes.data) {
-                setAiConfig(prev => ({
-                    ...prev,
-                    use_analysis: true,
-                    provider: prefsRes.data.ai_provider || prev.provider,
-                    model_name: prefsRes.data.model_name || prev.model_name,
-                    api_key: prefsRes.data.api_key || prev.api_key,
-                    api_endpoint: prefsRes.data.api_endpoint || prev.api_endpoint,
-                    concurrent_requests: prefsRes.data.concurrent_ai_requests || prev.concurrent_requests,
-                    enrichment_batch_size: prefsRes.data.ai_enrichment_batch_size || prev.enrichment_batch_size
-                }));
-            }
-        } catch (err) {
-            console.error("Failed to load preferences", err);
-        }
-    };
-
-    const handleSaveSettings = async () => {
-        setIsSaving(true);
-        try {
-            const preferences = {
-                use_analysis: true,
-                ai_provider: aiConfig.provider,
-                model_name: aiConfig.model_name,
-                api_key: aiConfig.api_key,
-                api_endpoint: aiConfig.api_endpoint,
-                concurrent_ai_requests: aiConfig.concurrent_requests,
-                ai_enrichment_batch_size: aiConfig.enrichment_batch_size
-            };
-
+    // Mutation: AI 설정 저장
+    const saveSettingsMutation = useMutation({
+        mutationFn: async (preferences: any) => {
             await client.put('/users/me/preferences/ai', preferences);
+        },
+        onSuccess: () => {
+            // AI 설정 쿼리 무효화 (자동 재조회)
+            queryClient.invalidateQueries({ queryKey: ['users', 'me', 'preferences', 'ai'] });
             alert(t('aiAnalysis.configSaveSuccess'));
-        } catch (error) {
+        },
+        onError: (error) => {
             console.error("Failed to save settings", error);
             alert(t('aiAnalysis.configSaveFail'));
-        } finally {
-            setIsSaving(false);
-        }
+        },
+    });
+
+    const handleSaveSettings = () => {
+        const preferences = {
+            use_analysis: true,
+            ai_provider: aiConfig.provider,
+            model_name: aiConfig.model_name,
+            api_key: aiConfig.api_key,
+            api_endpoint: aiConfig.api_endpoint,
+            concurrent_ai_requests: aiConfig.concurrent_requests,
+            ai_enrichment_batch_size: aiConfig.enrichment_batch_size
+        };
+        saveSettingsMutation.mutate(preferences);
     };
 
     const handleLoadSettings = () => {
-        fetchPreferences();
+        // AI 설정 쿼리 무효화 (자동 재조회)
+        queryClient.invalidateQueries({ queryKey: ['users', 'me', 'preferences', 'ai'] });
     };
 
     const handleRunAnalysis = () => {
@@ -552,10 +557,10 @@ const CodeAiAnalysis: React.FC = () => {
                         </button>
                         <button
                             onClick={handleSaveSettings}
-                            disabled={isSaving}
-                            className={`px-3 py-1.5 text-xs font-bold text-white bg-slate-800 border border-slate-800 rounded-lg hover:bg-slate-700 transition-all flex items-center gap-1.5 shadow-sm ${isSaving ? 'opacity-70' : ''}`}
+                            disabled={saveSettingsMutation.isPending}
+                            className={`px-3 py-1.5 text-xs font-bold text-white bg-slate-800 border border-slate-800 rounded-lg hover:bg-slate-700 transition-all flex items-center gap-1.5 shadow-sm ${saveSettingsMutation.isPending ? 'opacity-70' : ''}`}
                         >
-                            {isSaving ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                            {saveSettingsMutation.isPending ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                             {t('aiAnalysis.saveSettings')}
                         </button>
                     </div>

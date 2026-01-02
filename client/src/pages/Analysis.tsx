@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database, Square, RotateCw, Rocket, XCircle } from 'lucide-react';
@@ -80,25 +81,64 @@ const Analysis: React.FC = () => {
         }
     };
 
-    // Fetch user preferences
-    React.useEffect(() => {
-        loadPreferences();
-
-        // Check for active analysis
-        const checkActiveAnalysis = async () => {
-            try {
-                const res = await client.get('/analysis/active');
-                if (res.data && res.data.job_id) {
-                    setJobId(res.data.job_id);
-                    setStatus(res.data.status);
-                }
-            } catch (error) {
-                // No active analysis is fine, just ignore
-                console.debug("No active analysis found");
+    // React Query: 사용자 설정 조회
+    useQuery({
+        queryKey: ['users', 'me', 'preferences'],
+        queryFn: async () => {
+            const res = await client.get('/users/me/preferences');
+            if (res.data) {
+                // Boolean fields
+                if (res.data.skip_dto_source !== undefined) setSkipDtoSource(res.data.skip_dto_source);
+                if (res.data.skip_dto_methods !== undefined) setSkipDtoMethods(res.data.skip_dto_methods);
+                // String/Selection fields
+                if (res.data.scope !== undefined) setScope(res.data.scope);
+                // Advanced Source Options
+                if (res.data.java_parse_workers !== undefined) setJavaParseWorkers(res.data.java_parse_workers);
+                if (res.data.java_file_parse_timeout !== undefined) setJavaFileParseTimeout(res.data.java_file_parse_timeout);
+                if (res.data.java_complexity_threshold !== undefined) setJavaComplexityThreshold(res.data.java_complexity_threshold);
+                if (res.data.sequence_diagram_include_packages !== undefined) setSequenceDiagramIncludePackages(res.data.sequence_diagram_include_packages);
+                if (res.data.exclude_patterns !== undefined) setExcludePatterns(res.data.exclude_patterns);
+                if (res.data.log_level !== undefined) setLogLevel(res.data.log_level);
+                if (res.data.analysis_target !== undefined) setAnalysisTarget(res.data.analysis_target);
+                if (res.data.save_strategy !== undefined) setSaveStrategy(res.data.save_strategy);
             }
-        };
-        checkActiveAnalysis();
-    }, []);
+            return res.data;
+        },
+        staleTime: 1 * 60 * 1000, // 1분 캐싱
+    });
+
+    // React Query: 활성 분석 작업 조회
+    useQuery({
+        queryKey: ['analysis', 'active'],
+        queryFn: async () => {
+            const res = await client.get('/analysis/active');
+            if (res.data && res.data.job_id) {
+                setJobId(res.data.job_id);
+                setStatus(res.data.status);
+            }
+            return res.data;
+        },
+        retry: false, // 활성 작업이 없을 수 있으므로 재시도 안 함
+        staleTime: 0, // 항상 최신 상태 확인
+    });
+
+    // React Query: 활성 작업의 기존 로그 조회
+    const { data: initialLogsData } = useQuery({
+        queryKey: ['analysis', 'job', jobId, 'logs'],
+        queryFn: async () => {
+            const res = await client.get(`/analysis/analyze/${jobId}/logs`);
+            return res.data;
+        },
+        enabled: !!jobId && logs.length === 0, // jobId가 있고 현재 로그가 없을 때만 실행
+        staleTime: 0,
+    });
+
+    // 초기 로그 데이터 로드 시 상태 업데이트
+    React.useEffect(() => {
+        if (initialLogsData && initialLogsData.logs && logs.length === 0) {
+            setLogs(initialLogsData.logs);
+        }
+    }, [initialLogsData, logs.length]);
 
     // WebSocket Hook for real-time monitoring
     useAnalysisWebSocket({
@@ -830,22 +870,22 @@ const Analysis: React.FC = () => {
                                         {t('analysis.runAnalysis')}
                                     </h3>
                                     <div className="flex flex-wrap gap-2 text-indigo-100 text-sm">
+                                        {projectName && (
+                                            <>
+                                                <span>Project: {projectName}</span>
+                                                <span>•</span>
+                                            </>
+                                        )}
                                         <span>Target: {analysisTarget.toUpperCase()}</span>
                                         <span>•</span>
                                         <span>Strategy: {saveStrategy.toUpperCase()}</span>
-                                        {projectName && (
-                                            <>
-                                                <span>•</span>
-                                                <span>Project: {projectName}</span>
-                                            </>
-                                        )}
                                     </div>
                                     <div className="flex gap-2 mt-3">
                                         <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
                                             {javaParseWorkers} Workers
                                         </span>
                                         <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
-                                            {mode === 'upload' ? 'Upload Mode' : 'Path Mode'}
+                                            {t('analysis.logLevel')}: {logLevel}
                                         </span>
                                     </div>
                                 </div>

@@ -187,8 +187,10 @@ class MaintenanceMixin:
                 # 1. Project 노드 삭제
                 session.run("MATCH (n:Project {name: $project_name}) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS", project_name=project_name)
                 
-                # 2. Project와 연관된 모든 노드 삭제 (project_name 속성 기반)
-                session.run("MATCH (n {project_name: $project_name}) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS", project_name=project_name)
+                # 2. Project와 연관된 모든 노드 삭제 (project_name 속성 기반, System 라벨 노드 제외)
+                # AnalysisHistory, User, UserGroup 등 System 라벨 노드는 삭제되지 않음
+                session.run("MATCH (n {project_name: $project_name}) WHERE NOT n:System CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS", project_name=project_name)
             else:
                 # 전체 삭제 (기존 로직) - Batch Transaction 적용
-                session.run("MATCH (n) CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")
+                # System 라벨이 없는 노드만 삭제 (분석 데이터만 삭제)
+                session.run("MATCH (n) WHERE NOT n:System CALL { WITH n DETACH DELETE n } IN TRANSACTIONS OF 10000 ROWS")

@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ReportViewerModal from '../components/ReportViewerModal';
 import {
@@ -57,13 +58,25 @@ const ClassDetails: React.FC = () => {
     const packageName = searchParams.get('package');
     const navigate = useNavigate();
 
-    const [classData, setClassData] = useState<ClassData | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    const [error, setError] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState<'info' | 'source' | 'methods' | 'fields'>('info');
     const [isCopied, setIsCopied] = useState(false);
     const codeRef = useRef<HTMLPreElement>(null);
+
+    // React Query: 클래스 상세 정보 조회
+    const {
+        data: classData = null,
+        isLoading,
+        error
+    } = useQuery({
+        queryKey: ['projects', projectName, 'classes', className, 'details', packageName],
+        queryFn: async () => {
+            const { data } = await axios.get<ClassData>(`/projects/${projectName}/classes/${className}`, {
+                params: { package: packageName }
+            });
+            return data;
+        },
+        enabled: !!(projectName && className && packageName),
+    });
 
     // Reports State
     const [reportModal, setReportModal] = useState<{
@@ -145,25 +158,7 @@ const ClassDetails: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchClassDetails = async () => {
-            if (!projectName || !className || !packageName) return;
-            setIsLoading(true);
-            try {
-                const { data } = await axios.get(`/projects/${projectName}/classes/${className}`, {
-                    params: { package: packageName }
-                });
-                setClassData(data);
-            } catch (err) {
-                console.error("Failed to fetch class details", err);
-                setError("Failed to load class details.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchClassDetails();
-    }, [projectName, className, packageName]);
+    // useEffect 제거 - React Query가 자동으로 처리
 
     if (isLoading) {
         return (
@@ -177,7 +172,7 @@ const ClassDetails: React.FC = () => {
         return (
             <div className="p-8 text-center text-slate-500">
                 <h2 className="text-xl font-bold mb-2">Class not found</h2>
-                <p className="mb-4">{error || "Could not retrieve class details."}</p>
+                <p className="mb-4">{error ? (error instanceof Error ? error.message : String(error)) : "Could not retrieve class details."}</p>
                 <button
                     onClick={() => navigate(-1)}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"

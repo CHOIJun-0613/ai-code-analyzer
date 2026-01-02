@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Box, FileCode, Layers, Database, FolderOpen, Code2, Search, Info, Code, Pencil, Check, X, ChevronDown, ChevronUp, FileText } from 'lucide-react';
@@ -46,14 +47,49 @@ interface HierarchyItem {
 const ProjectDetails: React.FC = () => {
     const { projectName } = useParams<{ projectName: string }>();
     const navigate = useNavigate();
-    const [stats, setStats] = useState<ProjectStats | null>(null);
-    const [hierarchy, setHierarchy] = useState<HierarchyItem[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const queryClient = useQueryClient();
 
     const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [packageSearchQuery, setPackageSearchQuery] = useState('');
+
+    // React Query: 프로젝트 통계 조회
+    const {
+        data: stats = null,
+        isLoading: isLoadingStats,
+        error: statsError
+    } = useQuery({
+        queryKey: ['projects', projectName, 'stats'],
+        queryFn: async () => {
+            const response = await axios.get<ProjectStats>(`/api/v1/projects/${projectName}/stats`);
+            return response.data;
+        },
+        enabled: !!projectName,
+    });
+
+    // React Query: 프로젝트 계층 구조 조회
+    const {
+        data: hierarchy = [],
+        isLoading: isLoadingHierarchy,
+        error: hierarchyError
+    } = useQuery<HierarchyItem[]>({
+        queryKey: ['projects', projectName, 'hierarchy'],
+        queryFn: async () => {
+            const response = await axios.get<HierarchyItem[]>(`/api/v1/projects/${projectName}/hierarchy`);
+            return response.data;
+        },
+        enabled: !!projectName,
+    });
+
+    const isLoading = isLoadingStats || isLoadingHierarchy;
+    const error = statsError || hierarchyError;
+
+    // 첫 번째 패키지 자동 선택 (useEffect로 처리)
+    React.useEffect(() => {
+        if (hierarchy && hierarchy.length > 0 && !selectedPackage) {
+            setSelectedPackage(hierarchy[0].package);
+        }
+    }, [hierarchy, selectedPackage]);
 
     // Edit Mode State
     const [isEditing, setIsEditing] = useState(false);
@@ -140,62 +176,38 @@ const ProjectDetails: React.FC = () => {
         }
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            if (!projectName) return;
-            setIsLoading(true);
-            try {
-                // Fetch stats and hierarchy in parallel
-                const [statsRes, hierarchyRes] = await Promise.all([
-                    axios.get(`/api/v1/projects/${projectName}/stats`),
-                    axios.get(`/api/v1/projects/${projectName}/hierarchy`)
-                ]);
-
-                setStats(statsRes.data);
-                // Initialize form with fetched data
-                setEditForm({
-                    framework: statsRes.data.project.framework || '',
-                    repository: statsRes.data.project.repository || ''
-                });
-                setHierarchy(hierarchyRes.data);
-
-                // NO OP - Let's view the file first to be exact. package by default if available
-                if (hierarchyRes.data.length > 0) {
-                    setSelectedPackage(hierarchyRes.data[0].package);
-                }
-            } catch (err) {
-                console.error("Failed to fetch project details", err);
-                setError("Failed to load project details.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchData();
-    }, [projectName]);
-
-    const handleSaveProjectInfo = async () => {
-        if (!stats) return;
-        try {
-            await axios.patch(`/api/v1/projects/${projectName}`, {
-                framework: editForm.framework,
-                repository: editForm.repository
+    // stats가 로드되면 editForm 초기화
+    React.useEffect(() => {
+        if (stats?.project) {
+            setEditForm({
+                framework: stats.project.framework || '',
+                repository: stats.project.repository || ''
             });
+        }
+    }, [stats]);
 
-            // Update local state
-            setStats({
-                ...stats,
-                project: {
-                    ...stats.project,
-                    framework: editForm.framework,
-                    repository: editForm.repository
-                }
-            });
+    // Mutation: 프로젝트 정보 업데이트
+    const updateProjectMutation = useMutation({
+        mutationFn: async (data: { framework: string; repository: string }) => {
+            await axios.patch(`/api/v1/projects/${projectName}`, data);
+        },
+        onSuccess: () => {
+            // stats 쿼리 무효화 (자동 재조회)
+            queryClient.invalidateQueries({ queryKey: ['projects', projectName, 'stats'] });
             setIsEditing(false);
-        } catch (err) {
+        },
+        onError: (err) => {
             console.error("Failed to update project", err);
             alert("Failed to save changes.");
-        }
+        },
+    });
+
+    const handleSaveProjectInfo = () => {
+        if (!stats) return;
+        updateProjectMutation.mutate({
+            framework: editForm.framework,
+            repository: editForm.repository
+        });
     };
 
     const handleCancelEdit = () => {
