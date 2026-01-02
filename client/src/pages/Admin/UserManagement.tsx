@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { userApi, User, Group } from '../../api/userApi';
+import { createUserSchema, updateUserSchema, type CreateUserFormData, type UpdateUserFormData } from '../../schemas/userSchema';
 import { Plus, User as UserIcon, Mail, Search, MoreVertical, X, Eye, EyeOff, Edit, Trash2, FileSpreadsheet, ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
 import ExcelJS from 'exceljs';
 
 import ConfirmModal from '../../components/ConfirmModal';
+import FormError from '../../components/FormError';
 
 type SortKey = 'username' | 'name' | 'email' | 'created_at' | 'updated_at';
 type SortDirection = 'asc' | 'desc';
@@ -21,7 +25,7 @@ const UserManagement = () => {
     const [groups, setGroups] = useState<Group[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
-    const [currentUser, setCurrentUser] = useState({ id: '', username: '', name: '', email: '', password: '', phone_number: '', group_ids: [] as string[] });
+    const [editingUserId, setEditingUserId] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
@@ -29,6 +33,31 @@ const UserManagement = () => {
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [deleteUserConfirm, setDeleteUserConfirm] = useState<User | null>(null);
+
+    // React Hook Form for Create User
+    const createForm = useForm<CreateUserFormData>({
+        resolver: zodResolver(createUserSchema),
+        defaultValues: {
+            username: '',
+            name: '',
+            email: '',
+            password: '',
+            phone_number: '',
+            group_ids: [],
+        },
+    });
+
+    // React Hook Form for Update User
+    const updateForm = useForm<UpdateUserFormData>({
+        resolver: zodResolver(updateUserSchema),
+        defaultValues: {
+            name: '',
+            email: '',
+            password: '',
+            phone_number: '',
+            group_ids: [],
+        },
+    });
 
     useEffect(() => {
         loadData();
@@ -56,51 +85,98 @@ const UserManagement = () => {
 
     const handleCreateUser = () => {
         setIsEditing(false);
-        setCurrentUser({ id: '', username: '', name: '', email: '', password: '', phone_number: '', group_ids: [] });
+        setEditingUserId('');
+        createForm.reset({
+            username: '',
+            name: '',
+            email: '',
+            password: '',
+            phone_number: '',
+            group_ids: [],
+        });
         setShowPassword(false);
         setShowModal(true);
     };
 
     const handleEditUser = (user: User) => {
         setIsEditing(true);
-        setCurrentUser({
-            id: user.id,
-            username: user.username,
+        setEditingUserId(user.id);
+        updateForm.reset({
             name: user.name || '',
             email: user.email,
+            password: '',
             phone_number: user.phone_number || '',
-            password: '', // Don't fill password
-            group_ids: user.groups.map(g => g.id)
+            group_ids: user.groups.map(g => g.id),
         });
         setShowPassword(false);
         setShowModal(true);
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const onCreateSubmit = async (data: CreateUserFormData) => {
         try {
-            if (isEditing) {
-                const updateData = {
-                    name: currentUser.name,
-                    email: currentUser.email,
-                    phone_number: currentUser.phone_number,
-                    group_ids: currentUser.group_ids,
-                    ...(currentUser.password ? { password: currentUser.password } : {})
-                };
-                await userApi.updateUser(currentUser.id, updateData);
-            } else {
-                const exists = await userApi.checkUserExists(currentUser.username);
-                if (exists) {
-                    toast.error(t('userManagement.idExists'));
-                    return;
-                }
-                await userApi.createUser(currentUser);
+            // Check for duplicates
+            const exists = await userApi.checkUserExists(data.username);
+            if (exists) {
+                createForm.setError('username', {
+                    type: 'manual',
+                    message: t('userManagement.idExists'),
+                });
+                toast.error(t('userManagement.idExists'));
+                return;
             }
+            await userApi.createUser({
+                id: '',
+                ...data,
+            });
+            toast.success(t('userManagement.createSuccess') || "User created successfully");
             setShowModal(false);
             loadData();
         } catch (error) {
-            console.error('Failed to save user:', error);
-            toast.error('Failed to save user');
+            console.error('Failed to create user:', error);
+            toast.error('Failed to create user');
+        }
+    };
+
+    const onUpdateSubmit = async (data: UpdateUserFormData) => {
+        try {
+            await userApi.updateUser(editingUserId, {
+                name: data.name,
+                email: data.email,
+                phone_number: data.phone_number,
+                group_ids: data.group_ids || [],
+                ...(data.password ? { password: data.password } : {}),
+            });
+            toast.success(t('userManagement.updateSuccess') || "User updated successfully");
+            setShowModal(false);
+            loadData();
+        } catch (error) {
+            console.error('Failed to update user:', error);
+            toast.error('Failed to update user');
+        }
+    };
+
+    const handleCheckDuplicate = async () => {
+        const username = createForm.getValues('username');
+        if (!username) {
+            toast.error(t('userManagement.enterUserId') || "Please enter a user ID");
+            return;
+        }
+
+        try {
+            const exists = await userApi.checkUserExists(username);
+            if (exists) {
+                createForm.setError('username', {
+                    type: 'manual',
+                    message: t('userManagement.idExists'),
+                });
+                toast.error(t('userManagement.idExists'));
+            } else {
+                createForm.clearErrors('username');
+                toast.success(t('userManagement.idAvailable'));
+            }
+        } catch (error) {
+            console.error('Failed to check duplicate:', error);
+            toast.error('Failed to check duplicate');
         }
     };
 
@@ -177,7 +253,7 @@ const UserManagement = () => {
                 const workbook = new ExcelJS.Workbook();
                 await workbook.xlsx.load(buffer);
 
-                const worksheet = workbook.worksheets[0]; // Get first sheet
+                const worksheet = workbook.worksheets[0];
                 if (!worksheet) {
                     throw new Error('No worksheet found');
                 }
@@ -202,7 +278,6 @@ const UserManagement = () => {
                     const groupsStr = getCellText(6);
 
                     if (usernameStr && emailStr && passwordStr) {
-                        // Parse groups
                         const groupNames = groupsStr ? groupsStr.split(',').map(g => g.trim()).filter(Boolean) : [];
                         const groupIds = groupNames.map(gName => {
                             const group = groups.find(g => g.name === gName);
@@ -458,7 +533,6 @@ const UserManagement = () => {
                                                         <MoreVertical className="w-4 h-4" />
                                                     </button>
 
-                                                    {/* Row Menu */}
                                                     {activeMenuId === user.id && (
                                                         <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-slate-100 rounded-lg shadow-xl z-20 py-1 origin-top-right animate-in fade-in zoom-in duration-100">
                                                             <button
@@ -503,130 +577,220 @@ const UserManagement = () => {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-                                <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userId')}</label>
-                                        <div className="flex gap-2">
+                            {isEditing ? (
+                                <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                                    <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userName')}</label>
                                             <input
                                                 type="text"
-                                                required
-                                                disabled={isEditing}
-                                                className={`flex-1 px-4 py-2.5 rounded-xl border border-slate-200 outline-none text-slate-800 transition-all ${isEditing ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : 'focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10'}`}
-                                                value={currentUser.username}
-                                                onChange={e => setCurrentUser({ ...currentUser, username: e.target.value })}
-                                                placeholder={t('userManagement.userId')}
+                                                {...updateForm.register('name')}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                placeholder={t('userManagement.userName')}
                                             />
-                                            {!isEditing && (
+                                            <FormError message={updateForm.formState.errors.name?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.phoneNumber')}</label>
+                                            <input
+                                                type="tel"
+                                                {...updateForm.register('phone_number')}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                placeholder={t('userManagement.phoneNumber')}
+                                            />
+                                            <FormError message={updateForm.formState.errors.phone_number?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
+                                            <input
+                                                type="email"
+                                                {...updateForm.register('email')}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                            />
+                                            <FormError message={updateForm.formState.errors.email?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                                {t('userManagement.password')}
+                                                <span className="text-xs font-normal text-slate-400 ml-2">(Create new to change)</span>
+                                            </label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    {...updateForm.register('password')}
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                    placeholder="••••••••"
+                                                />
                                                 <button
                                                     type="button"
-                                                    onClick={async () => {
-                                                        if (!currentUser.username) return;
-                                                        const exists = await userApi.checkUserExists(currentUser.username);
-                                                        if (exists) {
-                                                            toast.error(t('userManagement.idExists'));
-                                                        } else {
-                                                            toast.success(t('userManagement.idAvailable'));
-                                                        }
-                                                    }}
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                >
+                                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                </button>
+                                            </div>
+                                            <FormError message={updateForm.formState.errors.password?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
+                                            <select
+                                                multiple
+                                                {...updateForm.register('group_ids')}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
+                                            >
+                                                {groups.map(group => (
+                                                    <option key={group.id} value={group.id} className="py-1">{group.id}({group.name})</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
+                                                or
+                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
+                                                {t('userManagement.selectMultiple')}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white flex-shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowModal(false)}
+                                            className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                                        >
+                                            {t('common.cancel')}
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={updateForm.formState.isSubmitting}
+                                            className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {updateForm.formState.isSubmitting ? (
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    {t('common.saving')}
+                                                </span>
+                                            ) : (
+                                                t('common.save')
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="flex flex-col flex-1 overflow-hidden">
+                                    <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userId')}</label>
+                                            <div className="flex gap-2">
+                                                <div className="flex-1">
+                                                    <input
+                                                        type="text"
+                                                        {...createForm.register('username')}
+                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-slate-800"
+                                                        placeholder={t('userManagement.userId')}
+                                                    />
+                                                    <FormError message={createForm.formState.errors.username?.message} />
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleCheckDuplicate}
                                                     className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium text-sm whitespace-nowrap"
                                                 >
                                                     {t('userManagement.checkDuplicate')}
                                                 </button>
-                                            )}
+                                            </div>
                                         </div>
-                                        {isEditing && <p className="text-xs text-slate-400 mt-1">User ID cannot be changed</p>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userName')}</label>
-                                        <input
-                                            type="text"
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                            value={currentUser.name}
-                                            onChange={e => setCurrentUser({ ...currentUser, name: e.target.value })}
-                                            placeholder={t('userManagement.userName')}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.phoneNumber')}</label>
-                                        <input
-                                            type="tel"
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                            value={currentUser.phone_number}
-                                            onChange={e => setCurrentUser({ ...currentUser, phone_number: e.target.value })}
-                                            placeholder={t('userManagement.phoneNumber')}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
-                                        <input
-                                            type="email"
-                                            required
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                            value={currentUser.email}
-                                            onChange={e => setCurrentUser({ ...currentUser, email: e.target.value })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">
-                                            {t('userManagement.password')}
-                                            {isEditing && <span className="text-xs font-normal text-slate-400 ml-2">(Create new to change)</span>}
-                                        </label>
-                                        <div className="relative">
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userName')}</label>
                                             <input
-                                                type={showPassword ? 'text' : 'password'}
-                                                required={!isEditing}
+                                                type="text"
+                                                {...createForm.register('name')}
                                                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                                value={currentUser.password}
-                                                onChange={e => setCurrentUser({ ...currentUser, password: e.target.value })}
-                                                placeholder={isEditing ? '••••••••' : ''}
+                                                placeholder={t('userManagement.userName')}
                                             />
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                            <FormError message={createForm.formState.errors.name?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.phoneNumber')}</label>
+                                            <input
+                                                type="tel"
+                                                {...createForm.register('phone_number')}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                placeholder={t('userManagement.phoneNumber')}
+                                            />
+                                            <FormError message={createForm.formState.errors.phone_number?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
+                                            <input
+                                                type="email"
+                                                {...createForm.register('email')}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                            />
+                                            <FormError message={createForm.formState.errors.email?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.password')}</label>
+                                            <div className="relative">
+                                                <input
+                                                    type={showPassword ? 'text' : 'password'}
+                                                    {...createForm.register('password')}
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowPassword(!showPassword)}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                >
+                                                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                </button>
+                                            </div>
+                                            <FormError message={createForm.formState.errors.password?.message} />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
+                                            <select
+                                                multiple
+                                                {...createForm.register('group_ids')}
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
                                             >
-                                                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                            </button>
+                                                {groups.map(group => (
+                                                    <option key={group.id} value={group.id} className="py-1">{group.id}({group.name})</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
+                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
+                                                or
+                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
+                                                {t('userManagement.selectMultiple')}
+                                            </p>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
-                                        <select
-                                            multiple
-                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
-                                            value={currentUser.group_ids}
-                                            onChange={e => setCurrentUser({ ...currentUser, group_ids: Array.from(e.target.selectedOptions, option => option.value) })}
-                                        >
-                                            {groups.map(group => (
-                                                <option key={group.id} value={group.id} className="py-1">{group.id}({group.name})</option>
-                                            ))}
-                                        </select>
-                                        <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                                            <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
-                                            or
-                                            <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
-                                            {t('userManagement.selectMultiple')}
-                                        </p>
-                                    </div>
-                                </div>
 
-                                <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white flex-shrink-0">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowModal(false)}
-                                        className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
-                                    >
-                                        {isEditing ? t('common.save') : t('userManagement.createUser')}
-                                    </button>
-                                </div>
-                            </form>
+                                    <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white flex-shrink-0">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowModal(false)}
+                                            className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                                        >
+                                            {t('common.cancel')}
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={createForm.formState.isSubmitting}
+                                            className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            {createForm.formState.isSubmitting ? (
+                                                <span className="flex items-center gap-2">
+                                                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                    {t('common.saving')}
+                                                </span>
+                                            ) : (
+                                                t('userManagement.createUser')
+                                            )}
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
                         </div>
                     </div>
                 )}

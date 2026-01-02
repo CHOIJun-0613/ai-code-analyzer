@@ -232,7 +232,7 @@ const ProjectDetails: React.FC = () => {
         item.package.toLowerCase().includes(packageSearchQuery.toLowerCase())
     );
 
-    const selectedHierarchyItem = hierarchy.find(h => h.package === selectedPackage);
+
 
     const filteredClasses = React.useMemo(() => {
         let targetClasses: ClassItem[] = [];

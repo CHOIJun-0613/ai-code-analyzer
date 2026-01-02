@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { userApi, Group } from '../../api/userApi';
 import client from '../../api/client';
+import { groupSchema, type GroupFormData } from '../../schemas/groupSchema';
 import { Plus, Shield, Check, X, Users, MoreVertical, Trash2, Edit } from 'lucide-react';
 import ProjectSelector from '../../components/ProjectSelector';
+import FormError from '../../components/FormError';
 
 import ConfirmModal from '../../components/ConfirmModal';
 
@@ -21,10 +25,31 @@ const GroupManagement = () => {
     const [groups, setGroups] = useState<Group[]>([]);
     const [projects, setProjects] = useState<any[]>([]);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [newGroup, setNewGroup] = useState({ id: '', name: '', permissions: [] as string[], projects: [] as string[] });
-    const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+    const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const [deleteGroupConfirm, setDeleteGroupConfirm] = useState<Group | null>(null);
+
+    // React Hook Form for Create Group
+    const createForm = useForm<GroupFormData>({
+        resolver: zodResolver(groupSchema),
+        defaultValues: {
+            id: '',
+            name: '',
+            permissions: [],
+            projects: [],
+        },
+    });
+
+    // React Hook Form for Update Group
+    const updateForm = useForm<GroupFormData>({
+        resolver: zodResolver(groupSchema),
+        defaultValues: {
+            id: '',
+            name: '',
+            permissions: [],
+            projects: [],
+        },
+    });
 
     useEffect(() => {
         const handleClickOutside = () => setActiveMenuId(null);
@@ -55,20 +80,42 @@ const GroupManagement = () => {
         }
     };
 
-    const handleCreateGroup = async (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleOpenCreateModal = () => {
+        createForm.reset({
+            id: '',
+            name: '',
+            permissions: [],
+            projects: [],
+        });
+        setShowAddModal(true);
+    };
+
+    const handleOpenEditModal = (group: Group) => {
+        setEditingGroupId(group.id);
+        updateForm.reset({
+            id: group.id,
+            name: group.name,
+            permissions: group.permissions,
+            projects: group.projects || [],
+        });
+    };
+
+    const onCreateSubmit = async (data: GroupFormData) => {
         try {
             // Check duplicate ID
-            const exists = await userApi.checkGroupExists(newGroup.id);
+            const exists = await userApi.checkGroupExists(data.id);
             if (exists) {
+                createForm.setError('id', {
+                    type: 'manual',
+                    message: t('groupManagement.idExists', 'Group ID already exists'),
+                });
                 toast.error(t('groupManagement.idExists', 'Group ID already exists'));
                 return;
             }
 
-            await userApi.createGroup(newGroup);
-
+            await userApi.createGroup(data);
+            toast.success(t('groupManagement.createSuccess') || "Group created successfully");
             setShowAddModal(false);
-            setNewGroup({ id: '', name: '', permissions: [], projects: [] });
             loadGroups();
         } catch (error) {
             console.error('Failed to create group:', error);
@@ -76,17 +123,41 @@ const GroupManagement = () => {
         }
     };
 
-    const handleUpdateGroup = async () => {
-        if (!editingGroup) return;
+    const onUpdateSubmit = async (data: GroupFormData) => {
+        if (!editingGroupId) return;
         try {
-            // Use new general update endpoint
-            await userApi.updateGroup(editingGroup.id, editingGroup);
-
-            setEditingGroup(null);
+            await userApi.updateGroup(editingGroupId, data);
+            toast.success(t('groupManagement.updateSuccess') || "Group updated successfully");
+            setEditingGroupId(null);
             loadGroups();
         } catch (error) {
             console.error('Failed to update group:', error);
             toast.error('Failed to update group');
+        }
+    };
+
+    const handleCheckDuplicate = async () => {
+        const id = createForm.getValues('id');
+        if (!id) {
+            toast.error(t('groupManagement.enterGroupId') || "Please enter a group ID");
+            return;
+        }
+
+        try {
+            const exists = await userApi.checkGroupExists(id);
+            if (exists) {
+                createForm.setError('id', {
+                    type: 'manual',
+                    message: t('groupManagement.idExists', 'Group ID already exists'),
+                });
+                toast.error('Group ID already exists');
+            } else {
+                createForm.clearErrors('id');
+                toast.success('Group ID is available');
+            }
+        } catch (e) {
+            console.error(e);
+            toast.error('Failed to check duplicate');
         }
     };
 
@@ -108,17 +179,12 @@ const GroupManagement = () => {
         }
     };
 
-    const checkNewGroupId = async () => {
-        if (!newGroup.id) return;
-        try {
-            const exists = await userApi.checkGroupExists(newGroup.id);
-            if (exists) {
-                toast.error('Group ID already exists');
-            } else {
-                toast.success('Group ID is available');
-            }
-        } catch (e) {
-            console.error(e);
+    const handlePermissionChange = (form: typeof createForm | typeof updateForm, permValue: string, checked: boolean) => {
+        const currentPerms = form.getValues('permissions') || [];
+        if (checked) {
+            form.setValue('permissions', [...currentPerms, permValue]);
+        } else {
+            form.setValue('permissions', currentPerms.filter(p => p !== permValue));
         }
     };
 
@@ -138,7 +204,7 @@ const GroupManagement = () => {
                         <p className="mt-2 text-slate-500 text-lg">{t('groupManagement.subtitle')}</p>
                     </div>
                     <button
-                        onClick={() => setShowAddModal(true)}
+                        onClick={handleOpenCreateModal}
                         className="group flex items-center gap-2 bg-indigo-600 text-white px-6 py-3 rounded-xl hover:bg-indigo-700 transition-all duration-200 shadow-md hover:shadow-xl hover:-translate-y-0.5"
                     >
                         <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-200" />
@@ -180,7 +246,7 @@ const GroupManagement = () => {
                                         {activeMenuId === group.id && (
                                             <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-slate-100 rounded-lg shadow-lg z-50 py-1 animate-in fade-in zoom-in duration-100 origin-top-right">
                                                 <button
-                                                    onClick={() => setEditingGroup(group)}
+                                                    onClick={() => handleOpenEditModal(group)}
                                                     className="w-full text-left px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
                                                 >
                                                     <Edit className="w-3.5 h-3.5" />
@@ -242,22 +308,23 @@ const GroupManagement = () => {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleCreateGroup} className="flex flex-col flex-1 overflow-hidden">
+                            <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="flex flex-col flex-1 overflow-hidden">
                                 <div className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 mb-2">{t('groupManagement.groupId', 'Group ID')}</label>
                                         <div className="flex gap-2">
-                                            <input
-                                                type="text"
-                                                required
-                                                placeholder="unique_group_id"
-                                                className="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400"
-                                                value={newGroup.id}
-                                                onChange={e => setNewGroup({ ...newGroup, id: e.target.value })}
-                                            />
+                                            <div className="flex-1">
+                                                <input
+                                                    type="text"
+                                                    placeholder="unique_group_id"
+                                                    {...createForm.register('id')}
+                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400"
+                                                />
+                                                <FormError message={createForm.formState.errors.id?.message} />
+                                            </div>
                                             <button
                                                 type="button"
-                                                onClick={checkNewGroupId}
+                                                onClick={handleCheckDuplicate}
                                                 className="px-3 py-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 text-sm font-medium whitespace-nowrap"
                                             >
                                                 Check
@@ -268,47 +335,45 @@ const GroupManagement = () => {
                                         <label className="block text-sm font-semibold text-slate-700 mb-2">{t('groupManagement.groupName')}</label>
                                         <input
                                             type="text"
-                                            required
                                             placeholder={t('groupManagement.groupNamePlaceholder')}
+                                            {...createForm.register('name')}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 placeholder:text-slate-400"
-                                            value={newGroup.name}
-                                            onChange={e => setNewGroup({ ...newGroup, name: e.target.value })}
                                         />
+                                        <FormError message={createForm.formState.errors.name?.message} />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 mb-3">{t('groupManagement.assignPermissions')}</label>
                                         <div className="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
-                                            {AVAILABLE_PERMISSIONS.map(perm => (
-                                                <label
-                                                    key={perm.value}
-                                                    className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${newGroup.permissions.includes(perm.value)
-                                                        ? 'border-indigo-200 bg-indigo-50/50'
-                                                        : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
+                                            {AVAILABLE_PERMISSIONS.map(perm => {
+                                                const currentPerms = createForm.watch('permissions') || [];
+                                                const isChecked = currentPerms.includes(perm.value);
+
+                                                return (
+                                                    <label
+                                                        key={perm.value}
+                                                        className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${isChecked
+                                                            ? 'border-indigo-200 bg-indigo-50/50'
+                                                            : 'border-slate-100 hover:border-slate-200 hover:bg-slate-50'
                                                         }`}
-                                                >
-                                                    <input
-                                                        type="checkbox"
-                                                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                        checked={newGroup.permissions.includes(perm.value)}
-                                                        onChange={e => {
-                                                            if (e.target.checked) {
-                                                                setNewGroup({ ...newGroup, permissions: [...newGroup.permissions, perm.value] });
-                                                            } else {
-                                                                setNewGroup({ ...newGroup, permissions: newGroup.permissions.filter(p => p !== perm.value) });
-                                                            }
-                                                        }}
-                                                    />
-                                                    <span className="ml-3 text-sm font-medium text-slate-700">{perm.label}</span>
-                                                </label>
-                                            ))}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                            checked={isChecked}
+                                                            onChange={(e) => handlePermissionChange(createForm, perm.value, e.target.checked)}
+                                                        />
+                                                        <span className="ml-3 text-sm font-medium text-slate-700">{perm.label}</span>
+                                                    </label>
+                                                );
+                                            })}
                                         </div>
                                     </div>
 
                                     <div>
                                         <ProjectSelector
                                             projects={projects}
-                                            selected={newGroup.projects}
-                                            onChange={(projects) => setNewGroup({ ...newGroup, projects })}
+                                            selected={createForm.watch('projects') || []}
+                                            onChange={(projects) => createForm.setValue('projects', projects)}
                                         />
                                     </div>
                                 </div>
@@ -323,9 +388,17 @@ const GroupManagement = () => {
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
+                                        disabled={createForm.formState.isSubmitting}
+                                        className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {t('groupManagement.createGroup')}
+                                        {createForm.formState.isSubmitting ? (
+                                            <span className="flex items-center gap-2">
+                                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                {t('common.saving')}
+                                            </span>
+                                        ) : (
+                                            t('groupManagement.createGroup')
+                                        )}
                                     </button>
                                 </div>
                             </form>
@@ -334,76 +407,74 @@ const GroupManagement = () => {
                 )}
 
                 {/* Edit Group Modal */}
-                {editingGroup && (
+                {editingGroupId && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300">
                         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
                             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
                                 <div>
                                     <h2 className="text-xl font-bold text-slate-800">{t('groupManagement.editModalTitle')}</h2>
-                                    <p className="text-sm text-slate-500 mt-0.5">{t('groupManagement.for')} {editingGroup.id}</p>
+                                    <p className="text-sm text-slate-500 mt-0.5">{t('groupManagement.for')} {editingGroupId}</p>
                                 </div>
                                 <button
-                                    onClick={() => setEditingGroup(null)}
+                                    onClick={() => setEditingGroupId(null)}
                                     className="text-slate-400 hover:text-slate-600 transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
                             </div>
 
-                            <div className="flex flex-col flex-1 overflow-hidden">
+                            <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="flex flex-col flex-1 overflow-hidden">
                                 <div className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 mb-2">{t('groupManagement.groupId', 'Group ID')}</label>
                                         <input
                                             type="text"
                                             disabled
+                                            {...updateForm.register('id')}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed"
-                                            value={editingGroup.id}
                                         />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-semibold text-slate-700 mb-2">{t('groupManagement.groupName')}</label>
                                         <input
                                             type="text"
+                                            {...updateForm.register('name')}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
-                                            value={editingGroup.name}
-                                            onChange={e => setEditingGroup({ ...editingGroup, name: e.target.value })}
                                         />
+                                        <FormError message={updateForm.formState.errors.name?.message} />
                                     </div>
 
                                     <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar border border-slate-100 rounded-xl p-2">
                                         <label className="block text-xs font-semibold text-slate-500 mb-2 uppercase">{t('groupManagement.editPermissions')}</label>
-                                        {AVAILABLE_PERMISSIONS.map(perm => (
-                                            <label
-                                                key={perm.value}
-                                                className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${editingGroup.permissions.includes(perm.value)
-                                                    ? 'bg-indigo-50/50'
-                                                    : 'hover:bg-slate-50'
+                                        {AVAILABLE_PERMISSIONS.map(perm => {
+                                            const currentPerms = updateForm.watch('permissions') || [];
+                                            const isChecked = currentPerms.includes(perm.value);
+
+                                            return (
+                                                <label
+                                                    key={perm.value}
+                                                    className={`flex items-center p-2 rounded-lg cursor-pointer transition-all duration-200 ${isChecked
+                                                        ? 'bg-indigo-50/50'
+                                                        : 'hover:bg-slate-50'
                                                     }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                                                    checked={editingGroup.permissions.includes(perm.value)}
-                                                    onChange={e => {
-                                                        const currentPerms = editingGroup.permissions;
-                                                        if (e.target.checked) {
-                                                            setEditingGroup({ ...editingGroup, permissions: [...currentPerms, perm.value] });
-                                                        } else {
-                                                            setEditingGroup({ ...editingGroup, permissions: currentPerms.filter(p => p !== perm.value) });
-                                                        }
-                                                    }}
-                                                />
-                                                <span className="ml-3 text-sm font-medium text-slate-700">{perm.label}</span>
-                                            </label>
-                                        ))}
+                                                >
+                                                    <input
+                                                        type="checkbox"
+                                                        className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                                        checked={isChecked}
+                                                        onChange={(e) => handlePermissionChange(updateForm, perm.value, e.target.checked)}
+                                                    />
+                                                    <span className="ml-3 text-sm font-medium text-slate-700">{perm.label}</span>
+                                                </label>
+                                            );
+                                        })}
                                     </div>
 
                                     <div className="pt-4 border-t border-slate-100">
                                         <ProjectSelector
                                             projects={projects}
-                                            selected={editingGroup.projects || []}
-                                            onChange={(projects) => setEditingGroup({ ...editingGroup, projects })}
+                                            selected={updateForm.watch('projects') || []}
+                                            onChange={(projects) => updateForm.setValue('projects', projects)}
                                         />
                                     </div>
                                 </div>
@@ -411,20 +482,27 @@ const GroupManagement = () => {
                                 <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white flex-shrink-0">
                                     <button
                                         type="button"
-                                        onClick={() => setEditingGroup(null)}
+                                        onClick={() => setEditingGroupId(null)}
                                         className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
                                     >
                                         {t('common.cancel')}
                                     </button>
                                     <button
-                                        type="button"
-                                        onClick={handleUpdateGroup}
-                                        className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5"
+                                        type="submit"
+                                        disabled={updateForm.formState.isSubmitting}
+                                        className="px-5 py-2.5 text-sm font-medium text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        {t('groupManagement.saveChanges')}
+                                        {updateForm.formState.isSubmitting ? (
+                                            <span className="flex items-center gap-2">
+                                                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                {t('common.saving')}
+                                            </span>
+                                        ) : (
+                                            t('groupManagement.saveChanges')
+                                        )}
                                     </button>
                                 </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
                 )}
