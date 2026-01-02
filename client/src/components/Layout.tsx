@@ -19,7 +19,10 @@ const Layout: React.FC = () => {
     // -- State --
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [theme, setTheme] = useState<Theme>('normal');
+    const [theme, setTheme] = useState<Theme>(() => {
+        const savedTheme = localStorage.getItem('app-theme');
+        return (savedTheme as Theme) || 'normal';
+    });
 
     // -- Theme Effect --
     useEffect(() => {
@@ -32,6 +35,7 @@ const Layout: React.FC = () => {
         } else {
             document.documentElement.classList.remove('dark');
         }
+        localStorage.setItem('app-theme', theme);
     }, [theme]);
 
     // -- Fetch User Effect --

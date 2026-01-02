@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ReportViewerModal from '../components/ReportViewerModal';
 import VirtualizedTable, { Column } from '../components/VirtualizedTable';
 import {
@@ -58,6 +59,7 @@ const ClassDetails: React.FC = () => {
     const [searchParams] = useSearchParams();
     const packageName = searchParams.get('package');
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     const [activeTab, setActiveTab] = useState<'info' | 'source' | 'methods' | 'fields'>('info');
     const [isCopied, setIsCopied] = useState(false);
@@ -503,19 +505,43 @@ const ClassDetails: React.FC = () => {
 
             {/* Main Content Tabs */}
             <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
-                <div className="flex border-b border-slate-100 overflow-x-auto">
-                    {['info', 'source', 'methods', 'fields'].map((tab) => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab as any)}
-                            className={`px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab
-                                ? 'border-indigo-600 text-indigo-700 bg-indigo-50/10'
-                                : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
-                                }`}
-                        >
-                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                        </button>
-                    ))}
+                <div className="flex border-b border-slate-100 overflow-x-auto justify-between items-center">
+                    <div className="flex">
+                        {['info', 'source', 'methods', 'fields'].map((tab) => (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab as any)}
+                                className={`px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab
+                                    ? 'border-indigo-600 text-indigo-700 bg-indigo-50/10'
+                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                    }`}
+                            >
+                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                            </button>
+                        ))}
+                    </div>
+                    {/* Source Tab Toolbar - Only visible when source tab is active */}
+                    {activeTab === 'source' && (
+                        <div className="flex gap-2 mr-4">
+                            <button
+                                onClick={handleSelectAll}
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+                            >
+                                <MousePointerClick className="w-3.5 h-3.5" />
+                                {t('common.selectAll')}
+                            </button>
+                            <button
+                                onClick={handleCopySource}
+                                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition-all ${isCopied
+                                    ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
+                                    : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50 hover:text-indigo-600'
+                                    }`}
+                            >
+                                {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                                {isCopied ? t('common.copied') : t('common.copy')}
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="p-6">
@@ -539,11 +565,11 @@ const ClassDetails: React.FC = () => {
                                     <h3 className="text-lg font-bold text-slate-900 mb-3">Overview</h3>
                                     <div className="space-y-4">
                                         {classData.description && (
-                                            <div className="prose prose-slate max-w-none text-slate-600 leading-relaxed">
+                                            <div className="markdown-content bg-white dark:bg-[#1e1e1e] p-4 rounded-lg border border-slate-100 dark:border-slate-800">
                                                 <Markdown remarkPlugins={[remarkGfm]}>{classData.description}</Markdown>
                                             </div>
                                         )}
-                                        <div className="prose prose-slate max-w-none text-slate-600 border border-slate-200 rounded-lg p-4 bg-slate-50/50 max-h-[600px] overflow-y-auto mt-4">
+                                        <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto mt-4">
                                             {classData.ai_description ? (
                                                 <Markdown remarkPlugins={[remarkGfm]}>{classData.ai_description}</Markdown>
                                             ) : (
@@ -558,36 +584,17 @@ const ClassDetails: React.FC = () => {
 
                     {activeTab === 'source' && (
                         <div className="h-full flex flex-col">
-                            {/* Toolbar */}
-                            <div className="flex justify-end gap-2 mb-2">
-                                <button
-                                    onClick={handleSelectAll}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors"
-                                >
-                                    <MousePointerClick className="w-3.5 h-3.5" />
-                                    전체선택
-                                </button>
-                                <button
-                                    onClick={handleCopySource}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition-all ${isCopied
-                                        ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
-                                        : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50 hover:text-indigo-600'
-                                        }`}
-                                >
-                                    {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                                    {isCopied ? '복사됨' : '복사하기'}
-                                </button>
-                            </div>
+                            {/* Toolbar Removed form here */}
 
-                            <div className="bg-[#1e1e1e] rounded-xl overflow-hidden text-sm border border-slate-900/10 shadow-inner h-[600px] flex font-mono">
+                            <div className="bg-white dark:bg-[#1e1e1e] rounded-xl overflow-hidden text-sm border border-slate-200 dark:border-slate-900/10 shadow-inner h-[600px] flex font-mono transition-colors duration-300">
                                 <div className="overflow-auto w-full h-full flex">
-                                    <div className="flex-none min-h-full bg-[#1e1e1e] border-r border-[#333] flex flex-col text-right py-4 pr-3 pl-4 select-none text-[#6e7681] sticky left-0 z-10">
+                                    <div className="flex-none min-h-full bg-slate-50 dark:bg-[#1e1e1e] border-r border-slate-200 dark:border-[#333] flex flex-col text-right py-4 pr-3 pl-4 select-none text-slate-400 dark:text-[#6e7681] sticky left-0 z-10 transition-colors duration-300">
                                         {(classData.source || '').split('\n').map((_, i) => (
                                             <span key={i} className="leading-6">{i + 1}</span>
                                         ))}
                                     </div>
-                                    <div className="flex-1 min-h-full min-w-0 bg-[#1e1e1e]">
-                                        <pre ref={codeRef} className="m-0 p-4 leading-6 whitespace-pre text-[#d4d4d4] font-mono">
+                                    <div className="flex-1 min-h-full min-w-0 bg-white dark:bg-[#1e1e1e] transition-colors duration-300">
+                                        <pre ref={codeRef} className="m-0 p-4 leading-6 whitespace-pre text-slate-800 dark:text-[#d4d4d4] font-mono font-medium">
                                             {classData.source || '// No source code available'}
                                         </pre>
                                     </div>

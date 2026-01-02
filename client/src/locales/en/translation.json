@@ -9,6 +9,8 @@
         "error": "Error",
         "selectAll": "Select All",
         "deselectAll": "Deselect All",
+        "copy": "Copy",
+        "copied": "Copied",
         "success": "Success"
     },
     "layout": {

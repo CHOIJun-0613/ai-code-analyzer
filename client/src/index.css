@@ -1,3 +1,136 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  /* VS Code-like Markdown Styles */
+  .markdown-content {
+    @apply text-base leading-relaxed break-words font-sans;
+    color: #24292e; /* Light mode text */
+  }
+
+  .dark .markdown-content {
+    color: #d4d4d4; /* Dark mode text */
+  }
+
+  /* Headers */
+  .markdown-content h1,
+  .markdown-content h2,
+  .markdown-content h3,
+  .markdown-content h4,
+  .markdown-content h5,
+  .markdown-content h6 {
+    @apply font-bold mt-6 mb-4 border-b pb-2 border-slate-200 dark:border-slate-800;
+    color: #24292e;
+  }
+  
+  .dark .markdown-content h1,
+  .dark .markdown-content h2,
+  .dark .markdown-content h3,
+  .dark .markdown-content h4,
+  .dark .markdown-content h5,
+  .dark .markdown-content h6 {
+     color: #d4d4d4;
+  }
+
+  .markdown-content h1 { @apply text-2xl; }
+  .markdown-content h2 { @apply text-xl; }
+  .markdown-content h3 { @apply text-lg; }
+
+  /* Paragraphs */
+  .markdown-content p {
+    @apply mb-4;
+  }
+
+  /* Links */
+  .markdown-content a {
+    @apply text-blue-600 hover:underline;
+  }
+  .dark .markdown-content a {
+    @apply text-[#3794ff];
+  }
+
+  /* Lists */
+  .markdown-content ul {
+    @apply list-disc list-inside mb-4 pl-4;
+  }
+  .markdown-content ol {
+    @apply list-decimal list-inside mb-4 pl-4;
+  }
+  .markdown-content li {
+    @apply mb-1;
+  }
+  .markdown-content li > ul,
+  .markdown-content li > ol {
+     @apply mt-1 mb-0 ml-4;
+  }
+
+  /* Blockquotes */
+  .markdown-content blockquote {
+    @apply pl-4 border-l-4 border-slate-300 italic my-4;
+    color: #6a737d;
+  }
+  .dark .markdown-content blockquote {
+    @apply border-slate-600;
+    color: #a2a2a2;
+  }
+
+  /* Inline Code */
+  .markdown-content code {
+    @apply px-1.5 py-0.5 rounded font-mono text-sm;
+    font-family: Consolas, "Courier New", monospace;
+    background-color: rgba(27, 31, 35, 0.05);
+    color: #24292e;
+  }
+  .dark .markdown-content code {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #d4d4d4;
+  }
+
+  /* Code Blocks - Override generic code style for pre > code */
+  .markdown-content pre {
+    @apply p-4 rounded-lg overflow-x-auto mb-4;
+    background-color: #f6f8fa;
+  }
+  .dark .markdown-content pre {
+    background-color: #1e1e1e;
+    border: 1px solid #30363d;
+  }
+
+  .markdown-content pre code {
+    @apply p-0 bg-transparent text-inherit m-0;
+    color: inherit;
+  }
+
+  /* Tables */
+  .markdown-content table {
+    @apply w-full border-collapse mb-4 block overflow-x-auto;
+  }
+  
+  .markdown-content thead {
+     @apply bg-slate-50 dark:bg-slate-800/50;
+  }
+
+  .markdown-content th,
+  .markdown-content td {
+    @apply px-3 py-2 border border-slate-300 dark:border-slate-700 text-left text-sm;
+  }
+  
+  .markdown-content th {
+    @apply font-bold;
+  }
+
+  .markdown-content tr:nth-child(2n) {
+    @apply bg-slate-50 dark:bg-slate-800/20;
+  }
+
+  /* Images */
+  .markdown-content img {
+    @apply max-w-full h-auto rounded-lg shadow-sm my-4;
+  }
+  
+  /* Horizontal Rule */
+  .markdown-content hr {
+    @apply my-6 border-slate-200 dark:border-slate-800;
+  }
+}

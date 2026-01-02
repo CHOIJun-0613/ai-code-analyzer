@@ -11,6 +11,8 @@
         "search": "검색",
         "selectAll": "전체 선택",
         "deselectAll": "전체 해제",
+        "copy": "복사하기",
+        "copied": "복사됨",
         "noResults": "검색 결과가 없습니다",
         "noData": "데이터가 없습니다"
     },
