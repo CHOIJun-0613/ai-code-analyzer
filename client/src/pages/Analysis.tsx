@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
@@ -157,6 +158,11 @@ const Analysis: React.FC = () => {
         onComplete: (data) => {
             setStatus(data.status);
             console.log('Analysis complete:', data);
+            if (data.status === 'completed' || data.status === 'success') {
+                toast.success(t('analysis.analysisComplete') || "Analysis completed successfully!");
+            } else if (data.status === 'failed' || data.status === 'error') {
+                toast.error(t('analysis.analysisFailed') || "Analysis failed.");
+            }
         },
         onError: (error) => {
             console.error('WebSocket error:', error);
@@ -343,9 +349,11 @@ const Analysis: React.FC = () => {
             }
             setJobId(response.data.job_id);
             setStatus(response.data.status);
+            toast.success(t('analysis.startSuccess') || "Analysis started successfully.");
         } catch (error) {
             console.error("Analysis request failed", error);
-            alert("Failed to start analysis");
+            console.error("Analysis request failed", error);
+            toast.error(t('analysis.startFailed') || "Failed to start analysis");
         } finally {
             setIsLoading(false);
         }
@@ -361,9 +369,11 @@ const Analysis: React.FC = () => {
         if (!jobId) return;
         try {
             await client.post(`/analysis/analyze/${jobId}/cancel`);
+            toast.success(t('analysis.stopSuccess') || "Analysis stopped successfully.");
             setShowStopConfirmModal(false);
         } catch (error) {
             console.error("Failed to stop analysis", error);
+            toast.error(t('analysis.stopFailed') || "Failed to stop analysis.");
         }
     };
 
@@ -637,10 +647,10 @@ const Analysis: React.FC = () => {
                                             e.stopPropagation();
                                             try {
                                                 await loadPreferences();
-                                                alert("Settings loaded successfully!");
+                                                toast.success(t('analysis.settingsLoaded') || "Settings loaded successfully!");
                                             } catch (err) {
                                                 console.error("Failed to load preferences", err);
-                                                alert("Failed to load settings.");
+                                                toast.error(t('analysis.settingsLoadFailed') || "Failed to load settings.");
                                             }
                                         }}
                                         className="text-xs px-3 py-1.5 bg-white text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors border border-slate-200"
@@ -665,10 +675,10 @@ const Analysis: React.FC = () => {
                                                     analysis_target: analysisTarget,
                                                     save_strategy: saveStrategy
                                                 });
-                                                alert("Configuration saved successfully!");
+                                                toast.success(t('analysis.configSaved') || "Configuration saved successfully!");
                                             } catch (err) {
                                                 console.error("Failed to save preferences", err);
-                                                alert("Failed to save configuration.");
+                                                toast.error(t('analysis.configSaveFailed') || "Failed to save configuration.");
                                             }
                                         }}
                                         className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 font-medium transition-colors border border-indigo-100"
@@ -919,87 +929,91 @@ const Analysis: React.FC = () => {
                         </div>
                     </form>
                 </div>
-            </div>
+            </div >
 
             {/* Confirmation Modal */}
-            {showConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
-                        <div className="p-8">
-                            <div className="flex flex-col items-center text-center">
-                                <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-indigo-50/50">
-                                    <Rocket className="w-8 h-8 text-indigo-600" />
-                                </div>
+            {
+                showConfirmModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                            <div className="p-8">
+                                <div className="flex flex-col items-center text-center">
+                                    <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-indigo-50/50">
+                                        <Rocket className="w-8 h-8 text-indigo-600" />
+                                    </div>
 
-                                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                                    {t('analysis.analysisConfirmTitle')}
-                                </h3>
+                                    <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                        {t('analysis.analysisConfirmTitle')}
+                                    </h3>
 
-                                <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
-                                    {t('analysis.analysisConfirmMessage')}
-                                </p>
+                                    <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
+                                        {t('analysis.analysisConfirmMessage')}
+                                    </p>
 
-                                <div className="flex gap-3 w-full">
-                                    <button
-                                        type="button"
-                                        className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
-                                        onClick={() => setShowConfirmModal(false)}
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="flex-1 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-[0.98]"
-                                        onClick={executeAnalysis}
-                                    >
-                                        {t('analysis.confirm')}
-                                    </button>
+                                    <div className="flex gap-3 w-full">
+                                        <button
+                                            type="button"
+                                            className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                            onClick={() => setShowConfirmModal(false)}
+                                        >
+                                            {t('common.cancel')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="flex-1 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-[0.98]"
+                                            onClick={executeAnalysis}
+                                        >
+                                            {t('analysis.confirm')}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Stop Confirmation Modal */}
-            {showStopConfirmModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
-                        <div className="p-8">
-                            <div className="flex flex-col items-center text-center">
-                                <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
-                                    <Square className="w-8 h-8 text-rose-500 fill-current" />
-                                </div>
+            {
+                showStopConfirmModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                            <div className="p-8">
+                                <div className="flex flex-col items-center text-center">
+                                    <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
+                                        <Square className="w-8 h-8 text-rose-500 fill-current" />
+                                    </div>
 
-                                <h3 className="text-xl font-bold text-slate-900 mb-3">
-                                    {t('analysis.analysisStopConfirmTitle')}
-                                </h3>
+                                    <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                        {t('analysis.analysisStopConfirmTitle')}
+                                    </h3>
 
-                                <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
-                                    {t('analysis.analysisStopConfirmMessage')}
-                                </p>
+                                    <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
+                                        {t('analysis.analysisStopConfirmMessage')}
+                                    </p>
 
-                                <div className="flex gap-3 w-full">
-                                    <button
-                                        type="button"
-                                        className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
-                                        onClick={() => setShowStopConfirmModal(false)}
-                                    >
-                                        {t('common.cancel')}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="flex-1 py-3 px-4 bg-rose-600 text-white font-semibold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-700 hover:shadow-rose-300 transition-all active:scale-[0.98]"
-                                        onClick={executeStopAnalysis}
-                                    >
-                                        {t('analysis.confirm')}
-                                    </button>
+                                    <div className="flex gap-3 w-full">
+                                        <button
+                                            type="button"
+                                            className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                            onClick={() => setShowStopConfirmModal(false)}
+                                        >
+                                            {t('common.cancel')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="flex-1 py-3 px-4 bg-rose-600 text-white font-semibold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-700 hover:shadow-rose-300 transition-all active:scale-[0.98]"
+                                            onClick={executeStopAnalysis}
+                                        >
+                                            {t('analysis.confirm')}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* Status Panel */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
@@ -1086,7 +1100,7 @@ const Analysis: React.FC = () => {
                     )
                 }
             </div>
-        </div>
+        </div >
 
     );
 };

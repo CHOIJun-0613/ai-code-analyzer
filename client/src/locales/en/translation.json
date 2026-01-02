@@ -133,7 +133,11 @@
         "confirmStop": "Confirm Stop",
         "analyzing": "Analyzing...",
         "analysisStopConfirmTitle": "Stop Analysis",
-        "analysisStopConfirmMessage": "Are you sure you want to stop the analysis? Progress will be lost."
+        "analysisStopConfirmMessage": "Are you sure you want to stop the analysis? Progress will be lost.",
+        "deleteLogTitle": "Delete Analysis Log",
+        "deleteLogConfirm": "Are you sure you want to delete the log for Job ID:",
+        "deleteSuccess": "Log deleted successfully",
+        "deleteFailed": "Failed to delete history record"
     },
     "aiAnalysis": {
         "title": "AI Code Analysis",
@@ -248,7 +252,9 @@
         "processing": "Processing...",
         "excelUploadSuccess": "{{count}} users successfully imported",
         "excelUploadError": "Excel upload failed: {{error}}",
-        "processingWait": "This process may take a moment. Please wait."
+        "processingWait": "This process may take a moment. Please wait.",
+        "deleteUserTitle": "Delete User",
+        "deleteSuccess": "User deleted successfully"
     },
     "groupManagement": {
         "title": "Group & Permission Management",
@@ -270,6 +276,11 @@
             "analyze_code": "Analyze Code",
             "view_project": "View Project",
             "manage_project": "Manage Project"
-        }
+        },
+        "groupId": "Group ID",
+        "idExists": "Group ID already exists",
+        "deleteGroupTitle": "Delete Group",
+        "deleteConfirm": "Are you sure you want to delete this group?",
+        "deleteSuccess": "Group deleted successfully"
     }
 }

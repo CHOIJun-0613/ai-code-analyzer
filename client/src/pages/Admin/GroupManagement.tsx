@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { userApi, Group } from '../../api/userApi';
 import client from '../../api/client';
 import { Plus, Shield, Check, X, Users, MoreVertical, Trash2, Edit } from 'lucide-react';
 import ProjectSelector from '../../components/ProjectSelector';
+
+import ConfirmModal from '../../components/ConfirmModal';
 
 const GroupManagement = () => {
     const { t } = useTranslation();
@@ -21,6 +24,7 @@ const GroupManagement = () => {
     const [newGroup, setNewGroup] = useState({ id: '', name: '', permissions: [] as string[], projects: [] as string[] });
     const [editingGroup, setEditingGroup] = useState<Group | null>(null);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+    const [deleteGroupConfirm, setDeleteGroupConfirm] = useState<Group | null>(null);
 
     useEffect(() => {
         const handleClickOutside = () => setActiveMenuId(null);
@@ -57,7 +61,7 @@ const GroupManagement = () => {
             // Check duplicate ID
             const exists = await userApi.checkGroupExists(newGroup.id);
             if (exists) {
-                alert(t('groupManagement.idExists', 'Group ID already exists'));
+                toast.error(t('groupManagement.idExists', 'Group ID already exists'));
                 return;
             }
 
@@ -68,7 +72,7 @@ const GroupManagement = () => {
             loadGroups();
         } catch (error) {
             console.error('Failed to create group:', error);
-            alert('Failed to create group');
+            toast.error('Failed to create group');
         }
     };
 
@@ -82,18 +86,25 @@ const GroupManagement = () => {
             loadGroups();
         } catch (error) {
             console.error('Failed to update group:', error);
-            alert('Failed to update group');
+            toast.error('Failed to update group');
         }
     };
 
-    const handleDeleteGroup = async (group: Group) => {
-        if (!confirm(t('groupManagement.deleteConfirm', 'Are you sure you want to delete this group?'))) return;
+    const handleDeleteGroup = (group: Group) => {
+        setDeleteGroupConfirm(group);
+    };
+
+    const executeDeleteGroup = async () => {
+        if (!deleteGroupConfirm) return;
         try {
-            await userApi.deleteGroup(group.id);
+            await userApi.deleteGroup(deleteGroupConfirm.id);
             loadGroups();
+            toast.success(t('groupManagement.deleteSuccess') || "Group deleted successfully");
         } catch (error) {
             console.error('Failed to delete group:', error);
-            alert('Failed to delete group');
+            toast.error('Failed to delete group');
+        } finally {
+            setDeleteGroupConfirm(null);
         }
     };
 
@@ -102,9 +113,9 @@ const GroupManagement = () => {
         try {
             const exists = await userApi.checkGroupExists(newGroup.id);
             if (exists) {
-                alert('Group ID already exists');
+                toast.error('Group ID already exists');
             } else {
-                alert('Group ID is available');
+                toast.success('Group ID is available');
             }
         } catch (e) {
             console.error(e);
@@ -417,6 +428,16 @@ const GroupManagement = () => {
                         </div>
                     </div>
                 )}
+
+                <ConfirmModal
+                    isOpen={!!deleteGroupConfirm}
+                    onClose={() => setDeleteGroupConfirm(null)}
+                    onConfirm={executeDeleteGroup}
+                    title={t('groupManagement.deleteGroupTitle') || "Delete Group"}
+                    message={t('groupManagement.deleteConfirm') || "Are you sure you want to delete this group?"}
+                    confirmText={t('common.delete') || "Delete"}
+                    variant="danger"
+                />
             </div>
         </div>
     );

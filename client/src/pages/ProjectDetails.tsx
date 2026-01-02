@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -128,7 +129,7 @@ const ProjectDetails: React.FC = () => {
                 console.log('Report Data Response:', data); // DEBUG LOG
 
                 if (!data) {
-                    alert('No data received from server');
+                    toast.error('No data received from server');
                     throw new Error('No data received');
                 }
 
@@ -170,7 +171,7 @@ const ProjectDetails: React.FC = () => {
             setIsReportModalOpen(true);
         } catch (err) {
             console.error('Failed to fetch report', err);
-            alert('Failed to fetch report');
+            toast.error('Failed to fetch report');
         } finally {
             setIsFetchingReport(false);
         }
@@ -198,7 +199,7 @@ const ProjectDetails: React.FC = () => {
         },
         onError: (err) => {
             console.error("Failed to update project", err);
-            alert("Failed to save changes.");
+            toast.error("Failed to save changes.");
         },
     });
 

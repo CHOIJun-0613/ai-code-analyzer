@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
@@ -179,6 +180,11 @@ const CodeAiAnalysis: React.FC = () => {
         onComplete: (data) => {
             setStatus(data.status as any); // Cast to match state type
             console.log('AI Analysis complete:', data);
+            if (data.status === 'completed' || data.status === 'success') {
+                toast.success(t('aiAnalysis.analysisComplete') || "AI Analysis completed successfully!");
+            } else if (data.status === 'failed' || data.status === 'error') {
+                toast.error(t('aiAnalysis.analysisFailed') || "AI Analysis failed.");
+            }
         },
         onError: (error) => {
             console.error('WebSocket error:', error);
@@ -194,11 +200,11 @@ const CodeAiAnalysis: React.FC = () => {
         onSuccess: () => {
             // AI 설정 쿼리 무효화 (자동 재조회)
             queryClient.invalidateQueries({ queryKey: ['users', 'me', 'preferences', 'ai'] });
-            alert(t('aiAnalysis.configSaveSuccess'));
+            toast.success(t('aiAnalysis.configSaveSuccess'));
         },
         onError: (error) => {
             console.error("Failed to save settings", error);
-            alert(t('aiAnalysis.configSaveFail'));
+            toast.error(t('aiAnalysis.configSaveFail'));
         },
     });
 
@@ -222,7 +228,7 @@ const CodeAiAnalysis: React.FC = () => {
 
     const handleRunAnalysis = () => {
         if (!scope.projectName) {
-            alert(t('aiAnalysis.selectProject'));
+            toast.error(t('aiAnalysis.selectProject'));
             return;
         }
         setShowConfirmModal(true);
@@ -258,7 +264,7 @@ const CodeAiAnalysis: React.FC = () => {
         } catch (error: any) {
             console.error("Analysis failed", error);
             setStatus('failed');
-            alert(t('aiAnalysis.analysisStartFail', { error: error.response?.data?.detail || error.message }));
+            toast.error(t('aiAnalysis.analysisStartFail', { error: error.response?.data?.detail || error.message }));
         }
     };
 
@@ -272,11 +278,11 @@ const CodeAiAnalysis: React.FC = () => {
         try {
             console.log(`Requesting cancellation for job: ${jobId}`);
             await client.post(`/ai/${jobId}/cancel`);
-            alert("작업 중지 요청이 전송되었습니다.");
+            toast.success("작업 중지 요청이 전송되었습니다.");
             setShowStopConfirmModal(false);
         } catch (error) {
             console.error("Failed to stop analysis", error);
-            alert("작업 중지 요청 실패");
+            toast.error("작업 중지 요청 실패");
         }
     };
 

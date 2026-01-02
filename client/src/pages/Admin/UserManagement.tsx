@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
+import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { userApi, User, Group } from '../../api/userApi';
 import { Plus, User as UserIcon, Mail, Search, MoreVertical, X, Eye, EyeOff, Edit, Trash2, FileSpreadsheet, ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
 import ExcelJS from 'exceljs';
+
+import ConfirmModal from '../../components/ConfirmModal';
 
 type SortKey = 'username' | 'name' | 'email' | 'created_at' | 'updated_at';
 type SortDirection = 'asc' | 'desc';
@@ -25,6 +28,7 @@ const UserManagement = () => {
     const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'created_at', direction: 'desc' });
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [deleteUserConfirm, setDeleteUserConfirm] = useState<User | null>(null);
 
     useEffect(() => {
         loadData();
@@ -87,7 +91,7 @@ const UserManagement = () => {
             } else {
                 const exists = await userApi.checkUserExists(currentUser.username);
                 if (exists) {
-                    alert(t('userManagement.idExists'));
+                    toast.error(t('userManagement.idExists'));
                     return;
                 }
                 await userApi.createUser(currentUser);
@@ -96,18 +100,25 @@ const UserManagement = () => {
             loadData();
         } catch (error) {
             console.error('Failed to save user:', error);
-            alert('Failed to save user');
+            toast.error('Failed to save user');
         }
     };
 
-    const handleDeleteUser = async (user: User) => {
-        if (!confirm(t('userManagement.deleteUserConfirm'))) return;
+    const handleDeleteUser = (user: User) => {
+        setDeleteUserConfirm(user);
+    };
+
+    const executeDeleteUser = async () => {
+        if (!deleteUserConfirm) return;
         try {
-            await userApi.deleteUser(user.id);
+            await userApi.deleteUser(deleteUserConfirm.id);
             loadData();
+            toast.success(t('userManagement.deleteSuccess') || "User deleted successfully");
         } catch (error) {
             console.error('Failed to delete user:', error);
-            alert('Failed to delete user');
+            toast.error('Failed to delete user');
+        } finally {
+            setDeleteUserConfirm(null);
         }
     };
 
@@ -236,14 +247,14 @@ const UserManagement = () => {
                     }
                 }
 
-                alert(t('userManagement.uploadSuccess', { count: successCount }));
+                toast.success(t('userManagement.uploadSuccess', { count: successCount }));
                 if (failCount > 0) {
                     console.warn(`${failCount} users failed to import.`);
                 }
                 loadData();
             } catch (error) {
                 console.error('Excel processing error:', error);
-                alert(t('userManagement.uploadError', { error: 'Invalid file format or processing error' }));
+                toast.error(t('userManagement.uploadError', { error: 'Invalid file format or processing error' }));
             } finally {
                 setIsUploading(false);
                 if (fileInputRef.current) fileInputRef.current.value = '';
@@ -513,9 +524,9 @@ const UserManagement = () => {
                                                         if (!currentUser.username) return;
                                                         const exists = await userApi.checkUserExists(currentUser.username);
                                                         if (exists) {
-                                                            alert(t('userManagement.idExists'));
+                                                            toast.error(t('userManagement.idExists'));
                                                         } else {
-                                                            alert(t('userManagement.idAvailable'));
+                                                            toast.success(t('userManagement.idAvailable'));
                                                         }
                                                     }}
                                                     className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium text-sm whitespace-nowrap"
@@ -632,6 +643,16 @@ const UserManagement = () => {
                         </div>
                     </div>
                 )}
+
+                <ConfirmModal
+                    isOpen={!!deleteUserConfirm}
+                    onClose={() => setDeleteUserConfirm(null)}
+                    onConfirm={executeDeleteUser}
+                    title={t('userManagement.deleteUserTitle') || "Delete User"}
+                    message={t('userManagement.deleteUserConfirm') || "Are you sure you want to delete this user?"}
+                    confirmText={t('common.delete') || "Delete"}
+                    variant="danger"
+                />
             </div>
         </div>
     );

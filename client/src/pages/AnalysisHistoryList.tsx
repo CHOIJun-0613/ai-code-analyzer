@@ -3,6 +3,9 @@ import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import { Trash2, RefreshCw, Search, FileText, Settings, X, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
+import ConfirmModal from '../components/ConfirmModal';
+import toast from 'react-hot-toast';
+
 interface AnalysisHistory {
     id: string; // Neo4j elementId
     job_id: string;
@@ -39,6 +42,7 @@ const AnalysisHistoryList: React.FC = () => {
     // Modal State
     const [selectedSummary, setSelectedSummary] = useState<{ id: string, content: string } | null>(null);
     const [selectedOptions, setSelectedOptions] = useState<{ id: string, content: string, title: string } | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string, jobId: string } | null>(null);
 
     const fetchHistory = async () => {
         setIsLoading(true);
@@ -56,17 +60,22 @@ const AnalysisHistoryList: React.FC = () => {
         fetchHistory();
     }, []);
 
-    const handleDelete = async (id: string, jobId: string) => {
-        if (!window.confirm(`Are you sure you want to delete the log for Job ID: ${jobId}?`)) {
-            return;
-        }
+    const handleDelete = (id: string, jobId: string) => {
+        setDeleteConfirm({ id, jobId });
+    };
+
+    const executeDelete = async () => {
+        if (!deleteConfirm) return;
 
         try {
-            await client.delete(`/analysis/history/${id}`);
-            setHistory(prev => prev.filter(item => item.id !== id));
+            await client.delete(`/analysis/history/${deleteConfirm.id}`);
+            setHistory(prev => prev.filter(item => item.id !== deleteConfirm.id));
+            toast.success(t('analysis.deleteSuccess') || "Log deleted successfully");
         } catch (error) {
             console.error("Failed to delete history", error);
-            alert("Failed to delete history record");
+            toast.error(t('analysis.deleteFailed') || "Failed to delete history record");
+        } finally {
+            setDeleteConfirm(null);
         }
     };
 
@@ -351,6 +360,16 @@ const AnalysisHistoryList: React.FC = () => {
                     </div>
                 )
             }
+
+            <ConfirmModal
+                isOpen={!!deleteConfirm}
+                onClose={() => setDeleteConfirm(null)}
+                onConfirm={executeDelete}
+                title={t('analysis.deleteLogTitle') || "Delete Analysis Log"}
+                message={deleteConfirm ? `${t('analysis.deleteLogConfirm') || "Are you sure you want to delete the log for Job ID:"} ${deleteConfirm.jobId}?` : ""}
+                confirmText={t('common.delete') || "Delete"}
+                variant="danger"
+            />
 
         </div >
     );

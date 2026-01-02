@@ -140,7 +140,11 @@
         "confirmStop": "중지 확인",
         "analyzing": "분석 중...",
         "analysisStopConfirmTitle": "분석 중지 확인",
-        "analysisStopConfirmMessage": "분석 작업을 중지하시겠습니까?\n진행 중인 작업 내용은 저장되지 않습니다."
+        "analysisStopConfirmMessage": "분석 작업을 중지하시겠습니까?\n진행 중인 작업 내용은 저장되지 않습니다.",
+        "deleteLogTitle": "분석 로그 삭제",
+        "deleteLogConfirm": "다음 작업 ID의 로그를 삭제하시겠습니까:",
+        "deleteSuccess": "로그가 성공적으로 삭제되었습니다",
+        "deleteFailed": "로그 삭제에 실패했습니다"
     },
     "aiAnalysis": {
         "title": "코드 AI 분석",
@@ -251,7 +255,9 @@
         "downloadTemplate": "템플릿 다운로드",
         "excelUploadSuccess": "{{count}}명의 사용자가 성공적으로 등록되었습니다.",
         "excelUploadError": "엑셀 업로드 실패: {{error}}",
-        "processingWait": "잠시만 기다려 주세요. 작업을 처리 중입니다..."
+        "processingWait": "잠시만 기다려 주세요. 작업을 처리 중입니다...",
+        "deleteUserTitle": "사용자 삭제",
+        "deleteSuccess": "사용자가 성공적으로 삭제되었습니다"
     },
     "groupManagement": {
         "title": "그룹 및 권한 관리",
@@ -274,6 +280,11 @@
             "analyze_code": "코드 분석",
             "view_project": "프로젝트 보기",
             "manage_project": "프로젝트 관리"
-        }
+        },
+        "groupId": "그룹 ID",
+        "idExists": "이미 존재하는 그룹 ID입니다",
+        "deleteGroupTitle": "그룹 삭제",
+        "deleteConfirm": "정말로 이 그룹을 삭제하시겠습니까?",
+        "deleteSuccess": "그룹이 성공적으로 삭제되었습니다"
     }
 }

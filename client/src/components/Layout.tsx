@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Toaster } from 'react-hot-toast';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
@@ -236,6 +237,7 @@ const Layout: React.FC = () => {
                 currentTheme={theme}
                 onThemeChange={setTheme}
             />
+            <Toaster position="top-right" />
         </div>
     );
 };

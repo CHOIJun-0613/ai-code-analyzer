@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import toast from 'react-hot-toast';
 import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
@@ -28,7 +29,7 @@ const Login: React.FC = () => {
             navigate('/');
         } catch (error) {
             console.error('Login failed', error);
-            alert('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
+            toast.error('로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.');
         } finally {
             setIsLoading(false);
         }
