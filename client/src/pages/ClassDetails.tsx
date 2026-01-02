@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import ReportViewerModal from '../components/ReportViewerModal';
+import VirtualizedTable, { Column } from '../components/VirtualizedTable';
 import {
     ArrowLeft, Code2, FileCode, Braces,
     AlignLeft, Cpu, Database, GitBranch, Info,
@@ -145,6 +146,90 @@ const ClassDetails: React.FC = () => {
             console.error('Failed to copy text: ', err);
         }
     };
+
+    // VirtualizedTable Column 정의 - Methods
+    const methodColumns = useMemo((): Column<Method>[] => [
+        {
+            key: 'visibility',
+            header: 'Visibility',
+            width: '100px',
+            render: (method) => (
+                <span className="text-slate-500 text-xs lowercase">{method.visibility || '-'}</span>
+            ),
+        },
+        {
+            key: 'name',
+            header: 'Name',
+            width: '25%',
+            render: (method) => (
+                <span className="font-medium text-slate-900 font-mono text-sm">{method.name}</span>
+            ),
+        },
+        {
+            key: 'logicalName',
+            header: 'Logical Name',
+            width: '25%',
+            render: (method) => (
+                <span className="text-slate-600 font-mono text-xs">{method.logical_name || '-'}</span>
+            ),
+        },
+        {
+            key: 'returnType',
+            header: 'Return Type',
+            width: '20%',
+            render: (method) => (
+                <span className="text-slate-600 font-mono text-xs">{method.return_type}</span>
+            ),
+        },
+        {
+            key: 'complexity',
+            header: 'Complexity',
+            width: '120px',
+            align: 'right',
+            render: (method) => (
+                <span className="text-slate-600 text-sm">{method.cognitive_complexity || '-'}</span>
+            ),
+        },
+        {
+            key: 'loc',
+            header: 'LOC',
+            width: '100px',
+            align: 'right',
+            render: (method) => (
+                <span className="text-slate-600 text-sm">{method.PLOC || '-'}</span>
+            ),
+        },
+    ], []);
+
+    // VirtualizedTable Column 정의 - Fields
+    const fieldColumns = useMemo((): Column<Field>[] => [
+        {
+            key: 'name',
+            header: 'Name',
+            width: '30%',
+            render: (field) => (
+                <span className="font-medium text-slate-900 font-mono text-sm">{field.name}</span>
+            ),
+        },
+        {
+            key: 'type',
+            header: 'Type',
+            width: '30%',
+            render: (field) => (
+                <span className="text-indigo-600 font-mono text-xs">{field.type}</span>
+            ),
+        },
+        {
+            key: 'initialValue',
+            header: 'Initial Value',
+            width: '40%',
+            render: (field) => (
+                <span className="text-slate-500 font-mono text-xs truncate" title={field.initial_value || '-'}>
+                    {field.initial_value || '-'}
+                </span>
+            ),
+        },
+    ], []);
 
     const handleSelectAll = () => {
         if (!codeRef.current) return;
@@ -514,70 +599,31 @@ const ClassDetails: React.FC = () => {
                     {activeTab === 'methods' && (
                         <div>
                             <h3 className="text-lg font-bold text-slate-900 mb-4 px-1">Methods ({classData.methods.length})</h3>
-                            {classData.methods.length === 0 ? (
-                                <p className="text-slate-500 italic px-1">No methods found.</p>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase bg-slate-50/50">
-                                                <th className="px-4 py-3 font-semibold">Visibility</th>
-                                                <th className="px-4 py-3 font-semibold">Name</th>
-                                                <th className="px-4 py-3 font-semibold">Logical Name</th>
-                                                <th className="px-4 py-3 font-semibold">Return Type</th>
-                                                <th className="px-4 py-3 font-semibold text-right">Complexity</th>
-                                                <th className="px-4 py-3 font-semibold text-right">LOC</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {classData.methods.map((method, idx) => (
-                                                <tr
-                                                    key={idx}
-                                                    onClick={() => navigate(`/projects/${projectName}/classes/${className}/methods/${method.name}`)}
-                                                    className="hover:bg-slate-50 transition-colors cursor-pointer"
-                                                >
-                                                    <td className="px-4 py-3 text-slate-500 text-xs lowercase">{method.visibility || '-'}</td>
-                                                    <td className="px-4 py-3 font-medium text-slate-900 font-mono text-sm">{method.name}</td>
-                                                    <td className="px-4 py-3 text-slate-600 font-mono text-xs">{method.logical_name || '-'}</td>
-                                                    <td className="px-4 py-3 text-slate-600 font-mono text-xs">{method.return_type}</td>
-                                                    <td className="px-4 py-3 text-right text-slate-600 text-sm">{method.cognitive_complexity || '-'}</td>
-                                                    <td className="px-4 py-3 text-right text-slate-600 text-sm">{method.PLOC || '-'}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                            <VirtualizedTable
+                                data={classData.methods}
+                                columns={methodColumns}
+                                height={500}
+                                rowHeight={50}
+                                headerHeight={45}
+                                hoverable
+                                emptyMessage="No methods found."
+                                onRowClick={(method) => navigate(`/projects/${projectName}/classes/${className}/methods/${method.name}`)}
+                            />
                         </div>
                     )}
 
                     {activeTab === 'fields' && (
                         <div>
                             <h3 className="text-lg font-bold text-slate-900 mb-4 px-1">Fields ({classData.fields.length})</h3>
-                            {classData.fields.length === 0 ? (
-                                <p className="text-slate-500 italic px-1">No fields found.</p>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead>
-                                            <tr className="border-b border-slate-200 text-xs text-slate-500 uppercase bg-slate-50/50">
-                                                <th className="px-4 py-3 font-semibold">Name</th>
-                                                <th className="px-4 py-3 font-semibold">Type</th>
-                                                <th className="px-4 py-3 font-semibold">Initial Value</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {classData.fields.map((field, idx) => (
-                                                <tr key={idx} className="hover:bg-slate-50 transition-colors">
-                                                    <td className="px-4 py-3 font-medium text-slate-900 font-mono text-sm">{field.name}</td>
-                                                    <td className="px-4 py-3 text-indigo-600 font-mono text-xs">{field.type}</td>
-                                                    <td className="px-4 py-3 text-slate-500 font-mono text-xs truncate max-w-[200px]">{field.initial_value || '-'}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
+                            <VirtualizedTable
+                                data={classData.fields}
+                                columns={fieldColumns}
+                                height={500}
+                                rowHeight={50}
+                                headerHeight={45}
+                                hoverable
+                                emptyMessage="No fields found."
+                            />
                         </div>
                     )}
                 </div>

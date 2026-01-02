@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Box, FileCode, Layers, Database, FolderOpen, Code2, Search, Info, Code, Pencil, Check, X, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import ReportViewerModal from '../components/ReportViewerModal';
+import VirtualizedTable, { Column } from '../components/VirtualizedTable';
 
 interface ProjectStats {
     project: {
@@ -244,6 +245,51 @@ const ProjectDetails: React.FC = () => {
         });
         return allMatches;
     }, [searchQuery, hierarchy, selectedHierarchyItem, selectedPackage]);
+
+    // VirtualizedTable Column 정의
+    const classTableColumns = useMemo((): Column<ClassItem>[] => {
+        const baseColumns: Column<ClassItem>[] = [
+            {
+                key: 'physicalName',
+                header: 'Physical Name',
+                width: '33%',
+                render: (cls) => (
+                    <div className="flex items-center">
+                        <FileCode className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0 group-hover:text-indigo-500 transition-colors" />
+                        <span className="font-medium text-slate-700 truncate" title={cls.name}>
+                            {cls.name}
+                        </span>
+                    </div>
+                ),
+            },
+            {
+                key: 'logicalName',
+                header: 'Logical Name',
+                width: '33%',
+                render: (cls) => (
+                    <span className="text-slate-500 text-sm truncate block" title={cls.logical_name || '-'}>
+                        {cls.logical_name || '-'}
+                    </span>
+                ),
+            },
+        ];
+
+        // 검색 모드일 때 Package 컬럼 추가
+        if (searchQuery) {
+            baseColumns.push({
+                key: 'package',
+                header: 'Package',
+                width: '34%',
+                render: (cls) => (
+                    <span className="text-slate-400 text-xs truncate block" title={cls.packageName}>
+                        {cls.packageName}
+                    </span>
+                ),
+            });
+        }
+
+        return baseColumns;
+    }, [searchQuery]);
 
     if (isLoading) {
         return (
@@ -630,62 +676,29 @@ const ProjectDetails: React.FC = () => {
                             </span>
                         )}
                     </div>
-                    <div className="flex-1 overflow-y-auto p-0">
+                    <div className="flex-1 overflow-hidden p-0">
                         {!selectedPackage && !searchQuery ? (
                             <div className="flex flex-col items-center justify-center h-full text-slate-400">
                                 <FolderOpen className="w-12 h-12 mb-2 opacity-20" />
                                 <p>Select a package to view its classes or search globally</p>
                             </div>
                         ) : (
-                            <div>
-                                {filteredClasses.length === 0 ? (
-                                    <div className="py-12 text-center text-slate-400 italic">
-                                        {selectedHierarchyItem?.classes.length === 0
-                                            ? "No classes in this package"
-                                            : "No classes match your search"}
-                                    </div>
-                                ) : (
-                                    <table className="w-full text-left border-collapse">
-                                        <thead className="bg-slate-50 sticky top-0 z-10 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                                            <tr>
-                                                <th className="px-6 py-3 border-b border-slate-100 w-1/3">Physical Name</th>
-                                                <th className="px-6 py-3 border-b border-slate-100 w-1/3">Logical Name</th>
-                                                {searchQuery && <th className="px-6 py-3 border-b border-slate-100 w-1/3">Package</th>}
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-slate-100">
-                                            {filteredClasses.map((cls, idx) => (
-                                                <tr
-                                                    key={idx}
-                                                    onClick={() => navigate(`/projects/${encodeURIComponent(projectName || '')}/classes/${encodeURIComponent(cls.name)}?package=${encodeURIComponent(cls.packageName || selectedPackage || '')}`)}
-                                                    className="hover:bg-indigo-50/30 transition-colors group cursor-pointer"
-                                                >
-                                                    <td className="px-6 py-3">
-                                                        <div className="flex items-center">
-                                                            <FileCode className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0 group-hover:text-indigo-500 transition-colors" />
-                                                            <span className="font-medium text-slate-700 truncate max-w-[300px] xl:max-w-[400px]" title={cls.name}>
-                                                                {cls.name}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-3">
-                                                        <span className="text-slate-500 text-sm truncate max-w-[300px] xl:max-w-[400px] block" title={cls.logical_name || '-'}>
-                                                            {cls.logical_name || '-'}
-                                                        </span>
-                                                    </td>
-                                                    {searchQuery && (
-                                                        <td className="px-6 py-3">
-                                                            <span className="text-slate-400 text-xs truncate max-w-[200px] block" title={cls.packageName}>
-                                                                {cls.packageName}
-                                                            </span>
-                                                        </td>
-                                                    )}
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                )}
-                            </div>
+                            <VirtualizedTable
+                                data={filteredClasses}
+                                columns={classTableColumns}
+                                height={550}
+                                rowHeight={50}
+                                headerHeight={45}
+                                hoverable
+                                emptyMessage={
+                                    selectedHierarchyItem?.classes.length === 0
+                                        ? "No classes in this package"
+                                        : "No classes match your search"
+                                }
+                                onRowClick={(cls) =>
+                                    navigate(`/projects/${encodeURIComponent(projectName || '')}/classes/${encodeURIComponent(cls.name)}?package=${encodeURIComponent(cls.packageName || selectedPackage || '')}`)
+                                }
+                            />
                         )}
                     </div>
                 </div>

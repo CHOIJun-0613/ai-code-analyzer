@@ -23,10 +23,11 @@
     "mermaid": "^10.9.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-hot-toast": "^2.4.1",
     "react-i18next": "^14.1.0",
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.22.3",
-    "react-hot-toast": "^2.4.1",
+    "react-window": "^2.2.3",
     "remark-gfm": "^4.0.0",
     "zustand": "^4.5.2"
   },
