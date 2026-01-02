@@ -17,8 +17,8 @@ const GroupManagement = lazy(() => import('./pages/Admin/GroupManagement'));
 const AnalysisHistoryList = lazy(() => import('./pages/AnalysisHistoryList'));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-    const token = useAuthStore((state: AuthState) => state.token);
-    if (!token) {
+    const isLoggedIn = useAuthStore((state: AuthState) => state.isLoggedIn);
+    if (!isLoggedIn) {
         return <Navigate to="/login" replace />;
     }
     return children;

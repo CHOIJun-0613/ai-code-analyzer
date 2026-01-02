@@ -10,24 +10,28 @@ const client = axios.create({
     },
 });
 
-client.interceptors.request.use(
-    (config) => {
-        const token = useAuthStore.getState().token;
-        if (token) {
-            config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
+// Request interceptor removed as cookies are handled by browser
 
 client.interceptors.response.use(
     (response) => response,
-    (error) => {
-        if (error.response && error.response.status === 401) {
-            useAuthStore.getState().logout();
+    async (error) => {
+        const originalRequest = error.config;
+
+        // Prevent infinite loop
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+
+            try {
+                // Attempt to refresh token
+                await client.post('/login/refresh');
+
+                // Retry original request
+                return client(originalRequest);
+            } catch (refreshError) {
+                // Refresh failed, logout
+                useAuthStore.getState().logout();
+                return Promise.reject(refreshError);
+            }
         }
         return Promise.reject(error);
     }

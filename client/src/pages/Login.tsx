@@ -24,8 +24,8 @@ const Login: React.FC = () => {
             formData.append('username', username);
             formData.append('password', password);
 
-            const response = await axios.post('/api/v1/login/access-token', formData);
-            login(response.data.access_token, username);
+            await axios.post('/api/v1/login/access-token', formData);
+            login(username);
             navigate('/');
         } catch (error) {
             console.error('Login failed', error);

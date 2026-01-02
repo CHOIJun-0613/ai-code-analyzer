@@ -5,23 +5,22 @@ import client from '../api/client'; // Assuming client is needed for fetching us
 
 export interface AuthState {
     user: User | null;
-    token: string | null;
-    login: (token: string, username: string) => void;
+    isLoggedIn: boolean;
+    login: (username: string) => void;
     logout: () => void;
     fetchUser: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
-    token: localStorage.getItem('token'),
-    login: (token: string, username: string) => {
-        localStorage.setItem('token', token);
-        set({ token, user: { username } as User }); // temporary until fetched
+    isLoggedIn: false,
+    login: (username: string) => {
+        set({ isLoggedIn: true, user: { username } as User }); // temporary until fetched
         // We really should fetch the user details here or let the component do it
     },
     logout: () => {
-        localStorage.removeItem('token');
-        set({ token: null, user: null });
+        client.post('/login/logout').catch(console.error); // Call server logout
+        set({ isLoggedIn: false, user: null });
     },
     fetchUser: async () => {
         try {
