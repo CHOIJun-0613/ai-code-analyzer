@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState, useEffect, useRef } from 'react';
 import { List, RowComponentProps } from 'react-window';
 
 export interface Column<T> {
@@ -26,6 +26,7 @@ interface RowProps<T> {
   striped: boolean;
   rowClassName?: (item: T, index: number) => string;
   cellClassName: string;
+  columnWidths: Record<string, number>;
 }
 
 export interface VirtualizedTableProps<T> {
@@ -90,10 +91,58 @@ function VirtualizedTable<T>({
   rowClassName,
   cellClassName = '',
 }: VirtualizedTableProps<T>) {
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeData = useRef<{ startX: number; startWidth: number; columnKey: string } | null>(null);
+
+  const handleResizeStart = (e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const headerCell = e.currentTarget.parentElement;
+    if (headerCell) {
+      const startWidth = headerCell.getBoundingClientRect().width;
+      resizeData.current = {
+        startX: e.pageX,
+        startWidth,
+        columnKey
+      };
+      setIsResizing(true);
+    }
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !resizeData.current) return;
+      const { startX, startWidth, columnKey } = resizeData.current;
+      const diff = e.pageX - startX;
+      const newWidth = Math.max(50, startWidth + diff);
+
+      setColumnWidths(prev => ({
+        ...prev,
+        [columnKey]: newWidth
+      }));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      resizeData.current = null;
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing]);
+
   // 행 렌더링 컴포넌트
   const RowComponent = useCallback(
     (props: RowComponentProps<RowProps<T>>) => {
-      const { index, style, data: rowData, columns, onRowClick, hoverable, striped, rowClassName, cellClassName } = props;
+      const { index, style, data: rowData, columns, onRowClick, hoverable, striped, rowClassName, cellClassName, columnWidths } = props;
       const item = rowData[index];
       const isClickable = !!onRowClick;
       const customRowClass = rowClassName ? rowClassName(item, index) : '';
@@ -128,7 +177,11 @@ function VirtualizedTable<T>({
                   ${alignClass}
                   ${cellClassName}
                 `}
-                style={column.width ? { width: column.width, flexShrink: 0 } : undefined}
+                style={{
+                  width: columnWidths[column.key] ? `${columnWidths[column.key]}px` : column.width,
+                  flexShrink: 0,
+                  flexGrow: columnWidths[column.key] || column.width ? 0 : 1
+                }}
               >
                 {column.render(item, index)}
               </div>
@@ -206,13 +259,22 @@ function VirtualizedTable<T>({
             <div
               key={column.key}
               className={`
-                flex items-center px-4 font-semibold text-slate-700 text-sm
-                ${column.width ? '' : 'flex-1'}
+                flex items-center px-4 font-semibold text-slate-700 text-sm relative
+                ${(columnWidths[column.key] || column.width) ? '' : 'flex-1'}
                 ${alignClass}
               `}
-              style={column.width ? { width: column.width, flexShrink: 0 } : undefined}
+              style={{
+                width: columnWidths[column.key] ? `${columnWidths[column.key]}px` : column.width,
+                flexShrink: 0,
+                flexGrow: columnWidths[column.key] || column.width ? 0 : 1
+              }}
             >
               {column.header}
+              <div
+                className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-300 z-10"
+                onMouseDown={(e) => handleResizeStart(e, column.key)}
+                onClick={(e) => e.stopPropagation()}
+              />
             </div>
           );
         })}
@@ -233,6 +295,7 @@ function VirtualizedTable<T>({
           striped,
           rowClassName,
           cellClassName,
+          columnWidths,
         }}
         style={{ width: '100%', height: height - headerHeight }}
       />

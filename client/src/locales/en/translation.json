@@ -212,6 +212,9 @@
         "noProjects": "No projects found",
         "startUpload": "Start by uploading a new project for analysis"
     },
+    "projectDetails": {
+        "allClasses": "All Project Classes"
+    },
     "admin": {
         "title": "Administration",
         "subtitle": "Manage users, groups, and system settings",

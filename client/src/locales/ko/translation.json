@@ -218,6 +218,9 @@
         "noProjects": "프로젝트가 없습니다",
         "startUpload": "새 프로젝트를 업로드하여 분석을 시작하세요"
     },
+    "projectDetails": {
+        "allClasses": "프로젝트 전체 클래스"
+    },
     "admin": {
         "title": "관리",
         "subtitle": "사용자, 그룹 및 시스템 설정 관리",

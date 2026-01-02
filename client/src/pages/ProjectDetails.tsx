@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Box, FileCode, Layers, Database, FolderOpen, Code2, Search, Info, Code, Pencil, Check, X, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import ReportViewerModal from '../components/ReportViewerModal';
 import VirtualizedTable, { Column } from '../components/VirtualizedTable';
 
@@ -46,12 +47,15 @@ interface HierarchyItem {
     classes: ClassItem[];
 }
 
+const ALL_PACKAGES = '__ALL__';
+
 const ProjectDetails: React.FC = () => {
+    const { t } = useTranslation();
     const { projectName } = useParams<{ projectName: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
 
-    const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
+    const [selectedPackage, setSelectedPackage] = useState<string | null>(ALL_PACKAGES);
     const [searchQuery, setSearchQuery] = useState('');
     const [packageSearchQuery, setPackageSearchQuery] = useState('');
 
@@ -86,10 +90,11 @@ const ProjectDetails: React.FC = () => {
     const isLoading = isLoadingStats || isLoadingHierarchy;
     const error = statsError || hierarchyError;
 
-    // 첫 번째 패키지 자동 선택 (useEffect로 처리)
+    // 첫 번째 패키지 자동 선택 (useEffect로 처리) -> 기본값이 ALL_PACKAGES이므로 로직 수정
     React.useEffect(() => {
+        // hierarchy가 로드되었을 때 selectedPackage가 null이면 ALL_PACKAGES로 설정
         if (hierarchy && hierarchy.length > 0 && !selectedPackage) {
-            setSelectedPackage(hierarchy[0].package);
+            setSelectedPackage(ALL_PACKAGES);
         }
     }, [hierarchy, selectedPackage]);
 
@@ -230,21 +235,31 @@ const ProjectDetails: React.FC = () => {
     const selectedHierarchyItem = hierarchy.find(h => h.package === selectedPackage);
 
     const filteredClasses = React.useMemo(() => {
-        if (!searchQuery) {
-            return selectedHierarchyItem?.classes.map(c => ({ ...c, packageName: selectedPackage || '' })) || [];
+        let targetClasses: ClassItem[] = [];
+
+        if (selectedPackage === ALL_PACKAGES) {
+            // 전체 패키지에서 클래스 수집
+            hierarchy.forEach(pkg => {
+                targetClasses.push(...pkg.classes.map(c => ({ ...c, packageName: pkg.package })));
+            });
+        } else {
+            // 선택된 패키지의 클래스만 수집
+            const pkg = hierarchy.find(h => h.package === selectedPackage);
+            if (pkg) {
+                targetClasses = pkg.classes.map(c => ({ ...c, packageName: pkg.package }));
+            }
         }
 
-        // Global search across all packages
-        const allMatches: ClassItem[] = [];
-        hierarchy.forEach(pkg => {
-            const matches = pkg.classes.filter(cls =>
-                cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (cls.logical_name && cls.logical_name.toLowerCase().includes(searchQuery.toLowerCase()))
-            );
-            matches.forEach(m => allMatches.push({ ...m, packageName: pkg.package }));
-        });
-        return allMatches;
-    }, [searchQuery, hierarchy, selectedHierarchyItem, selectedPackage]);
+        if (!searchQuery) {
+            return targetClasses;
+        }
+
+        // 검색어 필터링
+        return targetClasses.filter(cls =>
+            cls.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (cls.logical_name && cls.logical_name.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+    }, [searchQuery, hierarchy, selectedPackage]);
 
     // VirtualizedTable Column 정의
     const classTableColumns = useMemo((): Column<ClassItem>[] => {
@@ -254,7 +269,7 @@ const ProjectDetails: React.FC = () => {
                 header: 'Physical Name',
                 width: '33%',
                 render: (cls) => (
-                    <div className="flex items-center">
+                    <div className="flex items-center w-full min-w-0">
                         <FileCode className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0 group-hover:text-indigo-500 transition-colors" />
                         <span className="font-medium text-slate-700 truncate" title={cls.name}>
                             {cls.name}
@@ -615,6 +630,23 @@ const ProjectDetails: React.FC = () => {
                         </div>
                     </div>
                     <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                        {/* All Project Classes Item */}
+                        <button
+                            onClick={() => setSelectedPackage(ALL_PACKAGES)}
+                            className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${selectedPackage === ALL_PACKAGES
+                                ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100'
+                                : 'text-slate-600 hover:bg-slate-100 border border-transparent'
+                                }`}
+                        >
+                            <Layers className={`w-4 h-4 ${selectedPackage === ALL_PACKAGES ? 'text-indigo-500' : 'text-slate-400'}`} />
+                            <span className="font-medium truncate text-sm">{t('projectDetails.allClasses')}</span>
+                            <span className="ml-auto text-xs bg-slate-200/50 px-2 py-0.5 rounded-full text-slate-500">
+                                {hierarchy.reduce((acc, curr) => acc + curr.classes.length, 0)}
+                            </span>
+                        </button>
+
+                        <div className="my-2 border-t border-slate-100"></div>
+
                         {filteredPackages.length === 0 ? (
                             <div className="p-4 text-center text-slate-400 text-sm">
                                 {hierarchy.length === 0 ? "No packages found" : "No packages match your search"}
@@ -647,7 +679,8 @@ const ProjectDetails: React.FC = () => {
                             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 whitespace-nowrap">
                                 <Layers className="w-5 h-5 text-slate-400" />
                                 Classes
-                                {selectedPackage && <span className="text-slate-400 font-normal text-sm ml-2 hidden xl:inline">in {selectedPackage}</span>}
+                                {selectedPackage && selectedPackage !== ALL_PACKAGES && <span className="text-slate-400 font-normal text-sm ml-2 hidden xl:inline">in {selectedPackage}</span>}
+                                {selectedPackage === ALL_PACKAGES && <span className="text-slate-400 font-normal text-sm ml-2 hidden xl:inline">({t('projectDetails.allClasses')})</span>}
                             </h2>
 
                             {/* Search Input */}
@@ -665,9 +698,9 @@ const ProjectDetails: React.FC = () => {
                             </div>
                         </div>
 
-                        {selectedHierarchyItem && !searchQuery && (
+                        {selectedPackage && !searchQuery && (
                             <span className="text-xs font-medium px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-500 ml-4 whitespace-nowrap">
-                                {filteredClasses.length} / {selectedHierarchyItem.classes.length} items
+                                {filteredClasses.length} items
                             </span>
                         )}
                         {searchQuery && (
@@ -691,8 +724,8 @@ const ProjectDetails: React.FC = () => {
                                 headerHeight={45}
                                 hoverable
                                 emptyMessage={
-                                    selectedHierarchyItem?.classes.length === 0
-                                        ? "No classes in this package"
+                                    filteredClasses.length === 0
+                                        ? "No classes found"
                                         : "No classes match your search"
                                 }
                                 onRowClick={(cls) =>
