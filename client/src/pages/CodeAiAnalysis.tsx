@@ -278,11 +278,11 @@ const CodeAiAnalysis: React.FC = () => {
         try {
             console.log(`Requesting cancellation for job: ${jobId}`);
             await client.post(`/ai/${jobId}/cancel`);
-            toast.success("작업 중지 요청이 전송되었습니다.");
+            toast.success(t('aiAnalysis.stopRequestSuccess'));
             setShowStopConfirmModal(false);
         } catch (error) {
             console.error("Failed to stop analysis", error);
-            toast.error("작업 중지 요청 실패");
+            toast.error(t('aiAnalysis.stopRequestFail'));
         }
     };
 

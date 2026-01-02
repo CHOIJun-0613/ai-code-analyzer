@@ -121,6 +121,7 @@
         "proTipContent": "For large projects, using the Server Path option is faster as it avoids uploading large files through the browser.",
         "tip": "Tip",
         "viewLogs": "View Logs",
+        "viewResultSummary": "View Result Summary",
         "saveLog": "Save Log",
         "saveSummary": "Save Summary",
         "close": "Close",
@@ -137,7 +138,17 @@
         "deleteLogTitle": "Delete Analysis Log",
         "deleteLogConfirm": "Are you sure you want to delete the log for Job ID:",
         "deleteSuccess": "Log deleted successfully",
-        "deleteFailed": "Failed to delete history record"
+        "deleteFailed": "Failed to delete history record",
+        "analysisComplete": "Analysis completed successfully!",
+        "analysisFailed": "Analysis failed.",
+        "startSuccess": "Analysis started successfully.",
+        "startFailed": "Failed to start analysis",
+        "stopSuccess": "Analysis stopped successfully.",
+        "stopFailed": "Failed to stop analysis.",
+        "settingsLoaded": "Settings loaded successfully!",
+        "settingsLoadFailed": "Failed to load settings.",
+        "configSaved": "Configuration saved successfully!",
+        "configSaveFailed": "Failed to save configuration."
     },
     "aiAnalysis": {
         "title": "AI Code Analysis",
@@ -183,7 +194,12 @@
         "analysisStartLog": "Starting AI Analysis: {{project}} ({{mode}})...",
         "taskStarted": "Analysis task started. Task ID: {{taskId}}",
         "checkServerLog": "You can check detailed progress in server logs.",
-        "analysisStartFail": "Failed to start analysis: {{error}}"
+        "analysisStartFail": "Failed to start analysis: {{error}}",
+        "stopAnalysis": "Stop Analysis",
+        "analysisComplete": "AI Analysis completed successfully!",
+        "analysisFailed": "AI Analysis failed.",
+        "stopRequestSuccess": "Stop request sent successfully.",
+        "stopRequestFail": "Failed to send stop request."
     },
     "dashboard": {
         "title": "Dashboard Overview",
