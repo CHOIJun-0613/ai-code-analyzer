@@ -377,14 +377,22 @@ def get_active_job(current_user: UserInDB = Depends(deps.get_current_user)):
     ]
     user_jobs.sort(key=lambda x: x["id"], reverse=True)
     if user_jobs:
-        return {"job_id": user_jobs[0]["id"], "status": user_jobs[0]["status"]}
+        return {
+            "job_id": user_jobs[0]["id"], 
+            "status": user_jobs[0]["status"],
+            "params": user_jobs[0].get("params", {})
+        }
     return None
 
 @router.get("/{job_id}")
 def get_job_status(job_id: str):
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
-    return {"job_id": job_id, "status": jobs[job_id]["status"]}
+    return {
+        "job_id": job_id, 
+        "status": jobs[job_id]["status"],
+        "params": jobs[job_id].get("params", {})
+    }
 
 @router.get("/{job_id}/logs")
 def get_job_logs(job_id: str):

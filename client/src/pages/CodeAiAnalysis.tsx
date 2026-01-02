@@ -132,18 +132,49 @@ const CodeAiAnalysis: React.FC = () => {
     });
 
     // React Query: 활성 AI 분석 작업 조회
-    useQuery({
+    const { data: activeJob } = useQuery({
         queryKey: ['ai', 'active'],
         queryFn: async () => {
+            console.log("Fetching active job...");
             const response = await client.get('/ai/active');
-            if (response.data && response.data.job_id) {
-                setJobId(response.data.job_id);
-                setStatus(response.data.status);
-            }
             return response.data;
         },
-        retry: false, // 활성 작업이 없을 수 있으므로 재시도 안 함
+        retry: false,
+        refetchOnWindowFocus: false,
+        staleTime: 0,
+        refetchOnMount: true
     });
+
+    // Restore state from active job
+    useEffect(() => {
+        if (activeJob && activeJob.job_id) {
+            console.log("Restoring active job state:", activeJob);
+            setJobId(activeJob.job_id);
+            setStatus(activeJob.status);
+
+            // Restore Scope
+            if (activeJob.params) {
+                setScope(prev => ({
+                    ...prev,
+                    projectName: activeJob.params.project_name || prev.projectName,
+                    nodeType: activeJob.params.node_type || prev.nodeType,
+                    limit: activeJob.params.limit || 0,
+                    clean: activeJob.params.clean || false,
+                    className: activeJob.params.class_name || '',
+                    logLevel: activeJob.params.log_level || 'INFO'
+                }));
+            }
+
+            // Restore Logs
+            client.get(`/ai/${activeJob.job_id}/logs`)
+                .then(res => {
+                    if (res.data && res.data.logs) {
+                        setLogs(res.data.logs);
+                    }
+                })
+                .catch(err => console.error("Failed to fetch logs for active job", err));
+        }
+    }, [activeJob]);
 
     // Modals
     const [showLogModal, setShowLogModal] = useState(false);
@@ -260,6 +291,8 @@ const CodeAiAnalysis: React.FC = () => {
             const res = await client.post('/ai/enrich', payload);
 
             setJobId(res.data.job_id);
+            // Invalidate active job query so cache is updated
+            queryClient.invalidateQueries({ queryKey: ['ai', 'active'] });
             // status is already running, polling will take over
         } catch (error: any) {
             console.error("Analysis failed", error);

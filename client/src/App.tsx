@@ -1,18 +1,20 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
 import Layout from './components/Layout';
 import { useAuthStore, AuthState } from './store/authStore';
+import LoadingSpinner from './components/LoadingSpinner';
 
-// Placeholder pages
-import ProjectDetails from './pages/ProjectDetails';
-import ClassDetails from './pages/ClassDetails';
-import Analysis from './pages/Analysis';
-import CodeAiAnalysis from './pages/CodeAiAnalysis';
-import Admin from './pages/Admin';
-import UserManagement from './pages/Admin/UserManagement';
-import GroupManagement from './pages/Admin/GroupManagement';
-import AnalysisHistoryList from './pages/AnalysisHistoryList';
+// Lazy loaded pages
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
+const ClassDetails = lazy(() => import('./pages/ClassDetails'));
+const Analysis = lazy(() => import('./pages/Analysis'));
+const CodeAiAnalysis = lazy(() => import('./pages/CodeAiAnalysis'));
+const Admin = lazy(() => import('./pages/Admin'));
+const UserManagement = lazy(() => import('./pages/Admin/UserManagement'));
+const GroupManagement = lazy(() => import('./pages/Admin/GroupManagement'));
+const AnalysisHistoryList = lazy(() => import('./pages/AnalysisHistoryList'));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     const token = useAuthStore((state: AuthState) => state.token);
@@ -28,15 +30,51 @@ function App() {
             <Routes>
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                    <Route index element={<Dashboard />} />
-                    <Route path="projects/:projectName" element={<ProjectDetails />} />
-                    <Route path="projects/:projectName/classes/:className" element={<ClassDetails />} />
-                    <Route path="analysis" element={<Analysis />} />
-                    <Route path="analysis/ai" element={<CodeAiAnalysis />} />
-                    <Route path="analysis/history" element={<AnalysisHistoryList />} />
-                    <Route path="admin" element={<Admin />} />
-                    <Route path="admin/users" element={<UserManagement />} />
-                    <Route path="admin/groups" element={<GroupManagement />} />
+                    <Route index element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <Dashboard />
+                        </Suspense>
+                    } />
+                    <Route path="projects/:projectName" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <ProjectDetails />
+                        </Suspense>
+                    } />
+                    <Route path="projects/:projectName/classes/:className" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <ClassDetails />
+                        </Suspense>
+                    } />
+                    <Route path="analysis" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <Analysis />
+                        </Suspense>
+                    } />
+                    <Route path="analysis/ai" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <CodeAiAnalysis />
+                        </Suspense>
+                    } />
+                    <Route path="analysis/history" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <AnalysisHistoryList />
+                        </Suspense>
+                    } />
+                    <Route path="admin" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <Admin />
+                        </Suspense>
+                    } />
+                    <Route path="admin/users" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <UserManagement />
+                        </Suspense>
+                    } />
+                    <Route path="admin/groups" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <GroupManagement />
+                        </Suspense>
+                    } />
                 </Route>
             </Routes>
         </Router>
