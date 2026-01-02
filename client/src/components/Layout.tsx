@@ -52,6 +52,14 @@ const Layout: React.FC = () => {
     const mainBgClass = theme === 'dark-modern' ? 'bg-[#1e1e1e] text-[#d4d4d4]' : 'bg-slate-50 text-slate-900';
     const sidebarWidthClass = isCollapsed ? 'w-20' : 'w-72';
 
+    // Header styles
+    const headerClass = theme === 'dark-modern'
+        ? 'bg-[#1e1e1e] border-slate-700 text-slate-400'
+        : 'bg-white border-slate-200 text-slate-500';
+    const headerTextValueClass = theme === 'dark-modern'
+        ? 'text-slate-200'
+        : 'text-slate-700';
+
     // Sidebar items styling
     const getLinkClass = (path: string) => `
         flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative
@@ -227,10 +235,10 @@ const Layout: React.FC = () => {
             {/* Main Content */}
             <div ref={mainContentRef} className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Top Header */}
-                <header className="h-12 bg-white border-b border-slate-200 flex items-center justify-end px-6 shrink-0 z-10">
-                    <div className="flex items-center text-sm text-slate-500 gap-4">
-                        <span>User: <span className="font-medium text-slate-700">{user?.username}</span></span>
-                        <span>Login: <span className="font-medium text-slate-700">{loginTime}</span></span>
+                <header className={`h-12 border-b flex items-center justify-end px-6 shrink-0 z-10 ${headerClass}`}>
+                    <div className="flex items-center text-sm gap-4">
+                        <span>User: <span className={`font-medium ${headerTextValueClass}`}>{user?.username}</span></span>
+                        <span>Login: <span className={`font-medium ${headerTextValueClass}`}>{loginTime}</span></span>
                     </div>
                 </header>
 
