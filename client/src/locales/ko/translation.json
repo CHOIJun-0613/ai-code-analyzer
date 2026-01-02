@@ -300,5 +300,18 @@
         "deleteGroupTitle": "그룹 삭제",
         "deleteConfirm": "정말로 이 그룹을 삭제하시겠습니까?",
         "deleteSuccess": "그룹이 성공적으로 삭제되었습니다"
+    },
+    "error": {
+        "title": "오류가 발생했습니다",
+        "message": "예상치 못한 오류가 발생했습니다. 불편을 드려 죄송합니다.",
+        "errorMessage": "에러 메시지",
+        "unknownError": "알 수 없는 오류",
+        "showDetails": "상세 정보 보기",
+        "stackTrace": "스택 트레이스",
+        "componentStack": "컴포넌트 스택",
+        "retry": "다시 시도",
+        "goHome": "홈으로 이동",
+        "contactSupport": "문제가 지속되면 관리자에게 문의하세요.",
+        "timestamp": "오류 발생 시간"
     }
 }
