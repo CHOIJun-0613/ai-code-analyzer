@@ -132,7 +132,7 @@ const CodeAiAnalysis: React.FC = () => {
     });
 
     // React Query: 활성 AI 분석 작업 조회
-    const { data: activeJob } = useQuery({
+    const { data: activeJob, isLoading: isActiveJobLoading } = useQuery({
         queryKey: ['ai', 'active'],
         queryFn: async () => {
             console.log("Fetching active job...");
@@ -147,34 +147,45 @@ const CodeAiAnalysis: React.FC = () => {
 
     // Restore state from active job
     useEffect(() => {
-        if (activeJob && activeJob.job_id) {
-            console.log("Restoring active job state:", activeJob);
-            setJobId(activeJob.job_id);
-            setStatus(activeJob.status);
+        if (!isActiveJobLoading) {
+            if (activeJob && activeJob.job_id) {
+                console.log("Restoring active job state:", activeJob);
+                setJobId(activeJob.job_id);
+                setStatus(activeJob.status);
 
-            // Restore Scope
-            if (activeJob.params) {
-                setScope(prev => ({
-                    ...prev,
-                    projectName: activeJob.params.project_name || prev.projectName,
-                    nodeType: activeJob.params.node_type || prev.nodeType,
-                    limit: activeJob.params.limit || 0,
-                    clean: activeJob.params.clean || false,
-                    className: activeJob.params.class_name || '',
-                    logLevel: activeJob.params.log_level || 'INFO'
-                }));
+                // Restore Scope
+                if (activeJob.params) {
+                    setScope(prev => ({
+                        ...prev,
+                        projectName: activeJob.params.project_name || prev.projectName,
+                        nodeType: activeJob.params.node_type || prev.nodeType,
+                        limit: activeJob.params.limit || 0,
+                        clean: activeJob.params.clean || false,
+                        className: activeJob.params.class_name || '',
+                        logLevel: activeJob.params.log_level || 'INFO'
+                    }));
+                }
+
+                // Restore Logs
+                client.get(`/ai/${activeJob.job_id}/logs`)
+                    .then(res => {
+                        if (res.data && res.data.logs) {
+                            setLogs(res.data.logs);
+                        }
+                    })
+                    .catch(err => console.error("Failed to fetch logs for active job", err));
+            } else {
+                // 활성 작업이 없으면 상태 초기화 (단, 방금 시작한 작업이 아닐 경우)
+                // executeAnalysis에서 쿼리 무효화 후 잠시 null일 수 있으므로 주의 필요하지만,
+                // 보통 시작 직후에는 activeJob이 잡혀야 함.
+                // 여기서는 "화면 재진입 시"를 가정하므로 초기화가 맞음.
+                console.log("No active job found, resetting state.");
+                setJobId('');
+                setStatus('idle');
+                setLogs([]);
             }
-
-            // Restore Logs
-            client.get(`/ai/${activeJob.job_id}/logs`)
-                .then(res => {
-                    if (res.data && res.data.logs) {
-                        setLogs(res.data.logs);
-                    }
-                })
-                .catch(err => console.error("Failed to fetch logs for active job", err));
         }
-    }, [activeJob]);
+    }, [activeJob, isActiveJobLoading]);
 
     // Modals
     const [showLogModal, setShowLogModal] = useState(false);

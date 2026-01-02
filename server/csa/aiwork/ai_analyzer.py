@@ -384,9 +384,9 @@ class AIAnalyzer:
                         logger.warning(f"[Async] 재시도 {retry_count}/{max_retries}: {wait_time:.1f}초 대기 중... (API제안: {api_wait_time}s)")
                         
                         # 비동기 대기 (Cancellation 가능)
-                        # wait_time 동안 0.5초 간격으로 취소 확인
+                        # wait_time 동안 1.0초 간격으로 취소 확인
                         slept = 0.0
-                        chunk = 0.5
+                        chunk = 1.0
                         while slept < wait_time:
                             if stop_check_callback:
                                 is_cancelled = stop_check_callback()
@@ -432,7 +432,7 @@ class AIAnalyzer:
             input_text = f"{prompt}\n\n```java\n{source_code}\n```"
 
             # LLM 비동기 호출
-            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback)
+            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
 
             # 응답 정제 (think 태그, markdown 블록 제거)
             ai_description = self._clean_response(raw_response)
@@ -456,7 +456,8 @@ class AIAnalyzer:
         source_code: str, 
         method_name: str = "", 
         class_name: str = "",
-        stop_check_callback=None
+        stop_check_callback=None,
+        logger: logging.Logger = logger
     ) -> str:
         """
         Java Method 소스 코드를 비동기로 분석하여 AI description을 생성합니다.
@@ -477,7 +478,7 @@ class AIAnalyzer:
             input_text = f"{prompt}\n\n```java\n{source_code}\n```"
 
             # LLM 비동기 호출
-            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback)
+            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
 
             # 응답 정제 (think 태그, markdown 블록 제거)
             ai_description = self._clean_response(raw_response)
@@ -503,7 +504,8 @@ class AIAnalyzer:
         self, 
         sql_statement: str, 
         sql_id: str = "",
-        stop_check_callback=None
+        stop_check_callback=None,
+        logger: logging.Logger = logger
     ) -> str:
         """
         SQL 문을 비동기로 분석하여 AI description을 생성합니다.
@@ -523,7 +525,7 @@ class AIAnalyzer:
             input_text = f"{prompt}\n\n```sql\n{sql_statement}\n```"
 
             # LLM 비동기 호출
-            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback)
+            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
 
             # 응답 정제 (think 태그, markdown 블록 제거)
             ai_description = self._clean_response(raw_response)
@@ -580,7 +582,7 @@ class AIAnalyzer:
             input_text = f"{prompt}\n\n" + "\n".join(method_sections)
 
             # LLM 비동기 호출
-            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback)
+            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
 
             # 응답 정제 (think 태그, markdown 블록 제거)
             cleaned_response = self._clean_response(raw_response)
@@ -638,7 +640,7 @@ class AIAnalyzer:
             input_text = f"{prompt}\n\n" + "\n".join(sql_sections)
 
             # LLM 비동기 호출
-            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback)
+            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
 
             # 응답 정제 (think 태그, markdown 블록 제거)
             cleaned_response = self._clean_response(raw_response)

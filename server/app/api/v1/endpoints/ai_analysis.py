@@ -175,6 +175,7 @@ def run_enrichment_task(
             current_job = jobs.get(job_id, {})
             status = current_job.get("status")
             if status == "cancelling":
+                task_logger.debug(f"Cancellation detected via memory status: {job_id}")
                 return True
                 
             return False
@@ -262,6 +263,9 @@ def run_enrichment_task(
             current_status = jobs[job_id]["status"]
             if current_status == "running" or current_status == "pending":
                  jobs[job_id]["status"] = "completed"
+                 jobs[job_id]["result"] = stats if 'stats' in locals() else {}
+            elif current_status == "cancelling":
+                 jobs[job_id]["status"] = "cancelled"
                  jobs[job_id]["result"] = stats if 'stats' in locals() else {}
         
         # Cleanup cancellation flag file
@@ -408,6 +412,7 @@ def cancel_job(job_id: str):
     # Update status in memory (for current process visibility)
     jobs[job_id]["status"] = "cancelling"
     jobs[job_id]["result"] = {"status": "cancelling"}
+    logging.info(f"Job {job_id} status updated to 'cancelling' in memory")
     
     # Create cancellation flag file (for cross-process visibility)
     try:
