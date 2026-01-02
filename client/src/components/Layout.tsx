@@ -13,6 +13,7 @@ const Layout: React.FC = () => {
     const location = useLocation();
     const { t } = useTranslation();
     const user = useAuthStore((state) => state.user);
+    const loginTime = useAuthStore((state) => state.loginTime);
     const isAdmin = user?.groups?.some(g => g.name.toLowerCase() === 'administrators') ?? false;
 
     // -- State --
@@ -224,9 +225,19 @@ const Layout: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div ref={mainContentRef} className="flex-1 overflow-auto relative">
-                <div className={`p-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500`}>
-                    <Outlet />
+            <div ref={mainContentRef} className="flex-1 flex flex-col overflow-hidden relative">
+                {/* Top Header */}
+                <header className="h-12 bg-white border-b border-slate-200 flex items-center justify-end px-6 shrink-0 z-10">
+                    <div className="flex items-center text-sm text-slate-500 gap-4">
+                        <span>User: <span className="font-medium text-slate-700">{user?.username}</span></span>
+                        <span>Login: <span className="font-medium text-slate-700">{loginTime}</span></span>
+                    </div>
+                </header>
+
+                <div className="flex-1 overflow-auto">
+                    <div className={`p-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500`}>
+                        <Outlet />
+                    </div>
                 </div>
             </div>
 
@@ -237,7 +248,7 @@ const Layout: React.FC = () => {
                 currentTheme={theme}
                 onThemeChange={setTheme}
             />
-            <Toaster position="top-right" />
+            <Toaster position="bottom-right" />
         </div>
     );
 };
