@@ -750,7 +750,8 @@ class AIEnrichmentService:
                     })
                     node_id_map[sql_id_val] = {
                         "node_id": node_id_val,
-                        "mapper_name": record["mapper_name"]
+                        "mapper_name": record["mapper_name"],
+                        "sql_id": sql_id_val
                     }
 
                 try:
