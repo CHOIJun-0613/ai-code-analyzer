@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
-import { LayoutDashboard, FileCode, Users, LogOut, ChevronLeft, ChevronRight, Settings, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, FileCode, LogOut, ChevronLeft, ChevronRight, Settings, ArrowLeft, ShieldCheck } from 'lucide-react';
 import AnimatedLogo from './AnimatedLogo';
 import SettingsModal, { Theme } from './SettingsModal';
 
@@ -178,7 +178,7 @@ const Layout: React.FC = () => {
 
                             <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/admin') && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
                                 <Link to="/admin" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isActive('/admin') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.adminOverview') : ""}>
-                                    <Users className={`shrink-0 w-5 h-5 transition-colors ${isActive('/admin') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
+                                    <ShieldCheck className={`shrink-0 w-5 h-5 transition-colors ${isActive('/admin') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
                                     <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
                                         {t('layout.adminOverview')}
                                     </span>

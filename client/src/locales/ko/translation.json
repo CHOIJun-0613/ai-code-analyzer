@@ -29,13 +29,13 @@
         "userManagement": "사용자 관리",
         "groupManagement": "그룹 관리",
         "aiPromptManagement": "AI 프롬프트 관리",
-        "settings": "설정",
+        "settings": "화면 설정",
         "logout": "로그아웃",
         "analysisManagement": "코드 분석",
         "analysisHistory": "분석 로그 관리"
     },
     "settings": {
-        "title": "설정",
+        "title": "화면 설정",
         "appearance": "화면 설정",
         "language": "언어",
         "normal": "기본",
@@ -286,7 +286,7 @@
         "cancel": "Cancel"
     },
     "admin": {
-        "title": "관리",
+        "title": "시스템 관리",
         "subtitle": "사용자, 그룹 및 시스템 설정 관리",
         "userManagement": "사용자 관리",
         "userManagementDesc": "사용자 계정을 생성, 수정 및 관리합니다. 역할을 할당하고 사용자 활동을 모니터링합니다.",
