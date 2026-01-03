@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
 import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database, Square, RotateCw, Rocket, XCircle } from 'lucide-react';
 import { useAnalysisWebSocket } from '../hooks/useAnalysisWebSocket';
+import { createAnalysisSchema, type AnalysisFormData } from '../schemas/analysisSchema';
 
 const Tooltip: React.FC<{ text: string, position?: string, arrowPosition?: string }> = ({ text, position = "left-1/2 -translate-x-1/2", arrowPosition = "left-1/2 -translate-x-1/2" }) => (
     <div className="group relative flex items-center ml-1">
@@ -18,14 +21,41 @@ const Tooltip: React.FC<{ text: string, position?: string, arrowPosition?: strin
 
 const Analysis: React.FC = () => {
     const { t } = useTranslation();
-    const [file, setFile] = useState<File | null>(null);
-    const [sourcePath, setSourcePath] = useState('');
-    const [dbScriptPath, setDbScriptPath] = useState('');
-    const [projectName, setProjectName] = useState('');
-    const [applicationName, setApplicationName] = useState('');
+    const queryClient = useQueryClient();
+
+    // React Hook Form
+    const {
+        register,
+        formState: { errors },
+        reset,
+        watch,
+        setValue,
+    } = useForm<AnalysisFormData>({
+        resolver: zodResolver(createAnalysisSchema(t)),
+        defaultValues: {
+            mode: 'path',
+            projectName: '',
+            applicationName: '',
+            file: undefined,
+            sourcePath: '',
+            dbScriptPath: '',
+            skipDtoSource: true,
+            skipDtoMethods: true,
+            scope: 'all',
+            analysisTarget: 'all',
+            saveStrategy: 'delete',
+            javaParseWorkers: 8,
+            javaFileParseTimeout: 120.0,
+            javaComplexityThreshold: 50000,
+            sequenceDiagramIncludePackages: '',
+            excludePatterns: '',
+            logLevel: 'INFO',
+        },
+    });
+
+    // System/UI State (keep as useState)
     const [jobId, setJobId] = useState('');
     const [status, setStatus] = useState('');
-    const [mode, setMode] = useState<'upload' | 'path'>('path');
     const [logs, setLogs] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -33,54 +63,22 @@ const Analysis: React.FC = () => {
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [showStopConfirmModal, setShowStopConfirmModal] = useState(false);
 
-    // Standard Options
-    const [skipDtoSource, setSkipDtoSource] = useState(true);
-    const [skipDtoMethods, setSkipDtoMethods] = useState(true);
-    const [scope, setScope] = useState('all');
-
-    // Advanced Source Options
-    const [javaParseWorkers, setJavaParseWorkers] = useState(8);
-    const [javaFileParseTimeout, setJavaFileParseTimeout] = useState(120.0);
-    const [javaComplexityThreshold, setJavaComplexityThreshold] = useState(50000);
-    const [sequenceDiagramIncludePackages, setSequenceDiagramIncludePackages] = useState('');
-    const [excludePatterns, setExcludePatterns] = useState('');
-    const [logLevel, setLogLevel] = useState('INFO');
-    const [analysisTarget, setAnalysisTarget] = useState<'all' | 'program' | 'db'>('all');
-    const [saveStrategy, setSaveStrategy] = useState<'delete' | 'update'>('delete');
-
     const logsEndRef = React.useRef<HTMLDivElement>(null);
+
+    // Watch form values for UI
+    const mode = watch('mode');
+    const file = watch('file');
+    const sourcePath = watch('sourcePath');
+    const projectName = watch('projectName');
+    const analysisTarget = watch('analysisTarget');
+    const saveStrategy = watch('saveStrategy');
+    const javaParseWorkers = watch('javaParseWorkers');
+    const logLevel = watch('logLevel');
 
     // Scroll to bottom of logs
     React.useEffect(() => {
         logsEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [logs]);
-
-    const loadPreferences = async () => {
-        try {
-            const res = await client.get('/users/me/preferences');
-            if (res.data) {
-                // Boolean fields - check for undefined
-                if (res.data.skip_dto_source !== undefined) setSkipDtoSource(res.data.skip_dto_source);
-                if (res.data.skip_dto_methods !== undefined) setSkipDtoMethods(res.data.skip_dto_methods);
-
-                // String/Selection fields
-                if (res.data.scope !== undefined) setScope(res.data.scope);
-
-                // Advanced Source Options
-                if (res.data.java_parse_workers !== undefined) setJavaParseWorkers(res.data.java_parse_workers);
-                if (res.data.java_file_parse_timeout !== undefined) setJavaFileParseTimeout(res.data.java_file_parse_timeout);
-                if (res.data.java_complexity_threshold !== undefined) setJavaComplexityThreshold(res.data.java_complexity_threshold);
-                if (res.data.sequence_diagram_include_packages !== undefined) setSequenceDiagramIncludePackages(res.data.sequence_diagram_include_packages);
-                if (res.data.exclude_patterns !== undefined) setExcludePatterns(res.data.exclude_patterns);
-                if (res.data.log_level !== undefined) setLogLevel(res.data.log_level);
-                if (res.data.analysis_target !== undefined) setAnalysisTarget(res.data.analysis_target);
-                if (res.data.save_strategy !== undefined) setSaveStrategy(res.data.save_strategy);
-            }
-        } catch (err) {
-            console.error("Failed to fetch preferences", err);
-            throw err; // Re-throw for caller handling
-        }
-    };
 
     // React Query: 사용자 설정 조회
     useQuery({
@@ -88,20 +86,26 @@ const Analysis: React.FC = () => {
         queryFn: async () => {
             const res = await client.get('/users/me/preferences');
             if (res.data) {
-                // Boolean fields
-                if (res.data.skip_dto_source !== undefined) setSkipDtoSource(res.data.skip_dto_source);
-                if (res.data.skip_dto_methods !== undefined) setSkipDtoMethods(res.data.skip_dto_methods);
-                // String/Selection fields
-                if (res.data.scope !== undefined) setScope(res.data.scope);
-                // Advanced Source Options
-                if (res.data.java_parse_workers !== undefined) setJavaParseWorkers(res.data.java_parse_workers);
-                if (res.data.java_file_parse_timeout !== undefined) setJavaFileParseTimeout(res.data.java_file_parse_timeout);
-                if (res.data.java_complexity_threshold !== undefined) setJavaComplexityThreshold(res.data.java_complexity_threshold);
-                if (res.data.sequence_diagram_include_packages !== undefined) setSequenceDiagramIncludePackages(res.data.sequence_diagram_include_packages);
-                if (res.data.exclude_patterns !== undefined) setExcludePatterns(res.data.exclude_patterns);
-                if (res.data.log_level !== undefined) setLogLevel(res.data.log_level);
-                if (res.data.analysis_target !== undefined) setAnalysisTarget(res.data.analysis_target);
-                if (res.data.save_strategy !== undefined) setSaveStrategy(res.data.save_strategy);
+                // Reset form with preferences
+                reset({
+                    mode: watch('mode'),
+                    projectName: watch('projectName'),
+                    applicationName: watch('applicationName'),
+                    file: watch('file'),
+                    sourcePath: watch('sourcePath'),
+                    dbScriptPath: watch('dbScriptPath'),
+                    skipDtoSource: res.data.skip_dto_source !== undefined ? res.data.skip_dto_source : true,
+                    skipDtoMethods: res.data.skip_dto_methods !== undefined ? res.data.skip_dto_methods : true,
+                    scope: res.data.scope !== undefined ? res.data.scope : 'all',
+                    analysisTarget: res.data.analysis_target !== undefined ? res.data.analysis_target : 'all',
+                    saveStrategy: res.data.save_strategy !== undefined ? res.data.save_strategy : 'delete',
+                    javaParseWorkers: res.data.java_parse_workers !== undefined ? res.data.java_parse_workers : 8,
+                    javaFileParseTimeout: res.data.java_file_parse_timeout !== undefined ? res.data.java_file_parse_timeout : 120.0,
+                    javaComplexityThreshold: res.data.java_complexity_threshold !== undefined ? res.data.java_complexity_threshold : 50000,
+                    sequenceDiagramIncludePackages: res.data.sequence_diagram_include_packages !== undefined ? res.data.sequence_diagram_include_packages : '',
+                    excludePatterns: res.data.exclude_patterns !== undefined ? res.data.exclude_patterns : '',
+                    logLevel: res.data.log_level !== undefined ? res.data.log_level : 'INFO',
+                });
             }
             return res.data;
         },
@@ -171,8 +175,8 @@ const Analysis: React.FC = () => {
     });
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files) {
-            setFile(e.target.files[0]);
+        if (e.target.files && e.target.files[0]) {
+            setValue('file', e.target.files[0]);
         }
     };
 
@@ -232,30 +236,63 @@ const Analysis: React.FC = () => {
         setShowConfirmModal(true);
     };
 
+    const handleLoadSettings = async () => {
+        try {
+            // Invalidate query to refetch
+            await queryClient.invalidateQueries({ queryKey: ['users', 'me', 'preferences'] });
+            toast.success(t('analysis.settingsLoaded') || "Settings loaded successfully!");
+        } catch (err) {
+            console.error("Failed to load preferences", err);
+            toast.error(t('analysis.settingsLoadFailed') || "Failed to load settings.");
+        }
+    };
+
+    const handleSaveSettings = async () => {
+        try {
+            const formData = watch();
+            const preferences = {
+                skip_dto_source: formData.skipDtoSource,
+                skip_dto_methods: formData.skipDtoMethods,
+                scope: formData.scope,
+                java_parse_workers: formData.javaParseWorkers,
+                java_file_parse_timeout: formData.javaFileParseTimeout,
+                java_complexity_threshold: formData.javaComplexityThreshold,
+                sequence_diagram_include_packages: formData.sequenceDiagramIncludePackages,
+                exclude_patterns: formData.excludePatterns,
+                log_level: formData.logLevel,
+                analysis_target: formData.analysisTarget,
+                save_strategy: formData.saveStrategy
+            };
+            await client.put('/users/me/preferences', preferences);
+            toast.success(t('analysis.configSaved') || "Configuration saved successfully!");
+        } catch (err) {
+            console.error("Failed to save preferences", err);
+            toast.error(t('analysis.configSaveFailed') || "Failed to save configuration.");
+        }
+    };
+
     const executeAnalysis = async () => {
         setShowConfirmModal(false);
         setIsLoading(true);
         setLogs([]);
 
-        // Preferences object
-        const preferences = {
-            skip_dto_source: skipDtoSource,
-            skip_dto_methods: skipDtoMethods,
-            scope: scope,
-            java_parse_workers: javaParseWorkers,
-            java_file_parse_timeout: javaFileParseTimeout,
-            java_complexity_threshold: javaComplexityThreshold,
-            sequence_diagram_include_packages: sequenceDiagramIncludePackages,
-            exclude_patterns: excludePatterns,
-            log_level: logLevel,
-            analysis_target: analysisTarget,
-            save_strategy: saveStrategy
-        };
-
-
+        const formData = watch();
 
         // Save preferences
         try {
+            const preferences = {
+                skip_dto_source: formData.skipDtoSource,
+                skip_dto_methods: formData.skipDtoMethods,
+                scope: formData.scope,
+                java_parse_workers: formData.javaParseWorkers,
+                java_file_parse_timeout: formData.javaFileParseTimeout,
+                java_complexity_threshold: formData.javaComplexityThreshold,
+                sequence_diagram_include_packages: formData.sequenceDiagramIncludePackages,
+                exclude_patterns: formData.excludePatterns,
+                log_level: formData.logLevel,
+                analysis_target: formData.analysisTarget,
+                save_strategy: formData.saveStrategy
+            };
             await client.put('/users/me/preferences', preferences);
         } catch (err) {
             console.error("Failed to save preferences", err);
@@ -263,86 +300,86 @@ const Analysis: React.FC = () => {
 
         try {
             let response;
-            if (mode === 'upload' && file) {
-                const formData = new FormData();
-                formData.append('file', file);
-                if (projectName) formData.append('project_name', projectName);
-                if (applicationName) formData.append('application_name', applicationName);
+            if (formData.mode === 'upload' && formData.file) {
+                const uploadFormData = new FormData();
+                uploadFormData.append('file', formData.file);
+                if (formData.projectName) uploadFormData.append('project_name', formData.projectName);
+                if (formData.applicationName) uploadFormData.append('application_name', formData.applicationName);
 
                 // Save Strategy
-                if (saveStrategy === 'delete') {
-                    formData.append('clean', 'true');
-                    formData.append('update', 'false');
+                if (formData.saveStrategy === 'delete') {
+                    uploadFormData.append('clean', 'true');
+                    uploadFormData.append('update', 'false');
                 } else {
-                    formData.append('clean', 'false');
-                    formData.append('update', 'true');
+                    uploadFormData.append('clean', 'false');
+                    uploadFormData.append('update', 'true');
                 }
 
                 // Analysis Target
-                if (analysisTarget === 'program') {
-                    formData.append('java_object', 'true');
-                    formData.append('db_object', 'false');
-                    formData.append('all_objects', 'false');
-                } else if (analysisTarget === 'db') {
-                    formData.append('java_object', 'false');
-                    formData.append('db_object', 'true');
-                    formData.append('all_objects', 'false');
+                if (formData.analysisTarget === 'program') {
+                    uploadFormData.append('java_object', 'true');
+                    uploadFormData.append('db_object', 'false');
+                    uploadFormData.append('all_objects', 'false');
+                } else if (formData.analysisTarget === 'db') {
+                    uploadFormData.append('java_object', 'false');
+                    uploadFormData.append('db_object', 'true');
+                    uploadFormData.append('all_objects', 'false');
                 } else {
-                    formData.append('all_objects', 'true');
+                    uploadFormData.append('all_objects', 'true');
                 }
 
                 // Advanced Source Options
-                formData.append('use_streaming_parse', 'true');
-                formData.append('java_parse_workers', String(javaParseWorkers));
-                formData.append('java_file_parse_timeout', String(javaFileParseTimeout));
-                formData.append('java_complexity_threshold', String(javaComplexityThreshold));
-                if (sequenceDiagramIncludePackages) formData.append('sequence_diagram_include_packages', sequenceDiagramIncludePackages);
-                if (excludePatterns) formData.append('exclude_patterns', excludePatterns);
-                formData.append('log_level', logLevel);
+                uploadFormData.append('use_streaming_parse', 'true');
+                uploadFormData.append('java_parse_workers', String(formData.javaParseWorkers));
+                uploadFormData.append('java_file_parse_timeout', String(formData.javaFileParseTimeout));
+                uploadFormData.append('java_complexity_threshold', String(formData.javaComplexityThreshold));
+                if (formData.sequenceDiagramIncludePackages) uploadFormData.append('sequence_diagram_include_packages', formData.sequenceDiagramIncludePackages);
+                if (formData.excludePatterns) uploadFormData.append('exclude_patterns', formData.excludePatterns);
+                uploadFormData.append('log_level', formData.logLevel);
 
                 // Advanced AI Options - DISABLING AI
-                formData.append('use_ai_analysis', 'false');
-                formData.append('use_ai', 'false');
+                uploadFormData.append('use_ai_analysis', 'false');
+                uploadFormData.append('use_ai', 'false');
 
                 // Standard Options
-                formData.append('skip_dto_source', String(skipDtoSource));
-                formData.append('skip_dto_methods', String(skipDtoMethods));
-                formData.append('scope', scope);
+                uploadFormData.append('skip_dto_source', String(formData.skipDtoSource));
+                uploadFormData.append('skip_dto_methods', String(formData.skipDtoMethods));
+                uploadFormData.append('scope', formData.scope);
 
-                response = await client.post('/analysis/analyze/upload', formData);
+                response = await client.post('/analysis/analyze/upload', uploadFormData);
             } else {
                 const payload: any = {
-                    source_folder: sourcePath,
-                    project_name: projectName,
-                    application_name: applicationName,
-                    db_script_path: dbScriptPath,
+                    source_folder: formData.sourcePath,
+                    project_name: formData.projectName,
+                    application_name: formData.applicationName,
+                    db_script_path: formData.dbScriptPath,
 
                     // Save Strategy
-                    clean: saveStrategy === 'delete',
-                    update: saveStrategy === 'update',
+                    clean: formData.saveStrategy === 'delete',
+                    update: formData.saveStrategy === 'update',
 
                     // Analysis Target
-                    java_object: analysisTarget === 'program' || analysisTarget === 'all',
-                    db_object: analysisTarget === 'db' || analysisTarget === 'all',
-                    all_objects: analysisTarget === 'all',
+                    java_object: formData.analysisTarget === 'program' || formData.analysisTarget === 'all',
+                    db_object: formData.analysisTarget === 'db' || formData.analysisTarget === 'all',
+                    all_objects: formData.analysisTarget === 'all',
 
                     // Advanced Source Options
                     use_streaming_parse: true,
-                    java_parse_workers: javaParseWorkers,
-                    java_file_parse_timeout: javaFileParseTimeout,
-                    java_complexity_threshold: javaComplexityThreshold,
-                    sequence_diagram_include_packages: sequenceDiagramIncludePackages,
-                    exclude_patterns: excludePatterns,
-                    log_level: logLevel,
+                    java_parse_workers: formData.javaParseWorkers,
+                    java_file_parse_timeout: formData.javaFileParseTimeout,
+                    java_complexity_threshold: formData.javaComplexityThreshold,
+                    sequence_diagram_include_packages: formData.sequenceDiagramIncludePackages,
+                    exclude_patterns: formData.excludePatterns,
+                    log_level: formData.logLevel,
 
                     // Advanced AI Options - DISABLING AI
                     use_ai_analysis: false,
                     use_ai: false, // Backward compatibility
 
                     // Standard Options
-                    skip_dto_source: skipDtoSource,
-                    skip_dto_methods: skipDtoMethods,
-                    scope: scope
+                    skip_dto_source: formData.skipDtoSource,
+                    skip_dto_methods: formData.skipDtoMethods,
+                    scope: formData.scope
                 };
 
                 response = await client.post('/analysis/analyze', payload);
@@ -351,7 +388,6 @@ const Analysis: React.FC = () => {
             setStatus(response.data.status);
             toast.success(t('analysis.startSuccess') || "Analysis started successfully.");
         } catch (error) {
-            console.error("Analysis request failed", error);
             console.error("Analysis request failed", error);
             toast.error(t('analysis.startFailed') || "Failed to start analysis");
         } finally {
@@ -539,7 +575,8 @@ const Analysis: React.FC = () => {
                 <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                     <div className="flex border-b border-slate-100">
                         <button
-                            onClick={() => setMode('path')}
+                            type="button"
+                            onClick={() => setValue('mode', 'path')}
                             className={`flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${mode === 'path'
                                 ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
                                 : 'text-slate-500 hover:bg-slate-50'
@@ -548,7 +585,8 @@ const Analysis: React.FC = () => {
                             <Folder className="w-4 h-4" /> {t('analysis.serverPath')}
                         </button>
                         <button
-                            onClick={() => setMode('upload')}
+                            type="button"
+                            onClick={() => setValue('mode', 'upload')}
                             className={`flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${mode === 'upload'
                                 ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
                                 : 'text-slate-500 hover:bg-slate-50'
@@ -565,8 +603,7 @@ const Analysis: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder={t('analysis.projectNamePlaceholder')}
-                                    value={projectName}
-                                    onChange={(e) => setProjectName(e.target.value)}
+                                    {...register('projectName')}
                                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
                                 />
                             </div>
@@ -575,11 +612,13 @@ const Analysis: React.FC = () => {
                                 <input
                                     type="text"
                                     placeholder={t('analysis.applicationNamePlaceholder')}
-                                    value={applicationName}
-                                    onChange={(e) => setApplicationName(e.target.value)}
+                                    {...register('applicationName')}
                                     maxLength={30}
                                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
                                 />
+                                {errors.applicationName && (
+                                    <p className="text-sm text-red-600 mt-1">{errors.applicationName.message}</p>
+                                )}
                             </div>
                         </div>
 
@@ -601,6 +640,9 @@ const Analysis: React.FC = () => {
                                     </p>
                                     <p className="text-xs text-slate-400 mt-1">{t('analysis.zipFilesOnly')}</p>
                                 </div>
+                                {errors.file && (
+                                    <p className="text-sm text-red-600 mt-1">{errors.file.message}</p>
+                                )}
                             </div>
                         ) : (
                             <div>
@@ -612,11 +654,13 @@ const Analysis: React.FC = () => {
                                     <input
                                         type="text"
                                         placeholder={t('analysis.serverSourcePathPlaceholder')}
-                                        value={sourcePath}
-                                        onChange={(e) => setSourcePath(e.target.value)}
+                                        {...register('sourcePath')}
                                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 font-mono text-sm"
                                     />
                                 </div>
+                                {errors.sourcePath && (
+                                    <p className="text-sm text-red-600 mt-1 mb-4">{errors.sourcePath.message}</p>
+                                )}
                                 <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.dbScriptPath')}</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -625,8 +669,7 @@ const Analysis: React.FC = () => {
                                     <input
                                         type="text"
                                         placeholder={t('analysis.dbScriptPathPlaceholder')}
-                                        value={dbScriptPath}
-                                        onChange={(e) => setDbScriptPath(e.target.value)}
+                                        {...register('dbScriptPath')}
                                         className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 font-mono text-sm"
                                     />
                                 </div>
@@ -643,44 +686,14 @@ const Analysis: React.FC = () => {
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            try {
-                                                await loadPreferences();
-                                                toast.success(t('analysis.settingsLoaded') || "Settings loaded successfully!");
-                                            } catch (err) {
-                                                console.error("Failed to load preferences", err);
-                                                toast.error(t('analysis.settingsLoadFailed') || "Failed to load settings.");
-                                            }
-                                        }}
+                                        onClick={handleLoadSettings}
                                         className="text-xs px-3 py-1.5 bg-white text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors border border-slate-200"
                                     >
                                         {t('analysis.loadSettings')}
                                     </button>
                                     <button
                                         type="button"
-                                        onClick={async (e) => {
-                                            e.stopPropagation();
-                                            try {
-                                                await client.put('/users/me/preferences', {
-                                                    skip_dto_source: skipDtoSource,
-                                                    skip_dto_methods: skipDtoMethods,
-                                                    scope: scope,
-                                                    java_parse_workers: javaParseWorkers,
-                                                    java_file_parse_timeout: javaFileParseTimeout,
-                                                    java_complexity_threshold: javaComplexityThreshold,
-                                                    sequence_diagram_include_packages: sequenceDiagramIncludePackages,
-                                                    exclude_patterns: excludePatterns,
-                                                    log_level: logLevel,
-                                                    analysis_target: analysisTarget,
-                                                    save_strategy: saveStrategy
-                                                });
-                                                toast.success(t('analysis.configSaved') || "Configuration saved successfully!");
-                                            } catch (err) {
-                                                console.error("Failed to save preferences", err);
-                                                toast.error(t('analysis.configSaveFailed') || "Failed to save configuration.");
-                                            }
-                                        }}
+                                        onClick={handleSaveSettings}
                                         className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 font-medium transition-colors border border-indigo-100"
                                     >
                                         {t('analysis.saveSettings')}
@@ -695,39 +708,17 @@ const Analysis: React.FC = () => {
                                         {t('analysis.analysisTarget')} <Tooltip text={t('analysis.analysisTargetTooltip')} position="left-0" arrowPosition="left-2" />
                                     </label>
                                     <div className="flex gap-4">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="analysisTarget"
-                                                value="all"
-                                                checked={analysisTarget === 'all'}
-                                                onChange={(e) => setAnalysisTarget(e.target.value as any)}
-                                                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-sm text-slate-700">{t('analysis.targetAll')}</span>
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="analysisTarget"
-                                                value="program"
-                                                checked={analysisTarget === 'program'}
-                                                onChange={(e) => setAnalysisTarget(e.target.value as any)}
-                                                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-sm text-slate-700">{t('analysis.targetProgram')}</span>
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="analysisTarget"
-                                                value="db"
-                                                checked={analysisTarget === 'db'}
-                                                onChange={(e) => setAnalysisTarget(e.target.value as any)}
-                                                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-sm text-slate-700">{t('analysis.targetDb')}</span>
-                                        </label>
+                                        {['all', 'program', 'db'].map((target) => (
+                                            <label key={target} className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    {...register('analysisTarget')}
+                                                    value={target}
+                                                    className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                                                />
+                                                <span className="text-sm text-slate-700">{t(`analysis.target${target.charAt(0).toUpperCase() + target.slice(1)}`)}</span>
+                                            </label>
+                                        ))}
                                     </div>
                                 </div>
                                 <div>
@@ -735,28 +726,17 @@ const Analysis: React.FC = () => {
                                         {t('analysis.saveStrategy')} <Tooltip text={t('analysis.saveStrategyTooltip')} />
                                     </label>
                                     <div className="flex gap-4">
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="saveStrategy"
-                                                value="delete"
-                                                checked={saveStrategy === 'delete'}
-                                                onChange={(e) => setSaveStrategy(e.target.value as any)}
-                                                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-sm text-slate-700">{t('analysis.saveDelete')}</span>
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name="saveStrategy"
-                                                value="update"
-                                                checked={saveStrategy === 'update'}
-                                                onChange={(e) => setSaveStrategy(e.target.value as any)}
-                                                className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
-                                            />
-                                            <span className="text-sm text-slate-700">{t('analysis.saveUpdate')}</span>
-                                        </label>
+                                        {['delete', 'update'].map((strategy) => (
+                                            <label key={strategy} className="flex items-center gap-2 cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    {...register('saveStrategy')}
+                                                    value={strategy}
+                                                    className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                                                />
+                                                <span className="text-sm text-slate-700">{t(`analysis.save${strategy.charAt(0).toUpperCase() + strategy.slice(1)}`)}</span>
+                                            </label>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -766,8 +746,7 @@ const Analysis: React.FC = () => {
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
-                                        checked={skipDtoSource}
-                                        onChange={(e) => setSkipDtoSource(e.target.checked)}
+                                        {...register('skipDtoSource')}
                                         className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
                                     />
                                     <span className="text-sm text-slate-700">{t('analysis.skipDtoSource')}</span>
@@ -776,8 +755,7 @@ const Analysis: React.FC = () => {
                                 <label className="flex items-center gap-2 cursor-pointer">
                                     <input
                                         type="checkbox"
-                                        checked={skipDtoMethods}
-                                        onChange={(e) => setSkipDtoMethods(e.target.checked)}
+                                        {...register('skipDtoMethods')}
                                         className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
                                     />
                                     <span className="text-sm text-slate-700">{t('analysis.skipDtoMethods')}</span>
@@ -791,8 +769,7 @@ const Analysis: React.FC = () => {
                                     {t('analysis.excludePatterns')} <Tooltip text={t('analysis.excludePatternsTooltip')} />
                                 </label>
                                 <textarea
-                                    value={excludePatterns}
-                                    onChange={(e) => setExcludePatterns(e.target.value)}
+                                    {...register('excludePatterns')}
                                     placeholder={t('analysis.excludePatternsPlaceholder')}
                                     rows={3}
                                     className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm font-mono h-[86px]"
@@ -807,8 +784,7 @@ const Analysis: React.FC = () => {
                                     </label>
                                     <input
                                         type="number"
-                                        value={javaParseWorkers}
-                                        onChange={(e) => setJavaParseWorkers(parseInt(e.target.value) || 8)}
+                                        {...register('javaParseWorkers', { valueAsNumber: true })}
                                         className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
                                     />
                                 </div>
@@ -818,8 +794,7 @@ const Analysis: React.FC = () => {
                                     </label>
                                     <input
                                         type="number"
-                                        value={javaFileParseTimeout}
-                                        onChange={(e) => setJavaFileParseTimeout(parseFloat(e.target.value) || 120)}
+                                        {...register('javaFileParseTimeout', { valueAsNumber: true })}
                                         className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
                                     />
                                 </div>
@@ -829,8 +804,7 @@ const Analysis: React.FC = () => {
                                     </label>
                                     <input
                                         type="number"
-                                        value={javaComplexityThreshold}
-                                        onChange={(e) => setJavaComplexityThreshold(parseInt(e.target.value) || 50000)}
+                                        {...register('javaComplexityThreshold', { valueAsNumber: true })}
                                         className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
                                     />
                                 </div>
@@ -845,8 +819,7 @@ const Analysis: React.FC = () => {
                                     <input
                                         type="text"
                                         placeholder="com.example, org.test"
-                                        value={sequenceDiagramIncludePackages}
-                                        onChange={(e) => setSequenceDiagramIncludePackages(e.target.value)}
+                                        {...register('sequenceDiagramIncludePackages')}
                                         className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
                                     />
                                 </div>
@@ -855,8 +828,7 @@ const Analysis: React.FC = () => {
                                         {t('analysis.logLevel')} <Tooltip text={t('analysis.logLevelTooltip')} position="right-0" arrowPosition="right-2" />
                                     </label>
                                     <select
-                                        value={logLevel}
-                                        onChange={(e) => setLogLevel(e.target.value)}
+                                        {...register('logLevel')}
                                         className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
                                     >
                                         <option value="DEBUG">DEBUG</option>

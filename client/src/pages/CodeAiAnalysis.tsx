@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -28,6 +30,8 @@ import {
     Rocket
 } from 'lucide-react';
 import { useAnalysisWebSocket } from '../hooks/useAnalysisWebSocket';
+import { createAiAnalysisSchema, type AiAnalysisFormData } from '../schemas/aiAnalysisSchema';
+import { FormError } from '../components/FormError';
 
 // Shared styling classes
 const cardClass = "bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md";
@@ -36,25 +40,6 @@ const inputClass = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 round
 const radioClass = "w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 focus:ring-indigo-500";
 
 const sectionTitleClass = "text-lg font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2";
-
-interface AiConfig {
-    use_analysis: boolean;
-    provider: string;
-    model_name: string;
-    api_key: string;
-    api_endpoint: string;
-    concurrent_requests: number;
-    enrichment_batch_size: number;
-}
-
-interface AnalysisScope {
-    projectName: string;
-    nodeType: string;
-    limit: number; // 0 = All
-    clean: boolean; // true = 삭제 후 저장, false = 업데이트 저장
-    className: string;
-    logLevel: string;
-}
 
 interface Project {
     name: string;
@@ -65,25 +50,29 @@ const CodeAiAnalysis: React.FC = () => {
     const { t } = useTranslation();
     const queryClient = useQueryClient();
 
-    // AI Config State
-    const [aiConfig, setAiConfig] = useState<AiConfig>({
-        use_analysis: true,
-        provider: 'google',
-        model_name: 'gemini-2.0-flash',
-        api_key: '',
-        api_endpoint: '',
-        concurrent_requests: 10,
-        enrichment_batch_size: 50
-    });
-
-    // Analysis Scope State
-    const [scope, setScope] = useState<AnalysisScope>({
-        projectName: '',
-        nodeType: 'all',
-        limit: 0,
-        clean: false,
-        className: '',
-        logLevel: 'INFO'
+    // React Hook Form
+    const {
+        register,
+        formState: { errors },
+        reset,
+        watch,
+        setValue,
+    } = useForm<AiAnalysisFormData>({
+        resolver: zodResolver(createAiAnalysisSchema(t)),
+        defaultValues: {
+            provider: 'google',
+            model_name: 'gemini-2.0-flash',
+            api_key: '',
+            api_endpoint: '',
+            concurrent_requests: 10,
+            enrichment_batch_size: 50,
+            projectName: '',
+            nodeType: 'all',
+            className: '',
+            limit: 0,
+            clean: false,
+            logLevel: 'INFO',
+        },
     });
 
     const [showApiKey, setShowApiKey] = useState(false);
@@ -92,6 +81,12 @@ const CodeAiAnalysis: React.FC = () => {
     const [status, setStatus] = useState<'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'success' | 'error' | 'cancelled' | 'cancelling'>('idle');
     const [jobId, setJobId] = useState<string>('');
     const [logs, setLogs] = useState<string[]>([]);
+
+    // Watch form values for UI
+    const provider = watch('provider');
+    const projectName = watch('projectName');
+    const nodeType = watch('nodeType');
+    const clean = watch('clean');
 
     // React Query: 프로젝트 목록 조회
     const { data: projects = [] } = useQuery<Project[]>({
@@ -103,11 +98,11 @@ const CodeAiAnalysis: React.FC = () => {
     });
 
     // 첫 번째 프로젝트 자동 선택 (useEffect로 처리)
-    React.useEffect(() => {
-        if (projects && projects.length > 0 && !scope.projectName) {
-            setScope(prev => ({ ...prev, projectName: projects[0].name }));
+    useEffect(() => {
+        if (projects && projects.length > 0 && !projectName) {
+            setValue('projectName', projects[0].name);
         }
-    }, [projects, scope.projectName]);
+    }, [projects, projectName, setValue]);
 
     // React Query: AI 설정 조회
     useQuery({
@@ -115,16 +110,20 @@ const CodeAiAnalysis: React.FC = () => {
         queryFn: async () => {
             const response = await client.get('/users/me/preferences/ai');
             if (response.data) {
-                setAiConfig(prev => ({
-                    ...prev,
-                    use_analysis: true,
-                    provider: response.data.ai_provider || prev.provider,
-                    model_name: response.data.model_name || prev.model_name,
-                    api_key: response.data.api_key || prev.api_key,
-                    api_endpoint: response.data.api_endpoint || prev.api_endpoint,
-                    concurrent_requests: response.data.concurrent_ai_requests || prev.concurrent_requests,
-                    enrichment_batch_size: response.data.ai_enrichment_batch_size || prev.enrichment_batch_size
-                }));
+                reset({
+                    provider: response.data.ai_provider || 'google',
+                    model_name: response.data.model_name || 'gemini-2.0-flash',
+                    api_key: response.data.api_key || '',
+                    api_endpoint: response.data.api_endpoint || '',
+                    concurrent_requests: response.data.concurrent_ai_requests || 10,
+                    enrichment_batch_size: response.data.ai_enrichment_batch_size || 50,
+                    projectName: projectName || (projects && projects.length > 0 ? projects[0].name : ''),
+                    nodeType: watch('nodeType'),
+                    className: watch('className'),
+                    limit: watch('limit'),
+                    clean: watch('clean'),
+                    logLevel: watch('logLevel'),
+                });
             }
             return response.data;
         },
@@ -155,15 +154,12 @@ const CodeAiAnalysis: React.FC = () => {
 
                 // Restore Scope
                 if (activeJob.params) {
-                    setScope(prev => ({
-                        ...prev,
-                        projectName: activeJob.params.project_name || prev.projectName,
-                        nodeType: activeJob.params.node_type || prev.nodeType,
-                        limit: activeJob.params.limit || 0,
-                        clean: activeJob.params.clean || false,
-                        className: activeJob.params.class_name || '',
-                        logLevel: activeJob.params.log_level || 'INFO'
-                    }));
+                    setValue('projectName', activeJob.params.project_name || '');
+                    setValue('nodeType', activeJob.params.node_type || 'all');
+                    setValue('limit', activeJob.params.limit || 0);
+                    setValue('clean', activeJob.params.clean || false);
+                    setValue('className', activeJob.params.class_name || '');
+                    setValue('logLevel', activeJob.params.log_level || 'INFO');
                 }
 
                 // Restore Logs
@@ -175,17 +171,13 @@ const CodeAiAnalysis: React.FC = () => {
                     })
                     .catch(err => console.error("Failed to fetch logs for active job", err));
             } else {
-                // 활성 작업이 없으면 상태 초기화 (단, 방금 시작한 작업이 아닐 경우)
-                // executeAnalysis에서 쿼리 무효화 후 잠시 null일 수 있으므로 주의 필요하지만,
-                // 보통 시작 직후에는 activeJob이 잡혀야 함.
-                // 여기서는 "화면 재진입 시"를 가정하므로 초기화가 맞음.
                 console.log("No active job found, resetting state.");
                 setJobId('');
                 setStatus('idle');
                 setLogs([]);
             }
         }
-    }, [activeJob, isActiveJobLoading]);
+    }, [activeJob, isActiveJobLoading, setValue]);
 
     // Modals
     const [showLogModal, setShowLogModal] = useState(false);
@@ -194,9 +186,6 @@ const CodeAiAnalysis: React.FC = () => {
     const [showStopConfirmModal, setShowStopConfirmModal] = useState(false);
 
     const logsEndRef = useRef<HTMLDivElement>(null);
-
-    // Standard local log adder (for client side actions)
-
 
     // Scroll to bottom of logs
     useEffect(() => {
@@ -251,14 +240,15 @@ const CodeAiAnalysis: React.FC = () => {
     });
 
     const handleSaveSettings = () => {
+        const formData = watch();
         const preferences = {
             use_analysis: true,
-            ai_provider: aiConfig.provider,
-            model_name: aiConfig.model_name,
-            api_key: aiConfig.api_key,
-            api_endpoint: aiConfig.api_endpoint,
-            concurrent_ai_requests: aiConfig.concurrent_requests,
-            ai_enrichment_batch_size: aiConfig.enrichment_batch_size
+            ai_provider: formData.provider,
+            model_name: formData.model_name,
+            api_key: formData.api_key,
+            api_endpoint: formData.api_endpoint,
+            concurrent_ai_requests: formData.concurrent_requests,
+            ai_enrichment_batch_size: formData.enrichment_batch_size
         };
         saveSettingsMutation.mutate(preferences);
     };
@@ -269,7 +259,7 @@ const CodeAiAnalysis: React.FC = () => {
     };
 
     const handleRunAnalysis = () => {
-        if (!scope.projectName) {
+        if (!projectName) {
             toast.error(t('aiAnalysis.selectProject'));
             return;
         }
@@ -283,19 +273,20 @@ const CodeAiAnalysis: React.FC = () => {
         setJobId('');
 
         try {
+            const formData = watch();
             const payload = {
-                project_name: scope.projectName,
-                node_type: scope.nodeType,
-                limit: scope.limit > 0 ? scope.limit : null,
-                clean: scope.clean,
-                class_name: scope.className || null,
-                concurrent_requests: aiConfig.concurrent_requests,
-                log_level: scope.logLevel,
+                project_name: formData.projectName,
+                node_type: formData.nodeType,
+                limit: formData.limit > 0 ? formData.limit : null,
+                clean: formData.clean,
+                class_name: formData.className || null,
+                concurrent_requests: formData.concurrent_requests,
+                log_level: formData.logLevel,
                 ai_config: {
-                    provider: aiConfig.provider,
-                    model_name: aiConfig.model_name,
-                    api_key: aiConfig.api_key,
-                    api_endpoint: aiConfig.api_endpoint
+                    provider: formData.provider,
+                    model_name: formData.model_name,
+                    api_key: formData.api_key,
+                    api_endpoint: formData.api_endpoint
                 }
             };
 
@@ -481,19 +472,18 @@ const CodeAiAnalysis: React.FC = () => {
                     <Database className="w-5 h-5 text-indigo-500" />
                     {t('aiAnalysis.taskSettings')}
                 </h2>
-                {/* ... (Existing Scope Form Content) ... */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                         <label className={labelClass}>{t('aiAnalysis.targetProject')}</label>
                         <select
                             className={inputClass}
-                            value={scope.projectName}
-                            onChange={(e) => setScope({ ...scope, projectName: e.target.value })}
+                            {...register('projectName')}
                         >
                             {projects.map(p => (
                                 <option key={p.name} value={p.name}>{p.name}</option>
                             ))}
                         </select>
+                        <FormError message={errors.projectName?.message} />
                     </div>
                     <div>
                         <label className={labelClass}>{t('aiAnalysis.nodeType')}</label>
@@ -501,8 +491,9 @@ const CodeAiAnalysis: React.FC = () => {
                             {['class', 'method', 'sql', 'all'].map(type => (
                                 <button
                                     key={type}
-                                    onClick={() => setScope({ ...scope, nodeType: type })}
-                                    className={`px-3 py-2 text-sm rounded-lg border transition-all ${scope.nodeType === type
+                                    type="button"
+                                    onClick={() => setValue('nodeType', type as any)}
+                                    className={`px-3 py-2 text-sm rounded-lg border transition-all ${nodeType === type
                                         ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-medium'
                                         : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
                                         }`}
@@ -518,24 +509,23 @@ const CodeAiAnalysis: React.FC = () => {
                             type="text"
                             className={inputClass}
                             placeholder={t('aiAnalysis.classFilterPlaceholder')}
-                            value={scope.className}
-                            onChange={(e) => setScope({ ...scope, className: e.target.value })}
+                            {...register('className')}
                         />
+                        <FormError message={errors.className?.message} />
                     </div>
                     <div>
                         <label className={labelClass}>{t('aiAnalysis.limit')}</label>
                         <input
                             type="number"
                             className={inputClass}
-                            value={scope.limit}
-                            onChange={(e) => setScope({ ...scope, limit: parseInt(e.target.value) || 0 })}
+                            {...register('limit', { valueAsNumber: true })}
                         />
+                        <FormError message={errors.limit?.message} />
                     </div>
                     <div>
                         <label className={labelClass}>{t('aiAnalysis.logLevel')}</label>
                         <select
-                            value={scope.logLevel}
-                            onChange={(e) => setScope({ ...scope, logLevel: e.target.value })}
+                            {...register('logLevel')}
                             className={inputClass}
                         >
                             <option value="DEBUG">DEBUG</option>
@@ -551,10 +541,9 @@ const CodeAiAnalysis: React.FC = () => {
                                 <div className="relative flex items-center">
                                     <input
                                         type="radio"
-                                        name="saveOption"
                                         className={radioClass}
-                                        checked={!scope.clean}
-                                        onChange={() => setScope({ ...scope, clean: false })}
+                                        checked={!clean}
+                                        onChange={() => setValue('clean', false)}
                                     />
                                 </div>
                                 <div>
@@ -570,10 +559,9 @@ const CodeAiAnalysis: React.FC = () => {
                                 <div className="relative flex items-center">
                                     <input
                                         type="radio"
-                                        name="saveOption"
                                         className={radioClass}
-                                        checked={scope.clean}
-                                        onChange={() => setScope({ ...scope, clean: true })}
+                                        checked={clean}
+                                        onChange={() => setValue('clean', true)}
                                     />
                                 </div>
                                 <div>
@@ -599,6 +587,7 @@ const CodeAiAnalysis: React.FC = () => {
 
                     <div className="flex items-center gap-2">
                         <button
+                            type="button"
                             onClick={handleLoadSettings}
                             className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all flex items-center gap-1.5"
                         >
@@ -606,6 +595,7 @@ const CodeAiAnalysis: React.FC = () => {
                             {t('aiAnalysis.loadSettings')}
                         </button>
                         <button
+                            type="button"
                             onClick={handleSaveSettings}
                             disabled={saveSettingsMutation.isPending}
                             className={`px-3 py-1.5 text-xs font-bold text-white bg-slate-800 border border-slate-800 rounded-lg hover:bg-slate-700 transition-all flex items-center gap-1.5 shadow-sm ${saveSettingsMutation.isPending ? 'opacity-70' : ''}`}
@@ -620,8 +610,7 @@ const CodeAiAnalysis: React.FC = () => {
                     <div>
                         <label className={labelClass}>{t('aiAnalysis.provider')}</label>
                         <select
-                            value={aiConfig.provider}
-                            onChange={(e) => setAiConfig({ ...aiConfig, provider: e.target.value })}
+                            {...register('provider')}
                             className={inputClass}
                         >
                             <option value="google">Google Gemini</option>
@@ -634,20 +623,19 @@ const CodeAiAnalysis: React.FC = () => {
                         <label className={labelClass}>{t('aiAnalysis.modelName')}</label>
                         <input
                             type="text"
-                            value={aiConfig.model_name}
-                            onChange={(e) => setAiConfig({ ...aiConfig, model_name: e.target.value })}
+                            {...register('model_name')}
                             className={inputClass}
                             placeholder="gemini-2.0-flash"
                         />
+                        <FormError message={errors.model_name?.message} />
                     </div>
-                    {aiConfig.provider !== 'lmstudio' && (
+                    {provider !== 'lmstudio' && (
                         <div className="md:col-span-2">
                             <label className={labelClass}>{t('aiAnalysis.apiKey')}</label>
                             <div className="relative">
                                 <input
                                     type={showApiKey ? "text" : "password"}
-                                    value={aiConfig.api_key}
-                                    onChange={(e) => setAiConfig({ ...aiConfig, api_key: e.target.value })}
+                                    {...register('api_key')}
                                     className={`${inputClass} pr-10`}
                                     placeholder={t('aiAnalysis.apiKeyPlaceholder')}
                                 />
@@ -659,18 +647,19 @@ const CodeAiAnalysis: React.FC = () => {
                                     {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
                             </div>
+                            <FormError message={errors.api_key?.message} />
                         </div>
                     )}
-                    {(aiConfig.provider === 'lmstudio' || aiConfig.provider === 'openai') && (
+                    {(provider === 'lmstudio' || provider === 'openai') && (
                         <div className="md:col-span-2">
                             <label className={labelClass}>{t('aiAnalysis.apiEndpoint')}</label>
                             <input
                                 type="text"
-                                value={aiConfig.api_endpoint}
-                                onChange={(e) => setAiConfig({ ...aiConfig, api_endpoint: e.target.value })}
+                                {...register('api_endpoint')}
                                 className={inputClass}
                                 placeholder="http://localhost:1234/v1"
                             />
+                            <FormError message={errors.api_endpoint?.message} />
                         </div>
                     )}
                     <div className="md:col-span-2 grid grid-cols-2 gap-4">
@@ -678,21 +667,21 @@ const CodeAiAnalysis: React.FC = () => {
                             <label className={labelClass}>{t('aiAnalysis.concurrency')}</label>
                             <input
                                 type="number"
-                                value={aiConfig.concurrent_requests}
-                                onChange={(e) => setAiConfig({ ...aiConfig, concurrent_requests: parseInt(e.target.value) || 1 })}
+                                {...register('concurrent_requests', { valueAsNumber: true })}
                                 min={1} max={50}
                                 className={inputClass}
                             />
+                            <FormError message={errors.concurrent_requests?.message} />
                         </div>
                         <div>
                             <label className={labelClass}>{t('aiAnalysis.batchSize')}</label>
                             <input
                                 type="number"
-                                value={aiConfig.enrichment_batch_size}
-                                onChange={(e) => setAiConfig({ ...aiConfig, enrichment_batch_size: parseInt(e.target.value) || 1 })}
+                                {...register('enrichment_batch_size', { valueAsNumber: true })}
                                 min={1} max={100}
                                 className={inputClass}
                             />
+                            <FormError message={errors.enrichment_batch_size?.message} />
                         </div>
                     </div>
                 </div>
@@ -709,19 +698,20 @@ const CodeAiAnalysis: React.FC = () => {
                                 {t('aiAnalysis.runAnalysis')}
                             </h2>
                             <p className="text-indigo-100 opacity-90">
-                                {t('aiAnalysis.target')}: {scope.projectName} ({scope.nodeType.toUpperCase()})
+                                {t('aiAnalysis.target')}: {projectName} ({nodeType.toUpperCase()})
                             </p>
                             <div className="flex gap-2 mt-2 flex-wrap">
                                 <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
-                                    {aiConfig.provider}
+                                    {provider}
                                 </span>
                                 <span className="px-2 py-1 bg-white/20 rounded text-xs backdrop-blur-sm">
-                                    {aiConfig.concurrent_requests} Concurrent
+                                    {watch('concurrent_requests')} Concurrent
                                 </span>
                             </div>
                         </div>
                         {status === 'running' && (
                             <button
+                                type="button"
                                 onClick={handleStopAnalysis}
                                 className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm font-bold backdrop-blur-sm shadow-sm border bg-rose-500/20 hover:bg-rose-500/40 border-rose-400/50 text-rose-100"
                             >
@@ -732,8 +722,9 @@ const CodeAiAnalysis: React.FC = () => {
                     </div>
 
                     <button
+                        type="button"
                         onClick={handleRunAnalysis}
-                        disabled={status === 'running' || !scope.projectName}
+                        disabled={status === 'running' || !projectName}
                         className={`mt-6 w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all transform active:scale-[0.98] ${status === 'running' ? 'opacity-70 cursor-wait' : ''
                             }`}
                     >
@@ -803,6 +794,7 @@ const CodeAiAnalysis: React.FC = () => {
                                 {/* Log Actions */}
                                 <div className="flex gap-3 pt-2">
                                     <button
+                                        type="button"
                                         onClick={() => setShowLogModal(true)}
                                         className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors text-sm font-medium shadow-sm"
                                     >
@@ -810,6 +802,7 @@ const CodeAiAnalysis: React.FC = () => {
                                         {t('analysis.viewLogs')}
                                     </button>
                                     <button
+                                        type="button"
                                         onClick={() => setShowSummaryModal(true)}
                                         disabled={status !== 'completed' && status !== 'success'} // Backend sends 'completed'
                                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-sm font-medium shadow-md ${status === 'completed' || status === 'success'
@@ -850,6 +843,7 @@ const CodeAiAnalysis: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
+                                    type="button"
                                     onClick={handleDownloadLogs}
                                     className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors text-sm font-medium shadow-sm"
                                     title={t('analysis.saveLog')}
@@ -858,6 +852,7 @@ const CodeAiAnalysis: React.FC = () => {
                                     <span className="hidden sm:inline">{t('analysis.saveLog')}</span>
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => setShowLogModal(false)}
                                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                                 >
@@ -911,6 +906,7 @@ const CodeAiAnalysis: React.FC = () => {
                                 <div className="flex-1"></div>
                             )}
                             <button
+                                type="button"
                                 onClick={() => setShowLogModal(false)}
                                 className="px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 text-sm font-bold shadow-sm h-fit whitespace-nowrap"
                             >
@@ -934,6 +930,7 @@ const CodeAiAnalysis: React.FC = () => {
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
+                                    type="button"
                                     onClick={handleDownloadSummary}
                                     className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors text-sm font-medium shadow-sm"
                                     title={t('analysis.saveSummary')}
@@ -942,6 +939,7 @@ const CodeAiAnalysis: React.FC = () => {
                                     <span className="hidden sm:inline">{t('analysis.saveSummary')}</span>
                                 </button>
                                 <button
+                                    type="button"
                                     onClick={() => setShowSummaryModal(false)}
                                     className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                                 >
@@ -965,6 +963,7 @@ const CodeAiAnalysis: React.FC = () => {
                         </div>
                         <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
                             <button
+                                type="button"
                                 onClick={() => setShowSummaryModal(false)}
                                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-sm transition-colors"
                             >

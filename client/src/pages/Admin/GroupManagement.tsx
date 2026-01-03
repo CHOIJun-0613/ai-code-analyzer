@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { userApi, Group } from '../../api/userApi';
 import client from '../../api/client';
-import { groupSchema, type GroupFormData } from '../../schemas/groupSchema';
+import { createGroupSchema, type GroupFormData } from '../../schemas/groupSchema';
 import { Plus, Shield, Check, X, Users, MoreVertical, Trash2, Edit } from 'lucide-react';
 import ProjectSelector from '../../components/ProjectSelector';
 import FormError from '../../components/FormError';
@@ -31,7 +31,7 @@ const GroupManagement = () => {
 
     // React Hook Form for Create Group
     const createForm = useForm<GroupFormData>({
-        resolver: zodResolver(groupSchema),
+        resolver: zodResolver(createGroupSchema(t)),
         defaultValues: {
             id: '',
             name: '',
@@ -42,7 +42,7 @@ const GroupManagement = () => {
 
     // React Hook Form for Update Group
     const updateForm = useForm<GroupFormData>({
-        resolver: zodResolver(groupSchema),
+        resolver: zodResolver(createGroupSchema(t)),
         defaultValues: {
             id: '',
             name: '',

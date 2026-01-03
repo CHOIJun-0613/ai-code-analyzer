@@ -306,6 +306,18 @@
         "deleteConfirm": "정말로 이 그룹을 삭제하시겠습니까?",
         "deleteSuccess": "그룹이 성공적으로 삭제되었습니다"
     },
+    "validation": {
+        "appNameMaxLength": "애플리케이션 이름은 최대 30자까지 입력 가능합니다.",
+        "fileOrPathRequired": "파일 또는 소스 경로를 입력해주세요.",
+        "apiKeyRequired": "API 키를 입력해주세요.",
+        "modelNameRequired": "모델명을 입력해주세요.",
+        "projectRequired": "프로젝트를 선택해주세요.",
+        "usernameMinLength": "사용자 ID는 최소 3자 이상이어야 합니다.",
+        "emailFormat": "올바른 이메일 형식을 입력해주세요.",
+        "passwordMinLength": "비밀번호는 최소 8자 이상이어야 합니다.",
+        "groupIdRequired": "그룹 ID를 입력해주세요.",
+        "groupNameRequired": "그룹명을 입력해주세요."
+    },
     "error": {
         "title": "오류가 발생했습니다",
         "message": "예상치 못한 오류가 발생했습니다. 불편을 드려 죄송합니다.",

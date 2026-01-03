@@ -1,21 +1,22 @@
 import { z } from 'zod';
+import type { TFunction } from 'i18next';
 
-export const aiAnalysisSchema = z.object({
+export const createAiAnalysisSchema = (t: TFunction) => z.object({
   // AI Config
-  provider: z.enum(['google', 'groq', 'lmstudio', 'openai']).default('google'),
-  model_name: z.string().min(1, "모델명을 입력해주세요."),
+  provider: z.enum(['google', 'groq', 'lmstudio', 'openai']),
+  model_name: z.string().min(1, t('validation.modelNameRequired')),
   api_key: z.string().optional(),
   api_endpoint: z.string().optional(),
-  concurrent_requests: z.number().int().min(1).max(50).default(10),
-  enrichment_batch_size: z.number().int().min(1).max(100).default(50),
+  concurrent_requests: z.number().int().min(1).max(50),
+  enrichment_batch_size: z.number().int().min(1).max(100),
 
   // Scope
-  projectName: z.string().min(1, "프로젝트를 선택해주세요."),
-  nodeType: z.enum(['class', 'method', 'sql', 'all']).default('all'),
+  projectName: z.string().min(1, t('validation.projectRequired')),
+  nodeType: z.enum(['class', 'method', 'sql', 'all']),
   className: z.string().optional(),
-  limit: z.number().int().min(0).default(0),
-  clean: z.boolean().default(false),
-  logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']).default('INFO'),
+  limit: z.number().int().min(0),
+  clean: z.boolean(),
+  logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
 }).refine((data) => {
   // provider가 lmstudio가 아닐 때 api_key 필수
   if (data.provider !== 'lmstudio') {
@@ -23,8 +24,8 @@ export const aiAnalysisSchema = z.object({
   }
   return true;
 }, {
-  message: "API 키를 입력해주세요.",
+  message: t('validation.apiKeyRequired'),
   path: ["api_key"],
 });
 
-export type AiAnalysisFormData = z.infer<typeof aiAnalysisSchema>;
+export type AiAnalysisFormData = z.infer<ReturnType<typeof createAiAnalysisSchema>>;

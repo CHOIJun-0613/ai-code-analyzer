@@ -304,6 +304,18 @@
         "deleteConfirm": "Are you sure you want to delete this group?",
         "deleteSuccess": "Group deleted successfully"
     },
+    "validation": {
+        "appNameMaxLength": "Application name must be 30 characters or less.",
+        "fileOrPathRequired": "Please provide a file or source path.",
+        "apiKeyRequired": "Please enter an API key.",
+        "modelNameRequired": "Please enter a model name.",
+        "projectRequired": "Please select a project.",
+        "usernameMinLength": "Username must be at least 3 characters.",
+        "emailFormat": "Please enter a valid email address.",
+        "passwordMinLength": "Password must be at least 8 characters.",
+        "groupIdRequired": "Please enter a group ID.",
+        "groupNameRequired": "Please enter a group name."
+    },
     "error": {
         "title": "An Error Occurred",
         "message": "An unexpected error has occurred. We apologize for the inconvenience.",

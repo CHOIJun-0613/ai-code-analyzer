@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { userApi, User, Group } from '../../api/userApi';
-import { createUserSchema, updateUserSchema, type CreateUserFormData, type UpdateUserFormData } from '../../schemas/userSchema';
+import { createUserSchemaFactory, updateUserSchemaFactory, type CreateUserFormData, type UpdateUserFormData } from '../../schemas/userSchema';
 import { Plus, User as UserIcon, Mail, Search, MoreVertical, X, Eye, EyeOff, Edit, Trash2, FileSpreadsheet, ArrowUpDown, ArrowUp, ArrowDown, Download } from 'lucide-react';
 import ExcelJS from 'exceljs';
 
@@ -36,7 +36,7 @@ const UserManagement = () => {
 
     // React Hook Form for Create User
     const createForm = useForm<CreateUserFormData>({
-        resolver: zodResolver(createUserSchema),
+        resolver: zodResolver(createUserSchemaFactory(t)),
         defaultValues: {
             username: '',
             name: '',
@@ -49,7 +49,7 @@ const UserManagement = () => {
 
     // React Hook Form for Update User
     const updateForm = useForm<UpdateUserFormData>({
-        resolver: zodResolver(updateUserSchema),
+        resolver: zodResolver(updateUserSchemaFactory(t)),
         defaultValues: {
             name: '',
             email: '',
