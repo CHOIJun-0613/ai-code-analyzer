@@ -32,3 +32,12 @@ async def get_class_impact_report(
 ):
     content = service.generate_impact_analysis_report(project_name, class_name)
     return {"content": content}
+@router.get("/projects/{project_name}/classes/{class_name}/methods/{method_name}/reports/sequence")
+async def get_method_sequence_report(
+    project_name: str,
+    class_name: str,
+    method_name: str,
+    service: ClassReportService = Depends(get_class_report_service)
+):
+    content = service.generate_method_sequence_diagram_md(project_name, class_name, method_name)
+    return {"content": content}

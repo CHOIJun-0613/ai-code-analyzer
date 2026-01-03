@@ -9,6 +9,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const ClassDetails = lazy(() => import('./pages/ClassDetails'));
+const MethodDetails = lazy(() => import('./pages/MethodDetails'));
 const Analysis = lazy(() => import('./pages/Analysis'));
 const CodeAiAnalysis = lazy(() => import('./pages/CodeAiAnalysis'));
 const Admin = lazy(() => import('./pages/Admin'));
@@ -45,6 +46,11 @@ function App() {
                     <Route path="projects/:projectName/classes/:className" element={
                         <Suspense fallback={<LoadingSpinner />}>
                             <ClassDetails />
+                        </Suspense>
+                    } />
+                    <Route path="projects/:projectName/classes/:className/methods/:methodName" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <MethodDetails />
                         </Suspense>
                     } />
                     <Route path="analysis-overview" element={

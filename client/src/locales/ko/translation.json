@@ -439,5 +439,51 @@
         "complexityTooltipLarge": "Large (대형 서비스)",
         "complexityTooltipHigh": "High (리팩토링 필요)",
         "noSource": "소스 코드를 사용할 수 없습니다"
+    },
+    "methodDetails": {
+        "title": "메서드 상세",
+        "info": "정보",
+        "source": "소스 코드",
+        "calls": "호출 정보",
+        "inOut": "IN/OUT",
+        "parameters": "파라미터",
+        "input": "Input (매개변수)",
+        "output": "Output (반환값)",
+        "exceptions": "Exceptions (예외)",
+        "noParameters": "파라미터 없음",
+        "noExceptions": "정의된 예외 없음",
+        "noCalls": "호출하는 메서드 정보가 없습니다",
+        "callOrder": "순서",
+        "targetMethod": "대상 메서드",
+        "targetLogicalName": "대상 논리명",
+        "targetReturnType": "리턴",
+        "targetClass": "대상 클래스",
+        "targetPackage": "대상 패키지",
+        "sequenceDiagram": "시퀀스 다이어그램",
+        "complexityHelp": {
+            "title": "Cognitive Complexity (인지복잡도)",
+            "description": "코드가 사람이 이해하고 유지보수하기에 얼마나 어려운지를 측정하는 지표 (SonarSource)",
+            "examplesTitle": "Cognitive Complexity 계산 예시",
+            "control": "제어 구조",
+            "increase": "복잡도 증가",
+            "example": "예시",
+            "structures": [
+                { "name": "if, else if, switch", "points": "+1", "desc": "if (x > 0) { ... }" },
+                { "name": "for, while, do-while", "points": "+1", "desc": "for (int i = 0; i < 10; i++) { ... }" },
+                { "name": "catch", "points": "+1", "desc": "catch (Exception e) { ... }" },
+                { "name": "중첩 (각 레벨)", "points": "+1", "desc": "중첩 if는 +2 (if +1, 중첩 +1)" },
+                { "name": "논리 연산자 (&&, ||)", "points": "+1 (시퀀스당)", "desc": "if (a && b && c) → +2" }
+            ],
+            "guideTitle": "메서드 복잡도 기준 (SonarSource 권장)",
+            "status": "상태",
+            "action": "조치",
+            "levels": [
+                { "score": "0 ~ 10", "status": "양호", "action": "이상적이며 유지보수하기 쉬운 코드", "color": "emerald" },
+                { "score": "11 ~ 15", "status": "관리 필요", "action": "리팩토링 고려", "color": "amber" },
+                { "score": "16 이상", "status": "리팩토링 필요", "action": "메서드 추출, 책임 분리 필수", "color": "red" }
+            ]
+        }
     }
 }
+
+

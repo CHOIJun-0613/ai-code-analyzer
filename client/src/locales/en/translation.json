@@ -437,5 +437,51 @@
         "complexityTooltipLarge": "Large (Large Service)",
         "complexityTooltipHigh": "High (Refactoring Required)",
         "noSource": "No source code available"
+    },
+    "methodDetails": {
+        "title": "Method Details",
+        "info": "Info",
+        "source": "Source",
+        "calls": "Calls",
+        "inOut": "IN/OUT",
+        "parameters": "Parameters",
+        "input": "Input (Parameters)",
+        "output": "Output (Return)",
+        "exceptions": "Exceptions",
+        "noParameters": "No parameters",
+        "noExceptions": "No exceptions defined",
+        "noCalls": "No method call information available",
+        "callOrder": "Order",
+        "targetMethod": "Target Method",
+        "targetLogicalName": "Target Logical Name",
+        "targetReturnType": "Return",
+        "targetClass": "Target Class",
+        "targetPackage": "Target Package",
+        "sequenceDiagram": "Sequence Diagram",
+        "complexityHelp": {
+            "title": "Cognitive Complexity",
+            "description": "A measure of how difficult the code is to understand and maintain for humans (SonarSource)",
+            "examplesTitle": "Cognitive Complexity Calculation Examples",
+            "control": "Control Structure",
+            "increase": "Complexity Increase",
+            "example": "Example",
+            "structures": [
+                { "name": "if, else if, switch", "points": "+1", "desc": "if (x > 0) { ... }" },
+                { "name": "for, while, do-while", "points": "+1", "desc": "for (int i = 0; i < 10; i++) { ... }" },
+                { "name": "catch", "points": "+1", "desc": "catch (Exception e) { ... }" },
+                { "name": "Nesting (per level)", "points": "+1", "desc": "Nested if is +2 (if +1, nesting +1)" },
+                { "name": "Logical Operators (&&, ||)", "points": "+1 (per sequence)", "desc": "if (a && b && c) → +2" }
+            ],
+            "guideTitle": "Method Complexity Guidelines (SonarSource)",
+            "status": "Status",
+            "action": "Action",
+            "levels": [
+                { "score": "0 ~ 10", "status": "Good", "action": "Ideal and easy to maintain", "color": "emerald" },
+                { "score": "11 ~ 15", "status": "Needs Care", "action": "Consider refactoring", "color": "amber" },
+                { "score": "16+", "status": "Refactoring Needed", "action": "Must extract method or separate responsibilities", "color": "red" }
+            ]
+        }
     }
 }
+
+

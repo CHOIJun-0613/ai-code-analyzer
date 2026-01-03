@@ -165,9 +165,13 @@ const ClassDetails: React.FC = () => {
             header: t('classDetails.name'),
             width: '25%',
             render: (method) => (
-                <span className="font-medium text-slate-900 dark:text-slate-200 font-mono text-sm">{method.name}</span>
+                <span className="font-medium text-indigo-600 dark:text-indigo-400 font-mono text-sm hover:underline">
+                    {method.name}
+                </span>
             ),
         },
+
+
         {
             key: 'logicalName',
             header: t('classDetails.logicalName'),
@@ -617,7 +621,10 @@ const ClassDetails: React.FC = () => {
                                 headerHeight={45}
                                 hoverable
                                 emptyMessage={t('common.noData')}
-                                onRowClick={(method) => navigate(`/projects/${projectName}/classes/${className}/methods/${method.name}`)}
+                                onRowClick={(method) => {
+                                    const pkg = classData?.package_name || packageName;
+                                    navigate(`/projects/${projectName}/classes/${className}/methods/${method.name}?package=${pkg}`);
+                                }}
                             />
                         </div>
                     )}

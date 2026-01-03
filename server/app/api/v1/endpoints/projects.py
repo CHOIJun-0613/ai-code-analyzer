@@ -198,3 +198,85 @@ def get_class_details(project_name: str, class_name: str, package: str):
         class_data["methods"] = methods
         
         return class_data
+
+@router.get("/{project_name}/classes/{class_name}/methods/{method_name}")
+def get_method_details(project_name: str, class_name: str, method_name: str, package: str):
+    pool = get_db()
+    
+    # 1. Fetch Method Node & Basic Info
+    query_method = """
+    MATCH (c:Class {name: $class_name, package_name: $package, project_name: $project_name})
+    MATCH (c)-[:HAS_METHOD]->(m:Method {name: $method_name})
+    OPTIONAL MATCH (m)-[:ANNOTATED_WITH]->(anno:Annotation)
+    OPTIONAL MATCH (m)-[:THROWS]->(exc:Exception)
+    RETURN m, collect(distinct anno.name) as anno_names, collect(distinct exc.name) as exceptions
+    """
+
+    
+    # 2. Fetch Method Calls (Outgoing)
+    query_calls = """
+    MATCH (c:Class {name: $class_name, package_name: $package, project_name: $project_name})
+    MATCH (c)-[:HAS_METHOD]->(m:Method {name: $method_name})
+    MATCH (m)-[r:CALLS]->(target:Method)<-[:HAS_METHOD]-(tc:Class)
+    RETURN target.name as name, 
+           target.logical_name as logical_name, 
+           target.return_type as return_type, 
+           tc.name as class_name, 
+           tc.package_name as package_name, 
+           r.call_order as order
+    ORDER BY r.call_order
+    """
+
+
+    with pool.session() as session:
+        result_method = session.run(query_method, 
+                                   project_name=project_name, 
+                                   class_name=class_name, 
+                                   method_name=method_name, 
+                                   package=package).single()
+        
+        if not result_method:
+            raise HTTPException(status_code=404, detail=f"Method {method_name} not found")
+            
+        method_data = dict(result_method["m"])
+        
+        # Parse JSON stored properties
+        import json
+        if "parameters" in method_data and isinstance(method_data["parameters"], str):
+            try:
+                method_data["parameters"] = json.loads(method_data["parameters"])
+            except:
+                pass
+        
+        # Use the collected annotation names
+        method_data["annotations"] = result_method["anno_names"]
+        method_data["exceptions"] = result_method["exceptions"]
+
+        method_data["class_name"] = class_name
+        method_data["package_name"] = package
+        
+        # Execute Calls Query
+        result_calls = session.run(query_calls, 
+                                  project_name=project_name, 
+                                  class_name=class_name, 
+                                  method_name=method_name, 
+                                  package=package)
+        
+        calls = []
+        for record in result_calls:
+            calls.append({
+                "name": record["name"],
+                "logical_name": record["logical_name"],
+                "return_type": record["return_type"],
+                "class_name": record["class_name"],
+                "package_name": record["package_name"],
+                "order": record["order"]
+            })
+            
+        method_data["calls"] = calls
+        
+        return method_data
+
+
+
+

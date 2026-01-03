@@ -90,46 +90,52 @@ class ClassReportService(ReverseImpactMixin):
 
     def generate_sequence_diagram_md(self, project_name: str, class_name: str) -> str:
         """Generates Mermaid sequence diagrams for all public methods in the class."""
-        pool = get_db()
-        # Ensure we have a driver from the pool
-        # get_db() returns the pool, we check if we can get a driver or connection directly
-        # Actually ConnectionPool.driver is what we want? 
-        # Wait, get_db() returns ConnectionPool instance.
-        # SequenceDiagramGenerator takes a 'driver'.
-        # pool.driver property exists? Let me check pool usage in other files.
-        # sequence.py uses: pool = get_connection_pool(); with pool.connection() as conn: generator = SequenceDiagramGenerator(conn.driver...)
-        
-        # In service layer, get_db() is typically the pool.
-        # DEBUG LOGGING
-        print(f"DEBUG: Generating sequence diagram for {class_name} in {project_name}")
+        return self._generate_sequence_md(project_name, class_name, None)
+
+    def generate_method_sequence_diagram_md(self, project_name: str, class_name: str, method_name: str) -> str:
+        """Generates Mermaid sequence diagram for a specific method."""
+        return self._generate_sequence_md(project_name, class_name, method_name)
+
+    def _generate_sequence_md(self, project_name: str, class_name: str, method_name: Optional[str]) -> str:
+        """Internal helper to generate sequence diagram markdown."""
         pool = get_db()
         with pool.connection() as conn:
             generator = SequenceDiagramGenerator(conn.driver, format='mermaid', database=conn.database)
-            result = generator.generate_content(class_name=class_name, project_name=project_name, include_external_calls=False)
-            print(f"DEBUG: Generator result keys: {result.keys()}")
-            if "error" in result:
-                print(f"DEBUG: Generator error: {result['error']}")
+            result = generator.generate_content(
+                class_name=class_name, 
+                method_name=method_name,
+                project_name=project_name, 
+                include_external_calls=False
+            )
 
         if "error" in result:
              return f"# Sequence Diagram\n\nError: {result['error']}"
 
         lines = []
-        lines = []
         class_logical_name = result.get('class_logical_name', '')
-        if class_logical_name:
-            lines.append(f"# Sequence Diagrams: {class_name} <{class_logical_name}>")
+        
+        if method_name:
+            if class_logical_name:
+                lines.append(f"# Sequence Diagram: {class_name}.{method_name} <{class_logical_name}>")
+            else:
+                lines.append(f"# Sequence Diagram: {class_name}.{method_name}")
         else:
-            lines.append(f"# Sequence Diagrams: {class_name}")
-        lines.append("**Diagrams for public methods**")
+            if class_logical_name:
+                lines.append(f"# Sequence Diagrams: {class_name} <{class_logical_name}>")
+            else:
+                lines.append(f"# Sequence Diagrams: {class_name}")
+            lines.append("**Diagrams for public methods**")
+        
         lines.append("")
         
         if result["type"] == "class":
             for item in result["items"]:
-                method_logical_name = item.get('logical_name', '')
-                if method_logical_name:
-                    lines.append(f"## ` {item['method_name']}() ` <{method_logical_name}>")
+                m_name = item['method_name']
+                m_logical = item.get('logical_name', '')
+                if m_logical:
+                    lines.append(f"## ` {m_name}() ` <{m_logical}>")
                 else:
-                    lines.append(f"## ` {item['method_name']}() `")
+                    lines.append(f"## ` {m_name}() `")
                 lines.append("")
                 lines.append("```mermaid")
                 lines.append(item['content'])
@@ -138,7 +144,6 @@ class ClassReportService(ReverseImpactMixin):
                 lines.append("---")
                 lines.append("")
         elif result["type"] == "method": 
-             # Should not happen for class level call unless only one method?
              lines.append("```mermaid")
              lines.append(result['content'])
              lines.append("```")
@@ -147,6 +152,7 @@ class ClassReportService(ReverseImpactMixin):
              return "# Sequence Diagrams\n\nNo diagrams generated."
 
         return "\n".join(lines)
+
         
     def generate_impact_analysis_report(self, project_name: str, class_name: str) -> str:
         """Generates impact analysis report for the class (reverse impact)."""
