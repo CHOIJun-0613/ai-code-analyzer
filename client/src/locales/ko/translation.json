@@ -161,7 +161,14 @@
         "settingsLoaded": "설정을 성공적으로 불러왔습니다!",
         "settingsLoadFailed": "설정을 불러오는데 실패했습니다.",
         "configSaved": "설정이 성공적으로 저장되었습니다!",
-        "configSaveFailed": "설정 저장에 실패했습니다."
+        "configSaveFailed": "설정 저장에 실패했습니다.",
+        "statusIdle": "대기 중",
+        "statusPending": "준비 중",
+        "statusRunning": "실행 중",
+        "statusCompleted": "완료됨",
+        "statusFailed": "실패",
+        "statusCancelled": "취소됨",
+        "statusCancelling": "취소 중"
     },
     "aiPrompt": {
         "title": "AI 분석 프롬프트 관리",

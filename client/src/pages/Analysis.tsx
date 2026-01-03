@@ -4,10 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useMachine } from '@xstate/react';
 import client from '../api/client';
 import { Upload, Folder, Play, FileCode, CheckCircle, AlertCircle, Loader2, Terminal, HelpCircle, Activity as ActivityIcon, X, FileText, List, Download, Database, Square, RotateCw, Rocket, XCircle } from 'lucide-react';
 import { useAnalysisWebSocket } from '../hooks/useAnalysisWebSocket';
 import { createAnalysisSchema, type AnalysisFormData } from '../schemas/analysisSchema';
+import { analysisMachine } from '../machines/analysisMachine';
 
 const Tooltip: React.FC<{ text: string, position?: string, arrowPosition?: string }> = ({ text, position = "left-1/2 -translate-x-1/2", arrowPosition = "left-1/2 -translate-x-1/2" }) => (
     <div className="group relative flex items-center ml-1">
@@ -53,10 +55,13 @@ const Analysis: React.FC = () => {
         },
     });
 
-    // System/UI State (keep as useState)
-    const [jobId, setJobId] = useState('');
-    const [status, setStatus] = useState('');
-    const [logs, setLogs] = useState<string[]>([]);
+    // XState 머신을 사용한 상태 관리
+    const [state, send] = useMachine(analysisMachine);
+
+    // 머신 컨텍스트에서 값 추출
+    const { jobId, logs } = state.context;
+
+    // UI 상태 (모달 표시 여부 등)는 useState 유지
     const [isLoading, setIsLoading] = useState(false);
     const [showLogModal, setShowLogModal] = useState(false);
     const [showSummaryModal, setShowSummaryModal] = useState(false);
@@ -118,8 +123,12 @@ const Analysis: React.FC = () => {
         queryFn: async () => {
             const res = await client.get('/analysis/active');
             if (res.data && res.data.job_id) {
-                setJobId(res.data.job_id);
-                setStatus(res.data.status);
+                // XState 머신에 START 이벤트 전송
+                send({ type: 'START', jobId: res.data.job_id });
+                // 상태 업데이트 이벤트 전송
+                if (res.data.status) {
+                    send({ type: 'STATUS_UPDATE', status: res.data.status });
+                }
             }
             return res.data;
         },
@@ -141,31 +150,40 @@ const Analysis: React.FC = () => {
     // 초기 로그 데이터 로드 시 상태 업데이트
     React.useEffect(() => {
         if (initialLogsData && initialLogsData.logs && logs.length === 0) {
-            setLogs(initialLogsData.logs);
+            // 각 로그를 XState 머신에 전송
+            initialLogsData.logs.forEach((log: string) => {
+                send({ type: 'LOG', log });
+            });
         }
-    }, [initialLogsData, logs.length]);
+    }, [initialLogsData, logs.length, send]);
 
     // WebSocket Hook for real-time monitoring
     useAnalysisWebSocket({
         jobId,
         jobType: 'analysis',
         onLog: (log) => {
-            setLogs((prev) => [...prev, log]);
+            // XState 머신에 LOG 이벤트 전송
+            send({ type: 'LOG', log });
         },
         onStatus: (newStatus) => {
-            setStatus(newStatus);
+            // XState 머신에 STATUS_UPDATE 이벤트 전송
+            send({ type: 'STATUS_UPDATE', status: newStatus });
         },
         onProgress: (progress) => {
             // Progress is extracted from logs, no need to handle separately
             console.debug('Progress:', progress);
         },
         onComplete: (data) => {
-            setStatus(data.status);
             console.log('Analysis complete:', data);
+            // 상태에 따라 적절한 이벤트 전송
             if (data.status === 'completed' || data.status === 'success') {
+                send({ type: 'COMPLETE', result: data });
                 toast.success(t('analysis.analysisComplete') || "Analysis completed successfully!");
             } else if (data.status === 'failed' || data.status === 'error') {
+                send({ type: 'FAIL', error: (data as any).error || 'Analysis failed' });
                 toast.error(t('analysis.analysisFailed') || "Analysis failed.");
+            } else if (data.status === 'cancelled' || data.status === 'canceled') {
+                send({ type: 'STATUS_UPDATE', status: data.status });
             }
         },
         onError: (error) => {
@@ -274,7 +292,10 @@ const Analysis: React.FC = () => {
     const executeAnalysis = async () => {
         setShowConfirmModal(false);
         setIsLoading(true);
-        setLogs([]);
+        // XState 머신 초기화 (새 분석 시작 전)
+        if (state.matches('completed') || state.matches('failed') || state.matches('cancelled')) {
+            send({ type: 'RESET' });
+        }
 
         const formData = watch();
 
@@ -384,8 +405,12 @@ const Analysis: React.FC = () => {
 
                 response = await client.post('/analysis/analyze', payload);
             }
-            setJobId(response.data.job_id);
-            setStatus(response.data.status);
+            // XState 머신에 START 이벤트 전송
+            send({ type: 'START', jobId: response.data.job_id });
+            // 상태 업데이트 이벤트 전송
+            if (response.data.status) {
+                send({ type: 'STATUS_UPDATE', status: response.data.status });
+            }
             toast.success(t('analysis.startSuccess') || "Analysis started successfully.");
         } catch (error) {
             console.error("Analysis request failed", error);
@@ -404,6 +429,8 @@ const Analysis: React.FC = () => {
     const executeStopAnalysis = async () => {
         if (!jobId) return;
         try {
+            // XState 머신에 CANCEL 이벤트 전송
+            send({ type: 'CANCEL' });
             await client.post(`/analysis/analyze/${jobId}/cancel`);
             toast.success(t('analysis.stopSuccess') || "Analysis stopped successfully.");
             setShowStopConfirmModal(false);
@@ -488,7 +515,7 @@ const Analysis: React.FC = () => {
                         </div>
                         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col gap-4">
                             {/* Progress Bar */}
-                            {(status === 'running' || status === 'pending') && progress && (
+                            {(state.matches('running') || state.matches('pending')) && progress && (
                                 <div className="w-full bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                                     <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
                                         <div className="flex items-center gap-2">
@@ -876,7 +903,7 @@ const Analysis: React.FC = () => {
                                         </span>
                                     </div>
                                 </div>
-                                {(status === 'running' || status === 'pending') && (
+                                {(state.matches('running') || state.matches('pending')) && (
                                     <button
                                         onClick={handleStopAnalysis}
                                         type="button"
@@ -890,14 +917,14 @@ const Analysis: React.FC = () => {
 
                             <button
                                 type="submit"
-                                disabled={isLoading || status === 'running' || (mode === 'upload' && !file) || (mode === 'path' && !sourcePath)}
-                                className={`w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${isLoading || status === 'running' ? 'cursor-wait' : ''
+                                disabled={isLoading || state.matches('running') || state.matches('pending') || (mode === 'upload' && !file) || (mode === 'path' && !sourcePath)}
+                                className={`w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all transform active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none ${isLoading || state.matches('running') ? 'cursor-wait' : ''
                                     }`}
                             >
-                                {isLoading || status === 'running' ? (
+                                {isLoading || state.matches('running') || state.matches('pending') ? (
                                     <span className="flex items-center justify-center gap-2">
                                         <RotateCw className="w-5 h-5 animate-spin" />
-                                        {status === 'running' ? t('analysis.analyzing') : t('analysis.startingAnalysis')}
+                                        {state.matches('running') ? t('analysis.analyzing') : t('analysis.startingAnalysis')}
                                     </span>
                                 ) : (
                                     t('analysis.startAnalysis')
@@ -1009,24 +1036,26 @@ const Analysis: React.FC = () => {
                                 </div>
 
                                 <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
-                                    {status === 'completed' ? (
+                                    {state.matches('completed') ? (
                                         <CheckCircle className="w-5 h-5 text-emerald-500" />
-                                    ) : status === 'failed' ? (
+                                    ) : state.matches('failed') ? (
                                         <AlertCircle className="w-5 h-5 text-red-500" />
-                                    ) : status === 'canceled' || status === 'cancelled' || status === 'cancelling' ? (
+                                    ) : state.matches('cancelled') || state.matches('cancelling') ? (
                                         <XCircle className="w-5 h-5 text-slate-500" />
                                     ) : (
                                         <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
                                     )}
                                     <div>
                                         <div className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider font-semibold">{t('analysis.currentStatus')}</div>
-                                        <div className="font-bold text-indigo-900 dark:text-indigo-200 capitalize">{status || 'Pending...'}</div>
+                                        <div className="font-bold text-indigo-900 dark:text-indigo-200 capitalize">
+                                            {t(`analysis.status${String(state.value).charAt(0).toUpperCase() + String(state.value).slice(1)}`) || String(state.value)}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Progress Bar */}
-                            {(status === 'running' || status === 'pending' || status === 'cancelling') && progress && (
+                            {(state.matches('running') || state.matches('pending') || state.matches('cancelling')) && progress && (
                                 <div className="w-full bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
                                     <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
                                         <div className="flex items-center gap-2">
@@ -1058,8 +1087,8 @@ const Analysis: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setShowSummaryModal(true)}
-                                    disabled={status !== 'completed'}
-                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-sm font-medium shadow-md ${status === 'completed'
+                                    disabled={!state.matches('completed')}
+                                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-sm font-medium shadow-md ${state.matches('completed')
                                         ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-none'
                                         : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                                         }`}

@@ -4,7 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { useMachine } from '@xstate/react';
 import client from '../api/client';
+import { aiAnalysisMachine } from '../machines/aiAnalysisMachine';
 import {
     Save,
     RotateCw,
@@ -77,10 +79,11 @@ const CodeAiAnalysis: React.FC = () => {
 
     const [showApiKey, setShowApiKey] = useState(false);
 
-    // System State
-    const [status, setStatus] = useState<'idle' | 'pending' | 'running' | 'completed' | 'failed' | 'success' | 'error' | 'cancelled' | 'cancelling'>('idle');
-    const [jobId, setJobId] = useState<string>('');
-    const [logs, setLogs] = useState<string[]>([]);
+    // XState 머신을 사용한 상태 관리
+    const [state, send] = useMachine(aiAnalysisMachine);
+
+    // 머신 컨텍스트에서 값 추출
+    const { jobId, logs } = state.context;
 
     // Watch form values for UI
     const provider = watch('provider');
@@ -149,8 +152,12 @@ const CodeAiAnalysis: React.FC = () => {
         if (!isActiveJobLoading) {
             if (activeJob && activeJob.job_id) {
                 console.log("Restoring active job state:", activeJob);
-                setJobId(activeJob.job_id);
-                setStatus(activeJob.status);
+                // XState 머신에 START 이벤트 전송
+                send({ type: 'START', jobId: activeJob.job_id });
+                // 상태 업데이트 이벤트 전송
+                if (activeJob.status) {
+                    send({ type: 'STATUS_UPDATE', status: activeJob.status });
+                }
 
                 // Restore Scope
                 if (activeJob.params) {
@@ -166,18 +173,20 @@ const CodeAiAnalysis: React.FC = () => {
                 client.get(`/ai/${activeJob.job_id}/logs`)
                     .then(res => {
                         if (res.data && res.data.logs) {
-                            setLogs(res.data.logs);
+                            // 각 로그를 XState 머신에 전송
+                            res.data.logs.forEach((log: string) => {
+                                send({ type: 'LOG', log });
+                            });
                         }
                     })
                     .catch(err => console.error("Failed to fetch logs for active job", err));
             } else {
                 console.log("No active job found, resetting state.");
-                setJobId('');
-                setStatus('idle');
-                setLogs([]);
+                // 상태 초기화
+                send({ type: 'RESET' });
             }
         }
-    }, [activeJob, isActiveJobLoading, setValue]);
+    }, [activeJob, isActiveJobLoading, setValue, send]);
 
     // Modals
     const [showLogModal, setShowLogModal] = useState(false);
@@ -199,22 +208,28 @@ const CodeAiAnalysis: React.FC = () => {
         jobId,
         jobType: 'ai',
         onLog: (log) => {
-            setLogs((prev) => [...prev, log]);
+            // XState 머신에 LOG 이벤트 전송
+            send({ type: 'LOG', log });
         },
         onStatus: (newStatus) => {
-            setStatus(newStatus as any); // Cast to match state type
+            // XState 머신에 STATUS_UPDATE 이벤트 전송
+            send({ type: 'STATUS_UPDATE', status: newStatus });
         },
         onProgress: (progress) => {
             // Progress is extracted from logs, no need to handle separately
             console.debug('Progress:', progress);
         },
         onComplete: (data) => {
-            setStatus(data.status as any); // Cast to match state type
             console.log('AI Analysis complete:', data);
+            // 상태에 따라 적절한 이벤트 전송
             if (data.status === 'completed' || data.status === 'success') {
+                send({ type: 'COMPLETE', result: data });
                 toast.success(t('aiAnalysis.analysisComplete') || "AI Analysis completed successfully!");
             } else if (data.status === 'failed' || data.status === 'error') {
+                send({ type: 'FAIL', error: (data as any).error || 'AI Analysis failed' });
                 toast.error(t('aiAnalysis.analysisFailed') || "AI Analysis failed.");
+            } else if (data.status === 'cancelled' || data.status === 'canceled') {
+                send({ type: 'STATUS_UPDATE', status: data.status });
             }
         },
         onError: (error) => {
@@ -268,9 +283,10 @@ const CodeAiAnalysis: React.FC = () => {
 
     const executeAnalysis = async () => {
         setShowConfirmModal(false);
-        setStatus('running');
-        setLogs([]); // Clear previous logs
-        setJobId('');
+        // XState 머신 초기화 (새 분석 시작 전)
+        if (state.matches('completed') || state.matches('failed') || state.matches('cancelled')) {
+            send({ type: 'RESET' });
+        }
 
         try {
             const formData = watch();
@@ -292,13 +308,17 @@ const CodeAiAnalysis: React.FC = () => {
 
             const res = await client.post('/ai/enrich', payload);
 
-            setJobId(res.data.job_id);
+            // XState 머신에 START 이벤트 전송
+            send({ type: 'START', jobId: res.data.job_id });
+            // 상태 업데이트 이벤트 전송 (running)
+            send({ type: 'STATUS_UPDATE', status: 'running' });
+
             // Invalidate active job query so cache is updated
             queryClient.invalidateQueries({ queryKey: ['ai', 'active'] });
-            // status is already running, polling will take over
+            // WebSocket will handle further updates
         } catch (error: any) {
             console.error("Analysis failed", error);
-            setStatus('failed');
+            send({ type: 'FAIL', error: error.response?.data?.detail || error.message });
             toast.error(t('aiAnalysis.analysisStartFail', { error: error.response?.data?.detail || error.message }));
         }
     };
@@ -311,6 +331,8 @@ const CodeAiAnalysis: React.FC = () => {
     const executeStopAnalysis = async () => {
         if (!jobId) return;
         try {
+            // XState 머신에 CANCEL 이벤트 전송
+            send({ type: 'CANCEL' });
             console.log(`Requesting cancellation for job: ${jobId}`);
             await client.post(`/ai/${jobId}/cancel`);
             toast.success(t('aiAnalysis.stopRequestSuccess'));
@@ -709,7 +731,7 @@ const CodeAiAnalysis: React.FC = () => {
                                 </span>
                             </div>
                         </div>
-                        {status === 'running' && (
+                        {(state.matches('running') || state.matches('pending')) && (
                             <button
                                 type="button"
                                 onClick={handleStopAnalysis}
@@ -724,11 +746,11 @@ const CodeAiAnalysis: React.FC = () => {
                     <button
                         type="button"
                         onClick={handleRunAnalysis}
-                        disabled={status === 'running' || !projectName}
-                        className={`mt-6 w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all transform active:scale-[0.98] ${status === 'running' ? 'opacity-70 cursor-wait' : ''
+                        disabled={state.matches('running') || state.matches('pending') || !projectName}
+                        className={`mt-6 w-full py-3.5 bg-white text-indigo-600 rounded-xl font-bold shadow-lg hover:shadow-xl hover:bg-indigo-50 transition-all transform active:scale-[0.98] ${state.matches('running') ? 'opacity-70 cursor-wait' : ''
                             }`}
                     >
-                        {status === 'running' ? (
+                        {state.matches('running') || state.matches('pending') ? (
                             <span className="flex items-center justify-center gap-2">
                                 <RotateCw className="w-5 h-5 animate-spin" /> {t('aiAnalysis.analyzing')}
                             </span>
@@ -753,24 +775,26 @@ const CodeAiAnalysis: React.FC = () => {
                                     </div>
 
                                     <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
-                                        {status === 'completed' || status === 'success' ? (
+                                        {state.matches('completed') ? (
                                             <CheckCircle className="w-5 h-5 text-emerald-500" />
-                                        ) : status === 'failed' || status === 'error' ? (
+                                        ) : state.matches('failed') ? (
                                             <AlertCircle className="w-5 h-5 text-red-500" />
-                                        ) : status === 'cancelled' ? (
+                                        ) : state.matches('cancelled') || state.matches('cancelling') ? (
                                             <XCircle className="w-5 h-5 text-slate-500" />
                                         ) : (
                                             <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
                                         )}
                                         <div>
                                             <div className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider font-semibold">{t('analysis.currentStatus')}</div>
-                                            <div className="font-bold text-indigo-900 dark:text-indigo-200 capitalize">{status || 'Pending...'}</div>
+                                            <div className="font-bold text-indigo-900 dark:text-indigo-200 capitalize">
+                                                {t(`analysis.status${String(state.value).charAt(0).toUpperCase() + String(state.value).slice(1)}`) || String(state.value)}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Progress Bar */}
-                                {(status === 'running' || status === 'pending') && progress && (
+                                {(state.matches('running') || state.matches('pending') || state.matches('cancelling')) && progress && (
                                     <div className="w-full bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                                         <div className="flex justify-between text-xs text-slate-600 mb-2 font-medium">
                                             <div className="flex items-center gap-2">
@@ -804,8 +828,8 @@ const CodeAiAnalysis: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowSummaryModal(true)}
-                                        disabled={status !== 'completed' && status !== 'success'} // Backend sends 'completed'
-                                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-sm font-medium shadow-md ${status === 'completed' || status === 'success'
+                                        disabled={!state.matches('completed')}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-sm font-medium shadow-md ${state.matches('completed')
                                             ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-none'
                                             : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                                             }`}
@@ -883,7 +907,7 @@ const CodeAiAnalysis: React.FC = () => {
                         </div>
                         <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-end gap-4">
                             {/* Progress Bar in Modal */}
-                            {(status === 'running' || status === 'pending') && progress ? (
+                            {(state.matches('running') || state.matches('pending') || state.matches('cancelling')) && progress ? (
                                 <div className="flex-1 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
                                     <div className="flex justify-between text-xs text-slate-600 mb-2 font-medium">
                                         <div className="flex items-center gap-2">

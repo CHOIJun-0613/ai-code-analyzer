@@ -173,7 +173,14 @@
         "settingsLoaded": "Settings loaded successfully!",
         "settingsLoadFailed": "Failed to load settings.",
         "configSaved": "Configuration saved successfully!",
-        "configSaveFailed": "Failed to save configuration."
+        "configSaveFailed": "Failed to save configuration.",
+        "statusIdle": "Idle",
+        "statusPending": "Pending",
+        "statusRunning": "Running",
+        "statusCompleted": "Completed",
+        "statusFailed": "Failed",
+        "statusCancelled": "Cancelled",
+        "statusCancelling": "Cancelling"
     },
     "aiAnalysis": {
         "title": "AI Code Analysis",
