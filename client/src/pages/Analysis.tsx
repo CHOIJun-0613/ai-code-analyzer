@@ -415,13 +415,18 @@ const Analysis: React.FC = () => {
 
     return (
         <div className="max-w-4xl mx-auto space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold text-slate-900">{t('analysis.title')}</h1>
-                <p className="text-slate-500 mt-1">{t('analysis.subtitle')}</p>
+            <div className="flex items-center gap-3">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
+                    <FileCode className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                </div>
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('analysis.title')}</h1>
+                    <p className="text-slate-500 dark:text-slate-400 mt-1">{t('analysis.subtitle')}</p>
+                </div>
             </div>
 
-            <div className="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-4">
-                <span className="font-bold text-indigo-600 mr-2">* {t('analysis.tip')}:</span>
+            <div className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                <span className="font-bold text-indigo-600 dark:text-indigo-400 mr-2">* {t('analysis.tip')}:</span>
                 {t('analysis.proTipContent')}
             </div>
 
@@ -430,15 +435,15 @@ const Analysis: React.FC = () => {
             {/* Log Modal */}
             {showLogModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 border dark:border-slate-800">
+                        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
                             <div className="flex items-center gap-4">
-                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                    <FileText className="w-5 h-5 text-indigo-600" />
+                                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                                     {t('analysis.analysisLogs')}
                                 </h3>
                                 {jobId && (
-                                    <div className="px-3 py-1 bg-slate-100 rounded-full border border-slate-200 text-xs font-mono text-slate-500">
+                                    <div className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full border border-slate-200 dark:border-slate-700 text-xs font-mono text-slate-500 dark:text-slate-400">
                                         ID: {jobId}
                                     </div>
                                 )}
@@ -446,7 +451,7 @@ const Analysis: React.FC = () => {
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleDownloadLogs}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors text-sm font-medium shadow-sm"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium shadow-sm"
                                     title={t('analysis.saveLog')}
                                 >
                                     <Download className="w-4 h-4" />
@@ -454,7 +459,7 @@ const Analysis: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setShowLogModal(false)}
-                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -481,20 +486,20 @@ const Analysis: React.FC = () => {
                                 )}
                             </div>
                         </div>
-                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex flex-col gap-4">
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-col gap-4">
                             {/* Progress Bar */}
                             {(status === 'running' || status === 'pending') && progress && (
-                                <div className="w-full bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                    <div className="flex justify-between text-xs text-slate-600 mb-2 font-medium">
+                                <div className="w-full bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
                                         <div className="flex items-center gap-2">
-                                            <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
+                                            <Loader2 className="w-3 h-3 animate-spin text-indigo-600 dark:text-indigo-400" />
                                             <span>Processing... {progress.current}/{progress.total}</span>
                                         </div>
-                                        <span className="text-indigo-600 font-bold">{progress.percent}%</span>
+                                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{progress.percent}%</span>
                                     </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                                         <div
-                                            className="bg-indigo-600 h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
+                                            className="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
                                             style={{ width: `${progress.percent}%` }}
                                         ></div>
                                     </div>
@@ -519,18 +524,18 @@ const Analysis: React.FC = () => {
             {/* Summary Modal */}
             {showSummaryModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center justify-between p-4 border-b border-slate-100 bg-slate-50/50">
+                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-5xl h-[80vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200 border dark:border-slate-800">
+                        <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50">
                             <div className="flex items-center gap-4">
-                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
-                                    <List className="w-5 h-5 text-indigo-600" />
+                                <h3 className="font-bold text-lg text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                                    <List className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                                     {t('analysis.resultSummary')}
                                 </h3>
                             </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={handleDownloadSummary}
-                                    className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors text-sm font-medium shadow-sm"
+                                    className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium shadow-sm"
                                     title={t('analysis.saveSummary')}
                                 >
                                     <Download className="w-4 h-4" />
@@ -538,7 +543,7 @@ const Analysis: React.FC = () => {
                                 </button>
                                 <button
                                     onClick={() => setShowSummaryModal(false)}
-                                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -558,7 +563,7 @@ const Analysis: React.FC = () => {
                                 ))}
                             </div>
                         </div>
-                        <div className="p-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex justify-end">
                             <button
                                 onClick={() => setShowSummaryModal(false)}
                                 className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium shadow-sm transition-colors"
@@ -572,14 +577,14 @@ const Analysis: React.FC = () => {
 
             {/* Main Form */}
             <div className="space-y-6">
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                    <div className="flex border-b border-slate-100">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden">
+                    <div className="flex border-b border-slate-100 dark:border-slate-800">
                         <button
                             type="button"
                             onClick={() => setValue('mode', 'path')}
                             className={`flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${mode === 'path'
-                                ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                                : 'text-slate-500 hover:bg-slate-50'
+                                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                 }`}
                         >
                             <Folder className="w-4 h-4" /> {t('analysis.serverPath')}
@@ -588,8 +593,8 @@ const Analysis: React.FC = () => {
                             type="button"
                             onClick={() => setValue('mode', 'upload')}
                             className={`flex-1 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${mode === 'upload'
-                                ? 'bg-indigo-50 text-indigo-600 border-b-2 border-indigo-600'
-                                : 'text-slate-500 hover:bg-slate-50'
+                                ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 dark:border-indigo-400'
+                                : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                                 }`}
                         >
                             <Upload className="w-4 h-4" /> {t('analysis.uploadZip')}
@@ -599,22 +604,22 @@ const Analysis: React.FC = () => {
                     <form onSubmit={handleConfirmation} className="p-6 space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.projectName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.projectName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
                                 <input
                                     type="text"
                                     placeholder={t('analysis.projectNamePlaceholder')}
                                     {...register('projectName')}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.applicationName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.applicationName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
                                 <input
                                     type="text"
                                     placeholder={t('analysis.applicationNamePlaceholder')}
                                     {...register('applicationName')}
                                     maxLength={30}
-                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                 />
                                 {errors.applicationName && (
                                     <p className="text-sm text-red-600 mt-1">{errors.applicationName.message}</p>
@@ -624,18 +629,18 @@ const Analysis: React.FC = () => {
 
                         {mode === 'upload' ? (
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.sourceFile')}</label>
-                                <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center hover:border-indigo-400 hover:bg-indigo-50/30 transition-all duration-200 group cursor-pointer relative">
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.sourceFile')}</label>
+                                <div className="border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-xl p-8 text-center hover:border-indigo-400 hover:bg-indigo-50/30 dark:hover:bg-indigo-900/10 transition-all duration-200 group cursor-pointer relative">
                                     <input
                                         type="file"
                                         accept=".zip"
                                         onChange={handleFileChange}
                                         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     />
-                                    <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                                    <div className="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                                         <Upload className="w-6 h-6" />
                                     </div>
-                                    <p className="text-sm font-medium text-slate-700">
+                                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300">
                                         {file ? file.name : t('analysis.clickToUpload')}
                                     </p>
                                     <p className="text-xs text-slate-400 mt-1">{t('analysis.zipFilesOnly')}</p>
@@ -646,7 +651,7 @@ const Analysis: React.FC = () => {
                             </div>
                         ) : (
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.serverSourcePath')}</label>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.serverSourcePath')}</label>
                                 <div className="relative mb-4">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Terminal className="h-5 w-5 text-slate-400" />
@@ -655,13 +660,13 @@ const Analysis: React.FC = () => {
                                         type="text"
                                         placeholder={t('analysis.serverSourcePathPlaceholder')}
                                         {...register('sourcePath')}
-                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 font-mono text-sm"
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none font-mono text-sm"
                                     />
                                 </div>
                                 {errors.sourcePath && (
                                     <p className="text-sm text-red-600 mt-1 mb-4">{errors.sourcePath.message}</p>
                                 )}
-                                <label className="block text-sm font-semibold text-slate-700 mb-2">{t('analysis.dbScriptPath')}</label>
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.dbScriptPath')}</label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                         <Database className="h-5 w-5 text-slate-400" />
@@ -670,31 +675,31 @@ const Analysis: React.FC = () => {
                                         type="text"
                                         placeholder={t('analysis.dbScriptPathPlaceholder')}
                                         {...register('dbScriptPath')}
-                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 font-mono text-sm"
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none font-mono text-sm"
                                     />
                                 </div>
                             </div>
                         )}
 
                         {/* Source Code Analysis Configuration Section */}
-                        <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
-                            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                                <div className="flex items-center gap-2 font-semibold text-slate-700">
-                                    <FileCode className="w-5 h-5 text-indigo-600" />
+                        <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-4">
+                            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+                                <div className="flex items-center gap-2 font-semibold text-slate-700 dark:text-slate-300">
+                                    <FileCode className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                                     <span>{t('analysis.sourceCodeAnalysisOptions')}</span>
                                 </div>
                                 <div className="flex items-center gap-2">
                                     <button
                                         type="button"
                                         onClick={handleLoadSettings}
-                                        className="text-xs px-3 py-1.5 bg-white text-slate-600 rounded-lg hover:bg-slate-50 font-medium transition-colors border border-slate-200"
+                                        className="text-xs px-3 py-1.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 font-medium transition-colors border border-slate-200 dark:border-slate-700"
                                     >
                                         {t('analysis.loadSettings')}
                                     </button>
                                     <button
                                         type="button"
                                         onClick={handleSaveSettings}
-                                        className="text-xs px-3 py-1.5 bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 font-medium transition-colors border border-indigo-100"
+                                        className="text-xs px-3 py-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 font-medium transition-colors border border-indigo-100 dark:border-indigo-800"
                                     >
                                         {t('analysis.saveSettings')}
                                     </button>
@@ -702,9 +707,9 @@ const Analysis: React.FC = () => {
                             </div>
 
                             {/* New Options: Analysis Target & Save Strategy - Moved to Top */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-slate-50">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pb-4 border-b border-slate-50 dark:border-slate-800">
                                 <div>
-                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-2">
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
                                         {t('analysis.analysisTarget')} <Tooltip text={t('analysis.analysisTargetTooltip')} position="left-0" arrowPosition="left-2" />
                                     </label>
                                     <div className="flex gap-4">
@@ -716,13 +721,13 @@ const Analysis: React.FC = () => {
                                                     value={target}
                                                     className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                                                 />
-                                                <span className="text-sm text-slate-700">{t(`analysis.target${target.charAt(0).toUpperCase() + target.slice(1)}`)}</span>
+                                                <span className="text-sm text-slate-700 dark:text-slate-300">{t(`analysis.target${target.charAt(0).toUpperCase() + target.slice(1)}`)}</span>
                                             </label>
                                         ))}
                                     </div>
                                 </div>
                                 <div>
-                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-2">
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">
                                         {t('analysis.saveStrategy')} <Tooltip text={t('analysis.saveStrategyTooltip')} />
                                     </label>
                                     <div className="flex gap-4">
@@ -734,7 +739,7 @@ const Analysis: React.FC = () => {
                                                     value={strategy}
                                                     className="w-4 h-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
                                                 />
-                                                <span className="text-sm text-slate-700">{t(`analysis.save${strategy.charAt(0).toUpperCase() + strategy.slice(1)}`)}</span>
+                                                <span className="text-sm text-slate-700 dark:text-slate-300">{t(`analysis.save${strategy.charAt(0).toUpperCase() + strategy.slice(1)}`)}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -749,7 +754,7 @@ const Analysis: React.FC = () => {
                                         {...register('skipDtoSource')}
                                         className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
                                     />
-                                    <span className="text-sm text-slate-700">{t('analysis.skipDtoSource')}</span>
+                                    <span className="text-sm text-slate-700 dark:text-slate-300">{t('analysis.skipDtoSource')}</span>
                                     <Tooltip text={t('analysis.skipDtoSourceTooltip')} />
                                 </label>
                                 <label className="flex items-center gap-2 cursor-pointer">
@@ -758,78 +763,78 @@ const Analysis: React.FC = () => {
                                         {...register('skipDtoMethods')}
                                         className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300"
                                     />
-                                    <span className="text-sm text-slate-700">{t('analysis.skipDtoMethods')}</span>
+                                    <span className="text-sm text-slate-700 dark:text-slate-300">{t('analysis.skipDtoMethods')}</span>
                                     <Tooltip text={t('analysis.skipDtoMethodsTooltip')} position="right-0" arrowPosition="right-2" />
                                 </label>
                             </div>
 
                             {/* Exclude Patterns */}
-                            <div className="pt-4 border-t border-slate-50">
-                                <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
+                            <div className="pt-4 border-t border-slate-50 dark:border-slate-800">
+                                <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                                     {t('analysis.excludePatterns')} <Tooltip text={t('analysis.excludePatternsTooltip')} />
                                 </label>
                                 <textarea
                                     {...register('excludePatterns')}
                                     placeholder={t('analysis.excludePatternsPlaceholder')}
                                     rows={3}
-                                    className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm font-mono h-[86px]"
+                                    className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm font-mono h-[86px]"
                                 />
                             </div>
 
                             {/* Advanced Numerical Inputs */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-50 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-50 dark:border-slate-800 pt-4">
                                 <div>
-                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                                         {t('analysis.workers')} <Tooltip text={t('analysis.workersTooltip')} position="left-0" arrowPosition="left-2" />
                                     </label>
                                     <input
                                         type="number"
                                         {...register('javaParseWorkers', { valueAsNumber: true })}
-                                        className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
+                                        className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                                         {t('analysis.timeout')} <Tooltip text={t('analysis.timeoutTooltip')} />
                                     </label>
                                     <input
                                         type="number"
                                         {...register('javaFileParseTimeout', { valueAsNumber: true })}
-                                        className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
+                                        className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                                         {t('analysis.complexityLimit')} <Tooltip text={t('analysis.complexityLimitTooltip')} position="right-0" arrowPosition="right-2" />
                                     </label>
                                     <input
                                         type="number"
                                         {...register('javaComplexityThreshold', { valueAsNumber: true })}
-                                        className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
+                                        className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm"
                                     />
                                 </div>
                             </div>
 
                             {/* Sequence Packages & Log Level */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50 dark:border-slate-800 pt-4">
                                 <div>
-                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                                         {t('analysis.includePackages')} <Tooltip text={t('analysis.includePackagesTooltip')} />
                                     </label>
                                     <input
                                         type="text"
                                         placeholder="com.example, org.test"
                                         {...register('sequenceDiagramIncludePackages')}
-                                        className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
+                                        className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm"
                                     />
                                 </div>
                                 <div>
-                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 mb-1">
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                                         {t('analysis.logLevel')} <Tooltip text={t('analysis.logLevelTooltip')} position="right-0" arrowPosition="right-2" />
                                     </label>
                                     <select
                                         {...register('logLevel')}
-                                        className="w-full px-2 py-1.5 rounded border border-slate-200 text-sm"
+                                        className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm"
                                     >
                                         <option value="DEBUG">DEBUG</option>
                                         <option value="INFO">INFO</option>
@@ -907,32 +912,32 @@ const Analysis: React.FC = () => {
             {
                 showConfirmModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
                             <div className="p-8">
                                 <div className="flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 bg-indigo-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-indigo-50/50">
-                                        <Rocket className="w-8 h-8 text-indigo-600" />
+                                    <div className="w-16 h-16 bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6 ring-8 ring-indigo-50/50 dark:ring-indigo-900/10">
+                                        <Rocket className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                                     </div>
 
-                                    <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
                                         {t('analysis.analysisConfirmTitle')}
                                     </h3>
 
-                                    <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
+                                    <p className="text-slate-500 dark:text-slate-400 whitespace-pre-wrap leading-relaxed mb-8">
                                         {t('analysis.analysisConfirmMessage')}
                                     </p>
 
                                     <div className="flex gap-3 w-full">
                                         <button
                                             type="button"
-                                            className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                            className="flex-1 py-3 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-[0.98]"
                                             onClick={() => setShowConfirmModal(false)}
                                         >
                                             {t('common.cancel')}
                                         </button>
                                         <button
                                             type="button"
-                                            className="flex-1 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:shadow-indigo-300 transition-all active:scale-[0.98]"
+                                            className="flex-1 py-3 px-4 bg-indigo-600 text-white font-semibold rounded-xl shadow-lg shadow-indigo-200 dark:shadow-none hover:bg-indigo-700 hover:shadow-indigo-300 dark:hover:shadow-indigo-900/50 transition-all active:scale-[0.98]"
                                             onClick={executeAnalysis}
                                         >
                                             {t('analysis.confirm')}
@@ -949,32 +954,32 @@ const Analysis: React.FC = () => {
             {
                 showStopConfirmModal && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 border border-slate-100 dark:border-slate-800">
                             <div className="p-8">
                                 <div className="flex flex-col items-center text-center">
-                                    <div className="w-16 h-16 bg-rose-50 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50">
-                                        <Square className="w-8 h-8 text-rose-500 fill-current" />
+                                    <div className="w-16 h-16 bg-rose-50 dark:bg-rose-900/20 rounded-full flex items-center justify-center mb-6 ring-8 ring-rose-50/50 dark:ring-rose-900/10">
+                                        <Square className="w-8 h-8 text-rose-500 dark:text-rose-400 fill-current" />
                                     </div>
 
-                                    <h3 className="text-xl font-bold text-slate-900 mb-3">
+                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-3">
                                         {t('analysis.analysisStopConfirmTitle')}
                                     </h3>
 
-                                    <p className="text-slate-500 whitespace-pre-wrap leading-relaxed mb-8">
+                                    <p className="text-slate-500 dark:text-slate-400 whitespace-pre-wrap leading-relaxed mb-8">
                                         {t('analysis.analysisStopConfirmMessage')}
                                     </p>
 
                                     <div className="flex gap-3 w-full">
                                         <button
                                             type="button"
-                                            className="flex-1 py-3 px-4 bg-white border border-slate-200 text-slate-700 font-semibold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-[0.98]"
+                                            className="flex-1 py-3 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-semibold rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:border-slate-300 dark:hover:border-slate-600 transition-all active:scale-[0.98]"
                                             onClick={() => setShowStopConfirmModal(false)}
                                         >
                                             {t('common.cancel')}
                                         </button>
                                         <button
                                             type="button"
-                                            className="flex-1 py-3 px-4 bg-rose-600 text-white font-semibold rounded-xl shadow-lg shadow-rose-200 hover:bg-rose-700 hover:shadow-rose-300 transition-all active:scale-[0.98]"
+                                            className="flex-1 py-3 px-4 bg-rose-600 text-white font-semibold rounded-xl shadow-lg shadow-rose-200 dark:shadow-none hover:bg-rose-700 hover:shadow-rose-300 dark:hover:shadow-rose-900/50 transition-all active:scale-[0.98]"
                                             onClick={executeStopAnalysis}
                                         >
                                             {t('analysis.confirm')}
@@ -988,9 +993,9 @@ const Analysis: React.FC = () => {
             }
 
             {/* Status Panel */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <ActivityIcon className="w-5 h-5 text-indigo-600" />
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <ActivityIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                     {t('analysis.analysisStatus')}
                 </h3>
 
@@ -998,12 +1003,12 @@ const Analysis: React.FC = () => {
                     jobId ? (
                         <div className="space-y-4">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                    <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">{t('analysis.jobId')}</div>
-                                    <div className="font-mono text-sm text-slate-700 break-all">{jobId}</div>
+                                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                                    <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-1">{t('analysis.jobId')}</div>
+                                    <div className="font-mono text-sm text-slate-700 dark:text-slate-300 break-all">{jobId}</div>
                                 </div>
 
-                                <div className="flex items-center gap-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
                                     {status === 'completed' ? (
                                         <CheckCircle className="w-5 h-5 text-emerald-500" />
                                     ) : status === 'failed' ? (
@@ -1014,25 +1019,25 @@ const Analysis: React.FC = () => {
                                         <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
                                     )}
                                     <div>
-                                        <div className="text-xs text-indigo-600 uppercase tracking-wider font-semibold">{t('analysis.currentStatus')}</div>
-                                        <div className="font-bold text-indigo-900 capitalize">{status || 'Pending...'}</div>
+                                        <div className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider font-semibold">{t('analysis.currentStatus')}</div>
+                                        <div className="font-bold text-indigo-900 dark:text-indigo-200 capitalize">{status || 'Pending...'}</div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Progress Bar */}
                             {(status === 'running' || status === 'pending' || status === 'cancelling') && progress && (
-                                <div className="w-full bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-                                    <div className="flex justify-between text-xs text-slate-600 mb-2 font-medium">
+                                <div className="w-full bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm">
+                                    <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-2 font-medium">
                                         <div className="flex items-center gap-2">
-                                            <Loader2 className="w-3 h-3 animate-spin text-indigo-600" />
+                                            <Loader2 className="w-3 h-3 animate-spin text-indigo-600 dark:text-indigo-400" />
                                             <span>Processing... {progress.current}/{progress.total}</span>
                                         </div>
-                                        <span className="text-indigo-600 font-bold">{progress.percent}%</span>
+                                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{progress.percent}%</span>
                                     </div>
-                                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div className="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden">
                                         <div
-                                            className="bg-indigo-600 h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
+                                            className="bg-indigo-600 dark:bg-indigo-500 h-2 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(79,70,229,0.3)]"
                                             style={{ width: `${progress.percent}%` }}
                                         ></div>
                                     </div>
@@ -1046,7 +1051,7 @@ const Analysis: React.FC = () => {
                             <div className="flex gap-3 pt-2">
                                 <button
                                     onClick={() => setShowLogModal(true)}
-                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors text-sm font-medium shadow-sm"
+                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium shadow-sm"
                                 >
                                     <FileText className="w-4 h-4" />
                                     {t('analysis.viewLogs')}
@@ -1055,8 +1060,8 @@ const Analysis: React.FC = () => {
                                     onClick={() => setShowSummaryModal(true)}
                                     disabled={status !== 'completed'}
                                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-sm font-medium shadow-md ${status === 'completed'
-                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
-                                        : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                                        ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-none'
+                                        : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                                         }`}
                                 >
                                     <List className="w-4 h-4" />

@@ -11,5 +11,7 @@ api_router.include_router(projects.router, prefix="/projects", tags=["projects"]
 api_router.include_router(reports.router, tags=["reports"])
 api_router.include_router(class_reports.router, tags=["class-reports"])
 api_router.include_router(ai_analysis.router, prefix="/ai", tags=["ai-analysis"])
+from app.api.v1.endpoints import ai_prompts
+api_router.include_router(ai_prompts.router, prefix="/ai-prompts", tags=["ai-prompts"])
 api_router.include_router(websocket.router, tags=["websocket"])
 

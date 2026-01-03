@@ -14,7 +14,9 @@ const CodeAiAnalysis = lazy(() => import('./pages/CodeAiAnalysis'));
 const Admin = lazy(() => import('./pages/Admin'));
 const UserManagement = lazy(() => import('./pages/Admin/UserManagement'));
 const GroupManagement = lazy(() => import('./pages/Admin/GroupManagement'));
+const AiPromptManagement = lazy(() => import('./pages/Admin/AiPromptManagement'));
 const AnalysisHistoryList = lazy(() => import('./pages/AnalysisHistoryList'));
+const CodeAnalysisDashboard = lazy(() => import('./pages/CodeAnalysisDashboard'));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     const isLoggedIn = useAuthStore((state: AuthState) => state.isLoggedIn);
@@ -45,6 +47,11 @@ function App() {
                             <ClassDetails />
                         </Suspense>
                     } />
+                    <Route path="analysis-overview" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <CodeAnalysisDashboard />
+                        </Suspense>
+                    } />
                     <Route path="analysis" element={
                         <Suspense fallback={<LoadingSpinner />}>
                             <Analysis />
@@ -73,6 +80,11 @@ function App() {
                     <Route path="admin/groups" element={
                         <Suspense fallback={<LoadingSpinner />}>
                             <GroupManagement />
+                        </Suspense>
+                    } />
+                    <Route path="admin/ai-prompts" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <AiPromptManagement />
                         </Suspense>
                     } />
                 </Route>

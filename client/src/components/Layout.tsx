@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
-import { LayoutDashboard, FileCode, Users, LogOut, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { LayoutDashboard, FileCode, Users, LogOut, ChevronLeft, ChevronRight, Settings, ArrowLeft } from 'lucide-react';
 import AnimatedLogo from './AnimatedLogo';
 import SettingsModal, { Theme } from './SettingsModal';
 
@@ -126,10 +126,10 @@ const Layout: React.FC = () => {
 
                     {isAdmin && (
                         <div className={`rounded-xl overflow-hidden transition-all duration-300 ${isGroupActive('/analysis') && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
-                            <Link to="#" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isGroupActive('/analysis') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.analysisManagement') : ""}>
+                            <Link to="/analysis-overview" className={`flex items-center px-4 py-3 transition-all duration-200 group ${isGroupActive('/analysis') ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.analysisManagement') : ""}>
                                 <FileCode className={`shrink-0 w-5 h-5 transition-colors ${isGroupActive('/analysis') ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
                                 <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
-                                    {t('layout.analysisManagement') || "Code Analysis Management"}
+                                    {t('layout.analysisManagement')}
                                 </span>
                             </Link>
 
@@ -143,7 +143,7 @@ const Layout: React.FC = () => {
                                         }`}
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                    <span className="whitespace-nowrap">{t('layout.codeStaticAnalysis') || "Code Static Analysis"}</span>
+                                    <span className="whitespace-nowrap">{t('layout.codeStaticAnalysis')}</span>
                                 </Link>
                                 <Link
                                     to="/analysis/ai"
@@ -153,7 +153,7 @@ const Layout: React.FC = () => {
                                         }`}
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                    <span className="whitespace-nowrap">{t('layout.codeAiAnalysis') || "Code AI Analysis"}</span>
+                                    <span className="whitespace-nowrap">{t('layout.codeAiAnalysis')}</span>
                                 </Link>
                                 <Link
                                     to="/analysis/history"
@@ -163,7 +163,7 @@ const Layout: React.FC = () => {
                                         }`}
                                 >
                                     <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                    <span className="whitespace-nowrap">{t('layout.analysisHistory') || "Analysis Log"}</span>
+                                    <span className="whitespace-nowrap">{t('layout.analysisHistory')}</span>
                                 </Link>
                             </div>
                         </div>
@@ -206,6 +206,16 @@ const Layout: React.FC = () => {
                                         <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
                                         <span className="whitespace-nowrap">{t('layout.groupManagement')}</span>
                                     </Link>
+                                    <Link
+                                        to="/admin/ai-prompts"
+                                        className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${isActive('/admin/ai-prompts')
+                                            ? 'bg-indigo-500/10 text-indigo-400'
+                                            : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
+                                            }`}
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
+                                        <span className="whitespace-nowrap">{t('layout.aiPromptManagement')}</span>
+                                    </Link>
                                 </div>
                             </div>
                         </>
@@ -239,8 +249,21 @@ const Layout: React.FC = () => {
             {/* Main Content */}
             <div ref={mainContentRef} className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Top Header */}
-                <header className={`h-12 border-b flex items-center justify-end px-6 shrink-0 z-10 ${headerClass}`}>
-                    <div className="flex items-center text-sm gap-4">
+                <header className={`h-12 border-b flex items-center justify-between px-6 shrink-0 z-10 ${headerClass}`}>
+                    <div className="flex items-center">
+                        {location.pathname !== '/' && (
+                            <button
+                                onClick={() => navigate(-1)}
+                                className="flex items-center gap-2.5 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200 transition-all group"
+                            >
+                                <div className="p-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm group-hover:shadow group-hover:border-slate-300 dark:group-hover:border-slate-600 transition-all">
+                                    <ArrowLeft size={14} className="group-hover:-translate-x-0.5 transition-transform" />
+                                </div>
+                                <span className="text-[11px] font-bold uppercase tracking-widest">{t('common.back')}</span>
+                            </button>
+                        )}
+                    </div>
+                    <div className="flex items-center text-xs gap-4">
                         <span>User: <span className={`font-medium ${headerTextValueClass}`}>{user?.username}</span></span>
                         <span>Login: <span className={`font-medium ${headerTextValueClass}`}>{loginTime}</span></span>
                     </div>

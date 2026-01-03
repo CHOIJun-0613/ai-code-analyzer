@@ -3,7 +3,7 @@ import toast from 'react-hot-toast';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Box, FileCode, Layers, Database, FolderOpen, Code2, Search, Info, Code, Pencil, Check, X, ChevronDown, ChevronUp, FileText } from 'lucide-react';
+import { Box, FileCode, Layers, Database, FolderOpen, Code2, Search, Info, Code, Pencil, Check, X, ChevronDown, ChevronUp, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ReportViewerModal from '../components/ReportViewerModal';
 import VirtualizedTable, { Column } from '../components/VirtualizedTable';
@@ -266,12 +266,12 @@ const ProjectDetails: React.FC = () => {
         const baseColumns: Column<ClassItem>[] = [
             {
                 key: 'physicalName',
-                header: 'Physical Name',
+                header: t('projectDetails.physicalName'),
                 width: '33%',
                 render: (cls) => (
                     <div className="flex items-center w-full min-w-0">
-                        <FileCode className="w-4 h-4 text-slate-400 mr-3 flex-shrink-0 group-hover:text-indigo-500 transition-colors" />
-                        <span className="font-medium text-slate-700 truncate" title={cls.name}>
+                        <FileCode className="w-4 h-4 text-slate-400 dark:text-slate-500 mr-3 flex-shrink-0 group-hover:text-indigo-500 transition-colors" />
+                        <span className="font-medium text-slate-700 dark:text-slate-200 truncate" title={cls.name}>
                             {cls.name}
                         </span>
                     </div>
@@ -279,24 +279,24 @@ const ProjectDetails: React.FC = () => {
             },
             {
                 key: 'logicalName',
-                header: 'Logical Name',
+                header: t('projectDetails.logicalName'),
                 width: '33%',
                 render: (cls) => (
-                    <span className="text-slate-500 text-sm truncate block" title={cls.logical_name || '-'}>
+                    <span className="text-slate-500 dark:text-slate-400 text-sm truncate block" title={cls.logical_name || '-'}>
                         {cls.logical_name || '-'}
                     </span>
                 ),
             },
         ];
 
-        // 검색 모드일 때 Package 컬럼 추가
-        if (searchQuery) {
+        // 검색 모드이거나 전체 보기일 때 Package 컬럼 추가
+        if (searchQuery || selectedPackage === ALL_PACKAGES) {
             baseColumns.push({
                 key: 'package',
-                header: 'Package',
+                header: t('projectDetails.packages'),
                 width: '34%',
                 render: (cls) => (
-                    <span className="text-slate-400 text-xs truncate block" title={cls.packageName}>
+                    <span className="text-slate-400 dark:text-slate-500 text-xs truncate block" title={cls.packageName}>
                         {cls.packageName}
                     </span>
                 ),
@@ -304,7 +304,7 @@ const ProjectDetails: React.FC = () => {
         }
 
         return baseColumns;
-    }, [searchQuery]);
+    }, [searchQuery, selectedPackage, t]);
 
     if (isLoading) {
         return (
@@ -317,12 +317,12 @@ const ProjectDetails: React.FC = () => {
     if (error || !stats) {
         return (
             <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-slate-900">Project not found</h3>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-white">{t('common.noResults')}</h3>
                 <button
                     onClick={() => navigate('/')}
                     className="mt-4 px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 transition-colors"
                 >
-                    Back to Dashboard
+                    {t('error.goHome')}
                 </button>
             </div>
         );
@@ -332,23 +332,16 @@ const ProjectDetails: React.FC = () => {
         <div className="space-y-8 animate-in fade-in duration-500">
             {/* Header */}
             <div>
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 mb-4 transition-colors group"
-                >
-                    <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-                    Back to Dashboard
-                </button>
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-indigo-50 rounded-xl">
-                            <Box className="w-8 h-8 text-indigo-600" />
+                        <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
+                            <Box className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
                             {stats && (
                                 <>
                                     <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{stats.project.name}</h1>
-                                    <p className="text-slate-500 dark:text-slate-400">Last updated: {new Date(stats.project.updated_at).toLocaleString()}</p>
+                                    <p className="text-slate-500 dark:text-slate-400">{t('projectDetails.lastUpdated')}: {new Date(stats.project.updated_at).toLocaleString()}</p>
                                 </>
                             )}
                         </div>
@@ -359,17 +352,17 @@ const ProjectDetails: React.FC = () => {
                         <button
                             onClick={() => !isFetchingReport && setIsReportMenuOpen(!isReportMenuOpen)}
                             disabled={isFetchingReport}
-                            className={`flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 transition-colors shadow-sm font-medium ${isFetchingReport ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-50 hover:text-indigo-600'}`}
+                            className={`flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-slate-600 dark:text-slate-300 transition-colors shadow-sm font-medium ${isFetchingReport ? 'opacity-70 cursor-not-allowed' : 'hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400'}`}
                         >
                             {isFetchingReport ? (
                                 <>
                                     <div className="w-4 h-4 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-                                    Generating...
+                                    {t('common.loading')}
                                 </>
                             ) : (
                                 <>
                                     <FileText className="w-5 h-5" />
-                                    Reports
+                                    {t('projectDetails.reports')}
                                     <ChevronDown className={`w-4 h-4 transition-transform ${isReportMenuOpen ? 'rotate-180' : ''}`} />
                                 </>
                             )}
@@ -381,30 +374,30 @@ const ProjectDetails: React.FC = () => {
                                     className="fixed inset-0 z-10"
                                     onClick={() => setIsReportMenuOpen(false)}
                                 />
-                                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
-                                    <div className="px-4 py-2 border-b border-slate-50">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Generate Report</span>
+                                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
+                                    <div className="px-4 py-2 border-b border-slate-50 dark:border-slate-800">
+                                        <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t('projectDetails.generateReport')}</span>
                                     </div>
                                     <button
-                                        onClick={() => handleOpenReport('stats', 'Project Statistics Report')}
-                                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 transition-colors flex items-center gap-2"
+                                        onClick={() => handleOpenReport('stats', t('projectDetails.projectStats'))}
+                                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-700 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors flex items-center gap-2"
                                     >
                                         <Layers className="w-4 h-4" />
-                                        Project Statistics
+                                        {t('projectDetails.projectStats')}
                                     </button>
                                     <button
-                                        onClick={() => handleOpenReport('crud', 'CRUD Matrix Report')}
-                                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 transition-colors flex items-center gap-2"
+                                        onClick={() => handleOpenReport('crud', t('projectDetails.crudMatrix'))}
+                                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-700 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors flex items-center gap-2"
                                     >
                                         <Database className="w-4 h-4" />
-                                        CRUD Matrix
+                                        {t('projectDetails.crudMatrix')}
                                     </button>
                                     <button
-                                        onClick={() => handleOpenReport('classes', 'Class List Report')}
-                                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 transition-colors flex items-center gap-2"
+                                        onClick={() => handleOpenReport('classes', t('projectDetails.classList'))}
+                                        className="w-full text-left px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 text-slate-700 dark:text-slate-300 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors flex items-center gap-2"
                                     >
                                         <FileCode className="w-4 h-4" />
-                                        Class List
+                                        {t('projectDetails.classList')}
                                     </button>
                                 </div>
                             </>
@@ -417,11 +410,11 @@ const ProjectDetails: React.FC = () => {
             {stats && (
                 <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                     {/* Project Information */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
-                        <div className="flex justify-between items-center border-b border-slate-100 pb-2">
-                            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2 cursor-pointer select-none" onClick={() => setAreCardsExpanded(!areCardsExpanded)}>
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-4">
+                        <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 cursor-pointer select-none" onClick={() => setAreCardsExpanded(!areCardsExpanded)}>
                                 <Info className="w-5 h-5 text-indigo-600" />
-                                Project Information
+                                {t('projectDetails.projectInformation')}
                                 {areCardsExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                             </h3>
                             <div>
@@ -432,23 +425,23 @@ const ProjectDetails: React.FC = () => {
                                             className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
                                         >
                                             <Check className="w-3.5 h-3.5" />
-                                            Save
+                                            {t('projectDetails.save')}
                                         </button>
                                         <button
                                             onClick={handleCancelEdit}
-                                            className="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors"
+                                            className="flex items-center gap-1 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                                         >
                                             <X className="w-3.5 h-3.5" />
-                                            Cancel
+                                            {t('projectDetails.cancel')}
                                         </button>
                                     </div>
                                 ) : (
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="flex items-center gap-1 px-3 py-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all text-sm font-medium"
+                                        className="flex items-center gap-1 px-3 py-1.5 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-all text-sm font-medium"
                                     >
                                         <Pencil className="w-3.5 h-3.5" />
-                                        Edit
+                                        {t('projectDetails.edit')}
                                     </button>
                                 )}
                             </div>
@@ -458,63 +451,71 @@ const ProjectDetails: React.FC = () => {
                             <>
                                 <div className="grid grid-cols-1 gap-y-3">
                                     <div className="grid grid-cols-3 items-center">
-                                        <span className="text-sm font-medium text-slate-500">Application Name</span>
-                                        <span className="col-span-2 text-slate-900 font-medium">{stats.project.application_name || '-'}</span>
+                                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                            <FileCode className="w-4 h-4" /> {t('projectDetails.applicationName')}
+                                        </span>
+                                        <span className="col-span-2 text-slate-900 dark:text-slate-200 font-medium">{stats.project.application_name || '-'}</span>
                                     </div>
                                     <div className="grid grid-cols-3 items-center">
-                                        <span className="text-sm font-medium text-slate-500">Framework</span>
+                                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                            <Layers className="w-4 h-4" /> {t('projectDetails.framework')}
+                                        </span>
                                         <div className="col-span-2">
                                             {isEditing ? (
                                                 <input
                                                     type="text"
-                                                    className="w-full px-3 py-1.5 text-sm border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                                    className="w-full px-3 py-1.5 text-sm border border-indigo-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                                     placeholder="e.g. Spring Boot"
                                                     value={editForm.framework}
                                                     onChange={(e) => setEditForm({ ...editForm, framework: e.target.value })}
                                                 />
                                             ) : (
-                                                <span className="text-slate-900">{stats.project.framework || <span className="text-slate-400 italic">Not specified</span>}</span>
+                                                <span className="text-slate-900 dark:text-slate-200 font-medium">{stats.project.framework || <span className="text-slate-400 dark:text-slate-600 italic">{t('projectDetails.notSpecified')}</span>}</span>
                                             )}
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-3 items-center">
-                                        <span className="text-sm font-medium text-slate-500">Repository</span>
+                                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 flex items-center gap-2">
+                                            <Database className="w-4 h-4" /> {t('projectDetails.repository')}
+                                        </span>
                                         <div className="col-span-2">
                                             {isEditing ? (
                                                 <input
                                                     type="text"
-                                                    className="w-full px-3 py-1.5 text-sm border border-indigo-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+                                                    className="w-full px-3 py-1.5 text-sm border border-indigo-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                                                     placeholder="Git Repository URL"
                                                     value={editForm.repository}
                                                     onChange={(e) => setEditForm({ ...editForm, repository: e.target.value })}
                                                 />
                                             ) : (
-                                                <span className="text-slate-900 truncate block" title={stats.project.repository}>
-                                                    {stats.project.repository || <span className="text-slate-400 italic">Not specified</span>}
+                                                <span className="text-slate-900 dark:text-slate-200 font-medium truncate block" title={stats.project.repository}>
+                                                    {stats.project.repository || <span className="text-slate-400 dark:text-slate-600 italic">{t('projectDetails.notSpecified')}</span>}
                                                 </span>
                                             )}
                                         </div>
                                     </div>
                                     <div className="grid grid-cols-3 items-start">
-                                        <span className="text-sm font-medium text-slate-500 mt-1">Path</span>
-                                        <span className="col-span-2 text-xs text-slate-600 font-mono bg-slate-50 p-2 rounded break-all">
+                                        <span className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2">
+                                            <FolderOpen className="w-4 h-4" /> {t('projectDetails.path')}
+                                        </span>
+                                        <span className="col-span-2 text-xs text-slate-600 dark:text-slate-400 font-mono bg-slate-50 dark:bg-slate-800 p-2 rounded break-all border border-slate-100 dark:border-slate-700">
                                             {stats.project.path}
                                         </span>
                                     </div>
                                 </div>
 
                                 {/* Summary Stats */}
-                                <div className="border-t border-slate-100 pt-4 mt-2">
+                                <div className="border-t border-slate-100 dark:border-slate-800 pt-4 mt-2">
                                     <div className="grid grid-cols-2 gap-4">
-                                        <div className="flex flex-col items-center p-3 bg-purple-50/50 rounded-xl border border-purple-100">
-                                            <Layers className="w-5 h-5 text-purple-600 mb-1" />
-                                            <span className="text-xl font-bold text-slate-900">{stats.package_count}</span>
-                                            <span className="text-xs text-slate-500 font-medium">Packages</span>
+                                        <div className="flex flex-col items-center p-3 bg-purple-50/50 dark:bg-purple-500/10 rounded-xl border border-purple-100 dark:border-purple-500/20">
+                                            <Layers className="w-5 h-5 text-purple-600 dark:text-purple-400 mb-1" />
+                                            <span className="text-xl font-bold text-slate-900 dark:text-white">{stats.package_count}</span>
+                                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('projectDetails.packages')}</span>
                                         </div>
-                                        <div className="flex flex-col items-center p-3 bg-emerald-50/50 rounded-xl border border-emerald-100">
-                                            <Code2 className="w-5 h-5 text-emerald-600 mb-1" />
-                                            <span className="text-xl font-bold text-slate-900">{stats.class_count}</span>
-                                            <span className="text-xs text-slate-500 font-medium">Classes</span>
+                                        <div className="flex flex-col items-center p-3 bg-emerald-50/50 dark:bg-emerald-500/10 rounded-xl border border-emerald-100 dark:border-emerald-500/20">
+                                            <Code2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 mb-1" />
+                                            <span className="text-xl font-bold text-slate-900 dark:text-white">{stats.class_count}</span>
+                                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">{t('projectDetails.classes')}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -523,11 +524,11 @@ const ProjectDetails: React.FC = () => {
                     </div>
 
                     {/* Code Statistics */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col gap-4">
-                        <h3 className="text-lg font-bold text-slate-900 flex items-center justify-between border-b border-slate-100 pb-2 cursor-pointer select-none" onClick={() => setAreCardsExpanded(!areCardsExpanded)}>
+                    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 flex flex-col gap-4">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2 cursor-pointer select-none" onClick={() => setAreCardsExpanded(!areCardsExpanded)}>
                             <div className="flex items-center gap-2">
                                 <Code className="w-5 h-5 text-emerald-600" />
-                                Code Statistics
+                                {t('projectDetails.codeStatistics')}
                             </div>
                             {areCardsExpanded ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
                         </h3>
@@ -536,24 +537,24 @@ const ProjectDetails: React.FC = () => {
                             <div className="flex flex-col xl:flex-row gap-6">
                                 {/* Left: Line Statistics (LOC) */}
                                 <div className="flex-1">
-                                    <h4 className="text-sm font-semibold text-slate-500 mb-3 ml-1">Line Statistics</h4>
-                                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                                        <div className="divide-y divide-slate-100">
-                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
-                                                <span className="text-sm font-medium text-slate-600">Total Lines (PLOC)</span>
-                                                <span className="text-lg font-bold text-slate-900">{stats.project.total_PLOC.toLocaleString()}</span>
+                                    <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 ml-1">{t('projectDetails.lineStatistics')}</h4>
+                                    <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('projectDetails.totalLines')}</span>
+                                                <span className="text-lg font-bold text-slate-900 dark:text-white">{stats.project.total_PLOC.toLocaleString()}</span>
                                             </div>
-                                            <div className="flex justify-between items-center p-4 hover:bg-emerald-50/30 transition-colors">
-                                                <span className="text-sm font-medium text-emerald-700">Code Lines (LLOC)</span>
-                                                <span className="text-lg font-bold text-emerald-700">{stats.project.total_LLOC.toLocaleString()}</span>
+                                            <div className="flex justify-between items-center p-4 hover:bg-emerald-50/30 dark:hover:bg-emerald-500/10 transition-colors">
+                                                <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">{t('projectDetails.codeLines')}</span>
+                                                <span className="text-lg font-bold text-emerald-700 dark:text-emerald-400">{stats.project.total_LLOC.toLocaleString()}</span>
                                             </div>
-                                            <div className="flex justify-between items-center p-4 hover:bg-amber-50/30 transition-colors">
-                                                <span className="text-sm font-medium text-amber-700">Comment Lines (CLOC)</span>
-                                                <span className="text-lg font-bold text-amber-700">{stats.project.total_CLOC.toLocaleString()}</span>
+                                            <div className="flex justify-between items-center p-4 hover:bg-amber-50/30 dark:hover:bg-amber-500/10 transition-colors">
+                                                <span className="text-sm font-medium text-amber-700 dark:text-amber-400">{t('projectDetails.commentLines')}</span>
+                                                <span className="text-lg font-bold text-amber-700 dark:text-amber-400">{stats.project.total_CLOC.toLocaleString()}</span>
                                             </div>
-                                            <div className="flex justify-between items-center p-4 hover:bg-indigo-50/30 transition-colors">
-                                                <span className="text-sm font-medium text-indigo-700">Blank Lines</span>
-                                                <span className="text-lg font-bold text-indigo-700">
+                                            <div className="flex justify-between items-center p-4 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/10 transition-colors">
+                                                <span className="text-sm font-medium text-indigo-700 dark:text-indigo-400">{t('projectDetails.blankLines')}</span>
+                                                <span className="text-lg font-bold text-indigo-700 dark:text-indigo-400">
                                                     {(stats.project.total_PLOC - stats.project.total_LLOC - stats.project.total_CLOC).toLocaleString()}
                                                 </span>
                                             </div>
@@ -562,32 +563,32 @@ const ProjectDetails: React.FC = () => {
                                 </div>
 
                                 {/* Divider (Visible on large screens) */}
-                                <div className="hidden xl:block w-px bg-slate-100 self-stretch mx-2"></div>
+                                <div className="hidden xl:block w-px bg-slate-100 dark:bg-slate-800 self-stretch mx-2"></div>
 
                                 {/* Right: File Statistics */}
                                 <div className="flex-1">
-                                    <h4 className="text-sm font-semibold text-slate-500 mb-3 ml-1">File Statistics</h4>
-                                    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-                                        <div className="divide-y divide-slate-100">
-                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50 transition-colors">
-                                                <span className="text-sm font-medium text-slate-600">Total Files</span>
-                                                <span className="text-lg font-bold text-slate-900">{stats.project.total_file_count.toLocaleString()}</span>
+                                    <h4 className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-3 ml-1">{t('projectDetails.fileStatistics')}</h4>
+                                    <div className="bg-white dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden shadow-sm">
+                                        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+                                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('projectDetails.totalFiles')}</span>
+                                                <span className="text-lg font-bold text-slate-900 dark:text-white">{stats.project.total_file_count.toLocaleString()}</span>
                                             </div>
-                                            <div className="flex justify-between items-center p-4 hover:bg-blue-50/30 transition-colors">
-                                                <span className="text-sm font-medium text-blue-700">Valid Java Files</span>
-                                                <span className="text-lg font-bold text-blue-700">{stats.project.total_java_file_count.toLocaleString()}</span>
+                                            <div className="flex justify-between items-center p-4 hover:bg-blue-50/30 dark:hover:bg-blue-500/10 transition-colors">
+                                                <span className="text-sm font-medium text-blue-700 dark:text-blue-400">{t('projectDetails.validJavaFiles')}</span>
+                                                <span className="text-lg font-bold text-blue-700 dark:text-blue-400">{stats.project.total_java_file_count.toLocaleString()}</span>
                                             </div>
-                                            <div className="flex justify-between items-center p-4 hover:bg-orange-50/30 transition-colors">
-                                                <span className="text-sm font-medium text-orange-700">XML Files</span>
-                                                <span className="text-lg font-bold text-orange-700">{stats.project.total_xml_file_count.toLocaleString()}</span>
+                                            <div className="flex justify-between items-center p-4 hover:bg-orange-50/30 dark:hover:bg-orange-500/10 transition-colors">
+                                                <span className="text-sm font-medium text-orange-700 dark:text-orange-400">{t('projectDetails.xmlFiles')}</span>
+                                                <span className="text-lg font-bold text-orange-700 dark:text-orange-400">{stats.project.total_xml_file_count.toLocaleString()}</span>
                                             </div>
-                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50/50 transition-colors">
-                                                <span className="text-sm font-medium text-slate-600">Config Files</span>
-                                                <span className="text-lg font-bold text-slate-900">{stats.project.total_config_file_count.toLocaleString()}</span>
+                                            <div className="flex justify-between items-center p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800 transition-colors">
+                                                <span className="text-sm font-medium text-slate-600 dark:text-slate-400">{t('projectDetails.configFiles')}</span>
+                                                <span className="text-lg font-bold text-slate-900 dark:text-white">{stats.project.total_config_file_count.toLocaleString()}</span>
                                             </div>
-                                            <div className="flex justify-between items-center p-4 hover:bg-red-50/30 transition-colors">
-                                                <span className="text-sm font-medium text-red-700">Ignored</span>
-                                                <span className="text-lg font-bold text-red-700">{stats.project.total_ignored_file_count.toLocaleString()}</span>
+                                            <div className="flex justify-between items-center p-4 hover:bg-red-50/30 dark:hover:bg-red-500/10 transition-colors">
+                                                <span className="text-sm font-medium text-red-700 dark:text-red-400">{t('projectDetails.ignored')}</span>
+                                                <span className="text-lg font-bold text-red-700 dark:text-red-400">{stats.project.total_ignored_file_count.toLocaleString()}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -599,15 +600,15 @@ const ProjectDetails: React.FC = () => {
             )}
 
             {/* Hierarchy / Modules - Split View */}
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row h-[600px]">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col md:flex-row h-[600px]">
                 {/* Left Panel: Packages */}
-                <div className="w-full md:w-1/3 border-r border-slate-100 flex flex-col bg-slate-50/30">
-                    <div className="p-4 border-b border-slate-100 bg-slate-50">
+                <div className="w-full md:w-1/3 border-r border-slate-100 dark:border-slate-800 flex flex-col bg-slate-50/30 dark:bg-slate-900/50">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/80">
                         <div className="flex items-center justify-between w-full">
-                            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <Database className="w-5 h-5 text-slate-400" />
-                                Packages
-                                <span className="text-sm font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full ml-1 whitespace-nowrap">
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                <Database className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                                {t('projectDetails.packages')}
+                                <span className="text-sm font-normal text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full ml-1 whitespace-nowrap">
                                     {packageSearchQuery
                                         ? `${Number(filteredPackages.length).toLocaleString()} / ${Number(hierarchy?.length || 0).toLocaleString()}`
                                         : Number(hierarchy?.length || 0).toLocaleString()
@@ -620,8 +621,8 @@ const ProjectDetails: React.FC = () => {
                                 </div>
                                 <input
                                     type="text"
-                                    className="block w-full pl-8 pr-2 py-1 border border-slate-200 rounded-lg text-xs placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white"
-                                    placeholder="Search packages..."
+                                    className="block w-full pl-8 pr-2 py-1 border border-slate-200 dark:border-slate-700 rounded-lg text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    placeholder={t('projectDetails.searchPackages')}
                                     value={packageSearchQuery}
                                     onChange={(e) => setPackageSearchQuery(e.target.value)}
                                     onClick={(e) => e.stopPropagation()}
@@ -634,22 +635,22 @@ const ProjectDetails: React.FC = () => {
                         <button
                             onClick={() => setSelectedPackage(ALL_PACKAGES)}
                             className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${selectedPackage === ALL_PACKAGES
-                                ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100'
-                                : 'text-slate-600 hover:bg-slate-100 border border-transparent'
+                                ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-500/20'
+                                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
                                 }`}
                         >
                             <Layers className={`w-4 h-4 ${selectedPackage === ALL_PACKAGES ? 'text-indigo-500' : 'text-slate-400'}`} />
                             <span className="font-medium truncate text-sm">{t('projectDetails.allClasses')}</span>
-                            <span className="ml-auto text-xs bg-slate-200/50 px-2 py-0.5 rounded-full text-slate-500">
+                            <span className="ml-auto text-xs bg-slate-200/50 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500 dark:text-slate-400">
                                 {hierarchy.reduce((acc, curr) => acc + curr.classes.length, 0)}
                             </span>
                         </button>
 
-                        <div className="my-2 border-t border-slate-100"></div>
+                        <div className="my-2 border-t border-slate-100 dark:border-slate-800"></div>
 
                         {filteredPackages.length === 0 ? (
-                            <div className="p-4 text-center text-slate-400 text-sm">
-                                {hierarchy.length === 0 ? "No packages found" : "No packages match your search"}
+                            <div className="p-4 text-center text-slate-400 dark:text-slate-500 text-sm">
+                                {hierarchy.length === 0 ? t('projectDetails.noClassesFound') : t('projectDetails.noClassesMatch')}
                             </div>
                         ) : (
                             filteredPackages.map((item) => (
@@ -657,13 +658,13 @@ const ProjectDetails: React.FC = () => {
                                     key={item.package}
                                     onClick={() => setSelectedPackage(item.package)}
                                     className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${selectedPackage === item.package
-                                        ? 'bg-indigo-50 text-indigo-700 shadow-sm border border-indigo-100'
-                                        : 'text-slate-600 hover:bg-slate-100 border border-transparent'
+                                        ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-500/20'
+                                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent'
                                         }`}
                                 >
                                     <FolderOpen className={`w-4 h-4 ${selectedPackage === item.package ? 'text-indigo-500' : 'text-slate-400'}`} />
                                     <span className="font-medium truncate text-sm">{item.package}</span>
-                                    <span className="ml-auto text-xs bg-slate-200/50 px-2 py-0.5 rounded-full text-slate-500">
+                                    <span className="ml-auto text-xs bg-slate-200/50 dark:bg-slate-800 px-2 py-0.5 rounded-full text-slate-500 dark:text-slate-400">
                                         {item.classes.length}
                                     </span>
                                 </button>
@@ -673,14 +674,14 @@ const ProjectDetails: React.FC = () => {
                 </div>
 
                 {/* Right Panel: Classes */}
-                <div className="flex-1 flex flex-col bg-white">
-                    <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <div className="flex-1 flex flex-col bg-white dark:bg-slate-900">
+                    <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/80">
                         <div className="flex items-center gap-4 flex-1">
-                            <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 whitespace-nowrap">
-                                <Layers className="w-5 h-5 text-slate-400" />
-                                Classes
-                                {selectedPackage && selectedPackage !== ALL_PACKAGES && <span className="text-slate-400 font-normal text-sm ml-2 hidden xl:inline">in {selectedPackage}</span>}
-                                {selectedPackage === ALL_PACKAGES && <span className="text-slate-400 font-normal text-sm ml-2 hidden xl:inline">({t('projectDetails.allClasses')})</span>}
+                            <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 whitespace-nowrap">
+                                <Layers className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                                {t('projectDetails.classes')}
+                                {selectedPackage && selectedPackage !== ALL_PACKAGES && <span className="text-slate-400 dark:text-slate-500 font-normal text-sm ml-2 hidden xl:inline">in {selectedPackage}</span>}
+                                {selectedPackage === ALL_PACKAGES && <span className="text-slate-400 dark:text-slate-500 font-normal text-sm ml-2 hidden xl:inline">({t('projectDetails.allClasses')})</span>}
                             </h2>
 
                             {/* Search Input */}
@@ -690,8 +691,8 @@ const ProjectDetails: React.FC = () => {
                                 </div>
                                 <input
                                     type="text"
-                                    className="block w-full pl-10 pr-3 py-1.5 border border-slate-200 rounded-lg text-sm placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white"
-                                    placeholder="Search classes (physical or logical name)..."
+                                    className="block w-full pl-10 pr-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    placeholder={t('projectDetails.searchClasses')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
@@ -699,21 +700,21 @@ const ProjectDetails: React.FC = () => {
                         </div>
 
                         {selectedPackage && !searchQuery && (
-                            <span className="text-xs font-medium px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-500 ml-4 whitespace-nowrap">
-                                {filteredClasses.length} items
+                            <span className="text-xs font-medium px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-500 dark:text-slate-400 ml-4 whitespace-nowrap">
+                                {filteredClasses.length} {t('projectDetails.items')}
                             </span>
                         )}
                         {searchQuery && (
-                            <span className="text-xs font-medium px-2.5 py-1 bg-white border border-slate-200 rounded-md text-slate-500 ml-4 whitespace-nowrap">
-                                {filteredClasses.length} results found
+                            <span className="text-xs font-medium px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-500 dark:text-slate-400 ml-4 whitespace-nowrap">
+                                {filteredClasses.length} {t('projectDetails.resultsFound')}
                             </span>
                         )}
                     </div>
                     <div className="flex-1 overflow-hidden p-0">
                         {!selectedPackage && !searchQuery ? (
-                            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+                            <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
                                 <FolderOpen className="w-12 h-12 mb-2 opacity-20" />
-                                <p>Select a package to view its classes or search globally</p>
+                                <p>{t('projectDetails.selectPackageHint')}</p>
                             </div>
                         ) : (
                             <VirtualizedTable
@@ -725,8 +726,8 @@ const ProjectDetails: React.FC = () => {
                                 hoverable
                                 emptyMessage={
                                     filteredClasses.length === 0
-                                        ? "No classes found"
-                                        : "No classes match your search"
+                                        ? t('projectDetails.noClassesFound')
+                                        : t('projectDetails.noClassesMatch')
                                 }
                                 onRowClick={(cls) =>
                                     navigate(`/projects/${encodeURIComponent(projectName || '')}/classes/${encodeURIComponent(cls.name)}?package=${encodeURIComponent(cls.packageName || selectedPackage || '')}`)

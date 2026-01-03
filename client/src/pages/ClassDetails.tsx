@@ -5,9 +5,10 @@ import { useTranslation } from 'react-i18next';
 import ReportViewerModal from '../components/ReportViewerModal';
 import VirtualizedTable, { Column } from '../components/VirtualizedTable';
 import {
-    ArrowLeft, Code2, FileCode, Braces,
+    Code2, FileCode, Braces,
     AlignLeft, Cpu, Database, GitBranch, Info,
-    Copy, Check, MousePointerClick, BookOpen, FileText, Activity, Workflow
+    Copy, Check, MousePointerClick, FileText, Activity, Workflow,
+    ChevronDown
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -111,15 +112,15 @@ const ClassDetails: React.FC = () => {
     }, []);
 
     const handleGenerateReport = async (type: 'spec' | 'sequence' | 'impact') => {
-        setReportModal({ isOpen: true, title: 'Generating Report...', content: '', isLoading: true });
+        setReportModal({ isOpen: true, title: t('common.loading'), content: '', isLoading: true });
         setShowReportMenu(false);
         try {
             const response = await axios.get(`/projects/${projectName}/classes/${className}/reports/${type}`);
             let title = '';
             switch (type) {
-                case 'spec': title = 'Class Specification'; break;
-                case 'sequence': title = 'Sequence Diagram'; break;
-                case 'impact': title = 'Impact Analysis'; break;
+                case 'spec': title = t('classDetails.classSpec'); break;
+                case 'sequence': title = t('classDetails.sequenceDiagram'); break;
+                case 'impact': title = t('classDetails.impactAnalysis'); break;
             }
             setReportModal({
                 isOpen: true,
@@ -131,8 +132,8 @@ const ClassDetails: React.FC = () => {
             console.error("Failed to generate report", error);
             setReportModal({
                 isOpen: true,
-                title: 'Error',
-                content: '# Error\nFailed to generate report.',
+                title: t('common.error'),
+                content: `# ${t('common.error')}\n${t('common.errorReport')}`,
                 isLoading: false
             });
         }
@@ -153,43 +154,43 @@ const ClassDetails: React.FC = () => {
     const methodColumns = useMemo((): Column<Method>[] => [
         {
             key: 'visibility',
-            header: 'Visibility',
+            header: t('classDetails.visibility'),
             width: '100px',
             render: (method) => (
-                <span className="text-slate-500 text-xs lowercase">{method.visibility || '-'}</span>
+                <span className="text-slate-500 dark:text-slate-400 text-xs lowercase">{method.visibility || '-'}</span>
             ),
         },
         {
             key: 'name',
-            header: 'Name',
+            header: t('classDetails.name'),
             width: '25%',
             render: (method) => (
-                <span className="font-medium text-slate-900 font-mono text-sm">{method.name}</span>
+                <span className="font-medium text-slate-900 dark:text-slate-200 font-mono text-sm">{method.name}</span>
             ),
         },
         {
             key: 'logicalName',
-            header: 'Logical Name',
+            header: t('classDetails.logicalName'),
             width: '25%',
             render: (method) => (
-                <span className="text-slate-600 font-mono text-xs">{method.logical_name || '-'}</span>
+                <span className="text-slate-600 dark:text-slate-400 font-mono text-xs">{method.logical_name || '-'}</span>
             ),
         },
         {
             key: 'returnType',
-            header: 'Return Type',
+            header: t('classDetails.returnType'),
             width: '20%',
             render: (method) => (
-                <span className="text-slate-600 font-mono text-xs">{method.return_type}</span>
+                <span className="text-slate-600 dark:text-slate-400 font-mono text-xs">{method.return_type}</span>
             ),
         },
         {
             key: 'complexity',
-            header: 'Complexity',
+            header: t('classDetails.complexity'),
             width: '120px',
             align: 'right',
             render: (method) => (
-                <span className="text-slate-600 text-sm">{method.cognitive_complexity || '-'}</span>
+                <span className="text-slate-600 dark:text-slate-400 text-sm">{method.cognitive_complexity || '-'}</span>
             ),
         },
         {
@@ -198,7 +199,7 @@ const ClassDetails: React.FC = () => {
             width: '100px',
             align: 'right',
             render: (method) => (
-                <span className="text-slate-600 text-sm">{method.PLOC || '-'}</span>
+                <span className="text-slate-600 dark:text-slate-400 text-sm">{method.PLOC || '-'}</span>
             ),
         },
     ], []);
@@ -207,26 +208,26 @@ const ClassDetails: React.FC = () => {
     const fieldColumns = useMemo((): Column<Field>[] => [
         {
             key: 'name',
-            header: 'Name',
+            header: t('classDetails.name'),
             width: '30%',
             render: (field) => (
-                <span className="font-medium text-slate-900 font-mono text-sm">{field.name}</span>
+                <span className="font-medium text-slate-900 dark:text-slate-200 font-mono text-sm">{field.name}</span>
             ),
         },
         {
             key: 'type',
-            header: 'Type',
+            header: t('classDetails.type'),
             width: '30%',
             render: (field) => (
-                <span className="text-indigo-600 font-mono text-xs">{field.type}</span>
+                <span className="text-indigo-600 dark:text-indigo-400 font-mono text-xs">{field.type}</span>
             ),
         },
         {
             key: 'initialValue',
-            header: 'Initial Value',
+            header: t('classDetails.initialValue'),
             width: '40%',
             render: (field) => (
-                <span className="text-slate-500 font-mono text-xs truncate" title={field.initial_value || '-'}>
+                <span className="text-slate-500 dark:text-slate-400 font-mono text-xs truncate" title={field.initial_value || '-'}>
                     {field.initial_value || '-'}
                 </span>
             ),
@@ -249,7 +250,7 @@ const ClassDetails: React.FC = () => {
 
     if (isLoading) {
         return (
-            <div className="flex items-center justify-center h-screen bg-slate-50">
+            <div className="flex items-center justify-center h-screen bg-white dark:bg-[#121212]">
                 <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
             </div>
         );
@@ -257,14 +258,14 @@ const ClassDetails: React.FC = () => {
 
     if (error || !classData) {
         return (
-            <div className="p-8 text-center text-slate-500">
-                <h2 className="text-xl font-bold mb-2">Class not found</h2>
-                <p className="mb-4">{error ? (error instanceof Error ? error.message : String(error)) : "Could not retrieve class details."}</p>
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400 bg-white dark:bg-[#121212] h-full">
+                <h2 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">{t('common.error')}</h2>
+                <p className="mb-4">{error ? (error instanceof Error ? error.message : String(error)) : t('common.noResults')}</p>
                 <button
                     onClick={() => navigate(-1)}
                     className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                 >
-                    Go Back
+                    {t('common.back')}
                 </button>
             </div>
         );
@@ -276,53 +277,10 @@ const ClassDetails: React.FC = () => {
         <div className="space-y-6 animate-in fade-in duration-500 pb-12">
             {/* Header */}
             <div>
-                <div className="flex items-center justify-between mb-2">
-                    <button
-                        onClick={() => navigate(`/projects/${projectName}`)}
-                        className="flex items-center text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors group"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform" />
-                        Back to Project
-                    </button>
-
-                    <div className="relative" ref={reportMenuRef}>
-                        <button
-                            onClick={() => setShowReportMenu(!showReportMenu)}
-                            className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
-                        >
-                            <BookOpen className="w-4 h-4" />
-                            Reports
-                        </button>
-
-                        {showReportMenu && (
-                            <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-100 z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
-                                <button
-                                    onClick={() => handleGenerateReport('spec')}
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2"
-                                >
-                                    <FileText className="w-4 h-4" />
-                                    Class Specification
-                                </button>
-                                <button
-                                    onClick={() => handleGenerateReport('sequence')}
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2"
-                                >
-                                    <Activity className="w-4 h-4" />
-                                    Sequence Diagram
-                                </button>
-                                <button
-                                    onClick={() => handleGenerateReport('impact')}
-                                    className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2"
-                                >
-                                    <Workflow className="w-4 h-4" />
-                                    Impact Analysis
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
                 <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-xl ${classData.type === 'interface' ? 'bg-amber-50 text-amber-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                    <div className={`p-3 rounded-xl ${classData.type === 'interface'
+                        ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                        : 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'}`}>
                         {classData.type === 'interface' ? <FileCode className="w-8 h-8" /> : <Code2 className="w-8 h-8" />}
                     </div>
                     <div className="flex-1">
@@ -333,77 +291,117 @@ const ClassDetails: React.FC = () => {
                                     {classData.name}
                                     {classData.extension ? (classData.extension.startsWith('.') ? classData.extension : `.${classData.extension}`) : ''}
                                 </h1>
-                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${classData.type === 'interface' ? 'bg-amber-100 text-amber-900 border-amber-200' : 'bg-indigo-100 text-indigo-900 border-indigo-200'}`}>
+                                <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${classData.type === 'interface' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800'}`}>
                                     {classData.type}
                                 </span>
                                 {classData.sub_type && (
-                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200 uppercase">
+                                    <span className="px-2 py-0.5 rounded text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 uppercase">
                                         {classData.sub_type}
                                     </span>
                                 )}
                             </div>
+
+                            {/* Reports Menu */}
+                            <div className="relative" ref={reportMenuRef}>
+                                <button
+                                    onClick={() => setShowReportMenu(!showReportMenu)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+                                >
+                                    <FileText className="w-5 h-5" />
+                                    {t('classDetails.reports')}
+                                    <ChevronDown className={`w-4 h-4 transition-transform ${showReportMenu ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {showReportMenu && (
+                                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-lg border border-slate-100 dark:border-slate-800 z-20 py-2 animate-in fade-in zoom-in-95 duration-200">
+                                        <button
+                                            onClick={() => handleGenerateReport('spec')}
+                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                            {t('classDetails.classSpec')}
+                                        </button>
+                                        <button
+                                            onClick={() => handleGenerateReport('sequence')}
+                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2"
+                                        >
+                                            <Activity className="w-4 h-4" />
+                                            {t('classDetails.sequenceDiagram')}
+                                        </button>
+                                        <button
+                                            onClick={() => handleGenerateReport('impact')}
+                                            className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2"
+                                        >
+                                            <Workflow className="w-4 h-4" />
+                                            {t('classDetails.impactAnalysis')}
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        {/* Logical Name and Last Updated */}
+                        <div className="mt-1">
+                            {classData.logical_name && (
+                                <p className="text-slate-600 dark:text-slate-300 text-sm mb-1">{classData.logical_name}</p>
+                            )}
                             {classData.updated_at && (
-                                <span className="text-sm text-slate-400 font-mono">
-                                    Last Updated: {new Date(classData.updated_at).toLocaleString()}
-                                </span>
+                                <p className="text-xs text-slate-400 dark:text-slate-500 font-mono">
+                                    {t('classDetails.lastUpdated')}: {new Date(classData.updated_at).toLocaleString()}
+                                </p>
                             )}
                         </div>
-                        {/* Logical Name */}
-                        {classData.logical_name && (
-                            <p className="text-slate-600 dark:text-slate-300 text-sm mt-1">{classData.logical_name}</p>
-                        )}
                     </div>
                 </div>
             </div>
 
             {/* Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 mb-2 text-slate-500 text-sm font-medium">
-                        <AlignLeft className="w-4 h-4" /> Lines of Code
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                        <AlignLeft className="w-4 h-4" /> {t('classDetails.linesOfCode')}
                     </div>
                     <div className="grid grid-cols-2 gap-x-4 gap-y-2">
                         <div className="flex justify-between items-baseline">
-                            <span className="text-xs text-slate-500">Physical (PLOC)</span>
-                            <span className="text-sm font-bold text-slate-900">{classData.PLOC?.toLocaleString() || '-'}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-500">{t('classDetails.physical')}</span>
+                            <span className="text-sm font-bold text-slate-900 dark:text-white">{classData.PLOC?.toLocaleString() || '-'}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-xs text-slate-500">Logical (LLOC)</span>
-                            <span className="text-sm font-bold text-slate-900">{classData.LLOC?.toLocaleString() || '-'}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-500">{t('classDetails.logical')}</span>
+                            <span className="text-sm font-bold text-slate-900 dark:text-white">{classData.LLOC?.toLocaleString() || '-'}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-xs text-slate-500">Comment (CLOC)</span>
-                            <span className="text-sm font-bold text-slate-900">{classData.CLOC?.toLocaleString() || '-'}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-500">{t('classDetails.comment')}</span>
+                            <span className="text-sm font-bold text-slate-900 dark:text-white">{classData.CLOC?.toLocaleString() || '-'}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
-                            <span className="text-xs text-slate-500">Blank Lines</span>
-                            <span className="text-sm font-bold text-slate-900">{Math.max(0, blankLines).toLocaleString()}</span>
+                            <span className="text-xs text-slate-500 dark:text-slate-500">{t('classDetails.blankLines')}</span>
+                            <span className="text-sm font-bold text-slate-900 dark:text-white">{Math.max(0, blankLines).toLocaleString()}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Complexity Card with Tooltip */}
-                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm relative group overflow-visible">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm relative group overflow-visible">
                     <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2 text-slate-500 text-sm font-medium">
-                            <Cpu className="w-4 h-4" /> Complexity
+                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                            <Cpu className="w-4 h-4" /> {t('classDetails.complexity')}
                         </div>
                         <div className="relative">
-                            <Info className="w-4 h-4 text-slate-300 cursor-help hover:text-indigo-500 transition-colors" />
+                            <Info className="w-4 h-4 text-slate-300 dark:text-slate-600 cursor-help hover:text-indigo-500 transition-colors" />
                             {/* Tooltip Popup */}
-                            <div className="absolute top-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-[-10px] w-80 p-5 bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-200 z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
-                                <div className="absolute -top-2 right-1.5 w-4 h-4 bg-white border-t border-l border-slate-200 rotate-45"></div>
-                                <h5 className="font-bold text-slate-900 mb-2 text-sm flex items-center gap-2">
-                                    코드 복잡도 (Weighted Sum)
+                            <div className="absolute top-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-[-10px] w-80 p-5 bg-white dark:bg-slate-800 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-slate-700 z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
+                                <div className="absolute -top-2 right-1.5 w-4 h-4 bg-white dark:bg-slate-800 border-t border-l border-slate-200 dark:border-slate-700 rotate-45"></div>
+                                <h5 className="font-bold text-slate-900 dark:text-white mb-2 text-sm flex items-center gap-2">
+                                    {t('classDetails.complexityTooltipTitle')}
                                 </h5>
-                                <p className="text-xs text-slate-600 leading-relaxed mb-3">
-                                    코드 구성 요소에 <strong>가중치</strong>를 부여하여 산출한 유지보수 난이도 지표입니다.
+                                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
+                                    {t('classDetails.complexityTooltipDescription')}
                                 </p>
 
                                 <div className="space-y-3">
-                                    <div className="bg-slate-50 p-3 rounded border border-slate-100">
-                                        <div className="text-xs font-semibold text-slate-700 mb-2">산정 기준</div>
-                                        <ul className="text-xs text-slate-500 space-y-1 font-mono">
+                                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border border-slate-100 dark:border-slate-800">
+                                        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('classDetails.complexityTooltipBasis')}</div>
+                                        <ul className="text-xs text-slate-500 dark:text-slate-500 space-y-1 font-mono">
                                             <li className="flex justify-between"><span>Lines</span> <span>× 1</span></li>
                                             <li className="flex justify-between"><span>Fields</span> <span>× 2</span></li>
                                             <li className="flex justify-between"><span>Methods</span> <span>× 5</span></li>
@@ -413,16 +411,16 @@ const ClassDetails: React.FC = () => {
                                     </div>
 
                                     <div>
-                                        <div className="text-xs font-semibold text-slate-700 mb-1">참고 기준</div>
-                                        <div className="grid grid-cols-[60px_1fr] gap-2 text-xs border-t border-slate-100 pt-2">
+                                        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t('classDetails.complexityTooltipReference')}</div>
+                                        <div className="grid grid-cols-[60px_1fr] gap-2 text-xs border-t border-slate-100 dark:border-slate-800 pt-2">
                                             <div className="font-mono text-emerald-600 font-bold">~ 2k</div>
-                                            <div className="text-slate-600">Normal (일반 클래스)</div>
+                                            <div className="text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipNormal')}</div>
 
                                             <div className="font-mono text-amber-600 font-bold">~ 5k</div>
-                                            <div className="text-slate-600">Large (대형 서비스)</div>
+                                            <div className="text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipLarge')}</div>
 
                                             <div className="font-mono text-red-600 font-bold">5k +</div>
-                                            <div className="text-slate-600">High (리팩토링 필요)</div>
+                                            <div className="text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipHigh')}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -457,20 +455,20 @@ const ClassDetails: React.FC = () => {
                     })()}
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 mb-2 text-slate-500 text-sm font-medium">
-                        <Braces className="w-4 h-4" /> Methods
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                        <Braces className="w-4 h-4" /> {t('classDetails.methods')}
                     </div>
                     <div className="flex justify-center">
-                        <span className="text-2xl font-bold text-slate-900">{classData.methods.length}</span>
+                        <span className="text-2xl font-bold text-slate-900 dark:text-white">{classData.methods.length}</span>
                     </div>
                 </div>
-                <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-2 mb-2 text-slate-500 text-sm font-medium">
-                        <Database className="w-4 h-4" /> Fields
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                    <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
+                        <Database className="w-4 h-4" /> {t('classDetails.fields')}
                     </div>
                     <div className="flex justify-center">
-                        <span className="text-2xl font-bold text-slate-900">{classData.fields.length}</span>
+                        <span className="text-2xl font-bold text-slate-900 dark:text-white">{classData.fields.length}</span>
                     </div>
                 </div>
             </div>
@@ -478,21 +476,21 @@ const ClassDetails: React.FC = () => {
             {/* Inheritance Info */}
             {
                 (classData.superclass || (classData.interfaces && classData.interfaces.length > 0)) && (
-                    <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex flex-col md:flex-row gap-6 text-sm">
+                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col md:flex-row gap-6 text-sm">
                         {classData.superclass && (
                             <div className="flex items-center gap-2">
-                                <span className="text-slate-500 font-medium">Extends:</span>
-                                <span className="font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded flex items-center gap-1">
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">{t('classDetails.extends')}:</span>
+                                <span className="font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-0.5 rounded flex items-center gap-1">
                                     <GitBranch className="w-3 h-3" /> {classData.superclass}
                                 </span>
                             </div>
                         )}
                         {classData.interfaces && classData.interfaces.length > 0 && (
                             <div className="flex items-center gap-2">
-                                <span className="text-slate-500 font-medium">Implements:</span>
+                                <span className="text-slate-500 dark:text-slate-400 font-medium">{t('classDetails.implements')}:</span>
                                 <div className="flex flex-wrap gap-2">
                                     {classData.interfaces.map((iface, idx) => (
-                                        <span key={idx} className="font-mono text-amber-700 bg-amber-50 px-2 py-0.5 rounded">
+                                        <span key={idx} className="font-mono text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded">
                                             {iface}
                                         </span>
                                     ))}
@@ -504,19 +502,24 @@ const ClassDetails: React.FC = () => {
             }
 
             {/* Main Content Tabs */}
-            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden min-h-[500px]">
-                <div className="flex border-b border-slate-100 overflow-x-auto justify-between items-center">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden min-h-[500px]">
+                <div className="flex border-b border-slate-100 dark:border-slate-800 overflow-x-auto justify-between items-center bg-white dark:bg-slate-900">
                     <div className="flex">
-                        {['info', 'source', 'methods', 'fields'].map((tab) => (
+                        {[
+                            { id: 'info', label: t('classDetails.info') },
+                            { id: 'source', label: t('classDetails.source') },
+                            { id: 'methods', label: t('classDetails.methodsTab') },
+                            { id: 'fields', label: t('classDetails.fieldsTab') }
+                        ].map((tab) => (
                             <button
-                                key={tab}
-                                onClick={() => setActiveTab(tab as any)}
-                                className={`px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab
-                                    ? 'border-indigo-600 text-indigo-700 bg-indigo-50/10'
-                                    : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
+                                    ? 'border-indigo-600 text-indigo-700 dark:text-indigo-400 bg-indigo-50/10'
+                                    : 'border-transparent text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
                             >
-                                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                                {tab.label}
                             </button>
                         ))}
                     </div>
@@ -525,7 +528,7 @@ const ClassDetails: React.FC = () => {
                         <div className="flex gap-2 mr-4">
                             <button
                                 onClick={handleSelectAll}
-                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors"
+                                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                             >
                                 <MousePointerClick className="w-3.5 h-3.5" />
                                 {t('common.selectAll')}
@@ -533,8 +536,8 @@ const ClassDetails: React.FC = () => {
                             <button
                                 onClick={handleCopySource}
                                 className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border rounded-lg transition-all ${isCopied
-                                    ? 'text-emerald-600 bg-emerald-50 border-emerald-200'
-                                    : 'text-slate-600 bg-white border-slate-200 hover:bg-slate-50 hover:text-indigo-600'
+                                    ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800'
+                                    : 'text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400'
                                     }`}
                             >
                                 {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -549,10 +552,10 @@ const ClassDetails: React.FC = () => {
                         <div className="space-y-6">
                             {classData.annotations && classData.annotations.length > 0 && (
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-3">Annotations</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">{t('classDetails.annotations')}</h3>
                                     <div className="flex flex-wrap gap-2">
                                         {classData.annotations.map((anno, idx) => (
-                                            <span key={idx} className="bg-purple-50 text-purple-700 px-3 py-1 rounded-full text-sm font-mono border border-purple-100">
+                                            <span key={idx} className="bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 px-3 py-1 rounded-full text-sm font-mono border border-purple-100 dark:border-purple-800">
                                                 @{anno}
                                             </span>
                                         ))}
@@ -562,18 +565,18 @@ const ClassDetails: React.FC = () => {
 
                             {(classData.description || classData.ai_description) && (
                                 <div>
-                                    <h3 className="text-lg font-bold text-slate-900 mb-3">Overview</h3>
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3">{t('classDetails.overview')}</h3>
                                     <div className="space-y-4">
                                         {classData.description && (
-                                            <div className="markdown-content bg-white dark:bg-[#1e1e1e] p-4 rounded-lg border border-slate-100 dark:border-slate-800">
+                                            <div className="markdown-content bg-white dark:bg-[#1e1e1e] p-4 rounded-lg border border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                                                 <Markdown remarkPlugins={[remarkGfm]}>{classData.description}</Markdown>
                                             </div>
                                         )}
-                                        <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto mt-4">
+                                        <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto mt-4 text-slate-700 dark:text-slate-300">
                                             {classData.ai_description ? (
                                                 <Markdown remarkPlugins={[remarkGfm]}>{classData.ai_description}</Markdown>
                                             ) : (
-                                                <p className="text-slate-400 italic text-sm">AI description will appear here...</p>
+                                                <p className="text-slate-400 dark:text-slate-500 italic text-sm">{t('classDetails.aiDescriptionPlaceholder')}</p>
                                             )}
                                         </div>
                                     </div>
@@ -595,7 +598,7 @@ const ClassDetails: React.FC = () => {
                                     </div>
                                     <div className="flex-1 min-h-full min-w-0 bg-white dark:bg-[#1e1e1e] transition-colors duration-300">
                                         <pre ref={codeRef} className="m-0 p-4 leading-6 whitespace-pre text-slate-800 dark:text-[#d4d4d4] font-mono font-medium">
-                                            {classData.source || '// No source code available'}
+                                            {classData.source || `// ${t('classDetails.noSource')}`}
                                         </pre>
                                     </div>
                                 </div>
@@ -605,7 +608,7 @@ const ClassDetails: React.FC = () => {
 
                     {activeTab === 'methods' && (
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 mb-4 px-1">Methods ({classData.methods.length})</h3>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 px-1">{t('classDetails.methodsTab')} ({classData.methods.length})</h3>
                             <VirtualizedTable
                                 data={classData.methods}
                                 columns={methodColumns}
@@ -613,7 +616,7 @@ const ClassDetails: React.FC = () => {
                                 rowHeight={50}
                                 headerHeight={45}
                                 hoverable
-                                emptyMessage="No methods found."
+                                emptyMessage={t('common.noData')}
                                 onRowClick={(method) => navigate(`/projects/${projectName}/classes/${className}/methods/${method.name}`)}
                             />
                         </div>
@@ -621,7 +624,7 @@ const ClassDetails: React.FC = () => {
 
                     {activeTab === 'fields' && (
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 mb-4 px-1">Fields ({classData.fields.length})</h3>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 px-1">{t('classDetails.fieldsTab')} ({classData.fields.length})</h3>
                             <VirtualizedTable
                                 data={classData.fields}
                                 columns={fieldColumns}
@@ -629,7 +632,7 @@ const ClassDetails: React.FC = () => {
                                 rowHeight={50}
                                 headerHeight={45}
                                 hoverable
-                                emptyMessage="No fields found."
+                                emptyMessage={t('common.noData')}
                             />
                         </div>
                     )}

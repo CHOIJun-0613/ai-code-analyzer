@@ -151,9 +151,9 @@ function VirtualizedTable<T>({
         <div
           style={style}
           className={`
-            flex border-b border-slate-100
-            ${striped && index % 2 === 1 ? 'bg-slate-50' : 'bg-white'}
-            ${hoverable ? 'hover:bg-indigo-50/30 transition-colors' : ''}
+            flex border-b border-slate-100 dark:border-slate-800
+            ${striped && index % 2 === 1 ? 'bg-slate-50 dark:bg-slate-800/50' : 'bg-white dark:bg-slate-900'}
+            ${hoverable ? 'hover:bg-indigo-50/30 dark:hover:bg-indigo-500/10 transition-colors' : ''}
             ${isClickable ? 'cursor-pointer' : ''}
             ${customRowClass}
           `}
@@ -196,10 +196,10 @@ function VirtualizedTable<T>({
   // 로딩 상태
   if (loading) {
     return (
-      <div className="flex items-center justify-center bg-white rounded-lg border border-slate-200" style={{ height }}>
+      <div className="flex items-center justify-center bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800" style={{ height }}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-          <p className="text-slate-500">Loading...</p>
+          <p className="text-slate-500 dark:text-slate-400">Loading...</p>
         </div>
       </div>
     );
@@ -208,9 +208,9 @@ function VirtualizedTable<T>({
   // 빈 데이터
   if (data.length === 0) {
     return (
-      <div className="flex flex-col bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div className="flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
         {/* 헤더 */}
-        <div className="flex bg-slate-50 border-b border-slate-200" style={{ height: headerHeight }}>
+        <div className="flex bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700" style={{ height: headerHeight }}>
           {columns.map((column) => {
             const alignClass =
               column.align === 'center'
@@ -223,7 +223,7 @@ function VirtualizedTable<T>({
               <div
                 key={column.key}
                 className={`
-                  flex items-center px-4 font-semibold text-slate-700 text-sm
+                  flex items-center px-4 font-semibold text-slate-700 dark:text-slate-300 text-sm
                   ${column.width ? '' : 'flex-1'}
                   ${alignClass}
                 `}
@@ -237,16 +237,16 @@ function VirtualizedTable<T>({
 
         {/* 빈 메시지 */}
         <div className="flex items-center justify-center py-12" style={{ height: height - headerHeight }}>
-          <p className="text-slate-400 text-sm">{emptyMessage}</p>
+          <p className="text-slate-400 dark:text-slate-500 text-sm">{emptyMessage}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col bg-white rounded-lg border border-slate-200 overflow-hidden">
+    <div className="flex flex-col bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
       {/* 헤더 */}
-      <div className="flex bg-slate-50 border-b border-slate-200" style={{ height: headerHeight }}>
+      <div className="flex bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700" style={{ height: headerHeight }}>
         {columns.map((column) => {
           const alignClass =
             column.align === 'center'
@@ -259,7 +259,7 @@ function VirtualizedTable<T>({
             <div
               key={column.key}
               className={`
-                flex items-center px-4 font-semibold text-slate-700 text-sm relative
+                flex items-center px-4 font-semibold text-slate-700 dark:text-slate-300 text-sm relative
                 ${(columnWidths[column.key] || column.width) ? '' : 'flex-1'}
                 ${alignClass}
               `}

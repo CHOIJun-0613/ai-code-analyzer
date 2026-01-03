@@ -28,6 +28,16 @@ except Exception as e:
     print(f"Warning: 규칙 매니저 초기화 실패: {e}", file=sys.stderr)
 
 
+
+# 애플리케이션 시작 시 AI 프롬프트 초기화
+try:
+    from csa.aiwork.prompt import initialize_prompts
+    initialize_prompts()
+except Exception as e:
+    import sys
+    print(f"Warning: AI 프롬프트 초기화 실패: {e}", file=sys.stderr)
+
+
 @click.group()
 @click.pass_context
 def cli(ctx):

@@ -33,6 +33,7 @@ const UserManagement = () => {
     const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [deleteUserConfirm, setDeleteUserConfirm] = useState<User | null>(null);
+    const [editingUser, setEditingUser] = useState<User | null>(null);
 
     // React Hook Form for Create User
     const createForm = useForm<CreateUserFormData>({
@@ -86,6 +87,7 @@ const UserManagement = () => {
     const handleCreateUser = () => {
         setIsEditing(false);
         setEditingUserId('');
+        setEditingUser(null);
         createForm.reset({
             username: '',
             name: '',
@@ -101,6 +103,7 @@ const UserManagement = () => {
     const handleEditUser = (user: User) => {
         setIsEditing(true);
         setEditingUserId(user.id);
+        setEditingUser(user);
         updateForm.reset({
             name: user.name || '',
             email: user.email,
@@ -367,25 +370,27 @@ const UserManagement = () => {
     };
 
     return (
-        <div className="min-h-screen bg-slate-50 p-8">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 p-8">
             <div className="max-w-7xl mx-auto">
                 <div className="flex justify-between items-start mb-8">
-                    <div>
-                        <div className="flex items-center gap-3 mb-1">
-                            <div className="p-2 bg-indigo-600 rounded-lg shadow-lg shadow-indigo-200">
-                                <UserIcon className="w-6 h-6 text-white" />
-                            </div>
-                            <h1 className="text-2xl font-bold text-slate-800">{t('userManagement.title')}</h1>
-                            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 text-xs font-semibold border border-slate-200">
-                                {users.length}
-                            </span>
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
+                            <UserIcon className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
                         </div>
-                        <p className="text-slate-500 text-xs">{t('userManagement.subtitle')}</p>
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-2xl font-bold text-slate-800 dark:text-white">{t('userManagement.title')}</h1>
+                                <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700">
+                                    {users.length}
+                                </span>
+                            </div>
+                            <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">{t('userManagement.subtitle')}</p>
+                        </div>
                     </div>
                     <div className="flex gap-3">
                         <button
                             onClick={handleDownloadTemplate}
-                            className="flex items-center gap-2 px-4 py-2 bg-white text-indigo-600 rounded-xl hover:bg-slate-50 border border-slate-200 transition-all font-medium text-xs shadow-sm hover:shadow"
+                            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all font-medium text-xs shadow-sm hover:shadow"
                         >
                             <Download className="w-4 h-4" />
                             {t('userManagement.downloadTemplate')}
@@ -401,7 +406,7 @@ const UserManagement = () => {
                             />
                             <label
                                 htmlFor="excel-upload"
-                                className={`flex items-center gap-2 px-4 py-2 bg-white text-emerald-600 rounded-xl hover:bg-slate-50 border border-slate-200 transition-all font-medium text-xs shadow-sm cursor-pointer hover:shadow ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                className={`flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-all font-medium text-xs shadow-sm cursor-pointer hover:shadow ${isUploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                             >
                                 <FileSpreadsheet className="w-4 h-4" />
                                 {isUploading ? t('userManagement.processing') : t('userManagement.excelBatchRegistration')}
@@ -409,7 +414,7 @@ const UserManagement = () => {
                         </div>
                         <button
                             onClick={handleCreateUser}
-                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all hover:-translate-y-0.5 font-medium text-xs"
+                            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-lg shadow-indigo-200 dark:shadow-none transition-all hover:-translate-y-0.5 font-medium text-xs"
                         >
                             <Plus className="w-4 h-4" />
                             {t('userManagement.addUser')}
@@ -417,15 +422,15 @@ const UserManagement = () => {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-visible">
                     {/* Filters */}
-                    <div className="p-5 border-b border-slate-100 flex gap-4">
+                    <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex gap-4">
                         <div className="relative flex-1 max-w-md">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                             <input
                                 type="text"
                                 placeholder={t('userManagement.searchPlaceholder')}
-                                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-xs text-slate-600 placeholder:text-slate-400"
+                                className="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-xs"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
@@ -436,20 +441,20 @@ const UserManagement = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('username')}>
+                                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-700 text-xs uppercase text-slate-500 dark:text-slate-400 font-semibold tracking-wider">
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('username')}>
                                         <div className="flex items-center">
                                             {t('userManagement.table.userId')}
                                             {getSortIcon('username')}
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('name')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('name')}>
                                         <div className="flex items-center">
                                             {t('userManagement.table.userName')}
                                             {getSortIcon('name')}
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('email')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('email')}>
                                         <div className="flex items-center">
                                             {t('userManagement.table.email')}
                                             {getSortIcon('email')}
@@ -458,13 +463,13 @@ const UserManagement = () => {
                                     <th className="px-6 py-4">
                                         {t('userManagement.table.groups')}
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('updated_at')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('updated_at')}>
                                         <div className="flex items-center">
                                             {t('userManagement.table.lastUpdated')}
                                             {getSortIcon('updated_at')}
                                         </div>
                                     </th>
-                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 transition-colors" onClick={() => handleSort('created_at')}>
+                                    <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors" onClick={() => handleSort('created_at')}>
                                         <div className="flex items-center">
                                             {t('userManagement.table.createdDate')}
                                             {getSortIcon('created_at')}
@@ -475,25 +480,27 @@ const UserManagement = () => {
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100">
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                                 {sortedUsers.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="px-6 py-12 text-center text-slate-500">
+                                        <td colSpan={7} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">
                                             {t('common.noData')}
                                         </td>
                                     </tr>
                                 ) : (
                                     sortedUsers.map((user) => (
-                                        <tr key={user.id} className="hover:bg-slate-50/80 transition-colors group">
-                                            <td className="px-6 py-4 text-sm font-medium text-slate-900">
-                                                {user.username}
+                                        <tr key={user.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group">
+                                            <td className="px-6 py-4 text-sm font-medium text-slate-900 dark:text-slate-200 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400 group/cell" onClick={() => handleEditUser(user)}>
+                                                <div className="flex items-center gap-1">
+                                                    {user.username}
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-slate-600">
+                                            <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400" onClick={() => handleEditUser(user)}>
                                                 {user.name || '-'}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-slate-600">
+                                            <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400" onClick={() => handleEditUser(user)}>
                                                 <div className="flex items-center gap-2">
-                                                    <Mail className="w-3.5 h-3.5 text-slate-400" />
+                                                    <Mail className="w-3.5 h-3.5 text-slate-400 group-hover:text-indigo-500" />
                                                     {user.email}
                                                 </div>
                                             </td>
@@ -502,7 +509,7 @@ const UserManagement = () => {
                                                     {user.groups.length > 0 ? (
                                                         <>
                                                             {user.groups.slice(0, 2).map(g => (
-                                                                <span key={g.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                                                <span key={g.id} className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800">
                                                                     {g.name}
                                                                 </span>
                                                             ))}
@@ -515,10 +522,10 @@ const UserManagement = () => {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                                            <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
                                                 {user.updated_at ? new Date(user.updated_at).toLocaleDateString() : '-'}
                                             </td>
-                                            <td className="px-6 py-4 text-sm text-slate-500 whitespace-nowrap">
+                                            <td className="px-6 py-4 text-sm text-slate-500 dark:text-slate-400 whitespace-nowrap">
                                                 {user.created_at ? new Date(user.created_at).toLocaleDateString() : '-'}
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -528,23 +535,23 @@ const UserManagement = () => {
                                                             e.stopPropagation();
                                                             setActiveMenuId(activeMenuId === user.id ? null : user.id);
                                                         }}
-                                                        className="p-1.5 text-slate-400 hover:text-slate-600 transition-colors rounded hover:bg-slate-100"
+                                                        className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors rounded hover:bg-slate-100 dark:hover:bg-slate-800"
                                                     >
                                                         <MoreVertical className="w-4 h-4" />
                                                     </button>
 
                                                     {activeMenuId === user.id && (
-                                                        <div className="absolute right-0 top-full mt-1 w-36 bg-white border border-slate-100 rounded-lg shadow-xl z-20 py-1 origin-top-right animate-in fade-in zoom-in duration-100">
+                                                        <div className="absolute right-0 top-full mt-1 w-36 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-lg shadow-xl z-20 py-1 origin-top-right animate-in fade-in zoom-in duration-100">
                                                             <button
                                                                 onClick={() => handleEditUser(user)}
-                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                                                                className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 flex items-center gap-2"
                                                             >
                                                                 <Edit className="w-3.5 h-3.5" />
                                                                 {t('common.edit')}
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDeleteUser(user)}
-                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                                className="w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 flex items-center gap-2"
                                                             >
                                                                 <Trash2 className="w-3.5 h-3.5" />
                                                                 {t('common.delete')}
@@ -564,14 +571,14 @@ const UserManagement = () => {
                 {/* Create/Edit User Modal */}
                 {showModal && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 transition-opacity duration-300">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col">
-                            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 flex-shrink-0">
-                                <h2 className="text-xl font-bold text-slate-800">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200 max-h-[90vh] flex flex-col border border-slate-200 dark:border-slate-800">
+                            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/50 flex-shrink-0">
+                                <h2 className="text-xl font-bold text-slate-800 dark:text-white">
                                     {isEditing ? t('userManagement.editUserTitle') : t('userManagement.modalTitle')}
                                 </h2>
                                 <button
                                     onClick={() => setShowModal(false)}
-                                    className="text-slate-400 hover:text-slate-600 transition-colors"
+                                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                                 >
                                     <X className="w-5 h-5" />
                                 </button>
@@ -581,36 +588,45 @@ const UserManagement = () => {
                                 <form onSubmit={updateForm.handleSubmit(onUpdateSubmit)} className="flex flex-col flex-1 overflow-hidden">
                                     <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userName')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.userId')}</label>
+                                            <input
+                                                type="text"
+                                                value={editingUser?.username || ''}
+                                                readOnly
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 cursor-not-allowed outline-none font-medium"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.userName')}</label>
                                             <input
                                                 type="text"
                                                 {...updateForm.register('name')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                                 placeholder={t('userManagement.userName')}
                                             />
                                             <FormError message={updateForm.formState.errors.name?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.phoneNumber')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.phoneNumber')}</label>
                                             <input
                                                 type="tel"
                                                 {...updateForm.register('phone_number')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                                 placeholder={t('userManagement.phoneNumber')}
                                             />
                                             <FormError message={updateForm.formState.errors.phone_number?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.email')}</label>
                                             <input
                                                 type="email"
                                                 {...updateForm.register('email')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                             />
                                             <FormError message={updateForm.formState.errors.email?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
                                                 {t('userManagement.password')}
                                                 <span className="text-xs font-normal text-slate-400 ml-2">(Create new to change)</span>
                                             </label>
@@ -618,13 +634,17 @@ const UserManagement = () => {
                                                 <input
                                                     type={showPassword ? 'text' : 'password'}
                                                     {...updateForm.register('password')}
-                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                    className="w-full px-4 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                                     placeholder="••••••••"
                                                 />
                                                 <button
                                                     type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setShowPassword(!showPassword);
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 z-10 p-1"
                                                 >
                                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                 </button>
@@ -632,30 +652,30 @@ const UserManagement = () => {
                                             <FormError message={updateForm.formState.errors.password?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.assignGroups')}</label>
                                             <select
                                                 multiple
                                                 {...updateForm.register('group_ids')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none min-h-[120px]"
                                             >
                                                 {groups.map(group => (
                                                     <option key={group.id} value={group.id} className="py-1">{group.id}({group.name})</option>
                                                 ))}
                                             </select>
-                                            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1">
+                                                <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 font-mono text-[10px]">Ctrl</span>
                                                 or
-                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
+                                                <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 font-mono text-[10px]">Cmd</span>
                                                 {t('userManagement.selectMultiple')}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white flex-shrink-0">
+                                    <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-white dark:bg-slate-900 flex-shrink-0">
                                         <button
                                             type="button"
                                             onClick={() => setShowModal(false)}
-                                            className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                                            className="px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-white transition-colors"
                                         >
                                             {t('common.cancel')}
                                         </button>
@@ -679,13 +699,13 @@ const UserManagement = () => {
                                 <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="flex flex-col flex-1 overflow-hidden">
                                     <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userId')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.userId')}</label>
                                             <div className="flex gap-2">
                                                 <div className="flex-1">
                                                     <input
                                                         type="text"
                                                         {...createForm.register('username')}
-                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none text-slate-800"
+                                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all outline-none"
                                                         placeholder={t('userManagement.userId')}
                                                     />
                                                     <FormError message={createForm.formState.errors.username?.message} />
@@ -693,53 +713,57 @@ const UserManagement = () => {
                                                 <button
                                                     type="button"
                                                     onClick={handleCheckDuplicate}
-                                                    className="px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium text-sm whitespace-nowrap"
+                                                    className="px-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium text-sm whitespace-nowrap"
                                                 >
                                                     {t('userManagement.checkDuplicate')}
                                                 </button>
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.userName')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.userName')}</label>
                                             <input
                                                 type="text"
                                                 {...createForm.register('name')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                                 placeholder={t('userManagement.userName')}
                                             />
                                             <FormError message={createForm.formState.errors.name?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.phoneNumber')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.phoneNumber')}</label>
                                             <input
                                                 type="tel"
                                                 {...createForm.register('phone_number')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                                 placeholder={t('userManagement.phoneNumber')}
                                             />
                                             <FormError message={createForm.formState.errors.phone_number?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.email')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.email')}</label>
                                             <input
                                                 type="email"
                                                 {...createForm.register('email')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                             />
                                             <FormError message={createForm.formState.errors.email?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.password')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.password')}</label>
                                             <div className="relative">
                                                 <input
                                                     type={showPassword ? 'text' : 'password'}
                                                     {...createForm.register('password')}
-                                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800"
+                                                    className="w-full px-4 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                                 />
                                                 <button
                                                     type="button"
-                                                    onClick={() => setShowPassword(!showPassword)}
-                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setShowPassword(!showPassword);
+                                                    }}
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 z-10 p-1"
                                                 >
                                                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                                 </button>
@@ -747,30 +771,30 @@ const UserManagement = () => {
                                             <FormError message={createForm.formState.errors.password?.message} />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-semibold text-slate-700 mb-2">{t('userManagement.assignGroups')}</label>
+                                            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('userManagement.assignGroups')}</label>
                                             <select
                                                 multiple
                                                 {...createForm.register('group_ids')}
-                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none text-slate-800 min-h-[120px]"
+                                                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none min-h-[120px]"
                                             >
                                                 {groups.map(group => (
                                                     <option key={group.id} value={group.id} className="py-1">{group.id}({group.name})</option>
                                                 ))}
                                             </select>
-                                            <p className="text-xs text-slate-500 mt-2 flex items-center gap-1">
-                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Ctrl</span>
+                                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1">
+                                                <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 font-mono text-[10px]">Ctrl</span>
                                                 or
-                                                <span className="px-1.5 py-0.5 bg-slate-100 rounded border border-slate-200 font-mono text-[10px]">Cmd</span>
+                                                <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600 font-mono text-[10px]">Cmd</span>
                                                 {t('userManagement.selectMultiple')}
                                             </p>
                                         </div>
                                     </div>
 
-                                    <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-white flex-shrink-0">
+                                    <div className="p-6 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 bg-white dark:bg-slate-900 flex-shrink-0">
                                         <button
                                             type="button"
                                             onClick={() => setShowModal(false)}
-                                            className="px-5 py-2.5 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors"
+                                            className="px-5 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-800 dark:hover:text-white transition-colors"
                                         >
                                             {t('common.cancel')}
                                         </button>
@@ -798,11 +822,11 @@ const UserManagement = () => {
                 {/* Loading Overlay */}
                 {isUploading && (
                     <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex flex-col items-center justify-center z-[60] animate-in fade-in duration-200">
-                        <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-sm w-full mx-4">
-                            <div className="w-12 h-12 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl shadow-2xl flex flex-col items-center gap-4 max-w-sm w-full mx-4 border border-slate-200 dark:border-slate-800">
+                            <div className="w-12 h-12 border-4 border-indigo-100 dark:border-indigo-900 border-t-indigo-600 dark:border-t-indigo-500 rounded-full animate-spin"></div>
                             <div className="text-center">
-                                <h3 className="text-lg font-bold text-slate-900 mb-1">{t('userManagement.processing')}</h3>
-                                <p className="text-slate-500 text-sm">{t('userManagement.processingWait')}</p>
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">{t('userManagement.processing')}</h3>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm">{t('userManagement.processingWait')}</p>
                             </div>
                         </div>
                     </div>

@@ -22,6 +22,16 @@ async def logging_context_middleware(request: Request, call_next):
     response = await call_next(request)
     return response
 
+@app.on_event("startup")
+def startup_event():
+    # Ensure DB is initialized
+    from app.core.database import get_db
+    get_db()
+    
+    # Initialize AI Prompts at startup
+    from csa.aiwork.prompt import initialize_prompts
+    initialize_prompts()
+
 from app.api.v1.api import api_router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 

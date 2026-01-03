@@ -34,12 +34,12 @@ import { createAiAnalysisSchema, type AiAnalysisFormData } from '../schemas/aiAn
 import { FormError } from '../components/FormError';
 
 // Shared styling classes
-const cardClass = "bg-white p-6 rounded-2xl shadow-sm border border-slate-200 transition-all hover:shadow-md";
-const labelClass = "block text-sm font-semibold text-slate-700 mb-2 flex items-center gap-2";
-const inputClass = "w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all duration-200 text-sm";
-const radioClass = "w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 focus:ring-indigo-500";
+const cardClass = "bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 transition-all hover:shadow-md";
+const labelClass = "block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 flex items-center gap-2";
+const inputClass = "w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all duration-200 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500";
+const radioClass = "w-4 h-4 text-indigo-600 bg-slate-100 border-slate-300 dark:bg-slate-800 dark:border-slate-600 focus:ring-indigo-500";
 
-const sectionTitleClass = "text-lg font-bold text-slate-800 flex items-center gap-2 mb-4 border-b border-slate-100 pb-2";
+const sectionTitleClass = "text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2 mb-4 border-b border-slate-100 dark:border-slate-800 pb-2";
 
 interface Project {
     name: string;
@@ -374,12 +374,12 @@ const CodeAiAnalysis: React.FC = () => {
             {/* Header */}
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                    <div className="p-3 bg-violet-500/10 rounded-xl">
-                        <BrainCircuit className="w-8 h-8 text-violet-600" />
+                    <div className="p-3 bg-violet-500/10 dark:bg-violet-500/20 rounded-xl">
+                        <BrainCircuit className="w-8 h-8 text-violet-600 dark:text-violet-400" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold text-slate-900">{t('aiAnalysis.title')}</h1>
-                        <p className="text-slate-500 mt-1">{t('aiAnalysis.subtitle')}</p>
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('aiAnalysis.title')}</h1>
+                        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('aiAnalysis.subtitle')}</p>
                     </div>
                 </div>
             </div>
@@ -494,8 +494,8 @@ const CodeAiAnalysis: React.FC = () => {
                                     type="button"
                                     onClick={() => setValue('nodeType', type as any)}
                                     className={`px-3 py-2 text-sm rounded-lg border transition-all ${nodeType === type
-                                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-medium'
-                                        : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
+                                        ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-500 dark:border-indigo-400 text-indigo-700 dark:text-indigo-400 font-medium'
+                                        : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'
                                         }`}
                                 >
                                     {type.toUpperCase()}
@@ -534,7 +534,7 @@ const CodeAiAnalysis: React.FC = () => {
                             <option value="ERROR">ERROR</option>
                         </select>
                     </div>
-                    <div className="md:col-span-2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                    <div className="md:col-span-2 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-700">
                         <label className={labelClass}>{t('aiAnalysis.saveOptions')}</label>
                         <div className="flex flex-col sm:flex-row gap-6 mt-3">
                             <label className="flex items-center gap-3 cursor-pointer group">
@@ -547,11 +547,11 @@ const CodeAiAnalysis: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <span className="text-sm font-medium text-slate-800 group-hover:text-indigo-700 transition-colors flex items-center gap-2">
-                                        <RefreshCw className="w-4 h-4 text-indigo-500" />
+                                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors flex items-center gap-2">
+                                        <RefreshCw className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
                                         {t('aiAnalysis.saveUpdate')}
                                     </span>
-                                    <p className="text-xs text-slate-500 mt-1">{t('aiAnalysis.saveUpdateDesc')}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('aiAnalysis.saveUpdateDesc')}</p>
                                 </div>
                             </label>
 
@@ -565,11 +565,11 @@ const CodeAiAnalysis: React.FC = () => {
                                     />
                                 </div>
                                 <div>
-                                    <span className="text-sm font-medium text-slate-800 group-hover:text-rose-700 transition-colors flex items-center gap-2">
-                                        <Eraser className="w-4 h-4 text-rose-500" />
+                                    <span className="text-sm font-medium text-slate-800 dark:text-slate-200 group-hover:text-rose-700 dark:group-hover:text-rose-400 transition-colors flex items-center gap-2">
+                                        <Eraser className="w-4 h-4 text-rose-500 dark:text-rose-400" />
                                         {t('aiAnalysis.saveClean')}
                                     </span>
-                                    <p className="text-xs text-slate-500 mt-1">{t('aiAnalysis.saveCleanDesc')}</p>
+                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{t('aiAnalysis.saveCleanDesc')}</p>
                                 </div>
                             </label>
                         </div>
@@ -579,8 +579,8 @@ const CodeAiAnalysis: React.FC = () => {
 
             {/* 3. Configuration */}
             <div className={cardClass}>
-                <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
-                    <h2 className={sectionTitleClass.replace('mb-4 border-b border-slate-100 pb-2', '')}>
+                <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
+                    <h2 className={sectionTitleClass.replace('mb-4 border-b border-slate-100 dark:border-slate-800 pb-2', '')}>
                         <SettingsIcon className="w-5 h-5 text-indigo-500" />
                         {t('aiAnalysis.configuration')}
                     </h2>
@@ -589,7 +589,7 @@ const CodeAiAnalysis: React.FC = () => {
                         <button
                             type="button"
                             onClick={handleLoadSettings}
-                            className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-all flex items-center gap-1.5"
+                            className="px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-all flex items-center gap-1.5"
                         >
                             <RotateCw className="w-3.5 h-3.5" />
                             {t('aiAnalysis.loadSettings')}
@@ -598,7 +598,7 @@ const CodeAiAnalysis: React.FC = () => {
                             type="button"
                             onClick={handleSaveSettings}
                             disabled={saveSettingsMutation.isPending}
-                            className={`px-3 py-1.5 text-xs font-bold text-white bg-slate-800 border border-slate-800 rounded-lg hover:bg-slate-700 transition-all flex items-center gap-1.5 shadow-sm ${saveSettingsMutation.isPending ? 'opacity-70' : ''}`}
+                            className={`px-3 py-1.5 text-xs font-bold text-white bg-slate-800 dark:bg-slate-700 border border-slate-800 dark:border-slate-700 rounded-lg hover:bg-slate-700 dark:hover:bg-slate-600 transition-all flex items-center gap-1.5 shadow-sm ${saveSettingsMutation.isPending ? 'opacity-70' : ''}`}
                         >
                             {saveSettingsMutation.isPending ? <RotateCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                             {t('aiAnalysis.saveSettings')}
@@ -642,7 +642,7 @@ const CodeAiAnalysis: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setShowApiKey(!showApiKey)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none"
                                 >
                                     {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                 </button>
@@ -690,7 +690,7 @@ const CodeAiAnalysis: React.FC = () => {
             {/* 2. Run Analysis & Status */}
             <div className="grid grid-cols-1 gap-6">
                 {/* Execution Card */}
-                <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-2xl p-6 text-white shadow-lg flex flex-col justify-between min-h-[200px]">
+                <div className="bg-gradient-to-br from-indigo-600 to-violet-700 dark:from-indigo-800 dark:to-violet-900 rounded-2xl p-6 text-white shadow-lg flex flex-col justify-between min-h-[200px]">
                     <div className="flex justify-between items-start">
                         <div>
                             <h2 className="text-2xl font-bold flex items-center gap-2 mb-2">
@@ -737,9 +737,9 @@ const CodeAiAnalysis: React.FC = () => {
                 </div>
 
                 {/* Analysis Status Panel */}
-                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
-                    <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                        <ActivityIcon className="w-5 h-5 text-indigo-600" />
+                <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-800 p-6">
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                        <ActivityIcon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         {t('analysis.analysisStatus')}
                     </h3>
 
@@ -747,12 +747,12 @@ const CodeAiAnalysis: React.FC = () => {
                         jobId ? (
                             <div className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                        <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">{t('analysis.jobId')}</div>
-                                        <div className="font-mono text-xs text-slate-700 break-all">{jobId}</div>
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-100 dark:border-slate-700">
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold mb-1">{t('analysis.jobId')}</div>
+                                        <div className="font-mono text-xs text-slate-700 dark:text-slate-300 break-all">{jobId}</div>
                                     </div>
 
-                                    <div className="flex items-center gap-3 p-4 bg-indigo-50 rounded-xl border border-indigo-100">
+                                    <div className="flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-xl border border-indigo-100 dark:border-indigo-800">
                                         {status === 'completed' || status === 'success' ? (
                                             <CheckCircle className="w-5 h-5 text-emerald-500" />
                                         ) : status === 'failed' || status === 'error' ? (
@@ -763,8 +763,8 @@ const CodeAiAnalysis: React.FC = () => {
                                             <Loader2 className="w-5 h-5 text-indigo-500 animate-spin" />
                                         )}
                                         <div>
-                                            <div className="text-xs text-indigo-600 uppercase tracking-wider font-semibold">{t('analysis.currentStatus')}</div>
-                                            <div className="font-bold text-indigo-900 capitalize">{status || 'Pending...'}</div>
+                                            <div className="text-xs text-indigo-600 dark:text-indigo-400 uppercase tracking-wider font-semibold">{t('analysis.currentStatus')}</div>
+                                            <div className="font-bold text-indigo-900 dark:text-indigo-200 capitalize">{status || 'Pending...'}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -796,7 +796,7 @@ const CodeAiAnalysis: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => setShowLogModal(true)}
-                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 hover:text-indigo-600 transition-colors text-sm font-medium shadow-sm"
+                                        className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors text-sm font-medium shadow-sm"
                                     >
                                         <FileText className="w-4 h-4" />
                                         {t('analysis.viewLogs')}
@@ -806,8 +806,8 @@ const CodeAiAnalysis: React.FC = () => {
                                         onClick={() => setShowSummaryModal(true)}
                                         disabled={status !== 'completed' && status !== 'success'} // Backend sends 'completed'
                                         className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl transition-all text-sm font-medium shadow-md ${status === 'completed' || status === 'success'
-                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200'
-                                            : 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none'
+                                            ? 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-200 dark:shadow-none'
+                                            : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-600 cursor-not-allowed shadow-none'
                                             }`}
                                     >
                                         <List className="w-4 h-4" />
