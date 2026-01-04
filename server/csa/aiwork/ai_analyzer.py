@@ -331,6 +331,193 @@ class AIAnalyzer:
         # 3. 코드 블록이 없으면 전체 응답 반환
         return cleaned.strip()
 
+    def _remove_method_bodies(self, source_code: str) -> str:
+        """
+        Java 소스 코드에서 메서드 Body를 제거하고 시그니처만 남깁니다.
+
+        Args:
+            source_code: 원본 Java 소스 코드
+
+        Returns:
+            Body가 제거된 소스 코드
+        """
+        # 간단한 정규식 기반 Body 제거
+        # 패턴: ) { ... } 형태의 메서드 Body 찾기
+        # 중첩 중괄호를 완벽하게 처리하지는 못하지만, 대부분의 경우 동작함
+
+        # 개선된 방법: 줄 단위로 처리하되, 메서드 시그니처 감지를 개선
+        lines = source_code.split('\n')
+        result_lines = []
+        in_method_body = False
+        brace_count = 0
+        method_brace_start = 0
+        pending_signature_lines = []
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+
+            # 주석 라인은 그대로 유지
+            if stripped.startswith('//') or stripped.startswith('/*') or stripped.startswith('*'):
+                if not in_method_body:
+                    result_lines.append(line)
+                continue
+
+            # 어노테이션은 그대로 유지
+            if stripped.startswith('@'):
+                if not in_method_body:
+                    result_lines.append(line)
+                continue
+
+            # 중괄호 카운팅
+            open_count = line.count('{')
+            close_count = line.count('}')
+
+            # 메서드 시그니처 감지: ( 와 ) 가 있고, { 가 있는 경우
+            has_params = '(' in line and ')' in line
+            has_open_brace = '{' in line
+
+            if not in_method_body:
+                # 메서드 시작 감지
+                if has_params and has_open_brace:
+                    # 메서드 시그니처로 판단
+                    # { 이전 부분만 유지
+                    before_brace = line.split('{')[0]
+                    result_lines.append(before_brace + '{ /* implementation hidden */ }')
+
+                    # 만약 { 가 여러 개 있거나 } 가 없다면 Body 진입
+                    if open_count > close_count:
+                        in_method_body = True
+                        method_brace_start = open_count - close_count
+                        brace_count = method_brace_start
+
+                elif has_params and not has_open_brace:
+                    # 메서드 시그니처가 여러 줄에 걸쳐 있을 수 있음
+                    pending_signature_lines.append(line)
+
+                elif pending_signature_lines and has_open_brace:
+                    # 이전에 모은 시그니처 라인들과 현재 라인을 합침
+                    for sig_line in pending_signature_lines:
+                        result_lines.append(sig_line)
+                    before_brace = line.split('{')[0]
+                    result_lines.append(before_brace + '{ /* implementation hidden */ }')
+                    pending_signature_lines = []
+
+                    if open_count > close_count:
+                        in_method_body = True
+                        method_brace_start = open_count - close_count
+                        brace_count = method_brace_start
+
+                else:
+                    # 일반 라인 (필드, 클래스 선언 등)
+                    result_lines.append(line)
+                    pending_signature_lines = []
+
+            else:
+                # 메서드 Body 내부 - 중괄호 카운팅만 수행
+                brace_count += open_count
+                brace_count -= close_count
+
+                # Body 끝 감지
+                if brace_count <= 0:
+                    in_method_body = False
+                    brace_count = 0
+
+        return '\n'.join(result_lines)
+
+    def _truncate_center(self, source_code: str, max_chars: int) -> str:
+        """
+        소스 코드의 중간 부분을 생략하고 Head와 Tail만 남깁니다.
+
+        Args:
+            source_code: 원본 소스 코드
+            max_chars: 최대 글자 수
+
+        Returns:
+            중간이 생략된 소스 코드
+        """
+        if len(source_code) <= max_chars:
+            return source_code
+
+        # Head 30%, Tail 20%
+        head_ratio = 0.30
+        tail_ratio = 0.20
+
+        head_chars = int(max_chars * head_ratio)
+        tail_chars = int(max_chars * tail_ratio)
+
+        head = source_code[:head_chars]
+        tail = source_code[-tail_chars:]
+
+        # 줄 단위로 자르기 (깔끔하게)
+        head_lines = head.split('\n')
+        tail_lines = tail.split('\n')
+
+        # 마지막/첫 줄이 잘렸을 수 있으므로 제거
+        if len(head_lines) > 1:
+            head_lines = head_lines[:-1]
+        if len(tail_lines) > 1:
+            tail_lines = tail_lines[1:]
+
+        skipped_chars = len(source_code) - len('\n'.join(head_lines)) - len('\n'.join(tail_lines))
+        skipped_lines = source_code.count('\n') - len(head_lines) - len(tail_lines)
+
+        separator = f"\n\n/* ... {skipped_lines} lines ({skipped_chars} chars) skipped ... */\n\n"
+
+        return '\n'.join(head_lines) + separator + '\n'.join(tail_lines)
+
+    def _optimize_source_code(
+        self,
+        source_code: str,
+        max_chars: int = 30000,
+        logger: logging.Logger = logger
+    ) -> tuple[str, str]:
+        """
+        소스 코드를 LLM Token 제한에 맞게 최적화합니다.
+
+        전략:
+        - Step 0 (Pass-through): 크기가 제한 이내이면 원본 그대로 반환
+        - Step 1 (Body Stripping): 메서드 구현 로직(Body) 제거, 시그니처만 유지
+        - Step 2 (Hard Truncation): 파일 중간 부분 생략 (Head 30% + Tail 20%)
+
+        Args:
+            source_code: 원본 소스 코드
+            max_chars: 최대 글자 수 (기본값: 30,000자 ≈ 8,192 토큰)
+            logger: 로거
+
+        Returns:
+            (최적화된 소스 코드, 적용된 최적화 레벨)
+            최적화 레벨: "none", "body_stripped", "truncated"
+        """
+        original_len = len(source_code)
+
+        # Step 0: Pass-through
+        if original_len <= max_chars:
+            logger.debug(f"소스 코드 크기 적정 ({original_len} chars <= {max_chars})")
+            return source_code, "none"
+
+        logger.info(f"소스 코드 크기 초과 감지 ({original_len} chars > {max_chars}), 최적화 시작")
+
+        # Step 1: Body Stripping
+        optimized = self._remove_method_bodies(source_code)
+        optimized_len = len(optimized)
+
+        logger.info(f"Step 1 (Body Stripping): {original_len} → {optimized_len} chars "
+                   f"({(1 - optimized_len/original_len)*100:.1f}% 감소)")
+
+        if optimized_len <= max_chars:
+            logger.info(f"Body Stripping으로 크기 제한 충족 ({optimized_len} <= {max_chars})")
+            return optimized, "body_stripped"
+
+        # Step 2: Hard Truncation
+        truncated = self._truncate_center(optimized, max_chars)
+        truncated_len = len(truncated)
+
+        logger.info(f"Step 2 (Hard Truncation): {optimized_len} → {truncated_len} chars "
+                   f"({(1 - truncated_len/original_len)*100:.1f}% 총 감소)")
+        logger.warning(f"Hard Truncation 적용됨 - 클래스 분석 결과가 불완전할 수 있습니다")
+
+        return truncated, "truncated"
+
     # ========== 비동기 메서드 (병렬 처리용) ==========
 
     async def _call_llm_async(
@@ -408,9 +595,9 @@ class AIAnalyzer:
                     raise e
 
     async def analyze_class_async(
-        self, 
-        source_code: str, 
-        class_name: str = "", 
+        self,
+        source_code: str,
+        class_name: str = "",
         stop_check_callback=None,
         logger: logging.Logger = logger
     ) -> str:
@@ -428,8 +615,47 @@ class AIAnalyzer:
             return ""
 
         try:
+            # 프롬프트 가져오기
             prompt = get_prompt("class_doc")
-            input_text = f"{prompt}\n\n```java\n{source_code}\n```"
+
+            # 프롬프트 + 마크다운 오버헤드 계산
+            # input_text = f"{prompt}\n\n```java\n{source_code}\n```"
+            markdown_overhead = len('\n\n```java\n') + len('\n```')
+            prompt_overhead = len(prompt) + markdown_overhead
+
+            # 전체 입력 제한 (30,000자 ≈ 8,192 토큰)
+            max_total_chars = 30000
+
+            # 소스 코드에 사용 가능한 최대 크기
+            source_code_max = max_total_chars - prompt_overhead
+
+            logger.debug(f"Token 제한 계산: max_total={max_total_chars}, "
+                        f"prompt={len(prompt)}, overhead={markdown_overhead}, "
+                        f"source_max={source_code_max}")
+
+            # 소스 코드 최적화 (Token 제한 대응)
+            optimized_code, optimization_level = self._optimize_source_code(
+                source_code,
+                max_chars=source_code_max,
+                logger=logger
+            )
+
+            if optimization_level != "none":
+                logger.info(f"Class AI 분석 - 소스 코드 최적화 적용 ({class_name}): "
+                           f"{len(source_code)} → {len(optimized_code)} chars, "
+                           f"level={optimization_level}")
+
+            # 최종 입력 텍스트 생성
+            input_text = f"{prompt}\n\n```java\n{optimized_code}\n```"
+
+            # 최종 입력 크기 검증
+            total_input_size = len(input_text)
+            logger.debug(f"최종 입력 크기: {total_input_size} chars "
+                        f"(limit: {max_total_chars})")
+
+            if total_input_size > max_total_chars:
+                logger.warning(f"경고: 최종 입력 크기가 제한 초과 "
+                              f"({total_input_size} > {max_total_chars})")
 
             # LLM 비동기 호출
             raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
@@ -452,9 +678,9 @@ class AIAnalyzer:
             return ""
 
     async def analyze_method_async(
-        self, 
-        source_code: str, 
-        method_name: str = "", 
+        self,
+        source_code: str,
+        method_name: str = "",
         class_name: str = "",
         stop_check_callback=None,
         logger: logging.Logger = logger
@@ -474,8 +700,34 @@ class AIAnalyzer:
             return ""
 
         try:
+            # 프롬프트 가져오기
             prompt = get_prompt("method_doc")
-            input_text = f"{prompt}\n\n```java\n{source_code}\n```"
+
+            # 프롬프트 + 마크다운 오버헤드 계산
+            markdown_overhead = len('\n\n```java\n') + len('\n```')
+            prompt_overhead = len(prompt) + markdown_overhead
+
+            # 전체 입력 제한 (30,000자 ≈ 8,192 토큰)
+            max_total_chars = 30000
+
+            # 소스 코드에 사용 가능한 최대 크기
+            source_code_max = max_total_chars - prompt_overhead
+
+            # 메서드 소스 코드 최적화 (필요시)
+            if len(source_code) > source_code_max:
+                optimized_code, optimization_level = self._optimize_source_code(
+                    source_code,
+                    max_chars=source_code_max,
+                    logger=logger
+                )
+                identifier = f"{class_name}.{method_name}" if class_name else method_name
+                logger.info(f"Method AI 분석 - 소스 코드 최적화 적용 ({identifier}): "
+                           f"{len(source_code)} → {len(optimized_code)} chars, "
+                           f"level={optimization_level}")
+            else:
+                optimized_code = source_code
+
+            input_text = f"{prompt}\n\n```java\n{optimized_code}\n```"
 
             # LLM 비동기 호출
             raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
@@ -501,8 +753,8 @@ class AIAnalyzer:
             return ""
 
     async def analyze_sql_async(
-        self, 
-        sql_statement: str, 
+        self,
+        sql_statement: str,
         sql_id: str = "",
         stop_check_callback=None,
         logger: logging.Logger = logger
@@ -521,8 +773,29 @@ class AIAnalyzer:
             return ""
 
         try:
+            # 프롬프트 가져오기
             prompt = get_prompt("sql_doc")
-            input_text = f"{prompt}\n\n```sql\n{sql_statement}\n```"
+
+            # 프롬프트 + 마크다운 오버헤드 계산
+            markdown_overhead = len('\n\n```sql\n') + len('\n```')
+            prompt_overhead = len(prompt) + markdown_overhead
+
+            # 전체 입력 제한 (30,000자 ≈ 8,192 토큰)
+            max_total_chars = 30000
+
+            # SQL에 사용 가능한 최대 크기
+            sql_max = max_total_chars - prompt_overhead
+
+            # SQL 최적화 (필요시 - 매우 긴 SQL의 경우)
+            if len(sql_statement) > sql_max:
+                # SQL은 truncate만 적용 (Body Stripping은 의미 없음)
+                optimized_sql = sql_statement[:sql_max] + "\n/* ... SQL truncated ... */"
+                logger.info(f"SQL AI 분석 - SQL 크기 제한으로 Truncation 적용 ({sql_id}): "
+                           f"{len(sql_statement)} → {len(optimized_sql)} chars")
+            else:
+                optimized_sql = sql_statement
+
+            input_text = f"{prompt}\n\n```sql\n{optimized_sql}\n```"
 
             # LLM 비동기 호출
             raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
