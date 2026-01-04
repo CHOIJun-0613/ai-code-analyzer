@@ -26,12 +26,18 @@ interface MethodCall {
 interface Parameter {
     name: string;
     type: string;
+    type_logical_name?: string;
+    type_package_name?: string;
 }
 
 interface MethodData {
     name: string;
     logical_name?: string;
     return_type: string;
+    return_type_detail?: {
+        logical_name: string;
+        package_name: string;
+    };
     visibility?: string;
     modifiers?: string[];
     parameters?: Parameter[];
@@ -60,7 +66,7 @@ const MethodDetails: React.FC = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
 
-    const [activeTab, setActiveTab] = useState<'info' | 'inout' | 'source' | 'calls' | 'sequence'>('info');
+    const [activeTab, setActiveTab] = useState<'info' | 'inout' | 'source' | 'flowchart' | 'calls' | 'sequence'>('info');
     const [showComplexityHelp, setShowComplexityHelp] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
     const codeRef = useRef<HTMLPreElement>(null);
@@ -102,6 +108,23 @@ const MethodDetails: React.FC = () => {
         },
         enabled: activeTab === 'sequence' && !!(projectName && className && methodName),
     });
+
+    const { overviewContent, flowChartContent } = useMemo(() => {
+        if (!methodData?.ai_description) return { overviewContent: '', flowChartContent: '' };
+        // Split by the specific header
+        const parts = methodData.ai_description.split('### **[Flow Chart]**');
+        const overview = parts[0].trim();
+        let chart = parts.length > 1 ? parts[1].trim() : '';
+
+        // Clean up markdown code blocks if present
+        if (chart.startsWith('```mermaid')) {
+            chart = chart.replace(/^```mermaid\s*/, '').replace(/\s*```$/, '');
+        } else if (chart.startsWith('```')) {
+            chart = chart.replace(/^```\s*/, '').replace(/\s*```$/, '');
+        }
+
+        return { overviewContent: overview, flowChartContent: chart };
+    }, [methodData?.ai_description]);
 
     const handleCopySource = async () => {
         if (!methodData?.source) return;
@@ -341,6 +364,7 @@ const MethodDetails: React.FC = () => {
                             { id: 'info', label: t('methodDetails.info') },
                             { id: 'inout', label: t('methodDetails.inOut') },
                             { id: 'source', label: t('methodDetails.source') },
+                            { id: 'flowchart', label: t('methodDetails.flowChartTab') },
                             { id: 'calls', label: t('methodDetails.calls') },
                             { id: 'sequence', label: t('methodDetails.sequenceDiagram') }
                         ].map((tab) => (
@@ -413,8 +437,33 @@ const MethodDetails: React.FC = () => {
                                         </div>
                                     )}
                                     <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-5 bg-slate-50/50 dark:bg-[#1e1e1e] text-slate-700 dark:text-slate-300">
-                                        {methodData.ai_description ? (
-                                            <Markdown remarkPlugins={[remarkGfm]}>{methodData.ai_description}</Markdown>
+                                        {overviewContent ? (
+                                            <Markdown
+                                                remarkPlugins={[remarkGfm]}
+                                                components={{
+                                                    code({ node, inline, className, children, ...props }: any) {
+                                                        const match = /language-(\w+)/.exec(className || '');
+                                                        /* Info 탭에서는 FlowChart를 제외하므로 Mermaid 렌더링 로직은 제거해도 되지만, 
+                                                           혹시 다른 다이어그램이 있을 수 있으니 유지하거나 단순 코드블록으로 처리 */
+                                                        if (!inline && match && match[1] === 'mermaid') {
+                                                            return <MermaidDiagram definition={String(children).replace(/\n$/, '')} />;
+                                                        }
+                                                        return !inline && match ? (
+                                                            <pre {...props} className={className}>
+                                                                <code className={className} {...props}>
+                                                                    {children}
+                                                                </code>
+                                                            </pre>
+                                                        ) : (
+                                                            <code className={className} {...props}>
+                                                                {children}
+                                                            </code>
+                                                        );
+                                                    }
+                                                }}
+                                            >
+                                                {overviewContent}
+                                            </Markdown>
                                         ) : (
                                             <p className="text-slate-400 dark:text-slate-500 italic text-sm">{t('classDetails.aiDescriptionPlaceholder')}</p>
                                         )}
@@ -435,12 +484,46 @@ const MethodDetails: React.FC = () => {
                                 {methodData.parameters && methodData.parameters.length > 0 ? (
                                     <div className="grid grid-cols-1 gap-3">
                                         {methodData.parameters.map((param, idx) => (
-                                            <div key={idx} className="flex items-center gap-6 p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-lg shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
-                                                <div className="min-w-[140px] flex items-center">
+                                            <div key={idx} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-lg shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors">
+                                                {/* Variable Name */}
+                                                <div className="min-w-[140px] shrink-0">
                                                     <span className="font-mono text-sm font-bold text-slate-900 dark:text-slate-200">{param.name}</span>
                                                 </div>
-                                                <div className="flex-1">
-                                                    <span className="text-xs font-mono text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-3 py-1 rounded border border-indigo-100 dark:border-indigo-900/30 font-semibold">{param.type}</span>
+
+                                                {/* Type Info Group */}
+                                                <div className="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                                                    {/* Type Name */}
+                                                    <div className="min-w-[200px]">
+                                                        <span className="text-sm font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block text-center md:text-left shadow-sm">
+                                                            {param.type}
+                                                        </span>
+                                                    </div>
+
+                                                    {/* Logical Name */}
+                                                    <div className="flex-1 min-w-[150px]">
+                                                        {param.type_logical_name ? (
+                                                            <span className="text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block truncate" title={param.type_logical_name}>
+                                                                {param.type_logical_name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-400 dark:text-slate-600 italic px-2">
+                                                                -
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Package Name */}
+                                                    <div className="flex-1 min-w-[200px]">
+                                                        {param.type_package_name ? (
+                                                            <span className="text-xs font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900/50 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-800 block truncate" title={param.type_package_name}>
+                                                                {param.type_package_name}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-xs text-slate-400 dark:text-slate-600 italic px-2">
+                                                                -
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}
@@ -457,14 +540,45 @@ const MethodDetails: React.FC = () => {
                                     {t('methodDetails.output')}
                                 </h3>
                                 <div className="p-4 bg-emerald-50/30 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-900/30 rounded-lg">
-                                    <div className="flex items-center gap-6">
-                                        <div className="min-w-[140px]">
+                                    <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                        <div className="min-w-[140px] shrink-0">
                                             <span className="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-500 tracking-wider">RETURNS</span>
                                         </div>
-                                        <div className="flex-1">
-                                            <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-slate-800 px-3 py-1 rounded shadow-sm border border-slate-100 dark:border-slate-800">
-                                                {methodData.return_type}
-                                            </span>
+
+                                        {/* Type Info Group */}
+                                        <div className="flex-1 flex flex-col md:flex-row md:items-center gap-4">
+                                            {/* Type Name - Matching Input Style */}
+                                            <div className="min-w-[200px]">
+                                                <span className="text-sm font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block text-center md:text-left shadow-sm">
+                                                    {methodData.return_type}
+                                                </span>
+                                            </div>
+
+                                            {/* Logical Name */}
+                                            <div className="flex-1 min-w-[150px]">
+                                                {methodData.return_type_detail?.logical_name ? (
+                                                    <span className="text-sm text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block truncate" title={methodData.return_type_detail.logical_name}>
+                                                        {methodData.return_type_detail.logical_name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 dark:text-slate-600 italic px-2">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            {/* Package Name */}
+                                            <div className="flex-1 min-w-[200px]">
+                                                {methodData.return_type_detail?.package_name ? (
+                                                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-900/50 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-800 block truncate" title={methodData.return_type_detail.package_name}>
+                                                        {methodData.return_type_detail.package_name}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-slate-400 dark:text-slate-600 italic px-2">
+                                                        -
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -508,6 +622,25 @@ const MethodDetails: React.FC = () => {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'flowchart' && (
+                        <div>
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                                <GitMerge className="w-5 h-5 text-indigo-500" />
+                                {t('methodDetails.flowChartTab')}
+                            </h3>
+                            {flowChartContent ? (
+                                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-auto">
+                                    <MermaidDiagram definition={flowChartContent} />
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                                    <GitMerge className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
+                                    <p className="text-slate-400 dark:text-slate-500 italic">{t('common.noData')}</p>
+                                </div>
+                            )}
                         </div>
                     )}
 

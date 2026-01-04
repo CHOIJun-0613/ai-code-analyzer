@@ -255,6 +255,93 @@ def get_method_details(project_name: str, class_name: str, method_name: str, pac
         method_data["class_name"] = class_name
         method_data["package_name"] = package
         
+        # --- NEW: Enrich Parameter and Return Type Details ---
+        type_names = set()
+        
+        # 1. Collect Type Names from Return Type
+        if method_data.get("return_type") and method_data["return_type"] != "void":
+            # Handle generics like List<UserDTO> -> UserDTO
+            rt = method_data["return_type"]
+            if '<' in rt:
+                # Extract content inside last <> or just simple split
+                # Simple approach: split by < and take the first part if it's a collection, 
+                # but usually we want the generic type argument.
+                # Regex to find words might be better, but let's stick to simple extraction of possible class names.
+                # For "List<UserDTO>", we want "UserDTO".
+                import re
+                found_types = re.findall(r'\b[A-Z]\w+\b', rt)
+                type_names.update(found_types)
+            else:
+                type_names.add(rt)
+                
+        # 2. Collect Type Names from Parameters
+        if method_data.get("parameters"):
+            for param in method_data["parameters"]:
+                if param.get("type"):
+                    pt = param["type"]
+                    if '<' in pt:
+                        import re
+                        found_types = re.findall(r'\b[A-Z]\w+\b', pt)
+                        type_names.update(found_types)
+                    else:
+                        type_names.add(pt)
+        
+        # 3. Query DB for these types
+        type_info_map = {}
+        if type_names:
+            query_types = """
+            MATCH (c:Class {project_name: $project_name})
+            WHERE c.name IN $type_names
+            RETURN c.name as name, c.package_name as package_name, c.logical_name as logical_name
+            """
+            result_types = session.run(query_types, project_name=project_name, type_names=list(type_names))
+            for record in result_types:
+                # Store by name. If multiple, last one wins (simple resolution)
+                type_info_map[record["name"]] = {
+                    "package_name": record["package_name"],
+                    "logical_name": record["logical_name"]
+                }
+                
+        # 4. Enrich Data
+        # Enrich Parameters
+        if method_data.get("parameters"):
+            for param in method_data["parameters"]:
+                pt = param.get("type")
+                # Simple matching: if type name exists in map
+                target_type = pt
+                if pt and '<' in pt:
+                    # Try to find which part matches
+                    import re
+                    found = re.findall(r'\b[A-Z]\w+\b', pt)
+                    for f in found:
+                        if f in type_info_map:
+                            target_type = f
+                            break
+                            
+                if target_type in type_info_map:
+                    param["type_package_name"] = type_info_map[target_type]["package_name"]
+                    param["type_logical_name"] = type_info_map[target_type]["logical_name"]
+                    
+        # Enrich Return Type
+        method_data["return_type_detail"] = {}
+        rt = method_data.get("return_type")
+        if rt:
+            target_type = rt
+            if '<' in rt:
+                import re
+                found = re.findall(r'\b[A-Z]\w+\b', rt)
+                for f in found:
+                    if f in type_info_map:
+                        target_type = f
+                        break
+            
+            if target_type in type_info_map:
+                method_data["return_type_detail"] = {
+                    "package_name": type_info_map[target_type]["package_name"],
+                    "logical_name": type_info_map[target_type]["logical_name"]
+                }
+        # -----------------------------------------------------
+        
         # Execute Calls Query
         result_calls = session.run(query_calls, 
                                   project_name=project_name, 

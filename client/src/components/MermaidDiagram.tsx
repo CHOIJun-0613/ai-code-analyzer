@@ -11,38 +11,62 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
     const [svgContent, setSvgContent] = useState<string>('');
     const [id] = useState(() => `mermaid-${Math.random().toString(36).substr(2, 9)}`);
 
-    const [zoom, setZoom] = useState(1);
+    // User requested fixed 30% initial zoom
+    const [zoom, setZoom] = useState(0.3);
 
+    // Reset zoom to 30% when definition changes
     useEffect(() => {
-        console.log("MermaidDiagram received definition:", definition);
-        setZoom(1);
+        setZoom(0.3);
     }, [definition]);
 
     useEffect(() => {
+        let mounted = true;
         const renderDiagram = async () => {
             if (!definition) return;
 
             try {
+                // Give a small tick for DOM to ready
+                await new Promise(resolve => setTimeout(resolve, 0));
+
+                if (!mounted) return;
+
                 mermaid.initialize({
                     startOnLoad: false,
                     theme: 'default',
                     securityLevel: 'loose',
+                    logLevel: 'error',
                 });
 
-                const { svg } = await mermaid.render(id, definition);
-                setSvgContent(svg);
+                const graphId = `${id}-svg`;
+                const existingElement = document.getElementById(graphId);
+                if (existingElement) existingElement.remove();
+
+                const { svg } = await mermaid.render(graphId, definition);
+
+                if (mounted) {
+                    setSvgContent(svg);
+                    // No complex smart zoom logic anymore.
+                    // Initial zoom is handled by the state default and the useEffect reset above.
+                }
             } catch (error) {
                 console.error("Mermaid rendering failed:", error);
-                setSvgContent(`<div class="p-4 bg-red-50 text-red-600 rounded border border-red-200">
-                    Failed to render diagram. Syntax error likely.
-                    <pre class="mt-2 text-xs overflow-auto">${error}</pre>
-                </div>`);
+                if (mounted) {
+                    setSvgContent(`<div class="p-4 bg-red-50 text-red-600 rounded border border-red-200">
+                        <p class="font-bold text-sm">Diagram API Error</p>
+                        <pre class="mt-2 text-xs overflow-auto">${error instanceof Error ? error.message : String(error)}</pre>
+                    </div>`);
+                }
             }
         };
 
         renderDiagram();
+
+        return () => {
+            mounted = false;
+        };
     }, [definition, id]);
 
+    // --- Drag & Drop Logic ---
     const [isDragging, setIsDragging] = useState(false);
     const [startX, setStartX] = useState(0);
     const [startY, setStartY] = useState(0);
@@ -51,7 +75,6 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
 
     const handleMouseDown = (e: React.MouseEvent) => {
         if (!containerRef.current) return;
-        // Only trigger on left click
         if (e.button !== 0) return;
 
         setIsDragging(true);
@@ -91,14 +114,14 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
                 </span>
                 <div className="w-px h-4 bg-slate-200 dark:bg-slate-700 mx-1" />
                 <button
-                    onClick={(e) => { e.stopPropagation(); setZoom(z => Math.min(z + 0.5, 20)); }}
+                    onClick={(e) => { e.stopPropagation(); setZoom(z => Math.min(z + 0.1, 5)); }}
                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-500 dark:text-slate-400"
                     title="Zoom In"
                 >
                     <ZoomIn className="w-4 h-4" />
                 </button>
                 <button
-                    onClick={(e) => { e.stopPropagation(); setZoom(z => Math.max(z - 0.5, 0.2)); }}
+                    onClick={(e) => { e.stopPropagation(); setZoom(z => Math.max(z - 0.1, 0.1)); }}
                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-500 dark:text-slate-400"
                     title="Zoom Out"
                 >
@@ -107,7 +130,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
                 <button
                     onClick={(e) => { e.stopPropagation(); setZoom(1); }}
                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-500 dark:text-slate-400"
-                    title="Reset Zoom"
+                    title="Reset Zoom to 100%"
                 >
                     <RotateCcw className="w-4 h-4" />
                 </button>
@@ -132,7 +155,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
                 {svgContent ? (
                     <div
                         ref={containerRef}
-                        className="mermaid-diagram inline-block origin-top-left pointer-events-none" // pointer-events-none ensures clicks pass through to container for dragging
+                        className="mermaid-diagram inline-block origin-top-left pointer-events-none"
                         style={{
                             width: `${zoom * 100}%`
                         }}

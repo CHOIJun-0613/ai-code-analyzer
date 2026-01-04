@@ -14,7 +14,7 @@ export interface AuthState {
 
 export const useAuthStore = create<AuthState>((set) => ({
     user: null,
-    isLoggedIn: false,
+    isLoggedIn: !!localStorage.getItem('login_time'),
     loginTime: localStorage.getItem('login_time'),
     login: (username: string) => {
         const now = new Date();

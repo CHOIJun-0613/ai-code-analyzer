@@ -444,6 +444,7 @@
         "source": "Source",
         "calls": "Calls",
         "inOut": "IN/OUT",
+        "flowChartTab": "Flow Chart",
         "parameters": "Parameters",
         "input": "Input (Parameters)",
         "output": "Output (Return)",

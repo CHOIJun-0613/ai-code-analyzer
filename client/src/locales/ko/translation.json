@@ -446,6 +446,7 @@
         "source": "소스 코드",
         "calls": "호출 정보",
         "inOut": "IN/OUT",
+        "flowChartTab": "흐름도",
         "parameters": "파라미터",
         "input": "Input (매개변수)",
         "output": "Output (반환값)",
