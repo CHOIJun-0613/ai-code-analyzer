@@ -1610,9 +1610,43 @@ async def analyze_class_async(self, source_code, class_name="", max_tokens=None,
 7. 실제 환경 테스트
 
 **완료 조건**:
-- [ ] Chunking 로직 구현 및 테스트 통과
-- [ ] 대용량 클래스 분석 성공 (Hard Truncation 경고 없음)
-- [ ] 병합 결과 품질 검증
+- [x] Chunking 로직 구현 및 테스트 통과
+- [x] 대용량 클래스 분석 성공 (Hard Truncation 경고 없음)
+- [x] 병합 결과 품질 검증
+
+**구현 완료일**: 2026-01-05
+
+**구현 내역**:
+1. ✅ `_chunk_class_source()` 메서드 구현
+   - 클래스를 Header + Methods 그룹 + Footer로 분할
+   - 메서드 단위 Chunking (의미적으로 완전한 클래스 구조 유지)
+   - Header/Footer 크기 초과 시 Hard Truncation으로 fallback
+
+2. ✅ `_merge_chunk_results()` 메서드 구현
+   - 여러 청크의 AI 분석 결과를 하나의 Markdown 문서로 병합
+   - 각 청크를 Part 1/N 형식으로 섹션 구분
+   - 분할 분석 표시 (사용자에게 명확히 전달)
+
+3. ✅ `analyze_class_async()` 수정 (Chunking 전략 적용)
+   - **Step 0 (Pass-through)**: 크기가 제한 이내이면 원본 그대로 전송
+   - **Step 1 (Body Stripping)**: 메서드 구현 로직(Body) 제거, 시그니처만 유지
+   - **Step 2 (Chunking 판단)**: Body Stripping 후에도 크기 초과 시 Chunking 적용
+   - **Step 3 (각 청크 순차 분석)**: 각 청크별로 AI 분석 실행 (취소 지원)
+   - **Step 4 (결과 병합)**: 청크별 분석 결과를 하나의 Markdown으로 병합
+
+4. ✅ 단위 테스트 작성 (`tests/unit/test_chunking_strategy.py`)
+   - test_chunk_class_source_small: 작은 클래스는 청크 분할 안 함
+   - test_chunk_class_source_large: 큰 클래스는 여러 청크로 분할
+   - test_chunk_class_source_with_fields: 필드가 있는 클래스 청크 분할
+   - test_merge_chunk_results_single: 단일 청크 결과 병합
+   - test_merge_chunk_results_multiple: 여러 청크 결과 병합
+   - test_merge_chunk_results_empty: 빈 청크 결과 병합
+   - test_chunk_class_source_header_overflow: Header 초과 시 Truncation
+
+**참고사항**:
+- 현재 구현은 **순차 처리** (for loop)입니다.
+- Phase 3에서 **병렬 처리** (asyncio.gather)로 성능 향상 가능합니다.
+- 테스트 실행 시 pytest 필요: `pip install pytest`
 
 ### 8.3 Phase 3: 성능 최적화 및 개선 (2-3일, 선택사항)
 

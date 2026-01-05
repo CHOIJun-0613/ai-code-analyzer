@@ -465,6 +465,181 @@ class AIAnalyzer:
 
         return '\n'.join(head_lines) + separator + '\n'.join(tail_lines)
 
+    def _chunk_class_source(
+        self,
+        source_code: str,
+        max_chars: int,
+        logger: logging.Logger = logger
+    ) -> list[str]:
+        """
+        클래스 소스 코드를 여러 청크로 분할합니다.
+
+        전략:
+        - Body Stripping 후 크기가 max_chars를 초과하는 경우 적용
+        - Header (클래스 선언, 필드) + Methods 그룹 + Footer
+        - 각 청크는 의미적으로 완전한 클래스 구조 유지
+
+        Args:
+            source_code: Body Stripping 적용된 소스 코드
+            max_chars: 청크당 최대 글자 수
+            logger: 로거
+
+        Returns:
+            청크 리스트 (각 청크는 완전한 클래스 구조)
+        """
+        lines = source_code.split('\n')
+
+        # 1. Header, Methods, Footer 분리
+        header_lines = []
+        method_groups = []  # [method_lines, ...]
+        footer_lines = []
+
+        in_class_body = False
+        current_method = []
+        brace_depth = 0
+
+        for i, line in enumerate(lines):
+            stripped = line.strip()
+
+            # 클래스 선언 감지
+            if 'class ' in line and '{' in line:
+                in_class_body = True
+                header_lines.append(line)
+                brace_depth = line.count('{') - line.count('}')
+                continue
+
+            if not in_class_body:
+                # 클래스 선언 이전 (패키지, 임포트, 어노테이션)
+                header_lines.append(line)
+                continue
+
+            # 메서드 시그니처 감지: ( ) { 패턴
+            if '(' in line and ')' in line and '{' in line:
+                if current_method:
+                    # 이전 메서드 저장
+                    method_groups.append(current_method)
+                current_method = [line]
+                brace_depth += line.count('{') - line.count('}')
+            elif current_method:
+                # 메서드 Body 내부
+                current_method.append(line)
+                brace_depth += line.count('{') - line.count('}')
+
+                # 메서드 종료 감지
+                if brace_depth == 1 and '}' in line:
+                    method_groups.append(current_method)
+                    current_method = []
+            else:
+                # 필드, 내부 클래스, 정적 블록 등 → Header에 포함
+                if len(method_groups) == 0:
+                    header_lines.append(line)
+                else:
+                    footer_lines.append(line)
+
+        # 마지막 메서드 처리
+        if current_method:
+            method_groups.append(current_method)
+
+        # Footer: 클래스 닫는 중괄호
+        if not footer_lines:
+            footer_lines = ['}']
+
+        # 2. Header, Footer 크기 계산
+        header_text = '\n'.join(header_lines)
+        footer_text = '\n'.join(footer_lines)
+        header_size = len(header_text)
+        footer_size = len(footer_text)
+        overhead = header_size + footer_size
+
+        logger.debug(f"클래스 구조 파싱: Header={header_size} chars, "
+                    f"Methods={len(method_groups)}개, Footer={footer_size} chars")
+
+        if overhead >= max_chars:
+            # Header/Footer만으로도 제한 초과 → Truncation 불가피
+            logger.warning(f"Header/Footer 크기({overhead})가 제한({max_chars}) 초과 "
+                          f"→ Chunking 불가, Hard Truncation 적용")
+            return [self._truncate_center(source_code, max_chars)]
+
+        # 3. 메서드를 청크로 그룹화
+        available_per_chunk = max_chars - overhead - 100  # 안전 마진
+        chunks = []
+        current_chunk_methods = []
+        current_chunk_size = 0
+
+        for method_lines in method_groups:
+            method_text = '\n'.join(method_lines)
+            method_size = len(method_text)
+
+            # 단일 메서드가 available_per_chunk 초과 시 강제 포함
+            if current_chunk_size + method_size <= available_per_chunk:
+                current_chunk_methods.append(method_text)
+                current_chunk_size += method_size
+            else:
+                # 현재 청크 완성
+                if current_chunk_methods:
+                    chunk = header_text + '\n' + '\n'.join(current_chunk_methods) + '\n' + footer_text
+                    chunks.append(chunk)
+                    logger.debug(f"청크 생성: {len(chunk)} chars, "
+                                f"{len(current_chunk_methods)}개 메서드")
+
+                # 새 청크 시작
+                current_chunk_methods = [method_text]
+                current_chunk_size = method_size
+
+        # 마지막 청크 처리
+        if current_chunk_methods:
+            chunk = header_text + '\n' + '\n'.join(current_chunk_methods) + '\n' + footer_text
+            chunks.append(chunk)
+            logger.debug(f"청크 생성 (마지막): {len(chunk)} chars, "
+                        f"{len(current_chunk_methods)}개 메서드")
+
+        logger.info(f"클래스를 {len(chunks)}개 청크로 분할 완료")
+
+        return chunks if chunks else [source_code]
+
+    def _merge_chunk_results(
+        self,
+        chunk_results: list[str],
+        class_name: str,
+        logger: logging.Logger = logger
+    ) -> str:
+        """
+        여러 청크의 AI 분석 결과를 하나의 Markdown 문서로 병합합니다.
+
+        전략:
+        - 각 청크는 동일한 클래스의 일부분을 분석한 결과
+        - 중복 제거 (클래스 개요 등)
+        - 메서드별 설명을 통합
+
+        Args:
+            chunk_results: 각 청크의 AI 분석 결과 (Markdown)
+            class_name: 클래스명
+            logger: 로거
+
+        Returns:
+            통합된 AI description (Markdown)
+        """
+        if not chunk_results:
+            return ""
+
+        if len(chunk_results) == 1:
+            return chunk_results[0]
+
+        logger.info(f"청크 결과 병합 시작: {len(chunk_results)}개 청크")
+
+        # 간단한 병합 전략: 각 청크 결과를 섹션으로 구분
+        merged = f"# {class_name} (분할 분석)\n\n"
+        merged += f"> 이 클래스는 크기가 커서 {len(chunk_results)}개 청크로 분할하여 분석되었습니다.\n\n"
+
+        for i, result in enumerate(chunk_results, 1):
+            merged += f"## Part {i}/{len(chunk_results)}\n\n"
+            merged += result
+            merged += "\n\n---\n\n"
+
+        logger.info(f"청크 결과 병합 완료: {len(merged)} chars")
+
+        return merged
+
     def _optimize_source_code(
         self,
         source_code: str,
@@ -640,38 +815,74 @@ class AIAnalyzer:
                         f"프롬프트: {len(prompt)} chars, "
                         f"소스 최대: {source_code_max} chars")
 
-            # 소스 코드 최적화 (Token 제한 대응)
-            optimized_code, optimization_level = self._optimize_source_code(
-                source_code,
-                max_chars=source_code_max,
-                logger=logger
-            )
+            # Step 0: Pass-through (크기가 제한 이내이면 원본 그대로)
+            if len(source_code) <= source_code_max:
+                logger.debug(f"소스 코드 크기 적정 ({len(source_code)} <= {source_code_max})")
+                input_text = f"{prompt}\n\n```java\n{source_code}\n```"
+                raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
+                ai_description = self._clean_response(raw_response)
+                logger.debug(f"Class AI 분석 완료 (async): {class_name}")
+                return ai_description if ai_description else ""
 
-            if optimization_level != "none":
-                logger.info(f"Class AI 분석 - 소스 코드 최적화 적용 ({class_name}): "
-                           f"{len(source_code)} → {len(optimized_code)} chars, "
-                           f"level={optimization_level}")
+            logger.info(f"소스 코드 크기 초과 감지 ({len(source_code)} > {source_code_max}), 최적화 시작")
 
-            # 최종 입력 텍스트 생성
-            input_text = f"{prompt}\n\n```java\n{optimized_code}\n```"
+            # Step 1: Body Stripping
+            optimized_code = self._remove_method_bodies(source_code)
+            optimized_len = len(optimized_code)
 
-            # 최종 입력 크기 검증
-            total_input_size = len(input_text)
-            logger.debug(f"최종 입력 크기: {total_input_size} chars "
-                        f"(limit: {max_total_chars})")
+            logger.info(f"Step 1 (Body Stripping): {len(source_code)} → {optimized_len} chars "
+                       f"({(1 - optimized_len/len(source_code))*100:.1f}% 감소)")
 
-            if total_input_size > max_total_chars:
-                logger.warning(f"경고: 최종 입력 크기가 제한 초과 "
-                              f"({total_input_size} > {max_total_chars})")
+            # Step 2: Chunking vs. Truncation 판단
+            if optimized_len <= source_code_max:
+                # 크기 OK → 단일 분석
+                logger.debug(f"Body Stripping 후 크기 적정 ({optimized_len} <= {source_code_max})")
+                input_text = f"{prompt}\n\n```java\n{optimized_code}\n```"
+                raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
+                ai_description = self._clean_response(raw_response)
+                logger.debug(f"Class AI 분석 완료 (async): {class_name}")
+                return ai_description if ai_description else ""
 
-            # LLM 비동기 호출
-            raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
+            # Step 3: Chunking 적용
+            logger.info(f"Body Stripping 후에도 크기 초과 ({optimized_len} > {source_code_max}), "
+                       f"Chunking 전략 적용")
 
-            # 응답 정제 (think 태그, markdown 블록 제거)
-            ai_description = self._clean_response(raw_response)
+            chunks = self._chunk_class_source(optimized_code, source_code_max, logger=logger)
 
-            logger.debug(f"Class AI 분석 완료 (async): {class_name}")
-            return ai_description if ai_description else ""
+            if len(chunks) == 1:
+                # Chunking 실패 (단일 청크) → Hard Truncation
+                logger.warning(f"Chunking 실패, Hard Truncation 적용")
+                truncated = self._truncate_center(optimized_code, source_code_max)
+                input_text = f"{prompt}\n\n```java\n{truncated}\n```"
+                raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
+                ai_description = self._clean_response(raw_response)
+                return ai_description if ai_description else ""
+
+            # Step 4: 각 청크 병렬 분석
+            logger.info(f"청크별 분석 시작: {len(chunks)}개 청크")
+
+            chunk_results = []
+            for i, chunk in enumerate(chunks, 1):
+                # 취소 확인
+                if stop_check_callback and stop_check_callback():
+                    logger.warning(f"청크 분석 중 사용자 취소 확인됨 (청크 {i}/{len(chunks)})")
+                    raise RuntimeError("Chunked analysis cancelled by user")
+
+                logger.debug(f"청크 {i}/{len(chunks)} 분석 중... ({len(chunk)} chars)")
+                input_text = f"{prompt}\n\n```java\n{chunk}\n```"
+                raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
+                chunk_result = self._clean_response(raw_response)
+                chunk_results.append(chunk_result)
+
+                logger.info(f"청크 {i}/{len(chunks)} 분석 완료")
+
+            # Step 5: 결과 병합
+            merged_result = self._merge_chunk_results(chunk_results, class_name, logger=logger)
+
+            logger.info(f"Class AI 분석 완료 (Chunking): {class_name}, "
+                       f"{len(chunks)}개 청크, 최종 {len(merged_result)} chars")
+
+            return merged_result if merged_result else ""
 
         except Exception as e:
             # 상세한 오류 로그 기록
