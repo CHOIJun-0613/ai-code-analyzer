@@ -1658,10 +1658,108 @@ async def analyze_class_async(self, source_code, class_name="", max_tokens=None,
 3. LLM 기반 병합 (선택사항)
 4. 성능 테스트 및 튜닝
 
-**완료 조건**:
-- [ ] 청크 병렬 분석으로 성능 향상
-- [ ] Rate Limit 고려한 안정적인 동작
+**완료 조건 (1,2번)**:
+- [x] 청크 병렬 분석으로 성능 향상
+- [x] Rate Limit 고려한 안정적인 동작 (Semaphore)
 - [ ] (선택) LLM 병합으로 품질 향상
+- [ ] 성능 테스트 및 검증
+
+**구현 완료일**: 2026-01-05 (1,2번 항목)
+
+**구현 내역**:
+
+#### 1. 청크 병렬 분석 구현 ✅
+
+**파일**: `server/csa/aiwork/ai_analyzer.py`
+
+**변경 내용**:
+- `analyze_class_async()` 메서드에 `semaphore` 파라미터 추가
+- 순차 처리 (for loop)를 병렬 처리 (asyncio.gather)로 변경
+- 인덱스 기반 정렬로 청크 순서 유지
+
+**주요 코드 변경**:
+```python
+# Before (Phase 2 - 순차 처리)
+for i, chunk in enumerate(chunks, 1):
+    raw_response = await self._call_llm_async(...)
+    chunk_results.append(chunk_result)
+
+# After (Phase 3 - 병렬 처리)
+async def analyze_single_chunk(idx: int, chunk: str) -> tuple[int, str]:
+    if semaphore:
+        async with semaphore:  # 동시 요청 수 제한
+            raw_response = await self._call_llm_async(...)
+            return idx, chunk_result
+    else:
+        raw_response = await self._call_llm_async(...)
+        return idx, chunk_result
+
+tasks = [analyze_single_chunk(i, chunk) for i, chunk in enumerate(chunks)]
+indexed_results = await asyncio.gather(*tasks)
+indexed_results.sort(key=lambda x: x[0])
+chunk_results = [result for _, result in indexed_results]
+```
+
+**주요 개선 사항**:
+- ✅ **병렬 처리**: 모든 청크를 동시에 LLM에 요청 (asyncio.gather)
+- ✅ **순서 유지**: 인덱스 기반 정렬로 청크 순서 보장
+- ✅ **Semaphore 지원**: semaphore가 제공되면 동시 요청 수 제한
+- ✅ **취소 지원**: 각 청크 분석 전 취소 확인
+
+#### 2. Semaphore 생성 및 전달 ✅
+
+**파일**: `server/csa/services/ai_enrichment_service.py`
+
+**변경 내용**:
+- `_enrich_classes_async()` 메서드에서 Semaphore 생성
+- 클래스 단위 semaphore를 제거하고 청크 단위로 적용
+- `analyze_class_async()` 호출 시 semaphore 전달
+
+**주요 코드 변경**:
+```python
+# Before (Phase 2 - 클래스 단위 semaphore)
+async def process_class(record, index):
+    async with semaphore:  # 클래스 단위 제한
+        ai_description = await self.analyzer.analyze_class_async(...)
+
+# After (Phase 3 - 청크 단위 semaphore)
+# Semaphore: 청크 분석 시 동시 LLM 요청 수 제한
+semaphore = asyncio.Semaphore(concurrent_requests)
+
+async def process_class(record, index):
+    # 클래스 단위 semaphore 제거
+    ai_description = await self.analyzer.analyze_class_async(
+        ...,
+        semaphore=semaphore,  # 청크 병렬 분석 시 사용
+        ...
+    )
+```
+
+**주요 개선 사항**:
+- ✅ **정확한 Rate Limit 관리**: 클래스 단위가 아닌 청크 단위로 LLM 요청 수 제한
+- ✅ **concurrent_requests 의미 명확화**: 실제 LLM 동시 호출 수를 정확히 제어
+- ✅ **유연한 제어**: semaphore=None이면 무제한 병렬 실행 가능
+
+#### 성능 비교
+
+**시나리오**: 1개 클래스가 10개 청크로 분할, concurrent_requests=5, 청크당 LLM 응답 5초
+
+| 구분 | Phase 2 (순차) | Phase 3 (병렬 + Semaphore) |
+|------|---------------|---------------------------|
+| **청크 1-5** | 5초씩 순차 (25초) | 병렬 처리 (5초) |
+| **청크 6-10** | 5초씩 순차 (25초) | 병렬 처리 (5초) |
+| **총 소요 시간** | 50초 | 10초 |
+| **LLM 동시 호출** | 1개 | 최대 5개 (Semaphore) |
+| **Rate Limit** | 자동 준수 | Semaphore로 관리 |
+
+**기대 효과**:
+- ✅ **5배 속도 향상** (청크 수에 비례, concurrent_requests=5 기준)
+- ✅ **Rate Limit 준수** (concurrent_requests로 제어)
+- ✅ **확장 가능**: 클래스가 100개 청크로 나뉘어도 동일한 성능 패턴
+
+**남은 작업 (Phase 3-3,4)**:
+- [ ] 3. LLM 기반 병합 (선택사항)
+- [ ] 4. 성능 테스트 및 튜닝
 
 ### 8.4 총 예상 일정
 

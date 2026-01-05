@@ -774,6 +774,7 @@ class AIAnalyzer:
         source_code: str,
         class_name: str = "",
         max_tokens: int = None,
+        semaphore: asyncio.Semaphore = None,
         stop_check_callback=None,
         logger: logging.Logger = logger
     ) -> str:
@@ -784,6 +785,7 @@ class AIAnalyzer:
             source_code: Java 클래스 소스 코드
             class_name: 클래스명 (로깅용)
             max_tokens: 최대 토큰 수 (None일 경우 기본값 8192 사용)
+            semaphore: 동시 요청 수 제한용 Semaphore (청크 병렬 분석 시 사용)
             stop_check_callback: 취소 확인 콜백
             logger: 로거
 
@@ -859,22 +861,51 @@ class AIAnalyzer:
                 return ai_description if ai_description else ""
 
             # Step 4: 각 청크 병렬 분석
-            logger.info(f"청크별 분석 시작: {len(chunks)}개 청크")
+            logger.info(f"청크별 분석 시작: {len(chunks)}개 청크 (병렬 처리)")
 
-            chunk_results = []
-            for i, chunk in enumerate(chunks, 1):
+            # 청크별 분석 함수 (순서 유지를 위해 인덱스 포함)
+            async def analyze_single_chunk(idx: int, chunk: str) -> tuple[int, str]:
+                """단일 청크 분석 (병렬 처리용)"""
                 # 취소 확인
                 if stop_check_callback and stop_check_callback():
-                    logger.warning(f"청크 분석 중 사용자 취소 확인됨 (청크 {i}/{len(chunks)})")
+                    logger.warning(f"청크 분석 중 사용자 취소 확인됨 (청크 {idx + 1}/{len(chunks)})")
                     raise RuntimeError("Chunked analysis cancelled by user")
 
-                logger.debug(f"청크 {i}/{len(chunks)} 분석 중... ({len(chunk)} chars)")
-                input_text = f"{prompt}\n\n```java\n{chunk}\n```"
-                raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
-                chunk_result = self._clean_response(raw_response)
-                chunk_results.append(chunk_result)
+                # Semaphore를 사용하여 동시 요청 수 제한
+                if semaphore:
+                    async with semaphore:
+                        logger.debug(f"청크 {idx + 1}/{len(chunks)} 분석 시작 (Semaphore 획득)")
+                        input_text = f"{prompt}\n\n```java\n{chunk}\n```"
+                        raw_response = await self._call_llm_async(
+                            input_text,
+                            stop_check_callback=stop_check_callback,
+                            logger=logger
+                        )
+                        chunk_result = self._clean_response(raw_response)
+                        logger.info(f"청크 {idx + 1}/{len(chunks)} 분석 완료 ({len(chunk_result)} chars)")
+                        return idx, chunk_result
+                else:
+                    # Semaphore 없이 병렬 실행 (동시 요청 수 무제한)
+                    logger.debug(f"청크 {idx + 1}/{len(chunks)} 분석 시작")
+                    input_text = f"{prompt}\n\n```java\n{chunk}\n```"
+                    raw_response = await self._call_llm_async(
+                        input_text,
+                        stop_check_callback=stop_check_callback,
+                        logger=logger
+                    )
+                    chunk_result = self._clean_response(raw_response)
+                    logger.info(f"청크 {idx + 1}/{len(chunks)} 분석 완료 ({len(chunk_result)} chars)")
+                    return idx, chunk_result
 
-                logger.info(f"청크 {i}/{len(chunks)} 분석 완료")
+            # 모든 청크를 병렬로 분석
+            tasks = [analyze_single_chunk(i, chunk) for i, chunk in enumerate(chunks)]
+            indexed_results = await asyncio.gather(*tasks)
+
+            # 순서대로 정렬 (인덱스 기준)
+            indexed_results.sort(key=lambda x: x[0])
+            chunk_results = [result for _, result in indexed_results]
+
+            logger.info(f"모든 청크 분석 완료: {len(chunk_results)}개")
 
             # Step 5: 결과 병합
             merged_result = self._merge_chunk_results(chunk_results, class_name, logger=logger)

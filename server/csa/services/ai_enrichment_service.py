@@ -367,29 +367,31 @@ class AIEnrichmentService:
         self.logger.info(f"Found {total} Class nodes to enrich")
         self.logger.info(f"Processing {total} Class nodes with {concurrent_requests} concurrent requests...")
 
+        # Semaphore: 청크 분석 시 동시 LLM 요청 수 제한
         semaphore = asyncio.Semaphore(concurrent_requests)
         processed_count = 0  # Shared counter for monotonic progress logging
 
         async def process_class(record, index):
             """Single Class node processing"""
             nonlocal processed_count
-            async with semaphore:
-                # Check cancellation
-                if stop_check_callback and stop_check_callback():
-                    return {"status": "cancelled"}
+            # Check cancellation
+            if stop_check_callback and stop_check_callback():
+                return {"status": "cancelled"}
 
-                class_name_val = record["name"]
-                source = record["source"]
-                node_id = record["node_id"]
+            class_name_val = record["name"]
+            source = record["source"]
+            node_id = record["node_id"]
 
-                try:
-                    ai_description = await self.analyzer.analyze_class_async(
-                        source,
-                        class_name_val,
-                        max_tokens=max_tokens,
-                        stop_check_callback=stop_check_callback,
-                        logger=self.logger
-                    )
+            try:
+                # Semaphore를 analyze_class_async에 전달 (청크 병렬 분석 시 동시 요청 수 제한)
+                ai_description = await self.analyzer.analyze_class_async(
+                    source,
+                    class_name_val,
+                    max_tokens=max_tokens,
+                    semaphore=semaphore,
+                    stop_check_callback=stop_check_callback,
+                    logger=self.logger
+                )
                     
                     # Update counter and log AFTER processing
                     processed_count += 1
