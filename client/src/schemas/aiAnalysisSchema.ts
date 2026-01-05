@@ -5,6 +5,7 @@ export const createAiAnalysisSchema = (t: TFunction) => z.object({
   // AI Config
   provider: z.enum(['google', 'groq', 'lmstudio', 'openai']),
   model_name: z.string().min(1, t('validation.modelNameRequired')),
+  max_tokens: z.number().int().min(1024).max(1000000).default(8192),
   api_key: z.string().optional(),
   api_endpoint: z.string().optional(),
   concurrent_requests: z.number().int().min(1).max(50),

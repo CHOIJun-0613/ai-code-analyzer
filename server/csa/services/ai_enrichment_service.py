@@ -86,6 +86,7 @@ class AIEnrichmentService:
         concurrent_requests: Optional[int] = None,
         limit: Optional[int] = None,
         clean: bool = False,
+        max_tokens: Optional[int] = None,
         target_class_name: Optional[str] = None,
         target_method_name: Optional[str] = None,
         target_mapper_name: Optional[str] = None,
@@ -101,12 +102,13 @@ class AIEnrichmentService:
             node_type: Node type to enrich (all, class, method, sql)
             concurrent_requests: Number of concurrent AI requests (None for env var)
             limit: Maximum number of nodes to process (None for all)
+            clean: Remove existing ai_description values before re-analysis
+            max_tokens: Maximum tokens for LLM context window (None for default 8192)
             target_class_name: Specific class name to force re-analysis
             target_method_name: Specific method name (requires class)
             target_mapper_name: Mapper name for SQL re-analysis
             target_sql_id: SQL identifier to re-analyze
             force: Force overwrite even if ai_description already exists
-            clean: Remove existing ai_description values before re-analysis
 
         Returns:
             Dictionary with statistics
@@ -145,6 +147,7 @@ class AIEnrichmentService:
                 concurrent_requests,
                 limit,
                 class_name=target_class_name if node_type == "class" else None,
+                max_tokens=max_tokens,
                 force=force if node_type == "class" and (target_class_name or target_specified) else False,
                 stop_check_callback=stop_check_callback,
             )
@@ -208,6 +211,7 @@ class AIEnrichmentService:
         batch_size: int = 50,
         limit: Optional[int] = None,
         clean: bool = False,
+        max_tokens: Optional[int] = None,
         target_class_name: Optional[str] = None,
         target_method_name: Optional[str] = None,
         target_mapper_name: Optional[str] = None,
@@ -224,6 +228,7 @@ class AIEnrichmentService:
             batch_size: Batch size for processing (deprecated, use concurrent_requests)
             limit: Maximum number of nodes to process (None for all)
             clean: Remove existing ai_description values before re-analysis
+            max_tokens: Maximum tokens for LLM context window (None for default 8192)
 
         Returns:
             Dictionary with statistics
@@ -235,6 +240,7 @@ class AIEnrichmentService:
             concurrent_requests=batch_size,  # batch_size를 concurrent_requests로 사용
             limit=limit,
             clean=clean,
+            max_tokens=max_tokens,
             target_class_name=target_class_name,
             target_method_name=target_method_name,
             target_mapper_name=target_mapper_name,
@@ -319,6 +325,7 @@ class AIEnrichmentService:
         concurrent_requests: int,
         limit: Optional[int],
         class_name: Optional[str] = None,
+        max_tokens: Optional[int] = None,
         force: bool = False,
         stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, int]:
@@ -377,8 +384,9 @@ class AIEnrichmentService:
 
                 try:
                     ai_description = await self.analyzer.analyze_class_async(
-                        source, 
-                        class_name_val, 
+                        source,
+                        class_name_val,
+                        max_tokens=max_tokens,
                         stop_check_callback=stop_check_callback,
                         logger=self.logger
                     )

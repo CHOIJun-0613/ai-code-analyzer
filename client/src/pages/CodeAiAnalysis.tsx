@@ -64,6 +64,7 @@ const CodeAiAnalysis: React.FC = () => {
         defaultValues: {
             provider: 'google',
             model_name: 'gemini-2.0-flash',
+            max_tokens: 8192,
             api_key: '',
             api_endpoint: '',
             concurrent_requests: 10,
@@ -116,6 +117,7 @@ const CodeAiAnalysis: React.FC = () => {
                 reset({
                     provider: response.data.ai_provider || 'google',
                     model_name: response.data.model_name || 'gemini-2.0-flash',
+                    max_tokens: response.data.max_tokens || 8192,
                     api_key: response.data.api_key || '',
                     api_endpoint: response.data.api_endpoint || '',
                     concurrent_requests: response.data.concurrent_ai_requests || 10,
@@ -260,6 +262,7 @@ const CodeAiAnalysis: React.FC = () => {
             use_analysis: true,
             ai_provider: formData.provider,
             model_name: formData.model_name,
+            max_tokens: formData.max_tokens,
             api_key: formData.api_key,
             api_endpoint: formData.api_endpoint,
             concurrent_ai_requests: formData.concurrent_requests,
@@ -650,6 +653,27 @@ const CodeAiAnalysis: React.FC = () => {
                             placeholder="gemini-2.0-flash"
                         />
                         <FormError message={errors.model_name?.message} />
+                    </div>
+                    <div>
+                        <label className={labelClass}>
+                            Max Tokens
+                            <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+                                (Context Window)
+                            </span>
+                        </label>
+                        <input
+                            type="number"
+                            {...register('max_tokens', { valueAsNumber: true })}
+                            min={1024}
+                            max={1000000}
+                            step={1024}
+                            className={inputClass}
+                            placeholder="8192"
+                        />
+                        <FormError message={errors.max_tokens?.message} />
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            Recommended: 8K (8192), 32K (32768), 128K (131072)
+                        </p>
                     </div>
                     {provider !== 'lmstudio' && (
                         <div className="md:col-span-2">

@@ -67,19 +67,49 @@ def update_user_preferences(
 def read_user_ai_preferences(
     current_user: UserInDB = Depends(deps.get_current_user),
 ):
+    """사용자의 AI 설정 조회"""
     prefs_str = UserService.get_user_ai_preferences(current_user.username)
-    try:
-        return json.loads(prefs_str)
-    except json.JSONDecodeError:
-        return {}
+
+    if prefs_str:
+        try:
+            prefs = json.loads(prefs_str)
+            # max_tokens 기본값 보장
+            if "max_tokens" not in prefs:
+                prefs["max_tokens"] = 8192
+            return prefs
+        except json.JSONDecodeError:
+            pass
+
+    # 기본값 반환
+    return {
+        "use_analysis": True,
+        "ai_provider": "google",
+        "model_name": "gemini-2.0-flash",
+        "max_tokens": 8192,
+        "api_key": "",
+        "api_endpoint": "",
+        "concurrent_ai_requests": 15,
+        "ai_enrichment_batch_size": 50
+    }
 
 @router.put("/me/preferences/ai", response_model=Dict[str, Any])
 def update_user_ai_preferences(
     preferences: Dict[str, Any],
     current_user: UserInDB = Depends(deps.get_current_user),
 ):
+    """사용자의 AI 설정 업데이트"""
+    # max_tokens 검증
+    max_tokens = preferences.get("max_tokens", 8192)
+    if not isinstance(max_tokens, int) or max_tokens < 1024 or max_tokens > 1000000:
+        raise HTTPException(
+            status_code=400,
+            detail="max_tokens must be an integer between 1024 and 1000000"
+        )
+
+    # JSON 문자열로 변환하여 저장
     prefs_str = json.dumps(preferences)
     UserService.update_user_ai_preferences(current_user.username, prefs_str)
+
     return preferences
 
 

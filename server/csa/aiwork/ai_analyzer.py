@@ -598,6 +598,7 @@ class AIAnalyzer:
         self,
         source_code: str,
         class_name: str = "",
+        max_tokens: int = None,
         stop_check_callback=None,
         logger: logging.Logger = logger
     ) -> str:
@@ -607,6 +608,9 @@ class AIAnalyzer:
         Args:
             source_code: Java 클래스 소스 코드
             class_name: 클래스명 (로깅용)
+            max_tokens: 최대 토큰 수 (None일 경우 기본값 8192 사용)
+            stop_check_callback: 취소 확인 콜백
+            logger: 로거
 
         Returns:
             AI 분석 결과 (Markdown 형식) 또는 빈 문자열
@@ -618,20 +622,23 @@ class AIAnalyzer:
             # 프롬프트 가져오기
             prompt = get_prompt("class_doc")
 
+            # max_tokens 기본값 처리
+            if max_tokens is None:
+                max_tokens = 8192
+
+            # 글자 수 변환 (1 Token ≈ 3.5 Chars)
+            max_total_chars = int(max_tokens * 3.5)
+
             # 프롬프트 + 마크다운 오버헤드 계산
-            # input_text = f"{prompt}\n\n```java\n{source_code}\n```"
             markdown_overhead = len('\n\n```java\n') + len('\n```')
             prompt_overhead = len(prompt) + markdown_overhead
-
-            # 전체 입력 제한 (30,000자 ≈ 8,192 토큰)
-            max_total_chars = 30000
 
             # 소스 코드에 사용 가능한 최대 크기
             source_code_max = max_total_chars - prompt_overhead
 
-            logger.debug(f"Token 제한 계산: max_total={max_total_chars}, "
-                        f"prompt={len(prompt)}, overhead={markdown_overhead}, "
-                        f"source_max={source_code_max}")
+            logger.debug(f"Token 제한: {max_tokens} tokens ({max_total_chars} chars), "
+                        f"프롬프트: {len(prompt)} chars, "
+                        f"소스 최대: {source_code_max} chars")
 
             # 소스 코드 최적화 (Token 제한 대응)
             optimized_code, optimization_level = self._optimize_source_code(

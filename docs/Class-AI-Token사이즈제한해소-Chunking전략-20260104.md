@@ -1575,9 +1575,26 @@ async def analyze_class_async(self, source_code, class_name="", max_tokens=None,
 7. 테스트
 
 **완료 조건**:
-- [ ] User preferences_ai에 max_tokens 추가 완료
-- [ ] Client에서 max_tokens 편집 가능
-- [ ] AI 분석 시 max_tokens 값 적용 확인
+- [x] User preferences_ai에 max_tokens 추가 완료
+- [x] Client에서 max_tokens 편집 가능
+- [x] AI 분석 시 max_tokens 값 적용 확인
+
+**구현 완료일**: 2026-01-05
+
+**구현 내역**:
+1. ✅ DB 마이그레이션 스크립트 작성 (`server/migrations/add_max_tokens_to_preferences_ai.py`)
+2. ✅ 백엔드 API 수정 (GET/PUT `/users/me/preferences/ai`)
+   - max_tokens 기본값 8192 보장
+   - max_tokens 검증 (1024 ~ 1000000)
+3. ✅ AIAnalyzer.analyze_class_async에 max_tokens 파라미터 추가
+4. ✅ AIEnrichmentService에서 max_tokens 전달
+5. ✅ AI 분석 API 엔드포인트에서 max_tokens 전달
+6. ✅ Client Form Schema 수정 (max_tokens 추가)
+7. ✅ Client UI 컴포넌트 수정 (CodeAiAnalysis)
+   - defaultValues에 max_tokens 추가
+   - AI 설정 조회 시 max_tokens 포함
+   - handleSaveSettings에서 max_tokens 저장
+   - UI에 Max Tokens 입력 필드 추가 (Model Name 우측)
 
 ### 8.2 Phase 2: Chunking 전략 구현 (3-5일)
 

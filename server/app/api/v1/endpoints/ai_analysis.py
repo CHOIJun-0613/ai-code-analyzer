@@ -136,9 +136,13 @@ def run_enrichment_task(
         concurrent = request.concurrent_requests
         if concurrent is None:
             concurrent = user_ai_prefs.get("concurrent_ai_requests", 10)
-            
+
+        # max_tokens 추출
+        max_tokens = user_ai_prefs.get("max_tokens", 8192)
+
         task_logger.info(f"AI Provider: {ai_options.get('provider')}")
         task_logger.info(f"Model Name: {ai_options.get('model_name')}")
+        task_logger.info(f"Max Tokens: {max_tokens}")
         
         ai_config = AIConfig(options=ai_options)
         
@@ -186,11 +190,11 @@ def run_enrichment_task(
             batch_size=concurrent, # This maps to concurrent_requests in the service
             limit=request.limit,
             clean=request.clean,
+            max_tokens=max_tokens,
             target_class_name=target_class_name,
             target_method_name=None,
-            target_mapper_name=None, 
+            target_mapper_name=None,
             target_sql_id=None,
-
             force=force_mode,
             stop_check_callback=check_stop
         )
