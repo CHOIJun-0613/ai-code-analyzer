@@ -93,6 +93,7 @@ class AIEnrichmentService:
         target_mapper_name: Optional[str] = None,
         target_sql_id: Optional[str] = None,
         force: bool = False,
+        batch_size: int = 5,
         stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, Any]:
         """
@@ -172,6 +173,7 @@ class AIEnrichmentService:
                 class_name=target_class_name if target_method_name else None,
                 method_name=target_method_name,
                 force=force if node_type == "method" and (target_method_name or target_specified) else False,
+                batch_size=batch_size,
                 stop_check_callback=stop_check_callback,
             )
             if method_stats.get("status") == "cancelled":
@@ -192,6 +194,7 @@ class AIEnrichmentService:
                 mapper_name=target_mapper_name if node_type == "sql" else None,
                 sql_id=target_sql_id if node_type == "sql" else None,
                 force=force if node_type == "sql" and (target_mapper_name or target_sql_id) else False,
+                batch_size=batch_size,
                 stop_check_callback=stop_check_callback,
             )
             if sql_stats.get("status") == "cancelled":
@@ -211,6 +214,7 @@ class AIEnrichmentService:
         self,
         project_name: str,
         node_type: str = "all",
+        concurrent_requests: Optional[int] = None,
         batch_size: int = 50,
         limit: Optional[int] = None,
         clean: bool = False,
@@ -242,7 +246,7 @@ class AIEnrichmentService:
         return asyncio.run(self.enrich_project_async(
             project_name=project_name,
             node_type=node_type,
-            concurrent_requests=batch_size,  # batch_size를 concurrent_requests로 사용
+            concurrent_requests=concurrent_requests if concurrent_requests is not None else batch_size, # Fallback for backward compatibility if needed, though batch_size arg is now strictly batch size in async
             limit=limit,
             clean=clean,
             max_tokens=max_tokens,
@@ -252,6 +256,7 @@ class AIEnrichmentService:
             target_mapper_name=target_mapper_name,
             target_sql_id=target_sql_id,
             force=force,
+            batch_size=5, # Default batch size for sync call wrapper
             stop_check_callback=stop_check_callback,
         ))
 
@@ -448,6 +453,7 @@ class AIEnrichmentService:
         class_name: Optional[str] = None,
         method_name: Optional[str] = None,
         force: bool = False,
+        batch_size: int = 5,
         stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, int]:
         """Enrich Method nodes with AI descriptions (배치 처리)."""
@@ -490,9 +496,9 @@ class AIEnrichmentService:
             return stats
 
         self.logger.info(f"Found {total} Method nodes to enrich")
-        self.logger.info(f"Processing {total} Method nodes with batch size 5...")
+        self.logger.info(f"Processing {total} Method nodes with batch size {batch_size}...")
 
-        batch_size = 5
+        # batch_size = 5 # Used from argument
         semaphore = asyncio.Semaphore(concurrent_requests)
         processed_count = 0 # Monotonic counter for batches
 
@@ -699,6 +705,7 @@ class AIEnrichmentService:
         mapper_name: Optional[str] = None,
         sql_id: Optional[str] = None,
         force: bool = False,
+        batch_size: int = 5,
         stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, int]:
         """Enrich SqlStatement nodes with AI descriptions (배치 처리)."""
@@ -741,9 +748,9 @@ class AIEnrichmentService:
             return stats
 
         self.logger.info(f"Found {total} SqlStatement nodes to enrich")
-        self.logger.info(f"Processing {total} SqlStatement nodes with batch size 5...")
+        self.logger.info(f"Processing {total} SqlStatement nodes with batch size {batch_size}...")
 
-        batch_size = 5
+        # batch_size = 5 # Used from argument
         semaphore = asyncio.Semaphore(concurrent_requests)
         processed_count = 0 # Monotonic counter
 

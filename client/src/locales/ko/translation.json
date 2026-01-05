@@ -16,6 +16,7 @@
         "noResults": "검색 결과가 없습니다",
         "noData": "데이터가 없습니다",
         "back": "이전으로",
+        "confirm": "확인",
         "errorReport": "보고서 생성에 실패했습니다"
     },
     "layout": {

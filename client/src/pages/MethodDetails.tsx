@@ -797,7 +797,7 @@ const MethodDetails: React.FC = () => {
                                 onClick={() => setShowComplexityHelp(false)}
                                 className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/25 transition-all active:scale-95"
                             >
-                                {t('common.done')}
+                                {t('common.confirm')}
                             </button>
                         </div>
                     </div>

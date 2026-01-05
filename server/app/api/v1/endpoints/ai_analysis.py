@@ -34,8 +34,10 @@ class AIEnrichRequest(BaseModel):
     clean: bool = False
     class_name: Optional[str] = None
     concurrent_requests: Optional[int] = None
+    batch_size: Optional[int] = None
     use_llm_merge: bool = False
     log_level: str = "INFO"
+    max_tokens: Optional[int] = None
 
     # Custom AI Config Override (Optional)
     # If provided, these values override saved user preferences for this specific run
@@ -138,12 +140,20 @@ def run_enrichment_task(
         if concurrent is None:
             concurrent = user_ai_prefs.get("concurrent_ai_requests", 10)
 
+        batch_size = request.batch_size
+        if batch_size is None:
+            batch_size = user_ai_prefs.get("batch_size", 5)
+
         # max_tokens 추출
-        max_tokens = user_ai_prefs.get("max_tokens", 8192)
+        max_tokens = request.max_tokens
+        if max_tokens is None:
+            max_tokens = user_ai_prefs.get("max_tokens", 8192)
 
         task_logger.info(f"AI Provider: {ai_options.get('provider')}")
         task_logger.info(f"Model Name: {ai_options.get('model_name')}")
         task_logger.info(f"Max Tokens: {max_tokens}")
+        task_logger.info(f"Concurrency: {concurrent}")
+        task_logger.info(f"Batch Size: {batch_size}")
         
         ai_config = AIConfig(options=ai_options)
         
@@ -188,7 +198,8 @@ def run_enrichment_task(
         stats = service.enrich_project(
             project_name=request.project_name,
             node_type=request.node_type,
-            batch_size=concurrent, # This maps to concurrent_requests in the service
+            concurrent_requests=concurrent,
+            batch_size=batch_size,
             limit=request.limit,
             clean=request.clean,
             max_tokens=max_tokens,
@@ -246,6 +257,8 @@ def run_enrichment_task(
             "",
             f"AI Provider: {ai_options.get('provider', 'Unknown')}",
             f"Model Name: {ai_options.get('model_name', 'Unknown')}",
+            f"Max Tokens: {max_tokens}",
+            f"Use LLM Merge: {request.use_llm_merge}",
             "",
             f"Total Processed: {s_total}",
             f"Success: {s_success}",
@@ -288,7 +301,11 @@ def run_enrichment_task(
                 ai_prefs_to_save = {
                     "provider": ai_options.get("provider"),
                     "model_name": ai_options.get("model_name"),
+                    "api_endpoint": ai_options.get("api_endpoint"),
+                    "max_tokens": max_tokens,
+                    "use_llm_merge": request.use_llm_merge,
                     "concurrent_requests": concurrent,
+                    "batch_size": batch_size,
                     "target_node_type": request.node_type,
                     "clean": request.clean,
                     "limit": request.limit,

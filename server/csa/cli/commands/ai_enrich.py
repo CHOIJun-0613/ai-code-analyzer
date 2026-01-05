@@ -193,7 +193,8 @@ def ai_enrich_command(
         stats = enrichment_service.enrich_project(
             project_name=project_name,
             node_type=node_type,
-            batch_size=concurrent,
+            concurrent_requests=concurrent,
+            batch_size=5, # Default batch size for CLI
             limit=limit,
             clean=clean,
             target_class_name=target_params["target_class_name"],

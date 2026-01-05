@@ -6,9 +6,9 @@ import ReportViewerModal from '../components/ReportViewerModal';
 import VirtualizedTable, { Column } from '../components/VirtualizedTable';
 import {
     Code2, FileCode, Braces,
-    AlignLeft, Cpu, Database, GitBranch, Info,
+    AlignLeft, Cpu, Database, GitBranch,
     Copy, Check, MousePointerClick, FileText, Activity, Workflow,
-    ChevronDown
+    ChevronDown, HelpCircle
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -63,6 +63,7 @@ const ClassDetails: React.FC = () => {
     const { t } = useTranslation();
 
     const [activeTab, setActiveTab] = useState<'info' | 'source' | 'methods' | 'fields'>('info');
+    const [showComplexityHelp, setShowComplexityHelp] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
     const codeRef = useRef<HTMLPreElement>(null);
 
@@ -384,51 +385,17 @@ const ClassDetails: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Complexity Card with Tooltip */}
+                {/* Complexity Card with Popup Trigger */}
                 <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm relative group overflow-visible">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
                             <Cpu className="w-4 h-4" /> {t('classDetails.complexity')}
-                        </div>
-                        <div className="relative">
-                            <Info className="w-4 h-4 text-slate-300 dark:text-slate-600 cursor-help hover:text-indigo-500 transition-colors" />
-                            {/* Tooltip Popup */}
-                            <div className="absolute top-6 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-[-10px] w-80 p-5 bg-white dark:bg-slate-800 rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-slate-200 dark:border-slate-700 z-50 hidden group-hover:block animate-in fade-in zoom-in-95 duration-200">
-                                <div className="absolute -top-2 right-1.5 w-4 h-4 bg-white dark:bg-slate-800 border-t border-l border-slate-200 dark:border-slate-700 rotate-45"></div>
-                                <h5 className="font-bold text-slate-900 dark:text-white mb-2 text-sm flex items-center gap-2">
-                                    {t('classDetails.complexityTooltipTitle')}
-                                </h5>
-                                <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mb-3">
-                                    {t('classDetails.complexityTooltipDescription')}
-                                </p>
-
-                                <div className="space-y-3">
-                                    <div className="bg-slate-50 dark:bg-slate-900 p-3 rounded border border-slate-100 dark:border-slate-800">
-                                        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('classDetails.complexityTooltipBasis')}</div>
-                                        <ul className="text-xs text-slate-500 dark:text-slate-500 space-y-1 font-mono">
-                                            <li className="flex justify-between"><span>Lines</span> <span>× 1</span></li>
-                                            <li className="flex justify-between"><span>Fields</span> <span>× 2</span></li>
-                                            <li className="flex justify-between"><span>Methods</span> <span>× 5</span></li>
-                                            <li className="flex justify-between"><span>Inner Classes</span> <span>× 10</span></li>
-                                            <li className="flex justify-between"><span>Annotations</span> <span>× 1</span></li>
-                                        </ul>
-                                    </div>
-
-                                    <div>
-                                        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">{t('classDetails.complexityTooltipReference')}</div>
-                                        <div className="grid grid-cols-[60px_1fr] gap-2 text-xs border-t border-slate-100 dark:border-slate-800 pt-2">
-                                            <div className="font-mono text-emerald-600 font-bold">~ 2k</div>
-                                            <div className="text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipNormal')}</div>
-
-                                            <div className="font-mono text-amber-600 font-bold">~ 5k</div>
-                                            <div className="text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipLarge')}</div>
-
-                                            <div className="font-mono text-red-600 font-bold">5k +</div>
-                                            <div className="text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipHigh')}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <button
+                                onClick={() => setShowComplexityHelp(true)}
+                                className="text-slate-400 hover:text-indigo-500 transition-colors p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                                <HelpCircle className="w-3.5 h-3.5" />
+                            </button>
                         </div>
                     </div>
 
@@ -653,7 +620,108 @@ const ClassDetails: React.FC = () => {
                 title={reportModal.title}
                 content={reportModal.content}
             />
-        </div >
+
+            {/* Complexity Help Modal */}
+            {showComplexityHelp && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div
+                        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Modal Header */}
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                                    <Cpu className="w-5 h-5" />
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                                    {t('classDetails.complexityTooltipTitle')}
+                                </h2>
+                            </div>
+                            <button
+                                onClick={() => setShowComplexityHelp(false)}
+                                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+                            >
+                                <Check className="w-5 h-5 text-slate-500" />
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 overflow-y-auto space-y-6">
+                            {/* Description */}
+                            <div>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    {t('classDetails.complexityTooltipDescription')}
+                                </p>
+                            </div>
+
+                            {/* Calculation Basis */}
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                                    {t('classDetails.complexityTooltipBasis')}
+                                </h3>
+                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4">
+                                    <ul className="space-y-2 text-sm">
+                                        <li className="flex justify-between items-center">
+                                            <span className="text-slate-600 dark:text-slate-400">Lines</span>
+                                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">× 1</span>
+                                        </li>
+                                        <li className="flex justify-between items-center">
+                                            <span className="text-slate-600 dark:text-slate-400">Fields</span>
+                                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">× 2</span>
+                                        </li>
+                                        <li className="flex justify-between items-center">
+                                            <span className="text-slate-600 dark:text-slate-400">Methods</span>
+                                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">× 5</span>
+                                        </li>
+                                        <li className="flex justify-between items-center">
+                                            <span className="text-slate-600 dark:text-slate-400">Inner Classes</span>
+                                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">× 10</span>
+                                        </li>
+                                        <li className="flex justify-between items-center">
+                                            <span className="text-slate-600 dark:text-slate-400">Annotations</span>
+                                            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">× 1</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Reference Levels */}
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                                    {t('classDetails.complexityTooltipReference')}
+                                </h3>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-4 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10">
+                                        <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400 min-w-[60px]">~ 2k</div>
+                                        <div className="text-sm text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipNormal')}</div>
+                                    </div>
+                                    <div className="flex items-center gap-4 p-3 rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-900/10">
+                                        <div className="font-mono font-bold text-amber-600 dark:text-amber-400 min-w-[60px]">~ 5k</div>
+                                        <div className="text-sm text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipLarge')}</div>
+                                    </div>
+                                    <div className="flex items-center gap-4 p-3 rounded-xl border border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10">
+                                        <div className="font-mono font-bold text-red-600 dark:text-red-400 min-w-[60px]">5k +</div>
+                                        <div className="text-sm text-slate-600 dark:text-slate-400">{t('classDetails.complexityTooltipHigh')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end">
+                            <button
+                                onClick={() => setShowComplexityHelp(false)}
+                                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/25 transition-all active:scale-95"
+                            >
+                                {t('common.confirm')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+        </div>
     );
 };
 

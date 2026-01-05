@@ -13,6 +13,7 @@
         "copied": "Copied",
         "success": "Success",
         "back": "Back",
+        "confirm": "Confirm",
         "errorReport": "Failed to generate report"
     },
     "layout": {
