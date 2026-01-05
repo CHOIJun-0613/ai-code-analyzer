@@ -73,9 +73,11 @@ def read_user_ai_preferences(
     if prefs_str:
         try:
             prefs = json.loads(prefs_str)
-            # max_tokens 기본값 보장
+            # 기본값 보장
             if "max_tokens" not in prefs:
                 prefs["max_tokens"] = 8192
+            if "use_llm_merge" not in prefs:
+                prefs["use_llm_merge"] = False
             return prefs
         except json.JSONDecodeError:
             pass
@@ -86,6 +88,7 @@ def read_user_ai_preferences(
         "ai_provider": "google",
         "model_name": "gemini-2.0-flash",
         "max_tokens": 8192,
+        "use_llm_merge": False,
         "api_key": "",
         "api_endpoint": "",
         "concurrent_ai_requests": 15,

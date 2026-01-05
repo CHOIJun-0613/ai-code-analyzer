@@ -34,8 +34,9 @@ class AIEnrichRequest(BaseModel):
     clean: bool = False
     class_name: Optional[str] = None
     concurrent_requests: Optional[int] = None
+    use_llm_merge: bool = False
     log_level: str = "INFO"
-    
+
     # Custom AI Config Override (Optional)
     # If provided, these values override saved user preferences for this specific run
     ai_config: Optional[AIConfigOverride] = None
@@ -191,6 +192,7 @@ def run_enrichment_task(
             limit=request.limit,
             clean=request.clean,
             max_tokens=max_tokens,
+            use_llm_merge=request.use_llm_merge,
             target_class_name=target_class_name,
             target_method_name=None,
             target_mapper_name=None,

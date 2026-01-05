@@ -640,6 +640,81 @@ class AIAnalyzer:
 
         return merged
 
+    async def _merge_chunk_results_with_llm(
+        self,
+        chunk_results: list[str],
+        class_name: str,
+        stop_check_callback=None,
+        logger: logging.Logger = logger
+    ) -> str:
+        """
+        LLM을 사용하여 여러 청크의 AI 분석 결과를 하나의 일관된 Markdown 문서로 병합합니다.
+
+        전략:
+        - 청크별 분석 결과를 LLM에 입력
+        - 중복 제거, 일관성 향상, 구조화 요청
+        - 전문적인 클래스 설명 문서 생성
+
+        Args:
+            chunk_results: 각 청크의 AI 분석 결과 (Markdown)
+            class_name: 클래스명
+            stop_check_callback: 취소 확인 콜백
+            logger: 로거
+
+        Returns:
+            LLM이 병합한 AI description (Markdown)
+        """
+        if not chunk_results:
+            return ""
+
+        if len(chunk_results) == 1:
+            return chunk_results[0]
+
+        logger.info(f"LLM 기반 청크 결과 병합 시작: {len(chunk_results)}개 청크")
+
+        # 병합 프롬프트 작성
+        merge_prompt = f"""다음은 `{class_name}` 클래스를 {len(chunk_results)}개 청크로 나누어 분석한 결과입니다.
+이 결과들을 하나의 일관되고 전문적인 클래스 설명 문서로 통합해주세요.
+
+요구사항:
+1. **중복 정보 제거**: 클래스 개요, 목적 등은 한 번만 기술
+2. **논리적 구조화**: 메서드를 기능별로 그룹화하여 재구성
+3. **일관된 어조**: 전체 문서의 어조와 스타일을 통일
+4. **Markdown 형식**: 헤더, 리스트, 코드 블록 등을 적절히 사용
+5. **분할 분석 표시 제거**: "Part 1/N" 같은 표현 제거
+
+청크별 분석 결과:
+
+"""
+
+        # 각 청크 결과를 프롬프트에 추가
+        for i, result in enumerate(chunk_results, 1):
+            merge_prompt += f"\n---\n**청크 {i}/{len(chunk_results)}**:\n\n{result}\n"
+
+        merge_prompt += "\n---\n\n위 청크별 분석 결과를 하나의 완전한 클래스 설명 문서로 통합해주세요."
+
+        try:
+            # LLM 호출
+            logger.debug(f"LLM 병합 프롬프트 크기: {len(merge_prompt)} chars")
+            raw_response = await self._call_llm_async(
+                merge_prompt,
+                stop_check_callback=stop_check_callback,
+                logger=logger
+            )
+
+            merged_result = self._clean_response(raw_response)
+
+            logger.info(f"LLM 기반 청크 결과 병합 완료: {len(merged_result)} chars")
+
+            return merged_result
+
+        except Exception as e:
+            logger.error(f"LLM 기반 병합 실패: {e}")
+            logger.warning(f"단순 병합으로 fallback")
+
+            # Fallback: 단순 병합
+            return self._merge_chunk_results(chunk_results, class_name, logger)
+
     def _optimize_source_code(
         self,
         source_code: str,
@@ -774,6 +849,7 @@ class AIAnalyzer:
         source_code: str,
         class_name: str = "",
         max_tokens: int = None,
+        use_llm_merge: bool = False,
         semaphore: asyncio.Semaphore = None,
         stop_check_callback=None,
         logger: logging.Logger = logger
@@ -785,6 +861,7 @@ class AIAnalyzer:
             source_code: Java 클래스 소스 코드
             class_name: 클래스명 (로깅용)
             max_tokens: 최대 토큰 수 (None일 경우 기본값 8192 사용)
+            use_llm_merge: LLM 기반 병합 사용 여부 (기본값: False, 단순 병합)
             semaphore: 동시 요청 수 제한용 Semaphore (청크 병렬 분석 시 사용)
             stop_check_callback: 취소 확인 콜백
             logger: 로거
@@ -908,9 +985,22 @@ class AIAnalyzer:
             logger.info(f"모든 청크 분석 완료: {len(chunk_results)}개")
 
             # Step 5: 결과 병합
-            merged_result = self._merge_chunk_results(chunk_results, class_name, logger=logger)
+            if use_llm_merge:
+                # LLM 기반 병합 (고품질, 추가 LLM 호출)
+                logger.info(f"LLM 기반 병합 사용")
+                merged_result = await self._merge_chunk_results_with_llm(
+                    chunk_results,
+                    class_name,
+                    stop_check_callback=stop_check_callback,
+                    logger=logger
+                )
+            else:
+                # 단순 병합 (기본값, 빠름)
+                logger.info(f"단순 병합 사용")
+                merged_result = self._merge_chunk_results(chunk_results, class_name, logger=logger)
 
-            logger.info(f"Class AI 분석 완료 (Chunking): {class_name}, "
+            merge_method = "LLM 병합" if use_llm_merge else "단순 병합"
+            logger.info(f"Class AI 분석 완료 (Chunking + {merge_method}): {class_name}, "
                        f"{len(chunks)}개 청크, 최종 {len(merged_result)} chars")
 
             return merged_result if merged_result else ""

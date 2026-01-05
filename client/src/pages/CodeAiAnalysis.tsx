@@ -65,6 +65,7 @@ const CodeAiAnalysis: React.FC = () => {
             provider: 'google',
             model_name: 'gemini-2.0-flash',
             max_tokens: 8192,
+            use_llm_merge: false,
             api_key: '',
             api_endpoint: '',
             concurrent_requests: 10,
@@ -118,6 +119,7 @@ const CodeAiAnalysis: React.FC = () => {
                     provider: response.data.ai_provider || 'google',
                     model_name: response.data.model_name || 'gemini-2.0-flash',
                     max_tokens: response.data.max_tokens || 8192,
+                    use_llm_merge: response.data.use_llm_merge || false,
                     api_key: response.data.api_key || '',
                     api_endpoint: response.data.api_endpoint || '',
                     concurrent_requests: response.data.concurrent_ai_requests || 10,
@@ -263,6 +265,7 @@ const CodeAiAnalysis: React.FC = () => {
             ai_provider: formData.provider,
             model_name: formData.model_name,
             max_tokens: formData.max_tokens,
+            use_llm_merge: formData.use_llm_merge,
             api_key: formData.api_key,
             api_endpoint: formData.api_endpoint,
             concurrent_ai_requests: formData.concurrent_requests,
@@ -300,6 +303,7 @@ const CodeAiAnalysis: React.FC = () => {
                 clean: formData.clean,
                 class_name: formData.className || null,
                 concurrent_requests: formData.concurrent_requests,
+                use_llm_merge: formData.use_llm_merge,
                 log_level: formData.logLevel,
                 ai_config: {
                     provider: formData.provider,
@@ -673,6 +677,24 @@ const CodeAiAnalysis: React.FC = () => {
                         <FormError message={errors.max_tokens?.message} />
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                             Recommended: 8K (8192), 32K (32768), 128K (131072)
+                        </p>
+                    </div>
+                    <div>
+                        <label className="flex items-center space-x-2 text-sm text-slate-700 dark:text-slate-300 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                {...register('use_llm_merge')}
+                                className="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-slate-800 focus:ring-2 dark:bg-slate-700 dark:border-slate-600"
+                            />
+                            <span>
+                                LLM Merge
+                                <span className="text-xs text-slate-400 dark:text-slate-500 ml-2">
+                                    (High Quality, 2x Time)
+                                </span>
+                            </span>
+                        </label>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 ml-6">
+                            Use LLM-based merging for chunked class analysis (higher quality, slower)
                         </p>
                     </div>
                     {provider !== 'lmstudio' && (

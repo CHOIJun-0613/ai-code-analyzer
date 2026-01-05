@@ -87,6 +87,7 @@ class AIEnrichmentService:
         limit: Optional[int] = None,
         clean: bool = False,
         max_tokens: Optional[int] = None,
+        use_llm_merge: bool = False,
         target_class_name: Optional[str] = None,
         target_method_name: Optional[str] = None,
         target_mapper_name: Optional[str] = None,
@@ -104,6 +105,7 @@ class AIEnrichmentService:
             limit: Maximum number of nodes to process (None for all)
             clean: Remove existing ai_description values before re-analysis
             max_tokens: Maximum tokens for LLM context window (None for default 8192)
+            use_llm_merge: Use LLM-based merging for chunked analysis (default: False)
             target_class_name: Specific class name to force re-analysis
             target_method_name: Specific method name (requires class)
             target_mapper_name: Mapper name for SQL re-analysis
@@ -148,6 +150,7 @@ class AIEnrichmentService:
                 limit,
                 class_name=target_class_name if node_type == "class" else None,
                 max_tokens=max_tokens,
+                use_llm_merge=use_llm_merge,
                 force=force if node_type == "class" and (target_class_name or target_specified) else False,
                 stop_check_callback=stop_check_callback,
             )
@@ -212,6 +215,7 @@ class AIEnrichmentService:
         limit: Optional[int] = None,
         clean: bool = False,
         max_tokens: Optional[int] = None,
+        use_llm_merge: bool = False,
         target_class_name: Optional[str] = None,
         target_method_name: Optional[str] = None,
         target_mapper_name: Optional[str] = None,
@@ -229,6 +233,7 @@ class AIEnrichmentService:
             limit: Maximum number of nodes to process (None for all)
             clean: Remove existing ai_description values before re-analysis
             max_tokens: Maximum tokens for LLM context window (None for default 8192)
+            use_llm_merge: Use LLM-based merging for chunked analysis (default: False)
 
         Returns:
             Dictionary with statistics
@@ -241,6 +246,7 @@ class AIEnrichmentService:
             limit=limit,
             clean=clean,
             max_tokens=max_tokens,
+            use_llm_merge=use_llm_merge,
             target_class_name=target_class_name,
             target_method_name=target_method_name,
             target_mapper_name=target_mapper_name,
@@ -326,6 +332,7 @@ class AIEnrichmentService:
         limit: Optional[int],
         class_name: Optional[str] = None,
         max_tokens: Optional[int] = None,
+        use_llm_merge: bool = False,
         force: bool = False,
         stop_check_callback: Optional[Callable[[], bool]] = None,
     ) -> Dict[str, int]:
@@ -388,30 +395,31 @@ class AIEnrichmentService:
                     source,
                     class_name_val,
                     max_tokens=max_tokens,
+                    use_llm_merge=use_llm_merge,
                     semaphore=semaphore,
                     stop_check_callback=stop_check_callback,
                     logger=self.logger
                 )
                     
-                    # Update counter and log AFTER processing
-                    processed_count += 1
-                    current_count = processed_count
-                    percent = current_count * 100 // total
+                # Update counter and log AFTER processing
+                processed_count += 1
+                current_count = processed_count
+                percent = current_count * 100 // total
 
-                    if ai_description:
-                        self._update_node_ai_description(node_id, ai_description)
-                        self.logger.info(f"[{current_count}/{total}] ({percent}%) Class enriched: {class_name_val}")
-                        return {"status": "success"}
-                    else:
-                        self.logger.warning(f"[{current_count}/{total}] ({percent}%) Class AI analysis returned empty: {class_name_val}")
-                        return {"status": "failed"}
-
-                except Exception as exc:
-                    processed_count += 1
-                    current_count = processed_count
-                    percent = current_count * 100 // total
-                    self.logger.error(f"[{current_count}/{total}] ({percent}%) Class enrichment failed ({class_name_val}): {exc}")
+                if ai_description:
+                    self._update_node_ai_description(node_id, ai_description)
+                    self.logger.info(f"[{current_count}/{total}] ({percent}%) Class enriched: {class_name_val}")
+                    return {"status": "success"}
+                else:
+                    self.logger.warning(f"[{current_count}/{total}] ({percent}%) Class AI analysis returned empty: {class_name_val}")
                     return {"status": "failed"}
+
+            except Exception as exc:
+                processed_count += 1
+                current_count = processed_count
+                percent = current_count * 100 // total
+                self.logger.error(f"[{current_count}/{total}] ({percent}%) Class enrichment failed ({class_name_val}): {exc}")
+                return {"status": "failed"}
 
         tasks = [process_class(record, i + 1) for i, record in enumerate(classes)]
         results = await asyncio.gather(*tasks)

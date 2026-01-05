@@ -1758,8 +1758,75 @@ async def process_class(record, index):
 - ✅ **확장 가능**: 클래스가 100개 청크로 나뉘어도 동일한 성능 패턴
 
 **남은 작업 (Phase 3-3,4)**:
-- [ ] 3. LLM 기반 병합 (선택사항)
+- [x] 3. LLM 기반 병합 (선택사항) - **완료 (2026-01-05)**
 - [ ] 4. 성능 테스트 및 튜닝
+
+#### 3. LLM 기반 병합 구현 ✅
+
+**파일**: `server/csa/aiwork/ai_analyzer.py`
+
+**구현 내용**:
+- `_merge_chunk_results_with_llm()` 비동기 메서드 추가
+- 청크별 분석 결과를 LLM에 재입력하여 고품질 병합
+- 자동 fallback: LLM 병합 실패 시 단순 병합으로 전환
+
+**주요 코드**:
+```python
+async def _merge_chunk_results_with_llm(
+    self,
+    chunk_results: list[str],
+    class_name: str,
+    stop_check_callback=None,
+    logger: logging.Logger = logger
+) -> str:
+    """LLM을 사용하여 여러 청크의 AI 분석 결과를 하나의 일관된 Markdown 문서로 병합"""
+
+    # 병합 프롬프트 작성
+    merge_prompt = f"""다음은 `{class_name}` 클래스를 {len(chunk_results)}개 청크로 나누어 분석한 결과입니다.
+이 결과들을 하나의 일관되고 전문적인 클래스 설명 문서로 통합해주세요.
+
+요구사항:
+1. **중복 정보 제거**: 클래스 개요, 목적 등은 한 번만 기술
+2. **논리적 구조화**: 메서드를 기능별로 그룹화하여 재구성
+3. **일관된 어조**: 전체 문서의 어조와 스타일을 통일
+4. **Markdown 형식**: 헤더, 리스트, 코드 블록 등을 적절히 사용
+5. **분할 분석 표시 제거**: "Part 1/N" 같은 표현 제거
+"""
+
+    # LLM 호출 및 Fallback
+    try:
+        raw_response = await self._call_llm_async(merge_prompt, ...)
+        return self._clean_response(raw_response)
+    except Exception as e:
+        logger.error(f"LLM 기반 병합 실패: {e}")
+        # Fallback: 단순 병합
+        return self._merge_chunk_results(chunk_results, class_name, logger)
+```
+
+**파라미터 추가**:
+- `analyze_class_async()`: `use_llm_merge` 파라미터 추가
+- `AIEnrichmentService.enrich_project_async()`: `use_llm_merge` 전달
+- `AIEnrichRequest`: `use_llm_merge` 필드 추가
+- `User.preferences_ai`: `use_llm_merge` 기본값 (False)
+
+**Client UI**:
+- **Checkbox 추가**: "LLM Merge (High Quality, 2x Time)"
+- **위치**: Max Tokens 필드 바로 아래
+- **설명**: "Use LLM-based merging for chunked class analysis (higher quality, slower)"
+- **저장/로드**: 사용자 AI 설정에 저장
+
+**비용/시간 트레이드오프**:
+| 항목 | 단순 병합 | LLM 병합 |
+|------|----------|---------|
+| LLM 호출 | N회 | N+1회 |
+| 소요 시간 | 5초 | 10초 (+100%) |
+| 품질 | 중복 가능 | 고품질 |
+| 일관성 | 낮음 | 높음 |
+
+**사용 권장 시나리오**:
+- ✅ 공개 문서, 리포트 생성
+- ✅ 청크 수가 적은 경우 (2-3개)
+- ✅ 품질 우선 (비용/시간 여유)
 
 ### 8.4 총 예상 일정
 
