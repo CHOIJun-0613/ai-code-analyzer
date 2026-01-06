@@ -7,7 +7,7 @@ import {
     Code2, Braces, AlignLeft, Cpu,
     Copy, Check, MousePointerClick,
     Box, Info, FileCode, GitMerge,
-    HelpCircle
+    HelpCircle, Sparkles
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -436,37 +436,44 @@ const MethodDetails: React.FC = () => {
                                             <Markdown remarkPlugins={[remarkGfm]}>{methodData.description}</Markdown>
                                         </div>
                                     )}
-                                    <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-5 bg-slate-50/50 dark:bg-[#1e1e1e] text-slate-700 dark:text-slate-300">
-                                        {overviewContent ? (
-                                            <Markdown
-                                                remarkPlugins={[remarkGfm]}
-                                                components={{
-                                                    code({ node, inline, className, children, ...props }: any) {
-                                                        const match = /language-(\w+)/.exec(className || '');
-                                                        /* Info 탭에서는 FlowChart를 제외하므로 Mermaid 렌더링 로직은 제거해도 되지만, 
-                                                           혹시 다른 다이어그램이 있을 수 있으니 유지하거나 단순 코드블록으로 처리 */
-                                                        if (!inline && match && match[1] === 'mermaid') {
-                                                            return <MermaidDiagram definition={String(children).replace(/\n$/, '')} />;
-                                                        }
-                                                        return !inline && match ? (
-                                                            <pre {...props} className={className}>
+                                    <div className="relative">
+                                        {/* AI Generated Badge */}
+                                        <div className="absolute -top-3 -left-3 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
+                                            <Sparkles className="w-3.5 h-3.5" />
+                                            <span>{t('classDetails.aiGenerated')}</span>
+                                        </div>
+                                        <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-5 bg-slate-50/50 dark:bg-[#1e1e1e] text-slate-700 dark:text-slate-300">
+                                            {overviewContent ? (
+                                                <Markdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    components={{
+                                                        code({ node, inline, className, children, ...props }: any) {
+                                                            const match = /language-(\w+)/.exec(className || '');
+                                                            /* Info 탭에서는 FlowChart를 제외하므로 Mermaid 렌더링 로직은 제거해도 되지만,
+                                                               혹시 다른 다이어그램이 있을 수 있으니 유지하거나 단순 코드블록으로 처리 */
+                                                            if (!inline && match && match[1] === 'mermaid') {
+                                                                return <MermaidDiagram definition={String(children).replace(/\n$/, '')} />;
+                                                            }
+                                                            return !inline && match ? (
+                                                                <pre {...props} className={className}>
+                                                                    <code className={className} {...props}>
+                                                                        {children}
+                                                                    </code>
+                                                                </pre>
+                                                            ) : (
                                                                 <code className={className} {...props}>
                                                                     {children}
                                                                 </code>
-                                                            </pre>
-                                                        ) : (
-                                                            <code className={className} {...props}>
-                                                                {children}
-                                                            </code>
-                                                        );
-                                                    }
-                                                }}
-                                            >
-                                                {overviewContent}
-                                            </Markdown>
-                                        ) : (
-                                            <p className="text-slate-400 dark:text-slate-500 italic text-sm">{t('classDetails.aiDescriptionPlaceholder')}</p>
-                                        )}
+                                                            );
+                                                        }
+                                                    }}
+                                                >
+                                                    {overviewContent}
+                                                </Markdown>
+                                            ) : (
+                                                <p className="text-slate-400 dark:text-slate-500 italic text-sm">{t('classDetails.aiDescriptionPlaceholder')}</p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -632,8 +639,15 @@ const MethodDetails: React.FC = () => {
                                 {t('methodDetails.flowChartTab')}
                             </h3>
                             {flowChartContent ? (
-                                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-auto">
-                                    <MermaidDiagram definition={flowChartContent} />
+                                <div className="relative">
+                                    {/* AI Generated Badge */}
+                                    <div className="absolute -top-3 -left-3 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        <span>{t('classDetails.aiGenerated')}</span>
+                                    </div>
+                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-auto">
+                                        <MermaidDiagram definition={flowChartContent} />
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">

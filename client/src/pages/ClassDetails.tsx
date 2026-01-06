@@ -8,7 +8,7 @@ import {
     Code2, FileCode, Braces,
     AlignLeft, Cpu, Database, GitBranch,
     Copy, Check, MousePointerClick, FileText, Activity, Workflow,
-    ChevronDown, HelpCircle
+    ChevronDown, HelpCircle, Search, X, Sparkles
 } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -47,6 +47,7 @@ interface ClassData {
     interfaces?: string[];
     annotations?: string[];
     extension?: string;
+    file_extension?: string;
     PLOC?: number;
     LLOC?: number;
     CLOC?: number;
@@ -65,6 +66,7 @@ const ClassDetails: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'info' | 'source' | 'methods' | 'fields'>('info');
     const [showComplexityHelp, setShowComplexityHelp] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
+    const [methodSearchQuery, setMethodSearchQuery] = useState('');
     const codeRef = useRef<HTMLPreElement>(null);
 
     // React Query: 클래스 상세 정보 조회
@@ -151,11 +153,23 @@ const ClassDetails: React.FC = () => {
         }
     };
 
+    // Filtered Methods based on search query
+    const filteredMethods = useMemo(() => {
+        if (!classData) return [];
+        if (!methodSearchQuery.trim()) return classData.methods;
+
+        const query = methodSearchQuery.toLowerCase();
+        return classData.methods.filter(method =>
+            method.name.toLowerCase().includes(query) ||
+            (method.logical_name && method.logical_name.toLowerCase().includes(query))
+        );
+    }, [classData, methodSearchQuery]);
+
     // VirtualizedTable Column 정의 - Methods
     const methodColumns = useMemo((): Column<Method>[] => [
         {
             key: 'visibility',
-            header: t('classDetails.visibility'),
+            header: t('classDetails.methodVisibility'),
             width: '100px',
             render: (method) => (
                 <span className="text-slate-500 dark:text-slate-400 text-xs lowercase">{method.visibility || '-'}</span>
@@ -163,7 +177,7 @@ const ClassDetails: React.FC = () => {
         },
         {
             key: 'name',
-            header: t('classDetails.name'),
+            header: t('classDetails.methodName'),
             width: '25%',
             render: (method) => (
                 <span className="font-medium text-indigo-600 dark:text-indigo-400 font-mono text-sm hover:underline">
@@ -175,7 +189,7 @@ const ClassDetails: React.FC = () => {
 
         {
             key: 'logicalName',
-            header: t('classDetails.logicalName'),
+            header: t('classDetails.methodLogicalName'),
             width: '25%',
             render: (method) => (
                 <span className="text-slate-600 dark:text-slate-400 font-mono text-xs">{method.logical_name || '-'}</span>
@@ -183,7 +197,7 @@ const ClassDetails: React.FC = () => {
         },
         {
             key: 'returnType',
-            header: t('classDetails.returnType'),
+            header: t('classDetails.methodReturnType'),
             width: '20%',
             render: (method) => (
                 <span className="text-slate-600 dark:text-slate-400 font-mono text-xs">{method.return_type}</span>
@@ -191,7 +205,7 @@ const ClassDetails: React.FC = () => {
         },
         {
             key: 'complexity',
-            header: t('classDetails.complexity'),
+            header: t('classDetails.methodComplexity'),
             width: '120px',
             align: 'right',
             render: (method) => (
@@ -200,14 +214,14 @@ const ClassDetails: React.FC = () => {
         },
         {
             key: 'loc',
-            header: 'LOC',
-            width: '100px',
+            header: t('classDetails.methodLoc'),
+            width: '200px',
             align: 'right',
             render: (method) => (
                 <span className="text-slate-600 dark:text-slate-400 text-sm">{method.PLOC || '-'}</span>
             ),
         },
-    ], []);
+    ], [t]);
 
     // VirtualizedTable Column 정의 - Fields
     const fieldColumns = useMemo((): Column<Field>[] => [
@@ -292,9 +306,16 @@ const ClassDetails: React.FC = () => {
                         <p className="text-slate-500 dark:text-slate-400 font-mono text-sm mb-1">{classData.package_name}</p>
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-                                    {classData.name}
-                                    {classData.extension ? (classData.extension.startsWith('.') ? classData.extension : `.${classData.extension}`) : ''}
+                                <h1 className="text-3xl font-bold text-slate-900 dark:text-white flex items-baseline gap-0">
+                                    <span>{classData.name}</span>
+                                    {(classData.file_extension || classData.extension) && (
+                                        <span className="text-sm text-slate-600 dark:text-slate-300 font-bold">
+                                            {(() => {
+                                                const ext = classData.file_extension || classData.extension;
+                                                return ext?.startsWith('.') ? ext : `.${ext}`;
+                                            })()}
+                                        </span>
+                                    )}
                                 </h1>
                                 <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${classData.type === 'interface' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-900 dark:text-amber-400 border-amber-200 dark:border-amber-800' : 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800'}`}>
                                     {classData.type}
@@ -360,8 +381,8 @@ const ClassDetails: React.FC = () => {
             </div>
 
             {/* Metrics Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+            <div className="flex flex-col md:flex-row gap-4">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm md:flex-[2]">
                     <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
                         <AlignLeft className="w-4 h-4" /> {t('classDetails.linesOfCode')}
                     </div>
@@ -386,17 +407,17 @@ const ClassDetails: React.FC = () => {
                 </div>
 
                 {/* Complexity Card with Popup Trigger */}
-                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm relative group overflow-visible">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm relative group overflow-visible md:flex-1">
                     <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
                             <Cpu className="w-4 h-4" /> {t('classDetails.complexity')}
-                            <button
-                                onClick={() => setShowComplexityHelp(true)}
-                                className="text-slate-400 hover:text-indigo-500 transition-colors p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-                            >
-                                <HelpCircle className="w-3.5 h-3.5" />
-                            </button>
                         </div>
+                        <button
+                            onClick={() => setShowComplexityHelp(true)}
+                            className="text-slate-400 hover:text-indigo-500 transition-colors p-0.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+                        >
+                            <HelpCircle className="w-3.5 h-3.5" />
+                        </button>
                     </div>
 
                     {(() => {
@@ -416,7 +437,10 @@ const ClassDetails: React.FC = () => {
                         }
 
                         return (
-                            <div className="flex items-baseline justify-center gap-2">
+                            <div
+                                className="flex items-baseline justify-center gap-2 cursor-pointer"
+                                onClick={() => setShowComplexityHelp(true)}
+                            >
                                 <span className={`text-2xl font-bold ${colorClass}`}>{score.toLocaleString()}</span>
                                 <span className={`text-xs font-medium ${colorClass} bg-opacity-10 px-1.5 py-0.5 rounded border border-current`}>
                                     {label}
@@ -426,7 +450,7 @@ const ClassDetails: React.FC = () => {
                     })()}
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm cursor-pointer md:flex-1" onClick={() => setActiveTab('methods')}>
                     <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
                         <Braces className="w-4 h-4" /> {t('classDetails.methods')}
                     </div>
@@ -434,7 +458,7 @@ const ClassDetails: React.FC = () => {
                         <span className="text-2xl font-bold text-slate-900 dark:text-white">{classData.methods.length}</span>
                     </div>
                 </div>
-                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm cursor-pointer md:flex-1" onClick={() => setActiveTab('fields')}>
                     <div className="flex items-center gap-2 mb-2 text-slate-500 dark:text-slate-400 text-sm font-medium">
                         <Database className="w-4 h-4" /> {t('classDetails.fields')}
                     </div>
@@ -485,7 +509,7 @@ const ClassDetails: React.FC = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
+                                className={`px-6 py-4 text-sm font-bold transition-colors border-b-2 whitespace-nowrap ${activeTab === tab.id
                                     ? 'border-indigo-600 text-indigo-700 dark:text-indigo-400 bg-indigo-50/10'
                                     : 'border-transparent text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                                     }`}
@@ -543,12 +567,19 @@ const ClassDetails: React.FC = () => {
                                                 <Markdown remarkPlugins={[remarkGfm]}>{classData.description}</Markdown>
                                             </div>
                                         )}
-                                        <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto mt-4 text-slate-700 dark:text-slate-300">
-                                            {classData.ai_description ? (
-                                                <Markdown remarkPlugins={[remarkGfm]}>{classData.ai_description}</Markdown>
-                                            ) : (
-                                                <p className="text-slate-400 dark:text-slate-500 italic text-sm">{t('classDetails.aiDescriptionPlaceholder')}</p>
-                                            )}
+                                        <div className="relative mt-4">
+                                            {/* AI Generated Badge */}
+                                            <div className="absolute -top-3 -left-3 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
+                                                <Sparkles className="w-3.5 h-3.5" />
+                                                <span>{t('classDetails.aiGenerated')}</span>
+                                            </div>
+                                            <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto text-slate-700 dark:text-slate-300">
+                                                {classData.ai_description ? (
+                                                    <Markdown remarkPlugins={[remarkGfm]}>{classData.ai_description}</Markdown>
+                                                ) : (
+                                                    <p className="text-slate-400 dark:text-slate-500 italic text-sm">{t('classDetails.aiDescriptionPlaceholder')}</p>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -579,9 +610,31 @@ const ClassDetails: React.FC = () => {
 
                     {activeTab === 'methods' && (
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 px-1">{t('classDetails.methodsTab')} ({classData.methods.length})</h3>
+                            <div className="flex items-center justify-between mb-4 px-1">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                                    {t('classDetails.methodsTab')} ({filteredMethods.length}{methodSearchQuery.trim() ? `/${classData.methods.length}` : ''})
+                                </h3>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        placeholder={t('classDetails.searchMethodPlaceholder')}
+                                        value={methodSearchQuery}
+                                        onChange={(e) => setMethodSearchQuery(e.target.value)}
+                                        className="pl-10 pr-10 py-2 border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-sm w-[32rem]"
+                                    />
+                                    {methodSearchQuery && (
+                                        <button
+                                            onClick={() => setMethodSearchQuery('')}
+                                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
                             <VirtualizedTable
-                                data={classData.methods}
+                                data={filteredMethods}
                                 columns={methodColumns}
                                 height={500}
                                 rowHeight={50}

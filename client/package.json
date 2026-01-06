@@ -20,7 +20,7 @@
     "html2canvas": "^1.4.1",
     "i18next": "^23.10.0",
     "i18next-browser-languagedetector": "^7.2.0",
-    "jspdf": "^3.0.4",
+    "jspdf": "^4.0.0",
     "lucide-react": "^0.363.0",
     "mermaid": "^10.9.0",
     "react": "^18.3.1",
