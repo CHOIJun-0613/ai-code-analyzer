@@ -483,6 +483,12 @@
                 { "score": "16+", "status": "Refactoring Needed", "action": "Must extract method or separate responsibilities", "color": "red" }
             ]
         }
+    },
+    "diagram": {
+        "rendering": "Rendering diagram...",
+        "zoomIn": "Zoom In",
+        "zoomOut": "Zoom Out",
+        "resetZoom": "Reset to 100%"
     }
 }
 

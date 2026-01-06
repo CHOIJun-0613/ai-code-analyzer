@@ -485,6 +485,12 @@
                 { "score": "16 이상", "status": "리팩토링 필요", "action": "메서드 추출, 책임 분리 필수", "color": "red" }
             ]
         }
+    },
+    "diagram": {
+        "rendering": "다이어그램 렌더링 중...",
+        "zoomIn": "확대",
+        "zoomOut": "축소",
+        "resetZoom": "100%로 리셋"
     }
 }
 

@@ -1,23 +1,87 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import mermaid from 'mermaid';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 interface MermaidDiagramProps {
     definition: string;
+    initialZoom?: number; // Optional: manually set initial zoom
 }
 
-const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
+/**
+ * Calculate diagram complexity based on node count
+ * @param definition - Mermaid diagram definition
+ * @returns complexity level: 'simple' | 'medium' | 'complex'
+ */
+const calculateComplexity = (definition: string): 'simple' | 'medium' | 'complex' => {
+    if (!definition || definition.trim() === '') return 'medium';
+
+    // Comprehensive node detection
+    // Flowchart: A[text], B(text), C{text}, D([text]), E>text], F{{text}}, etc.
+    // Sequence: participant, actor, etc.
+    const nodePatterns = [
+        /\b[A-Za-z0-9_]+\s*[\[\(\{][^\]]*[\]\)\}]/g,  // A[text], B(text), C{text}
+        /participant\s+[A-Za-z0-9_]+/gi,              // participant A
+        /actor\s+[A-Za-z0-9_]+/gi,                    // actor A
+    ];
+
+    let nodeCount = 0;
+    nodePatterns.forEach(pattern => {
+        const matches = definition.match(pattern);
+        if (matches) nodeCount += matches.length;
+    });
+
+    // Debug log (can be removed in production)
+    if (process.env.NODE_ENV === 'development') {
+        console.log('[MermaidDiagram] Complexity calculation (node-based):', {
+            nodeCount,
+            complexity: nodeCount <= 10 ? '하 (30%)' : nodeCount < 30 ? '중 (100%)' : '상 (200%)',
+            firstLine: definition.split('\n')[0]
+        });
+    }
+
+    // Node-based complexity thresholds:
+    // 하 (simple): 노드 10개 이내 → 30% zoom
+    if (nodeCount <= 10) return 'simple';
+
+    // 상 (complex): 노드 30개 이상 → 200% zoom
+    if (nodeCount >= 30) return 'complex';
+
+    // 중 (medium): 노드 11~29개 → 100% zoom
+    return 'medium';
+};
+
+/**
+ * Get initial zoom level based on complexity (node count)
+ * 하(10개 이내): 30%, 중(11~29개): 100%, 상(30개 이상): 200%
+ */
+const getInitialZoom = (complexity: 'simple' | 'medium' | 'complex'): number => {
+    switch (complexity) {
+        case 'simple': return 0.3;   // 30% - 노드 10개 이내
+        case 'medium': return 1.0;   // 100% - 노드 11~29개
+        case 'complex': return 2.0;  // 200% - 노드 30개 이상
+    }
+};
+
+const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition, initialZoom }) => {
+    const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const [svgContent, setSvgContent] = useState<string>('');
     const [id] = useState(() => `mermaid-${Math.random().toString(36).substr(2, 9)}`);
 
-    // User requested fixed 30% initial zoom
-    const [zoom, setZoom] = useState(0.3);
+    // Calculate initial zoom based on diagram complexity (if not manually specified)
+    const calculatedZoom = React.useMemo(() => {
+        if (initialZoom !== undefined) return initialZoom;
+        const complexity = calculateComplexity(definition);
+        return getInitialZoom(complexity);
+    }, [definition, initialZoom]);
 
-    // Reset zoom to 30% when definition changes
+    const [zoom, setZoom] = useState(calculatedZoom);
+
+    // Reset zoom to calculated value when definition changes
     useEffect(() => {
-        setZoom(0.3);
-    }, [definition]);
+        setZoom(calculatedZoom);
+    }, [calculatedZoom]);
 
     useEffect(() => {
         let mounted = true;
@@ -30,9 +94,12 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
 
                 if (!mounted) return;
 
+                // Detect dark mode from document root class
+                const isDarkMode = document.documentElement.classList.contains('dark');
+
                 mermaid.initialize({
                     startOnLoad: false,
-                    theme: 'default',
+                    theme: isDarkMode ? 'dark' : 'default',
                     securityLevel: 'loose',
                     logLevel: 'error',
                 });
@@ -116,21 +183,21 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
                 <button
                     onClick={(e) => { e.stopPropagation(); setZoom(z => Math.min(z + 0.1, 5)); }}
                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-500 dark:text-slate-400"
-                    title="Zoom In"
+                    title={t('diagram.zoomIn')}
                 >
                     <ZoomIn className="w-4 h-4" />
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); setZoom(z => Math.max(z - 0.1, 0.1)); }}
                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-500 dark:text-slate-400"
-                    title="Zoom Out"
+                    title={t('diagram.zoomOut')}
                 >
                     <ZoomOut className="w-4 h-4" />
                 </button>
                 <button
                     onClick={(e) => { e.stopPropagation(); setZoom(1); }}
                     className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md text-slate-500 dark:text-slate-400"
-                    title="Reset Zoom to 100%"
+                    title={t('diagram.resetZoom')}
                 >
                     <RotateCcw className="w-4 h-4" />
                 </button>
@@ -138,7 +205,7 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
 
             {/* Diagram Container */}
             <div
-                className={`overflow-auto custom-scrollbar p-4 bg-white dark:bg-white text-left ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
+                className={`overflow-auto custom-scrollbar p-4 bg-white dark:bg-[#1e1e1e] text-left ${isDragging ? 'cursor-grabbing select-none' : 'cursor-grab'}`}
                 style={{ maxHeight: '80vh', minHeight: '200px' }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
@@ -162,8 +229,8 @@ const MermaidDiagram: React.FC<MermaidDiagramProps> = ({ definition }) => {
                         dangerouslySetInnerHTML={{ __html: svgContent }}
                     />
                 ) : (
-                    <div className="flex items-center justify-center h-full text-slate-400">
-                        Rendering diagram...
+                    <div className="flex items-center justify-center h-full text-slate-400 dark:text-slate-500">
+                        {t('diagram.rendering')}
                     </div>
                 )}
             </div>
