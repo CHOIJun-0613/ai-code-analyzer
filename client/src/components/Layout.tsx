@@ -247,7 +247,7 @@ const Layout: React.FC = () => {
             </div>
 
             {/* Main Content */}
-            <div ref={mainContentRef} className="flex-1 flex flex-col overflow-hidden relative">
+            <div className="flex-1 flex flex-col overflow-hidden relative">
                 {/* Top Header */}
                 <header className={`h-12 border-b flex items-center justify-between px-6 shrink-0 z-10 ${headerClass}`}>
                     <div className="flex items-center">
@@ -269,7 +269,7 @@ const Layout: React.FC = () => {
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-auto">
+                <div ref={mainContentRef} className="flex-1 overflow-auto">
                     <div className={`p-8 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500`}>
                         <Outlet />
                     </div>
