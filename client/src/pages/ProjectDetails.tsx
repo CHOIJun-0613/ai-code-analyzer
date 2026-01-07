@@ -621,12 +621,23 @@ const ProjectDetails: React.FC = () => {
                                 </div>
                                 <input
                                     type="text"
-                                    className="block w-full pl-8 pr-2 py-1 border border-slate-200 dark:border-slate-700 rounded-lg text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    className="block w-full pl-8 pr-8 py-1 border border-slate-200 dark:border-slate-700 rounded-lg text-xs placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-all"
                                     placeholder={t('projectDetails.searchPackages')}
                                     value={packageSearchQuery}
                                     onChange={(e) => setPackageSearchQuery(e.target.value)}
                                     onClick={(e) => e.stopPropagation()}
                                 />
+                                {packageSearchQuery && (
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setPackageSearchQuery('');
+                                        }}
+                                        className="absolute inset-y-0 right-0 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                    >
+                                        <X className="h-3 w-3" />
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -691,11 +702,19 @@ const ProjectDetails: React.FC = () => {
                                 </div>
                                 <input
                                     type="text"
-                                    className="block w-full pl-10 pr-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                                    className="block w-full pl-10 pr-10 py-1.5 border border-slate-200 dark:border-slate-700 rounded-lg text-sm placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white dark:bg-slate-800 text-slate-900 dark:text-white transition-all"
                                     placeholder={t('projectDetails.searchClasses')}
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
+                                {searchQuery && (
+                                    <button
+                                        onClick={() => setSearchQuery('')}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                )}
                             </div>
                         </div>
 
