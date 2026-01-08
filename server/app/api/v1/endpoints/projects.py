@@ -55,21 +55,31 @@ def get_projects(current_user: Any = Depends(deps.get_current_user)):
     if is_admin:
         query = """
         MATCH (p:Project)
-        RETURN p
+        OPTIONAL MATCH (p)-[:CONTAINS]->(pkg:Package)
+        OPTIONAL MATCH (pkg)-[:CONTAINS]->(c:Class)
+        RETURN p, count(distinct pkg) as package_count, count(distinct c) as class_count
         ORDER BY p.updated_at DESC
         """
         params = {}
     else:
         query = """
         MATCH (u:User {id: $username})-[:BELONGS_TO]->(g:UserGroup)-[:HAS_ACCESS_TO]->(p:Project)
-        RETURN DISTINCT p
+        OPTIONAL MATCH (p)-[:CONTAINS]->(pkg:Package)
+        OPTIONAL MATCH (pkg)-[:CONTAINS]->(c:Class)
+        RETURN p, count(distinct pkg) as package_count, count(distinct c) as class_count
         ORDER BY p.updated_at DESC
         """
         params = {"username": current_user.username}
 
     with pool.session() as session:
         result = session.run(query, **params)
-        projects = [dict(record["p"]) for record in result]
+        projects = []
+        for record in result:
+            project_data = dict(record["p"])
+            project_data["package_count"] = record["package_count"]
+            project_data["class_count"] = record["class_count"]
+            projects.append(project_data)
+            
     return projects
 
 @router.get("/{project_name}/stats")
