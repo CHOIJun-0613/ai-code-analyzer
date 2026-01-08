@@ -35,7 +35,7 @@ const ProjectList: React.FC = () => {
     // Filter projects based on search term
     const filteredProjects = useMemo(() => {
         if (!searchTerm) return projects;
-        return projects.filter(p => 
+        return projects.filter(p =>
             p.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }, [projects, searchTerm]);
@@ -47,7 +47,7 @@ const ProjectList: React.FC = () => {
     const columns: Column<Project>[] = [
         {
             key: 'name',
-            header: 'Project Name',
+            header: <div className="w-full text-center">{t('projectList.projectName')}</div>,
             width: '30%',
             sortable: true,
             render: (project) => (
@@ -59,7 +59,7 @@ const ProjectList: React.FC = () => {
         },
         {
             key: 'package_count',
-            header: 'Package Count',
+            header: t('projectList.packageCount'),
             width: '15%',
             sortable: true,
             align: 'center',
@@ -72,7 +72,7 @@ const ProjectList: React.FC = () => {
         },
         {
             key: 'class_count',
-            header: 'Class Count',
+            header: t('projectList.classCount'),
             width: '15%',
             sortable: true,
             align: 'center',
@@ -85,7 +85,7 @@ const ProjectList: React.FC = () => {
         },
         {
             key: 'total_file_count',
-            header: 'Total Files',
+            header: t('projectList.totalFiles'),
             width: '15%',
             sortable: true,
             align: 'center',
@@ -99,11 +99,20 @@ const ProjectList: React.FC = () => {
         },
         {
             key: 'updated_at',
-            header: 'Last Modified',
+            header: t('projectList.lastModified'),
             width: '25%',
             sortable: true,
-            align: 'right',
-            render: (project) => new Date(project.updated_at).toLocaleString()
+            align: 'center',
+            render: (project) => {
+                const date = new Date(project.updated_at);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const hours = String(date.getHours()).padStart(2, '0');
+                const minutes = String(date.getMinutes()).padStart(2, '0');
+                const seconds = String(date.getSeconds()).padStart(2, '0');
+                return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+            }
         }
     ];
 
@@ -111,9 +120,9 @@ const ProjectList: React.FC = () => {
         <div className="space-y-6 h-[calc(100vh-140px)] flex flex-col">
             <div className="flex items-center justify-between shrink-0">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Project List</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t('projectList.title')}</h1>
                     <p className="text-slate-500 dark:text-slate-400 mt-1">
-                        Manage and view all your analyzed projects
+                        {t('projectList.subtitle')}
                     </p>
                 </div>
             </div>
@@ -125,11 +134,22 @@ const ProjectList: React.FC = () => {
                 </div>
                 <input
                     type="text"
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors duration-200"
-                    placeholder="Search projects by name..."
+                    className="block w-full pl-10 pr-10 py-2 border border-slate-300 dark:border-slate-700 rounded-xl leading-5 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm transition-colors duration-200"
+                    placeholder={t('projectList.searchPlaceholder')}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                {searchTerm && (
+                    <button
+                        onClick={() => setSearchTerm('')}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    >
+                        <span className="sr-only">Clear search</span>
+                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                )}
             </div>
 
             {/* Project Grid */}

@@ -293,10 +293,10 @@ const ProjectDetails: React.FC = () => {
         if (searchQuery || selectedPackage === ALL_PACKAGES) {
             baseColumns.push({
                 key: 'package',
-                header: t('projectDetails.packages'),
+                header: t('projectDetails.package'),
                 width: '34%',
                 render: (cls) => (
-                    <span className="text-slate-400 dark:text-slate-500 text-xs truncate block" title={cls.packageName}>
+                    <span className="text-slate-600 dark:text-slate-400 font-medium text-sm truncate block" title={cls.packageName}>
                         {cls.packageName}
                     </span>
                 ),
@@ -720,12 +720,12 @@ const ProjectDetails: React.FC = () => {
 
                         {selectedPackage && !searchQuery && (
                             <span className="text-xs font-medium px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-500 dark:text-slate-400 ml-4 whitespace-nowrap">
-                                {filteredClasses.length} {t('projectDetails.items')}
+                                {filteredClasses.length.toLocaleString()} {t('projectDetails.items')}
                             </span>
                         )}
                         {searchQuery && (
                             <span className="text-xs font-medium px-2.5 py-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-slate-500 dark:text-slate-400 ml-4 whitespace-nowrap">
-                                {filteredClasses.length} {t('projectDetails.resultsFound')}
+                                {filteredClasses.length.toLocaleString()} {t('projectDetails.resultsFound')}
                             </span>
                         )}
                     </div>

@@ -17,6 +17,7 @@ description: # Agent D: Reporter (Documentation)
    - **Filename**: `{{수정제목}}-{{일련번호}}-작업결과-YYYYMMDD.md`
    - **Contents**: Summary, Changed Files (Server/Client), Test Report.
 2. **Git Commit Suggestion**:
+   - **Language**: Korean 
    - Generate a clear Commit Subject and Body.
 
 ## Step 3: Notification

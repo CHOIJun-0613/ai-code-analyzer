@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
-import { LayoutDashboard, FileCode, LogOut, ChevronLeft, ChevronRight, Settings, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, FileCode, LogOut, ChevronLeft, ChevronRight, Settings, ArrowLeft, ShieldCheck, Box } from 'lucide-react';
 import AnimatedLogo from './AnimatedLogo';
 import SettingsModal, { Theme } from './SettingsModal';
 
@@ -118,26 +118,26 @@ const Layout: React.FC = () => {
                     </div>
 
                     {/* Dashboard Group */}
-                    <div className={`rounded-xl overflow-hidden transition-all duration-300 ${(location.pathname === '/' || location.pathname.startsWith('/projects')) && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
-                        <div className={`flex items-center px-4 py-3 transition-all duration-200 group ${(location.pathname === '/' || location.pathname.startsWith('/projects')) ? 'text-white' : 'text-slate-400 hover:text-white'} ${isCollapsed ? 'justify-center' : ''}`} title={isCollapsed ? t('layout.dashboard') : ""}>
-                            <LayoutDashboard className={`shrink-0 w-5 h-5 transition-colors ${(location.pathname === '/' || location.pathname.startsWith('/projects')) ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
+                    <div className={`rounded-xl overflow-hidden transition-all duration-300 mb-1 ${(location.pathname === '/' || location.pathname.startsWith('/projects')) && !isCollapsed ? 'bg-slate-800/50' : ''}`}>
+                        <Link
+                            to="/"
+                            className={`flex items-center px-4 py-3 transition-all duration-200 group relative
+                                ${(location.pathname === '/' && isCollapsed)
+                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20 rounded-xl'
+                                    : (location.pathname === '/')
+                                        ? 'text-white'
+                                        : 'text-slate-400 hover:text-white'}
+                                ${isCollapsed ? 'justify-center mx-3 my-1' : ''}`}
+                            title={isCollapsed ? t('layout.dashboard') : ""}
+                        >
+                            <LayoutDashboard className={`shrink-0 w-5 h-5 transition-colors ${location.pathname === '/' ? 'text-indigo-400' : 'text-slate-400 group-hover:text-white'}`} />
                             <span className={`ml-3 font-medium flex-1 whitespace-nowrap transition-all duration-200 ${isCollapsed ? 'opacity-0 w-0 overflow-hidden' : 'opacity-100'}`}>
                                 {t('layout.dashboard')}
                             </span>
-                        </div>
+                        </Link>
 
                         {/* Submenu - Only show when expanded */}
                         <div className={`pl-11 pr-4 pb-2 space-y-1 ${isCollapsed ? 'hidden' : 'block'}`}>
-                            <Link
-                                to="/"
-                                className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${location.pathname === '/'
-                                    ? 'bg-indigo-500/10 text-indigo-400'
-                                    : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
-                                    }`}
-                            >
-                                <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                <span className="whitespace-nowrap">{t('layout.dashboard')}</span>
-                            </Link>
                             <Link
                                 to="/projects"
                                 className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${location.pathname.startsWith('/projects')
@@ -146,7 +146,7 @@ const Layout: React.FC = () => {
                                     }`}
                             >
                                 <span className="w-1.5 h-1.5 rounded-full bg-current mr-2 opacity-50 group-hover:opacity-100" />
-                                <span className="whitespace-nowrap">Project List</span>
+                                <span className="whitespace-nowrap">{t('layout.projectList')}</span>
                             </Link>
                         </div>
                     </div>

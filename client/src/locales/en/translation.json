@@ -21,6 +21,7 @@
     "layout": {
         "main": "Analysis",
         "dashboard": "Dashboard",
+        "projectList": "Project List",
         "analysis": "Code Analysis",
         "codeStaticAnalysis": "Code Static Analysis",
         "codeAiAnalysis": "Code AI Analysis",
@@ -33,6 +34,17 @@
         "analysisManagement": "Code Analysis",
         "analysisHistory": "Analysis Log",
         "aiPromptManagement": "AI Prompt Management"
+    },
+    "projectList": {
+        "title": "Project List",
+        "subtitle": "Manage and view all your analyzed projects",
+        "searchPlaceholder": "Search projects by name...",
+        "projectName": "Project Name",
+        "packageCount": "Package Count",
+        "classCount": "Class Count",
+        "totalFiles": "Total Files",
+        "lastModified": "Last Modified",
+        "noProjects": "No projects found matching your search."
     },
     "aiPrompt": {
         "title": "AI Prompt Management",
@@ -274,6 +286,7 @@
         "allClasses": "All Project Classes",
         "physicalName": "Physical Name",
         "logicalName": "Logical Name",
+        "package": "Package",
         "searchPackages": "Search packages...",
         "searchClasses": "Search classes (physical or logical name)...",
         "items": "Items",

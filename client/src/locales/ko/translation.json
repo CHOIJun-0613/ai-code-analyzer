@@ -22,6 +22,7 @@
     "layout": {
         "main": "분석",
         "dashboard": "대시보드",
+        "projectList": "프로젝트 목록",
         "analysis": "코드 분석",
         "codeStaticAnalysis": "코드 정적 분석",
         "codeAiAnalysis": "코드 AI 분석",
@@ -34,6 +35,17 @@
         "logout": "로그아웃",
         "analysisManagement": "코드 분석",
         "analysisHistory": "분석 로그 관리"
+    },
+    "projectList": {
+        "title": "프로젝트 목록",
+        "subtitle": "분석된 전체 프로젝트를 관리하고 조회합니다",
+        "searchPlaceholder": "프로젝트명으로 검색...",
+        "projectName": "프로젝트명",
+        "packageCount": "패키지 수",
+        "classCount": "클래스 수",
+        "totalFiles": "총 파일 수",
+        "lastModified": "최종 수정일",
+        "noProjects": "검색 결과가 없습니다."
     },
     "settings": {
         "title": "화면 설정",
@@ -276,8 +288,9 @@
         "configFiles": "설정 파일 수",
         "ignored": "분석 비대상 파일 수",
         "allClasses": "프로젝트 전체 클래스",
-        "physicalName": "Physical Name",
-        "logicalName": "Logical Name",
+        "physicalName": "Class 명",
+        "logicalName": "Class 논리명",
+        "package": "Package",
         "searchPackages": "패키지 검색...",
         "searchClasses": "클래스 검색 (물리명 또는 논리명)...",
         "items": "Items",

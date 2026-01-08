@@ -22,13 +22,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-transparent dark:border-slate-700">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-800">
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('settings.title')}</h2>
                     <button
                         onClick={onClose}
-                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                        className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     >
                         <X className="w-5 h-5" />
                     </button>
@@ -38,7 +38,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                 <div className="p-6 space-y-8">
                     {/* Appearance Section */}
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('settings.appearance')}</h3>
+                        <h3 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-4">{t('settings.appearance')}</h3>
 
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
@@ -47,7 +47,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                                     onClick={() => onThemeChange('normal')}
                                     className={`relative p-4 rounded-xl border-2 text-left transition-all ${currentTheme === 'normal'
                                         ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
-                                        : 'border-gray-200 hover:border-indigo-200 hover:bg-gray-50'
+                                        : 'border-gray-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
@@ -60,8 +60,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                                             </div>
                                         )}
                                     </div>
-                                    <div className="font-semibold text-gray-900">{t('settings.normal')}</div>
-                                    <div className="text-xs text-gray-500 mt-1">{t('settings.normalDesc')}</div>
+                                    <div className="font-semibold text-gray-900 dark:text-slate-200">{t('settings.normal')}</div>
+                                    <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">{t('settings.normalDesc')}</div>
                                 </button>
 
                                 {/* Dark Modern Theme Option */}
@@ -69,11 +69,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                                     onClick={() => onThemeChange('dark-modern')}
                                     className={`relative p-4 rounded-xl border-2 text-left transition-all ${currentTheme === 'dark-modern'
                                         ? 'border-indigo-600 bg-indigo-900/10 ring-1 ring-indigo-600'
-                                        : 'border-gray-200 hover:border-indigo-200 hover:bg-gray-50'
+                                        : 'border-gray-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-slate-800'
                                         }`}
                                 >
                                     <div className="flex items-center justify-between mb-2">
-                                        <div className="p-2 bg-slate-900 rounded-lg shadow-sm">
+                                        <div className="p-2 bg-slate-900 border border-slate-700 rounded-lg shadow-sm">
                                             <Moon className="w-5 h-5 text-indigo-400" />
                                         </div>
                                         {currentTheme === 'dark-modern' && (
@@ -82,8 +82,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                                             </div>
                                         )}
                                     </div>
-                                    <div className="font-semibold text-gray-900">{t('settings.darkModern')}</div>
-                                    <div className="text-xs text-gray-500 mt-1">{t('settings.darkModernDesc')}</div>
+                                    <div className="font-semibold text-gray-900 dark:text-slate-200">{t('settings.darkModern')}</div>
+                                    <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">{t('settings.darkModernDesc')}</div>
                                 </button>
                             </div>
                         </div>
@@ -91,14 +91,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
 
                     {/* Language Section */}
                     <div>
-                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">{t('settings.language')}</h3>
+                        <h3 className="text-sm font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider mb-4">{t('settings.language')}</h3>
                         <div className="grid grid-cols-2 gap-4">
                             {/* Korean Option */}
                             <button
                                 onClick={() => changeLanguage('ko')}
                                 className={`relative p-4 rounded-xl border-2 text-left transition-all ${i18n.language === 'ko'
                                     ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
-                                    : 'border-gray-200 hover:border-indigo-200 hover:bg-gray-50'
+                                    : 'border-gray-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-slate-800'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-2">
@@ -111,8 +111,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                                         </div>
                                     )}
                                 </div>
-                                <div className="font-semibold text-gray-900">한국어</div>
-                                <div className="text-xs text-gray-500 mt-1">Korean</div>
+                                <div className="font-semibold text-gray-900 dark:text-slate-200">한국어</div>
+                                <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">Korean</div>
                             </button>
 
                             {/* English Option */}
@@ -120,7 +120,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                                 onClick={() => changeLanguage('en')}
                                 className={`relative p-4 rounded-xl border-2 text-left transition-all ${i18n.language === 'en'
                                     ? 'border-indigo-600 bg-indigo-50/50 ring-1 ring-indigo-600'
-                                    : 'border-gray-200 hover:border-indigo-200 hover:bg-gray-50'
+                                    : 'border-gray-200 dark:border-slate-700 hover:border-indigo-200 dark:hover:border-indigo-500 hover:bg-gray-50 dark:hover:bg-slate-800'
                                     }`}
                             >
                                 <div className="flex items-center justify-between mb-2">
@@ -133,15 +133,15 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                                         </div>
                                     )}
                                 </div>
-                                <div className="font-semibold text-gray-900">English</div>
-                                <div className="text-xs text-gray-500 mt-1">English</div>
+                                <div className="font-semibold text-gray-900 dark:text-slate-200">English</div>
+                                <div className="text-xs text-gray-500 dark:text-slate-400 mt-1">English</div>
                             </button>
                         </div>
                     </div>
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end">
+                <div className="p-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-800 flex justify-end">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-white border border-gray-200 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors"
