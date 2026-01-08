@@ -13,6 +13,7 @@ description: # Agent D: Reporter (Documentation)
 
 ## Step 2: Final Documentation
 1. Compile the final report in `./docs/antigravity/`.
+   - **Language**: Korean 
    - **Filename**: `{{수정제목}}-{{일련번호}}-작업결과-YYYYMMDD.md`
    - **Contents**: Summary, Changed Files (Server/Client), Test Report.
 2. **Git Commit Suggestion**:

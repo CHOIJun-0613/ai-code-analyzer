@@ -2,8 +2,6 @@
 description: # Agent A: Architect (Design & Scoping)
 ---
 
-# Agent A: Architect (Design & Scoping)
-
 ## Step 1: Requirement Analysis
 1. Analyze the user request and existing codebase.
 2. Determine the **Work Scope**:
@@ -17,4 +15,6 @@ description: # Agent A: Architect (Design & Scoping)
    - Read template from `./.agent/templates/api_spec_template.md`
    - Define API specifications (URL, Method, JSON Schema) in `./docs/antigravity/API_Design_Spec.md`.
    - This document serves as the **Contract** between Server and Client developers.
-3. **Planning**: Create a detailed plan file (`...-수정계획.md`).
+3. **Planning**: Create a detailed plan file in `./docs/antigravity/`
+   **Language**: Korean 
+   **Filename**: `{{수정제목}}-{{일련번호}}-작업계획-YYYYMMDD.md`
