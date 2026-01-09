@@ -2,6 +2,8 @@
 description: # Workflow: Dynamic Full-Stack Orchestrator
 ---
 
+// turbo-all
+
 ## 0. Configuration
 
 - **Project Root**: `./` (Relative Path)

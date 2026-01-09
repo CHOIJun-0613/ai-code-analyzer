@@ -17,6 +17,61 @@ from csa.services.graph_db import converters
 class ClassMixin:
     """Manage class nodes and their relationships."""
 
+    def get_class_analysis_info(self, class_name: str, project_name: str) -> Optional[dict]:
+        """
+        클래스의 분석 정보(해시코드, AI 설명)를 조회합니다.
+
+        Args:
+            class_name: 클래스명
+            project_name: 프로젝트명
+
+        Returns:
+            dict: 분석 정보 (source_hashcode, ai_description) 또는 None
+        """
+        return self._execute_read(self._get_class_analysis_info_tx, class_name, project_name)
+
+    @staticmethod
+    def _get_class_analysis_info_tx(tx, class_name: str, project_name: str) -> Optional[dict]:
+        query = """
+        MATCH (c:Class {name: $class_name, project_name: $project_name})
+        RETURN c.source_hashcode as source_hashcode, c.ai_description as ai_description
+        """
+        result = tx.run(query, class_name=class_name, project_name=project_name)
+        record = result.single()
+        if record:
+            return {
+                "source_hashcode": record["source_hashcode"],
+                "ai_description": record["ai_description"]
+            }
+        return None
+
+    def get_project_class_hashes(self, project_name: str) -> dict[str, dict]:
+        """
+        프로젝트 내 모든 클래스의 해시코드와 AI 설명을 조회합니다.
+
+        Args:
+            project_name: 프로젝트명
+
+        Returns:
+            dict: {class_name: {'source_hashcode': str, 'ai_description': str}}
+        """
+        return self._execute_read(self._get_project_class_hashes_tx, project_name)
+
+    @staticmethod
+    def _get_project_class_hashes_tx(tx, project_name: str) -> dict[str, dict]:
+        query = """
+        MATCH (c:Class {project_name: $project_name})
+        RETURN c.name as name, c.source_hashcode as source_hashcode, c.ai_description as ai_description
+        """
+        result = tx.run(query, project_name=project_name)
+        return {
+            record["name"]: {
+                "source_hashcode": record["source_hashcode"],
+                "ai_description": record["ai_description"]
+            }
+            for record in result
+        }
+
     def add_class(
         self,
         class_node: Class,
@@ -86,6 +141,7 @@ class ClassMixin:
                     cls.type = c.type,
                     cls.sub_type = c.sub_type,
                     cls.source = c.source,
+                    cls.source_hashcode = c.source_hashcode,
                     cls.logical_name = c.logical_name,
                     cls.superclass = c.superclass,
                     cls.interfaces = c.interfaces,

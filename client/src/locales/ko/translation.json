@@ -460,7 +460,8 @@
         "complexityTooltipNormal": "Normal (일반 클래스)",
         "complexityTooltipLarge": "Large (대형 서비스)",
         "complexityTooltipHigh": "High (리팩토링 필요)",
-        "noSource": "소스 코드를 사용할 수 없습니다"
+        "noSource": "소스 코드를 사용할 수 없습니다",
+        "sourceHash": "소스 해시"
     },
     "methodDetails": {
         "title": "메서드 상세",

@@ -460,7 +460,8 @@
         "complexityTooltipNormal": "Normal (General Class)",
         "complexityTooltipLarge": "Large (Large Service)",
         "complexityTooltipHigh": "High (Refactoring Required)",
-        "noSource": "No source code available"
+        "noSource": "No source code available",
+        "sourceHash": "Source Hash"
     },
     "methodDetails": {
         "title": "Method Details",

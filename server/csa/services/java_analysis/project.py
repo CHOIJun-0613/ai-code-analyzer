@@ -9,6 +9,7 @@ import re
 import time
 import psutil
 import multiprocessing
+import hashlib
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from queue import Queue
 from threading import Lock
@@ -29,6 +30,9 @@ from csa.models.graph_entities import (
     Package,
     SqlStatement,
     TestClass,
+    JpaEntity,
+    JpaRepository,
+    JpaQuery,
 )
 from csa.services.graph_db import GraphDB
 from csa.utils.logger import get_logger
@@ -472,20 +476,33 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         use_ai = should_use_ai
         
         ai_description = ""
+        source_hashcode = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
 
         if use_ai and AI_ANALYZER_AVAILABLE:
             try:
-                analyzer = None
-                if ai_options and AIAnalyzer and AIConfig:
-                    # worker-specific analyzer
-                    config = AIConfig(ai_options)
-                    analyzer = AIAnalyzer(config)
-                else:
-                    # global analyzer
-                    analyzer = get_ai_analyzer()
-                    
-                if analyzer and analyzer.is_available():
-                    ai_description = analyzer.analyze_class(file_content, class_name)
+                # Check for existing analysis if DB is available
+                skip_ai = False
+                if graph_db:
+                    analysis_info = graph_db.get_class_analysis_info(class_name, project_name)
+                    if analysis_info and analysis_info.get("source_hashcode") == source_hashcode:
+                        existing_ai_desc = analysis_info.get("ai_description")
+                        if existing_ai_desc:
+                            ai_description = existing_ai_desc
+                            skip_ai = True
+                            logger.info(f"Skipping AI analysis for {class_name} (source unchanged)")
+
+                if not skip_ai:
+                    analyzer = None
+                    if ai_options and AIAnalyzer and AIConfig:
+                        # worker-specific analyzer
+                        config = AIConfig(ai_options)
+                        analyzer = AIAnalyzer(config)
+                    else:
+                        # global analyzer
+                        analyzer = get_ai_analyzer()
+                        
+                    if analyzer and analyzer.is_available():
+                        ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
                 logger.warning(f"AI Class 분석 실패 ({class_name}): {e}")
                 ai_description = ""
@@ -518,7 +535,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             PLOC=loc_metrics.ploc,
             LLOC=loc_metrics.lloc,
             CLOC=loc_metrics.cloc,
-            code_complexity=0  # 메서드와 필드 추가 후 재계산
+            code_complexity=0,  # 메서드와 필드 추가 후 재계산
+            source_hashcode=source_hashcode
         )
 
         # imports 추가
@@ -830,6 +848,15 @@ def parse_java_project_full(
     logger.info(f"Starting Java project analysis in: {directory}")
     logger.info(f"Project name: {project_name}")
 
+    # Fetch existing class hashes for skipping analysis
+    existing_hashes = {}
+    if graph_db:
+        try:
+            existing_hashes = graph_db.get_project_class_hashes(project_name)
+            logger.info(f"Loaded {len(existing_hashes)} existing class hashes for incremental analysis")
+        except Exception as e:
+            logger.warning(f"Failed to load existing class hashes: {e}")
+
     java_file_count = 0
     processed_file_count = 0
     
@@ -935,6 +962,16 @@ def parse_java_project_full(
                     # LOC 메트릭 계산
                     loc_metrics = calculate_loc(file_content)
 
+                    # Source Hash Calculation & Incremental Analysis Check
+                    source_hashcode = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
+                    ai_description = ""
+                    
+                    if class_name in existing_hashes:
+                        info = existing_hashes[class_name]
+                        if info.get("source_hashcode") == source_hashcode:
+                            ai_description = info.get("ai_description", "")
+                            # logger.debug(f"Reusing existing analysis for {class_name}")
+
                     classes[class_key] = Class(
                         name=class_name,
                         logical_name=class_logical_name if class_logical_name else "",
@@ -942,11 +979,12 @@ def parse_java_project_full(
                         type=class_type,
                         sub_type=sub_type,
                         source=file_content,
+                        source_hashcode=source_hashcode,
                         annotations=class_annotations,
                         package_name=package_name,
                         project_name=project_name,
                         description=class_description if class_description else "",
-                        ai_description="",
+                        ai_description=ai_description,
                         bxm_category=class_logical_name if class_logical_name else "",
                         PLOC=loc_metrics.ploc,
                         LLOC=loc_metrics.lloc,
@@ -2012,4 +2050,3 @@ __all__ = [
     "parse_java_project_streaming",
     "parse_single_java_file",
 ]
-

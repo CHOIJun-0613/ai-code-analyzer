@@ -54,6 +54,7 @@ interface ClassData {
     code_complexity?: number;
     fields: Field[];
     methods: Method[];
+    source_hashcode?: string;
 }
 
 const ClassDetails: React.FC = () => {
@@ -590,6 +591,13 @@ const ClassDetails: React.FC = () => {
                     {activeTab === 'source' && (
                         <div className="h-full flex flex-col">
                             {/* Toolbar Removed form here */}
+
+                            {classData.source_hashcode && (
+                                <div className="mb-3 flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-mono bg-slate-50 dark:bg-slate-800/50 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-800">
+                                    <span className="font-semibold text-slate-700 dark:text-slate-300 select-none">{t('classDetails.sourceHash')}:</span>
+                                    <span className="text-slate-600 dark:text-slate-400 break-all">{classData.source_hashcode}</span>
+                                </div>
+                            )}
 
                             <div className="bg-white dark:bg-[#1e1e1e] rounded-xl overflow-hidden text-sm border border-slate-200 dark:border-slate-900/10 shadow-inner h-[600px] flex font-mono transition-colors duration-300">
                                 <div className="overflow-auto w-full h-full flex">

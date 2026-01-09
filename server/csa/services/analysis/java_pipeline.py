@@ -52,7 +52,7 @@ def analyze_full_project_java(
         return _analyze_with_streaming(java_source_folder, project_name, graph_db, logger, ai_options, source_options, use_ai_analysis, stop_check_callback)
     else:
         logger.info("Using BATCH parsing mode (traditional)")
-        return _analyze_with_batch(java_source_folder, project_name, logger, source_options=source_options, stop_check_callback=stop_check_callback)
+        return _analyze_with_batch(java_source_folder, project_name, graph_db, logger, source_options=source_options, stop_check_callback=stop_check_callback)
 
 
 def _analyze_with_streaming(
@@ -157,6 +157,7 @@ def _analyze_with_streaming(
 def _analyze_with_batch(
     java_source_folder: str,
     project_name: Optional[str],
+    graph_db: Optional[GraphDB],
     logger,
     source_options: dict = None,
     stop_check_callback: callable = None,
@@ -191,7 +192,7 @@ def _analyze_with_batch(
         test_classes,
         sql_statements,
         detected_project_name,
-    ) = parse_java_project_full(java_source_folder, source_options=source_options, stop_check_callback=stop_check_callback)
+    ) = parse_java_project_full(java_source_folder, graph_db=graph_db, source_options=source_options, stop_check_callback=stop_check_callback)
 
     final_project_name = determine_project_name(project_name, detected_project_name, logger)
     logger.info("Project name: %s", final_project_name)

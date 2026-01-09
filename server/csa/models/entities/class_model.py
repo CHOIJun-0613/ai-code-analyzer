@@ -88,6 +88,7 @@ class Class(BaseModel):
     properties: list[Field] = []
     calls: list[MethodCall] = []
     source: str = ""
+    source_hashcode: str = ""
     superclass: str | None = None
     interfaces: list[str] = []
     imports: list[str] = []
