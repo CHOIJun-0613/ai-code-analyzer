@@ -364,21 +364,21 @@ class RulesManager:
     
     def get_logical_name_rules(self, project_name: str = None) -> Dict[str, Any]:
         """논리명 규칙 반환 (Project Agnostic)"""
-        # load_rules should have been called by handlers.py, but for safety/dev
+        # Worker processes need auto-load
         if not self._rules_loaded:
-             pass # Assume loaded or caller handles it? 
-             # Requirement 3 says "Start loading when analysis starts". 
-             # So getters should just return what's there. 
-             # But for backward compat/safety, maybe empty check?
-             pass
+            self.load_rules()
         return self._logical_name_rules
 
     def get_description_rules(self, project_name: str = None) -> Dict[str, Any]:
         """Description 규칙 반환 (Project Agnostic)"""
+        if not self._rules_loaded:
+            self.load_rules()
         return self._description_rules
 
     def get_class_subtype_rules(self, project_name: str = None) -> List[Dict[str, Any]]:
         """Class sub-type 규칙 반환 (Project Agnostic)"""
+        if not self._rules_loaded:
+            self.load_rules()
         return self._class_subtype_rules
 
     def reload_rules(self):

@@ -138,7 +138,7 @@ def analyze_project(
     """Analyze project artifacts and optionally persist them into Neo4j."""
     
     # 1. 분석 시작 시 최신 규칙 로드 (Global Dynamic Rules)
-    rules_manager.load_rules()
+    rules_manager.reload_rules()
 
     # Cancellation Check Helper
     # Cancellation Check Helper

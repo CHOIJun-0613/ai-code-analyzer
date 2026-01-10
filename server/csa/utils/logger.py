@@ -198,8 +198,8 @@ def setup_logger(name: str = None, command: str = None) -> logging.Logger:
         logger.addHandler(console_handler)
         print(f"Warning: Could not create file handler: {e}")
     
-    # 부모 로거로 전파 (JobLogHandler 등 상위 핸들러 지원)
-    logger.propagate = True
+    # 부모 로거로 전파 차단 (중복 로깅 방지 - 핸들러가 직접 부착되어 있으므로)
+    logger.propagate = False
     
     return logger
 

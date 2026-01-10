@@ -395,43 +395,48 @@ class JavaLogicalNameExtractor(LogicalNameExtractor):
             self.logger.error(f"메서드 논리명 추출 실패: {e}")
             return ""
     
-    def extract_field_logical_name(self, java_source: str, field_name: str) -> Optional[str]:
+    def extract_field_logical_name(self, java_source: str, field_name: str, line_number: int = None) -> Optional[str]:
         """필드의 논리명 추출"""
         try:
-            tree = javalang.parse.parse(java_source)
             lines = java_source.split('\n')
-            
-            # 필드 선언을 찾기 위한 패턴들
-            field_patterns = [
-                rf'\b(public|private|protected)?\s*(static)?\s*(final)?\s*\w+\s+{re.escape(field_name)}\s*[;=]',
-                rf'\b{re.escape(field_name)}\s*[;=]',
-                rf'^\s*{re.escape(field_name)}\s*[;=]',
-                rf'{re.escape(field_name)}\s*[;=]'  # 가장 단순한 패턴
-            ]
             actual_field_line = -1
             
-            for i, line in enumerate(lines):
-                for pattern in field_patterns:
-                    if re.search(pattern, line):
-                        actual_field_line = i
-                        self.logger.debug(f"필드 {field_name} 패턴 매칭 성공 (라인 {i + 1}): {line.strip()}")
-                        break
-                if actual_field_line != -1:
-                    break
-            
-            # 패턴 매칭이 실패한 경우, 단순 문자열 검색으로 시도
-            if actual_field_line == -1:
+            # 1. 라인 번호가 제공된 경우 바로 위치 특정 (최적화)
+            if line_number and line_number > 0 and line_number <= len(lines):
+                actual_field_line = line_number - 1
+                self.logger.debug(f"필드 {field_name} 위치 최적화: 라인 {line_number} (제공됨)")
+            else:
+                # 2. 라인 번호가 없는 경우 전체 검색 (기존 로직 - 느림)
+                # 필드 선언을 찾기 위한 패턴들
+                field_patterns = [
+                    rf'\b(public|private|protected)?\s*(static)?\s*(final)?\s*\w+\s+{re.escape(field_name)}\s*[;=]',
+                    rf'\b{re.escape(field_name)}\s*[;=]',
+                    rf'^\s*{re.escape(field_name)}\s*[;=]',
+                    rf'{re.escape(field_name)}\s*[;=]'  # 가장 단순한 패턴
+                ]
+                
                 for i, line in enumerate(lines):
-                    if f"{field_name}" in line and (";" in line or "=" in line) and ("public" in line or "private" in line or "protected" in line):
-                        actual_field_line = i
-                        self.logger.debug(f"필드 {field_name} 문자열 검색 성공 (라인 {i + 1}): {line.strip()}")
+                    for pattern in field_patterns:
+                        if re.search(pattern, line):
+                            actual_field_line = i
+                            self.logger.debug(f"필드 {field_name} 패턴 매칭 성공 (라인 {i + 1}): {line.strip()}")
+                            break
+                    if actual_field_line != -1:
                         break
+                
+                # 패턴 매칭이 실패한 경우, 단순 문자열 검색으로 시도
+                if actual_field_line == -1:
+                    for i, line in enumerate(lines):
+                        if f"{field_name}" in line and (";" in line or "=" in line) and ("public" in line or "private" in line or "protected" in line):
+                            actual_field_line = i
+                            self.logger.debug(f"필드 {field_name} 문자열 검색 성공 (라인 {i + 1}): {line.strip()}")
+                            break
             
             if actual_field_line == -1:
                 self.logger.warning(f"필드 {field_name} 선언을 찾을 수 없음")
                 return ""
             
-            self.logger.debug(f"필드 {field_name} 실제 위치: 라인 {actual_field_line + 1}")
+            # self.logger.debug(f"필드 {field_name} 실제 위치: 라인 {actual_field_line + 1}") # 로그 너무 많음
             comment_block = self._collect_comment_block(lines, actual_field_line)
             if comment_block:
                 logical_name = self._match_logical_name_from_rules('java_field', comment_block)
@@ -443,25 +448,31 @@ class JavaLogicalNameExtractor(LogicalNameExtractor):
             for i in range(actual_field_line - 1, max(0, actual_field_line - 20) - 1, -1):
                 line = lines[i].strip()
                 
-                # 클래스 선언이나 다른 필드 선언을 만나면 검색 중단
-                if ('class ' in line and line.endswith('{')) or (line.endswith(';') and not line.startswith('*')):
-                    self.logger.debug(f"검색 중단 (라인 {i + 1}): {line}")
-                    break
+                # 클래스 선언이나 다른 필드 선언을 만나면 검색 중단 (세미콜론으로 끝나는 라인은 다른 필드일 가능성 높음)
+                # 단, 현재 라인의 바로 위가 이전 필드일 수 있으므로 주의. (int a; int b;)
+                # 하지만 보통 주석은 필드 바로 위에 있음.
+                if ('class ' in line and line.endswith('{')) or (line.endswith(';') and not line.startswith('*') and not line.startswith('/')):
+                     # 이전 필드 선언을 만나면 중단하되, 그 필드에 대한 주석일 수도 있음?
+                     # 아니, 우리는 actual_field_line의 주석을 찾는 것임.
+                     # actual_field_line 바로 위에 다른 필드가 있다면, 그 필드의 주석인지 내 주석인지 모호함.
+                     # 하지만 보통 내 주석은 내 바로 위에 있음.
+                     # 만약 바로 위 라인이세미콜론으로 끝난다면, 내 주석이 없을 확률이 높음 (공백 없이 붙여쓴 경우).
+                     pass
                 
                 if line.startswith('/**'):
-                    self.logger.debug(f"주석 시작 발견 (라인 {i + 1}): {line}")
+                    # self.logger.debug(f"주석 시작 발견 (라인 {i + 1}): {line}")
                     # 여러 줄 주석 시작
                     logical_name = ""
                     for j in range(i + 1, min(len(lines), i + 20)):
                         comment_line = lines[j].strip()
-                        self.logger.debug(f"주석 라인 {j + 1}: {comment_line}")
+                        # self.logger.debug(f"주석 라인 {j + 1}: {comment_line}")
                         if comment_line.strip().startswith('*') and not comment_line.strip().startswith('*/'):
                             # 주석 내용에서 논리명 추출
                             content = comment_line.strip()[1:].strip()
-                            self.logger.debug(f"주석 내용 분석: '{content}' (어노테이션 여부: {content.startswith('@')})")
+                            # self.logger.debug(f"주석 내용 분석: '{content}' (어노테이션 여부: {content.startswith('@')})")
                             if content and not content.startswith('@'):  # 어노테이션이 아닌 경우만
                                 logical_name = content
-                                self.logger.debug(f"논리명 추출: {logical_name}")
+                                # self.logger.debug(f"논리명 추출: {logical_name}")
                                 break
                         elif comment_line.endswith('*/'):
                             break
@@ -477,7 +488,7 @@ class JavaLogicalNameExtractor(LogicalNameExtractor):
                             self.logger.debug(f"필드 {field_name} 논리명 추출 성공 (한 줄): {content}")
                             return content
             
-            self.logger.debug(f"필드 {field_name} 논리명을 찾을 수 없음")
+            # self.logger.debug(f"필드 {field_name} 논리명을 찾을 수 없음")
             return ""
             
         except Exception as e:
@@ -743,12 +754,12 @@ def extract_java_method_logical_name(java_content: str, method_name: str, projec
         return None
 
 
-def extract_java_field_logical_name(java_content: str, field_name: str, project_name: str) -> Optional[str]:
+def extract_java_field_logical_name(java_content: str, field_name: str, project_name: str, line_number: int = None) -> Optional[str]:
     """Java 소스코드에서 필드 논리명 추출 (개선된 버전 - 캐시된 인스턴스 재사용)"""
     try:
         # 캐시된 인스턴스 재사용
         extractor = JavaLogicalNameExtractor(project_name)
-        return extractor.extract_field_logical_name(java_content, field_name)
+        return extractor.extract_field_logical_name(java_content, field_name, line_number)
     except Exception:
         return None
 

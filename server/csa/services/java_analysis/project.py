@@ -610,7 +610,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     field_logical_name = ""  # DTO 필드 논리명 추출 건너뛰기 (성능 최적화)
                 else:
                     from csa.services.java_parser_addon_r001 import extract_java_field_logical_name
-                    field_logical_name = extract_java_field_logical_name(file_content, declarator.name, project_name)
+                    line_number = field_declaration.position.line if field_declaration.position else None
+                    field_logical_name = extract_java_field_logical_name(file_content, declarator.name, project_name, line_number)
                 
                 prop = Field(
                     name=declarator.name,
