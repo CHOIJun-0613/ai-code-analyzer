@@ -21,6 +21,8 @@ def analyze_full_project_java(
     source_options: dict = None,
     use_ai_analysis: bool = False,
     stop_check_callback: callable = None,
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     Parse Java sources and resolve the effective project name.
@@ -49,10 +51,30 @@ def analyze_full_project_java(
 
     if use_streaming:
         logger.info("Using STREAMING parsing mode (memory efficient)")
-        return _analyze_with_streaming(java_source_folder, project_name, graph_db, logger, ai_options, source_options, use_ai_analysis, stop_check_callback)
+        return _analyze_with_streaming(
+            java_source_folder, 
+            project_name, 
+            graph_db, 
+            logger, 
+            ai_options, 
+            source_options, 
+            use_ai_analysis, 
+            stop_check_callback,
+            skip_dto_source,
+            skip_dto_methods
+        )
     else:
         logger.info("Using BATCH parsing mode (traditional)")
-        return _analyze_with_batch(java_source_folder, project_name, graph_db, logger, source_options=source_options, stop_check_callback=stop_check_callback)
+        return _analyze_with_batch(
+            java_source_folder, 
+            project_name, 
+            graph_db, 
+            logger, 
+            source_options=source_options, 
+            stop_check_callback=stop_check_callback,
+            skip_dto_source=skip_dto_source,
+            skip_dto_methods=skip_dto_methods
+        )
 
 
 def _analyze_with_streaming(
@@ -64,6 +86,8 @@ def _analyze_with_streaming(
     source_options: dict = None,
     use_ai_analysis: bool = False,
     stop_check_callback: callable = None,
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     스트리밍 방식으로 Java 프로젝트 분석.
@@ -107,6 +131,8 @@ def _analyze_with_streaming(
         source_options=source_options,
         use_ai_analysis=use_ai_analysis,
         stop_check_callback=stop_check_callback,
+        skip_dto_source=skip_dto_source,
+        skip_dto_methods=skip_dto_methods
     )
 
     # 종료 시간 기록
@@ -161,6 +187,8 @@ def _analyze_with_batch(
     logger,
     source_options: dict = None,
     stop_check_callback: callable = None,
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
 ) -> Tuple[JavaAnalysisArtifacts, str]:
     """
     배치 방식으로 Java 프로젝트 분석 (기존 방식).
@@ -192,7 +220,14 @@ def _analyze_with_batch(
         test_classes,
         sql_statements,
         detected_project_name,
-    ) = parse_java_project_full(java_source_folder, graph_db=graph_db, source_options=source_options, stop_check_callback=stop_check_callback)
+    ) = parse_java_project_full(
+        java_source_folder, 
+        graph_db=graph_db, 
+        source_options=source_options, 
+        stop_check_callback=stop_check_callback,
+        skip_dto_source=skip_dto_source,
+        skip_dto_methods=skip_dto_methods
+    )
 
     final_project_name = determine_project_name(project_name, detected_project_name, logger)
     logger.info("Project name: %s", final_project_name)

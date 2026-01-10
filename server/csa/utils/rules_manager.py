@@ -48,7 +48,7 @@ class RulesManager:
 
     def _load_all_rules(self):
         """모든 규칙 파일을 한 번에 로드"""
-        self.logger.info("규칙 파일들을 로드 중...")
+        self.logger.debug("규칙 파일들을 로드 중...")
 
         # 논리명 추출 규칙들 로드
         self._load_logical_name_rules()
@@ -59,7 +59,7 @@ class RulesManager:
         # Class sub-type 추출 규칙들 로드
         self._load_class_subtype_rules()
 
-        self.logger.info(f"규칙 로드 완료 - 논리명: {len(self._logical_name_rules)}개, Description: {len(self._description_rules)}개, Class Subtype: {len(self._class_subtype_rules)}개")
+        self.logger.debug(f"규칙 로드 완료 - 논리명: {len(self._logical_name_rules)}개, Description: {len(self._description_rules)}개, Class Subtype: {len(self._class_subtype_rules)}개")
     
     def _load_logical_name_rules(self):
         """논리명 추출 규칙들 로드"""

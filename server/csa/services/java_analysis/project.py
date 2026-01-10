@@ -539,6 +539,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
 
         if skip_dto_source and is_dto_class(class_name, file_path):
             class_source = ""  # DTO 클래스는 소스 저장 안 함
+            source_hashcode = ""
             logger.debug(f"DTO 소스 저장 건너뜀: {class_name}")
 
         # LOC 메트릭 계산
@@ -627,7 +628,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         
         # 메서드 처리 (인자로 제어)
         SKIP_DTO_METHODS = skip_dto_methods
-        logger.info(f"Sub-type check: {sub_type}, Skip DTO Methods: {SKIP_DTO_METHODS}, Class Annotations: {[a.name for a in class_annotations]}")
+        logger.debug(f"Sub-type check: {sub_type}, Skip DTO Methods: {SKIP_DTO_METHODS}, Class Annotations: {[a.name for a in class_annotations]}")
 
         if SKIP_DTO_METHODS and sub_type == "dto":
             # DTO 메서드 분석 생략
@@ -711,8 +712,12 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
     
                 # AI 분석 수행 (오류 시 빈 문자열 반환)
                 method_ai_description = ""
+                
+                # Getter/Setter 등 단순 메서드는 AI 분석 제외 (속도 최적화)
+                is_simple_method = method_name.startswith(('get', 'set', 'is')) and len(method_source.strip().splitlines()) <= 5
+
                 # USE_AI_ANALYSIS 결정 로직은 위에서 계산된 use_ai 사용
-                if use_ai:
+                if use_ai and not is_simple_method:
                     if not AI_ANALYZER_AVAILABLE:
                          logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer not available")
                     elif not method_source:
@@ -888,6 +893,8 @@ def parse_java_project_full(
     graph_db: GraphDB = None,
     source_options: dict = None,
     stop_check_callback: callable = None,
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
 ) -> tuple[
     list[Package], list[Class], dict[str, str], list[Bean], list[BeanDependency],
     list[Endpoint], list[MyBatisMapper], list[JpaEntity], list[JpaRepository],
@@ -1020,6 +1027,12 @@ def parse_java_project_full(
 
                     # Source Hash Calculation & Incremental Analysis Check
                     source_hashcode = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
+
+                    # DTO check for source skipping (do not save source and hashcode)
+                    is_skipped_dto = skip_dto_source and is_dto_class(class_name, file_path)
+                    if is_skipped_dto:
+                        source_hashcode = ""
+
                     ai_description = ""
                     
                     if class_name in existing_hashes:
@@ -1034,7 +1047,7 @@ def parse_java_project_full(
                         file_path=file_path,
                         type=class_type,
                         sub_type=sub_type,
-                        source=file_content,
+                        source="" if is_skipped_dto else file_content,
                         source_hashcode=source_hashcode,
                         annotations=class_annotations,
                         package_name=package_name,
@@ -1114,6 +1127,11 @@ def parse_java_project_full(
 
                 all_declarations = class_declaration.methods + class_declaration.constructors
                 
+                # DTO 메서드 생략 로직
+                if skip_dto_methods and sub_type == "dto":
+                     logger.debug(f"DTO 메서드 분석 생략: {class_name}")
+                     all_declarations = []
+
                 for declaration in all_declarations:
                     local_var_map = field_map.copy()
                     params = []
@@ -1504,7 +1522,7 @@ def is_dto_class(class_name: str, file_path: str = None) -> bool:
     return False
 
 
-def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None) -> tuple:
+def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True) -> tuple:
     """
     병렬 처리용 파싱 래퍼 함수 (Neo4j 연결 없이 파싱만 수행)
 
@@ -1521,7 +1539,7 @@ def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: di
 
     try:
         package_node, class_node, inner_classes, package_name = parse_single_java_file(
-            file_path, project_name, None, ai_options, use_ai=use_ai  # graph_db=None for parsing only
+            file_path, project_name, None, ai_options, use_ai=use_ai, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods
         )
 
         # 처리 시간 계산 및 로깅
@@ -1547,6 +1565,8 @@ def parse_java_project_streaming(
     source_options: dict = None,
     use_ai_analysis: bool = False,
     stop_check_callback: callable = None,
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
 ) -> dict:
     """
     스트리밍 방식 Java 프로젝트 파싱
@@ -1761,7 +1781,7 @@ def parse_java_project_streaming(
     with ThreadPoolExecutor(max_workers=parallel_workers) as executor:
         # 모든 파일을 병렬로 파싱 제출
         future_to_file = {
-            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis): file_path
+            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods): file_path
             for file_path in java_files
         }
 

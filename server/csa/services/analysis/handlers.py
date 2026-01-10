@@ -245,6 +245,8 @@ def analyze_project(
                 source_options=source_options,
                 use_ai_analysis=use_ai_analysis,
                 stop_check_callback=lambda: check_cancellation(job_id, logger),
+                skip_dto_source=skip_dto_source,
+                skip_dto_methods=skip_dto_methods,
             )
             
             # Check Cancellation
