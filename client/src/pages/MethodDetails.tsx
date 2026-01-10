@@ -13,6 +13,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axios from '../api/client';
 import MermaidDiagram from '../components/MermaidDiagram';
+import SourceCodeViewer from '../components/SourceCodeViewer';
 
 interface MethodCall {
     name: string;
@@ -619,20 +620,7 @@ const MethodDetails: React.FC = () => {
 
                     {activeTab === 'source' && (
                         <div className="h-full flex flex-col">
-                            <div className="bg-white dark:bg-[#1e1e1e] rounded-xl overflow-hidden text-sm border border-slate-200 dark:border-slate-900/10 shadow-inner h-[600px] flex font-mono transition-colors duration-300">
-                                <div className="overflow-auto w-full h-full flex">
-                                    <div className="flex-none min-h-full bg-slate-50 dark:bg-[#1e1e1e] border-r border-slate-200 dark:border-[#333] flex flex-col text-right py-4 pr-3 pl-4 select-none text-slate-400 dark:text-[#6e7681] sticky left-0 z-10 transition-colors duration-300">
-                                        {(methodData.source || '').split('\n').map((_, i) => (
-                                            <span key={i} className="leading-6">{i + 1}</span>
-                                        ))}
-                                    </div>
-                                    <div className="flex-1 min-h-full min-w-0 bg-white dark:bg-[#1e1e1e] transition-colors duration-300">
-                                        <pre ref={codeRef} className="m-0 p-4 leading-6 whitespace-pre text-slate-800 dark:text-[#d4d4d4] font-mono font-medium">
-                                            {methodData.source || `// ${t('classDetails.noSource')}`}
-                                        </pre>
-                                    </div>
-                                </div>
-                            </div>
+                            <SourceCodeViewer ref={codeRef} source={methodData.source || `// ${t('classDetails.noSource')}`} />
                         </div>
                     )}
 
@@ -729,13 +717,13 @@ const MethodDetails: React.FC = () => {
             </div>
             {/* Complexity Help Modal */}
             {showComplexityHelp && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
                     <div
-                        className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Modal Header */}
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                             <div className="flex items-center gap-3">
                                 <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
                                     <Cpu className="w-5 h-5" />

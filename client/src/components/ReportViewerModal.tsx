@@ -314,11 +314,11 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-white rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 text-slate-900 dark:text-slate-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-6xl h-[90vh] flex flex-col animate-in zoom-in-95 duration-200 text-slate-900 dark:text-slate-100">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-slate-100">
-                    <h2 className="text-lg font-bold text-slate-900 dark:text-slate-900">{title}</h2>
+                <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-700">
+                    <h2 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h2>
                     <div className="flex items-center gap-1">
                         <button
                             onClick={handleDownloadMarkdown}
@@ -359,7 +359,7 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-hidden bg-white flex flex-col">
+                <div className="flex-1 overflow-hidden bg-white dark:bg-slate-800 flex flex-col">
                     {isGrid && gridData ? (
                         <div className="flex-1 flex flex-col overflow-hidden" ref={reportRef}>
                             {/* Summary Stats for Grid */}
@@ -439,8 +439,8 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
                         </div>
                     ) : (
                         // Markdown Mode (Existing logic)
-                        <div className="flex-1 overflow-y-auto p-8 bg-white dark:bg-white custom-scrollbar">
-                            <div ref={reportRef} className="prose prose-slate prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-slate-900 prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-slate-700 dark:prose-p:text-slate-700 prose-li:text-slate-700 dark:prose-li:text-slate-700 prose-blockquote:text-slate-900 dark:prose-blockquote:text-slate-900 prose-strong:text-slate-900 dark:prose-strong:text-slate-900 max-w-none bg-white dark:bg-white p-4">
+                        <div className="flex-1 overflow-y-auto p-8 bg-white dark:bg-slate-800 custom-scrollbar">
+                            <div ref={reportRef} className="prose prose-slate dark:prose-invert prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white prose-h1:text-2xl prose-h2:text-xl prose-h3:text-lg prose-p:text-slate-700 dark:prose-p:text-slate-300 prose-li:text-slate-700 dark:prose-li:text-slate-300 prose-blockquote:text-slate-900 dark:prose-blockquote:text-slate-100 prose-strong:text-slate-900 dark:prose-strong:text-white max-w-none bg-white dark:bg-slate-800 p-4">
                                 <Markdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
@@ -479,7 +479,7 @@ const ReportViewerModal: React.FC<ReportViewerModalProps> = ({ isOpen, onClose, 
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end">
+                <div className="p-4 border-t border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 rounded-b-2xl flex justify-end">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-white border border-slate-200 text-slate-600 font-medium rounded-lg hover:bg-slate-50 transition-colors"

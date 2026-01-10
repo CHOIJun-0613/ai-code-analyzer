@@ -21,10 +21,10 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-transparent dark:border-slate-700">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200 border border-transparent dark:border-slate-700">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-800">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-slate-700">
                     <h2 className="text-lg font-bold text-gray-900 dark:text-white">{t('settings.title')}</h2>
                     <button
                         onClick={onClose}
@@ -141,7 +141,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-800 flex justify-end">
+                <div className="p-4 bg-gray-50 dark:bg-slate-900/50 border-t border-gray-100 dark:border-slate-700 flex justify-end">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-white border border-gray-200 text-gray-600 font-medium rounded-lg hover:bg-gray-50 transition-colors"
