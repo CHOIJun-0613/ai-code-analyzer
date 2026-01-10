@@ -19,6 +19,7 @@ from csa.services.java_analysis.project import parse_single_java_file
 from csa.services.analysis.neo4j_writer import save_java_objects_to_neo4j, connect_to_neo4j_db
 from csa.services.analysis.summary import print_analysis_summary
 from csa.services.graph_db import GraphDB
+from csa.utils.rules_manager import rules_manager
 
 
 def _prepare_database(
@@ -136,6 +137,9 @@ def analyze_project(
 ) -> Dict[str, object]:
     """Analyze project artifacts and optionally persist them into Neo4j."""
     
+    # 1. 분석 시작 시 최신 규칙 로드 (Global Dynamic Rules)
+    rules_manager.load_rules()
+
     # Cancellation Check Helper
     # Cancellation Check Helper
     def check_cancellation(job_id: str, logger):

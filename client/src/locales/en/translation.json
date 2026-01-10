@@ -102,7 +102,7 @@
         "useStreamingParse": "Use Streaming Parse",
         "useStreamingParseTooltip": "Parse files in a streaming manner to save memory for large projects.",
         "skipDtoSource": "Do not save DTO class source",
-        "skipDtoSourceTooltip": "Exclude DTO class source code from analysis to reduce noise.",
+        "skipDtoSourceTooltip": "Do not save DTO class source code to save storage space.",
         "skipDtoMethods": "Exclude DTO method static analysis",
         "skipDtoMethodsTooltip": "Exclude methods within DTO classes from analysis.",
         "workers": "Workers",

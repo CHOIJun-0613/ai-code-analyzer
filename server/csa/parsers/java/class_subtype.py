@@ -11,32 +11,30 @@ from csa.utils.logger import get_logger
 
 
 class ClassSubtypeExtractor:
-    """Class sub-type 추출기 - rule003 기반"""
+    """Class sub-type 추출기 - rule003 기반 (Global Rules)"""
 
-    _instances = {}  # 프로젝트별 인스턴스 캐시
+    _instance = None
+    
+    def __new__(cls):
+        # Singleton
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
-    def __new__(cls, project_name: str, rules_directory: str = "rules"):
-        # 프로젝트별로 인스턴스를 캐시하여 재사용
-        cache_key = f"{project_name}_{rules_directory}"
-        if cache_key not in cls._instances:
-            instance = super().__new__(cls)
-            cls._instances[cache_key] = instance
-        return cls._instances[cache_key]
-
-    def __init__(self, project_name: str, rules_directory: str = "rules"):
+    def __init__(self):
         # 이미 초기화된 인스턴스는 재초기화하지 않음
         if hasattr(self, '_initialized'):
             return
 
-        self.project_name = project_name
-        self.rules_directory = rules_directory
         self.logger = get_logger(__name__)
-
-        # 전역 규칙 매니저에서 규칙 가져오기
-        from csa.utils.rules_manager import rules_manager
-        self.rules = rules_manager.get_class_subtype_rules(project_name)
-
+        # Rules are accessed dynamically via property or method to ensure latest loaded rules
         self._initialized = True
+
+    @property
+    def rules(self):
+        """Get current rules from manager"""
+        from csa.utils.rules_manager import rules_manager
+        return rules_manager.get_class_subtype_rules()
 
     def extract_class_subtype(self, annotations: List[Annotation]) -> str:
         """클래스의 sub-type 추출
@@ -67,30 +65,31 @@ class ClassSubtypeExtractor:
 
         self.logger.debug(f"클래스 annotations: {annotation_names}")
 
-        # 1. Controller 타입 체크
-        if "RestController" in annotation_names or "Controller" in annotation_names:
-            self.logger.debug("클래스 sub-type 추출 성공: controller")
-            return "controller"
-
-        # 2. Service 타입 체크
-        if "Service" in annotation_names:
-            self.logger.debug("클래스 sub-type 추출 성공: service")
-            return "service"
-
-        # 3. Component 타입 체크
-        if "Component" in annotation_names:
-            self.logger.debug("클래스 sub-type 추출 성공: component")
-            return "component"
-
-        # 4. DBM (Data Access) 타입 체크
-        if "BxmDataAccess" in annotation_names:
-            self.logger.debug("클래스 sub-type 추출 성공: dbio")
-            return "dbio"
-
-        # 5. DTO 타입 체크 (@XmlType + @XmlRootElement)
-        if "XmlType" in annotation_names and "XmlRootElement" in annotation_names:
-            self.logger.debug("클래스 sub-type 추출 성공: dto")
-            return "dto"
+        # 동적 규칙 적용 (설정 파일 기반)
+        if isinstance(self.rules, list):
+            for rule in self.rules:
+                subtype = rule.get('subtype')
+                required_annotations = rule.get('annotations', [])
+                condition = rule.get('condition', 'any')  # any | all
+                
+                # Check annotations
+                matched_count = 0
+                for req_name in required_annotations:
+                    if req_name in annotation_names:
+                        matched_count += 1
+                
+                is_match = False
+                if required_annotations:
+                    if condition == 'all':
+                        if matched_count == len(required_annotations):
+                            is_match = True
+                    else:  # any
+                        if matched_count > 0:
+                            is_match = True
+                
+                if is_match:
+                    self.logger.debug(f"클래스 sub-type 추출 성공 ({subtype}): {required_annotations} 중 {matched_count}개 일치")
+                    return subtype
 
         # 6. 기본값: utility
         self.logger.debug("클래스 sub-type 추출 성공: utility (기본값)")
@@ -135,10 +134,12 @@ def extract_class_subtype_from_annotations(annotations: List[Annotation], projec
         sub-type 문자열 ("controller", "service", "component", "dbio", "dto", "utility")
     """
     try:
-        # 프로젝트명이 있으면 캐시된 인스턴스 재사용
-        if project_name:
-            extractor = ClassSubtypeExtractor(project_name)
-            return extractor.extract_class_subtype(annotations)
+        # Singleton instance use
+        extractor = ClassSubtypeExtractor()
+        return extractor.extract_class_subtype(annotations)
+
+        # Legacy fallback logic removed as global rules cover it
+
 
         # 프로젝트명이 없으면 직접 추출 (캐싱 없음)
         if not annotations:
@@ -175,7 +176,9 @@ def process_java_file_with_rule003(file_path: str, project_name: str, graph_db: 
     from csa.vendor import javalang
     from csa.services.java_analysis.utils import parse_annotations
 
-    extractor = ClassSubtypeExtractor(project_name)
+
+
+    extractor = ClassSubtypeExtractor()
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:

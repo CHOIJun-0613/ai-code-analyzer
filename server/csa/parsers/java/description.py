@@ -17,30 +17,24 @@ from csa.utils.logger import get_logger
 class DescriptionExtractor:
     """Description 추출기 - 개선된 버전 (전역 규칙 매니저 사용)"""
     
-    _instances = {}  # 프로젝트별 인스턴스 캐시
+    _instance = None
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
-    def __new__(cls, project_name: str, rules_directory: str = "rules"):
-        # 프로젝트별로 인스턴스를 캐시하여 재사용
-        cache_key = f"{project_name}_{rules_directory}"
-        if cache_key not in cls._instances:
-            instance = super().__new__(cls)
-            cls._instances[cache_key] = instance
-        return cls._instances[cache_key]
-
-    def __init__(self, project_name: str, rules_directory: str = "rules"):
-        # 이미 초기화된 인스턴스는 재초기화하지 않음
+    def __init__(self):
         if hasattr(self, '_initialized'):
             return
             
-        self.project_name = project_name
-        self.rules_directory = rules_directory
         self.logger = get_logger(__name__)
-        
-        # 전역 규칙 매니저에서 규칙 가져오기
-        from csa.utils.rules_manager import rules_manager
-        self.rules = rules_manager.get_description_rules(project_name)
-        
         self._initialized = True
+
+    @property
+    def rules(self):
+        from csa.utils.rules_manager import rules_manager
+        return rules_manager.get_description_rules()
 
 
     def _parse_rules_content(self, content: str) -> Dict[str, Any]:
@@ -59,7 +53,7 @@ class DescriptionExtractor:
         }
 
     def extract_class_description(self, annotations: List[Annotation]) -> str:
-        """클래스의 description 추출
+        """클래스의 description 추출 (동적 규칙 기반)
 
         Args:
             annotations: 클래스의 Annotation 객체 리스트
@@ -69,42 +63,29 @@ class DescriptionExtractor:
         """
         if not annotations:
             return ""
-
-        # 1. rule002: @BxmCategory annotation의 description 파라미터 찾기 (최우선)
-        for annotation in annotations:
-            if annotation.name == "BxmCategory":
-                if "description" in annotation.parameters:
-                    desc = annotation.parameters["description"]
-                    # 따옴표 제거
-                    desc = desc.strip('"').strip("'")
-                    self.logger.debug(f"클래스 description 추출 성공 (@BxmCategory): {desc}")
-                    return desc
-
-        # 2. @Tag annotation의 description 파라미터 찾기 (fallback)
-        for annotation in annotations:
-            if annotation.name == "Tag" or annotation.name.endswith(".Tag"):
-                if "description" in annotation.parameters:
-                    desc = annotation.parameters["description"]
-                    # 따옴표 제거
-                    desc = desc.strip('"').strip("'")
-                    self.logger.debug(f"클래스 description 추출 성공 (@Tag): {desc}")
-                    return desc
-
-        # 3. @BXMType annotation의 description 파라미터 찾기 (fallback)
-        for annotation in annotations:
-            if annotation.name == "BXMType":
-                if "description" in annotation.parameters:
-                    desc = annotation.parameters["description"]
-                    # 따옴표 제거
-                    desc = desc.strip('"').strip("'")
-                    self.logger.debug(f"클래스 description 추출 성공 (@BXMType): {desc}")
-                    return desc
+            
+        rules = self.rules.get('class', []) if self.rules else []
+        
+        # 규칙 순회
+        for rule in rules:
+            target_anno = rule.get('annotation')
+            target_param = rule.get('parameter', 'description')
+            
+            for annotation in annotations:
+                # Annotation 이름 매칭 (패키지명 포함 여부 고려)
+                if annotation.name == target_anno or annotation.name.endswith("." + target_anno):
+                    if target_param in annotation.parameters:
+                        desc = annotation.parameters[target_param]
+                        # 따옴표 제거
+                        desc = desc.strip('"').strip("'")
+                        self.logger.debug(f"클래스 description 추출 성공 (@{target_anno}): {desc}")
+                        return desc
 
         self.logger.debug("클래스 description를 찾을 수 없음")
         return ""
 
     def extract_method_description(self, annotations: List[Annotation]) -> str:
-        """메서드의 description 추출
+        """메서드의 description 추출 (동적 규칙 기반)
 
         Args:
             annotations: 메서드의 Annotation 객체 리스트
@@ -114,36 +95,23 @@ class DescriptionExtractor:
         """
         if not annotations:
             return ""
+            
+        rules = self.rules.get('method', []) if self.rules else []
 
-        # 1. rule002: @BxmCategory annotation의 description 파라미터 찾기 (최우선)
-        for annotation in annotations:
-            if annotation.name == "BxmCategory":
-                if "description" in annotation.parameters:
-                    desc = annotation.parameters["description"]
-                    # 따옴표 제거
-                    desc = desc.strip('"').strip("'")
-                    self.logger.debug(f"메서드 description 추출 성공 (@BxmCategory): {desc}")
-                    return desc
-
-        # 2. @Operation annotation의 description 파라미터 찾기 (fallback)
-        for annotation in annotations:
-            if annotation.name == "Operation" or annotation.name.endswith(".Operation"):
-                if "description" in annotation.parameters:
-                    desc = annotation.parameters["description"]
-                    # 따옴표 제거
-                    desc = desc.strip('"').strip("'")
-                    self.logger.debug(f"메서드 description 추출 성공 (@Operation): {desc}")
-                    return desc
-
-        # 3. @BXMType annotation의 description 파라미터 찾기 (fallback)
-        for annotation in annotations:
-            if annotation.name == "BXMType":
-                if "description" in annotation.parameters:
-                    desc = annotation.parameters["description"]
-                    # 따옴표 제거
-                    desc = desc.strip('"').strip("'")
-                    self.logger.debug(f"메서드 description 추출 성공 (@BXMType): {desc}")
-                    return desc
+        # 규칙 순회
+        for rule in rules:
+            target_anno = rule.get('annotation')
+            target_param = rule.get('parameter', 'description')
+            
+            for annotation in annotations:
+                # Annotation 이름 매칭 (패키지명 포함 여부 고려)
+                if annotation.name == target_anno or annotation.name.endswith("." + target_anno):
+                    if target_param in annotation.parameters:
+                        desc = annotation.parameters[target_param]
+                        # 따옴표 제거
+                        desc = desc.strip('"').strip("'")
+                        self.logger.debug(f"메서드 description 추출 성공 (@{target_anno}): {desc}")
+                        return desc
 
         self.logger.debug("메서드 description를 찾을 수 없음")
         return ""
@@ -203,8 +171,8 @@ class DescriptionExtractor:
 class JavaDescriptionExtractor(DescriptionExtractor):
     """Java 파일 전용 description 추출기"""
 
-    def __init__(self, project_name: str, rules_directory: str = "rules"):
-        super().__init__(project_name, rules_directory)
+    def __init__(self):
+        super().__init__()
 
 
 def extract_java_class_description(annotations: List[Annotation], project_name: str) -> str:
@@ -218,8 +186,8 @@ def extract_java_class_description(annotations: List[Annotation], project_name: 
         description 또는 빈 문자열
     """
     try:
-        # 캐시된 인스턴스 재사용
-        extractor = JavaDescriptionExtractor(project_name)
+        # 캐시된 인스턴스 재사용 (Global)
+        extractor = JavaDescriptionExtractor()
         return extractor.extract_class_description(annotations)
     except Exception:
         return ""
@@ -236,8 +204,8 @@ def extract_java_method_description(annotations: List[Annotation], project_name:
         description 또는 빈 문자열
     """
     try:
-        # 캐시된 인스턴스 재사용
-        extractor = JavaDescriptionExtractor(project_name)
+        # 캐시된 인스턴스 재사용 (Global)
+        extractor = JavaDescriptionExtractor()
         return extractor.extract_method_description(annotations)
     except Exception:
         return ""
@@ -245,7 +213,7 @@ def extract_java_method_description(annotations: List[Annotation], project_name:
 
 def process_java_file_with_rule002(file_path: str, project_name: str, graph_db: GraphDB):
     """Rule002를 사용하여 Java 파일의 description 추출 및 업데이트"""
-    extractor = JavaDescriptionExtractor(project_name)
+    extractor = JavaDescriptionExtractor()
 
     try:
         with open(file_path, 'r', encoding='utf-8') as f:

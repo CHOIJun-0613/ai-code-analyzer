@@ -637,7 +637,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             all_declarations = class_declaration.methods + class_declaration.constructors
             
             for declaration in all_declarations:
-                logger.debug(f"Processing method declaration: {declaration.name}")
+                method_name = declaration.name
+                logger.debug(f"Processing method declaration: {method_name}")
                 local_var_map = field_map.copy()
                 params = []
                 for param in declaration.parameters:
