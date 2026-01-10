@@ -3,6 +3,9 @@ from app.api import deps
 from pydantic import BaseModel
 from typing import List, Dict, Any
 from app.core.database import get_db
+from csa.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -196,7 +199,8 @@ def get_class_details(project_name: str, class_name: str, package: str):
         class_data["superclass"] = result_class["superclass_name"]
         class_data["interfaces"] = result_class["interfaces"]
         class_data["annotations"] = result_class["annotations"]
-
+        
+        
         # Execute Fields Query
         result_fields = session.run(query_fields, class_name=class_name, package=package, project_name=project_name)
         fields = [dict(record["f"]) for record in result_fields]

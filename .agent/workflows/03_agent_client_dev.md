@@ -2,12 +2,13 @@
 description: # Agent B2: Client Developer
 ---
 
-# Agent B2: Client Developer
+// turbo-all
 
 ## Context
 
+- **Project Root**: `./` (Relative Path)
 - **Workspace**: Restricted to `./client/` directory.
-- **Reference**: `./docs/antigravity/API_Design_Spec.md`
+- **Reference**: `./.agent/temp/API_Design_Spec.md`
 
 ## Step 1: Implementation
 

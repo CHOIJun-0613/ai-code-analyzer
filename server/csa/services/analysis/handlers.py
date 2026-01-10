@@ -11,9 +11,12 @@ from csa.utils.context import get_client_id, get_job_id
 
 from csa.models.analysis import AnalysisResult, DatabaseAnalysisStats, JavaAnalysisStats
 from csa.models.graph_entities import Project
+from csa.models.analysis import AnalysisResult, DatabaseAnalysisStats, JavaAnalysisStats, JavaAnalysisArtifacts
+from csa.models.graph_entities import Project
 from csa.services.analysis.db_pipeline import analyze_full_project_db
 from csa.services.analysis.java_pipeline import analyze_full_project_java
-from csa.services.analysis.neo4j_writer import save_java_objects_to_neo4j
+from csa.services.java_analysis.project import parse_single_java_file
+from csa.services.analysis.neo4j_writer import save_java_objects_to_neo4j, connect_to_neo4j_db
 from csa.services.analysis.summary import print_analysis_summary
 from csa.services.graph_db import GraphDB
 
@@ -373,5 +376,106 @@ def analyze_project(
             db.close()
 
 
-__all__ = ["analyze_project"]
+
+def analyze_single_class(
+    project_name: str,
+    target_file_path: str,
+    logger,
+    graph_db: Optional[GraphDB] = None,
+    ai_options: dict = None,
+    use_ai_analysis: bool = False,
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
+) -> Dict[str, object]:
+    """
+    Analyze a single Java class file and update the Graph DB.
+    """
+    if not os.path.exists(target_file_path):
+        return {"success": False, "message": f"File not found: {target_file_path}"}
+
+    logger.info(f"Analyzing single class: {target_file_path} (Project: {project_name})")
+
+    # Connect to DB if not provided
+    if graph_db is None:
+        try:
+            neo4j_uri = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+            neo4j_user = os.getenv("NEO4J_USER", "neo4j")
+            neo4j_password = os.getenv("NEO4J_PASSWORD")
+            neo4j_database = os.getenv("NEO4J_DATABASE", "neo4j")
+            
+            if not neo4j_password:
+                logger.error("NEO4J_PASSWORD not set")
+                return {"success": False, "message": "Backend configuration error (DB password missing)"}
+
+            graph_db = connect_to_neo4j_db(neo4j_uri, neo4j_user, neo4j_password, neo4j_database, logger)
+        except Exception as e:
+             logger.error(f"Failed to connect to Neo4j: {e}")
+             return {"success": False, "message": f"Database connection failed: {e}"}
+
+    logger.info(f"Analysis Params - Use AI: {use_ai_analysis}, AI Options: {ai_options}, Skip DTO Source: {skip_dto_source}, Skip DTO Methods: {skip_dto_methods}")
+
+    # 1. Parse File
+    package_node, class_node, inner_classes, source_hashcode = parse_single_java_file(
+        target_file_path, 
+        project_name, 
+        graph_db, 
+        ai_options, 
+        use_ai_analysis,
+        skip_dto_source=skip_dto_source,
+        skip_dto_methods=skip_dto_methods
+    )
+
+    if not class_node:
+        if source_hashcode == "SKIPPED_UNCHANGED":
+            return {"success": True, "message": "Skipped (Unchanged)"}
+        return {"success": False, "message": "Failed to parse class"}
+
+    # 2. Construct Artifacts
+    all_classes = [class_node] + inner_classes
+    pkgs = [package_node] if package_node else []
+    
+    class_to_pkg = {}
+    if package_node:
+        for c in all_classes:
+            class_to_pkg[c.name] = package_node.name
+
+    from datetime import datetime
+    timestamp = datetime.now()
+
+    artifacts = JavaAnalysisArtifacts(
+        packages=pkgs,
+        classes=all_classes,
+        class_to_package_map=class_to_pkg,
+        
+        beans=[],
+        dependencies=[],
+        endpoints=[],
+        mybatis_mappers=[],
+        jpa_entities=[],
+        jpa_repositories=[],
+        jpa_queries=[],
+        config_files=[],
+        test_classes=[],
+        sql_statements=[],
+        project_name=project_name,
+        metadata={}
+    )
+
+    # 3. Save to Neo4j
+    if graph_db:
+        # Save Class and Package
+        if package_node:
+            graph_db.add_package(package_node, project_name)
+        
+        for c in all_classes:
+            graph_db.add_class(c, package_node.name if package_node else "", project_name)
+            
+        # Save derived objects (Beans, Mybatis, etc.) using the helper that extracts them
+        from csa.services.analysis.neo4j_writer import add_single_class_objects
+        add_single_class_objects(graph_db, class_node, package_node.name if package_node else "", project_name, logger)
+        
+    return {"success": True, "message": f"Class {class_node.name} re-analyzed successfully"}
+
+__all__ = ["analyze_project", "analyze_single_class"]
+
 

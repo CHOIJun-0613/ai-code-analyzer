@@ -461,7 +461,29 @@
         "complexityTooltipLarge": "Large (Large Service)",
         "complexityTooltipHigh": "High (Refactoring Required)",
         "noSource": "No source code available",
-        "sourceHash": "Source Hash"
+        "sourceHash": "Source Hash",
+        "reanalyze": "Re-analyze"
+    },
+    "classAnalysis": {
+        "title": "Class Re-analysis",
+        "parsingOptions": "Analysis Options",
+        "skipDtoSource": "Skip DTO Source",
+        "skipDtoSourceDesc": "Do not store source code for DTOs to save space.",
+        "skipDtoMethods": "Skip DTO Methods",
+        "skipDtoMethodsDesc": "Do not analyze methods/complexity for DTOs.",
+        "dtoOptionsDisabled": "Options disabled because this class is not identified as a DTO.",
+        "aiAnalysis": "AI Analysis",
+        "includeAi": "Include AI Analysis",
+        "includeAiDesc": "Generate AI description and insights (Requires LLM).",
+        "start": "Start Analysis",
+        "stop": "Stop",
+        "cancel": "Cancel",
+        "close": "Close",
+        "completed": "Completed",
+        "failed": "Failed",
+        "cancelled": "Cancelled",
+        "processing": "Processing...",
+        "initializing": "Initializing analysis job..."
     },
     "methodDetails": {
         "title": "Method Details",

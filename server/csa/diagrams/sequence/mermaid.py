@@ -280,7 +280,6 @@ class MermaidDiagramGenerator:
         main_class_name = self._sanitize_string(class_info['name'])
         main_class_package = self._sanitize_string(class_info.get('package_name', ''))
         
-        logger.info(f"DEBUG: main_class={main_class_name}, package={main_class_package}")
         
         all_calls = [call for flow in flows.values() for call in flow]
 
@@ -337,8 +336,6 @@ class MermaidDiagramGenerator:
 
         ordered_participants = ['Client', main_class_name]
         seen_participants = set(ordered_participants)
-
-        logger.info(f"DEBUG: participant_details={participant_details}")
 
         for participant in participant_details.keys():
             if participant and participant not in seen_participants:

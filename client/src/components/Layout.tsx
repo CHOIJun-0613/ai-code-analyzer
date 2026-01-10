@@ -3,7 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../store/authStore';
-import { LayoutDashboard, FileCode, LogOut, ChevronLeft, ChevronRight, Settings, ArrowLeft, ShieldCheck, Box } from 'lucide-react';
+import { LayoutDashboard, FileCode, LogOut, ChevronLeft, ChevronRight, Settings, ArrowLeft, ShieldCheck } from 'lucide-react';
 import AnimatedLogo from './AnimatedLogo';
 import SettingsModal, { Theme } from './SettingsModal';
 
@@ -65,14 +65,7 @@ const Layout: React.FC = () => {
         : 'text-slate-700';
 
     // Sidebar items styling
-    const getLinkClass = (path: string) => `
-        flex items-center px-4 py-3 rounded-xl transition-all duration-200 group relative
-        ${isActive(path)
-            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/20'
-            : 'hover:bg-slate-800 hover:text-white text-slate-400'
-        }
-        ${isCollapsed ? 'justify-center' : ''}
-    `;
+
 
     const mainContentRef = React.useRef<HTMLDivElement>(null);
 

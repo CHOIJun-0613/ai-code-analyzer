@@ -1,7 +1,7 @@
 import threading
 import uuid
 from typing import Dict, Optional
-from csa.services.analyze_service import analyze_project
+from csa.services.analyze_service import analyze_project, analyze_single_class
 from csa.services.analyze_service import analyze_project
 from csa.utils.logger import get_logger, JobIdFilter
 from csa.utils.context import get_client_id, set_job_id, set_client_id
@@ -75,29 +75,41 @@ def run_analysis_task(job_id: str, params: dict, user_id: str):
         # Initial log
         logger.info(f"Starting analysis job: {job_id}")
         
-        result = analyze_project(
-            java_source_folder=params.get("source_folder"),
-            project_name=params.get("project_name"),
-            application_name=params.get("application_name"),
-            db_script_folder=params.get("db_script_folder"),
-            neo4j_uri=settings.NEO4J_URI,
-            neo4j_user=settings.NEO4J_USER,
-            neo4j_password=settings.NEO4J_PASSWORD,
-            neo4j_database=settings.NEO4J_DATABASE or "neo4j",
-            clean=params.get("clean", False),
-            dry_run=params.get("dry_run", False),
-            java_object=params.get("java_object", False),
-            db_object=params.get("db_object", False),
-            all_objects=params.get("all_objects", True),
-            class_name=None,
-            update=False,
-            logger=logger,
-            use_ai=params.get("use_ai", False),
-            skip_dto_source=params.get("skip_dto_source", True),
-            skip_dto_methods=params.get("skip_dto_methods", True),
-            scope=params.get("scope", 'all'),
-            ai_options=params.get("ai_options"),
-        )
+        if params.get('analysis_target') == 'target_file':
+             result = analyze_single_class(
+                project_name=params.get("project_name"),
+                target_file_path=params.get("target_file_path"),
+                logger=logger,
+                # graph_db=None, # Will be connected inside
+                ai_options=params.get("ai_options"),
+                use_ai_analysis=params.get("use_ai", False),
+                skip_dto_source=params.get("skip_dto_source", True),
+                skip_dto_methods=params.get("skip_dto_methods", True),
+             )
+        else:
+            result = analyze_project(
+                java_source_folder=params.get("source_folder"),
+                project_name=params.get("project_name"),
+                application_name=params.get("application_name"),
+                db_script_folder=params.get("db_script_folder"),
+                neo4j_uri=settings.NEO4J_URI,
+                neo4j_user=settings.NEO4J_USER,
+                neo4j_password=settings.NEO4J_PASSWORD,
+                neo4j_database=settings.NEO4J_DATABASE or "neo4j",
+                clean=params.get("clean", False),
+                dry_run=params.get("dry_run", False),
+                java_object=params.get("java_object", False),
+                db_object=params.get("db_object", False),
+                all_objects=params.get("all_objects", True),
+                class_name=None,
+                update=False,
+                logger=logger,
+                use_ai=params.get("use_ai", False),
+                skip_dto_source=params.get("skip_dto_source", True),
+                skip_dto_methods=params.get("skip_dto_methods", True),
+                scope=params.get("scope", 'all'),
+                ai_options=params.get("ai_options"),
+            )
         jobs[job_id]["status"] = "completed" if result.get("success") else "failed"
         jobs[job_id]["result"] = result
         logger.info(f"Analysis job {job_id} completed with status: {jobs[job_id]['status']}")

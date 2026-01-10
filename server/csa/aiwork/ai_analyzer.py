@@ -1421,6 +1421,95 @@ class AIAnalyzer:
 
         return results
 
+    def analyze_class(self, source_code: str, class_name: str = "") -> str:
+        """
+        Analyze a single Java class.
+        
+        Args:
+            source_code: Java class source code
+            class_name: Name of the class (for logging)
+            
+        Returns:
+            Analysis result (markdown)
+        """
+        start_time = time.time()
+        
+        # 프롬프트 가져오기
+        try:
+            prompt_template = get_prompt("class_doc")
+        except Exception:
+            # Fallback if prompt service fails or key missing
+            from csa.aiwork.default_prompts import DEFAULT_PROMPTS
+            prompt_template = DEFAULT_PROMPTS.get("class_doc", "")
+            
+        if not prompt_template:
+            logger.error("Class analysis prompt not found")
+            return ""
+
+        # 소스 코드 길이 제한 (약 30000자 - 토큰 제한 고려)
+        truncated_source = self._truncate_center(source_code, 30000)
+        
+        # 프롬프트 구성
+        full_prompt = f"{prompt_template}\n\n```java\n{truncated_source}\n```"
+        
+        try:
+            logger.info(f"AI Class Analysis Start: {class_name} ({len(source_code)} chars)")
+            response = self._call_llm(full_prompt)
+            clean_response = self._clean_response(response)
+            
+            elapsed = time.time() - start_time
+            logger.info(f"AI Class Analysis Completed: {class_name} ({elapsed:.2f}s)")
+            
+            return clean_response
+            
+        except Exception as e:
+            logger.error(f"AI Class Analysis Failed: {class_name} - {e}")
+            raise e
+
+    def analyze_method(self, source_code: str, method_name: str = "", class_name: str = "") -> str:
+        """
+        Analyze a single Java method.
+        
+        Args:
+            source_code: Java method source code
+            method_name: Name of the method
+            class_name: Name of the class
+            
+        Returns:
+            Analysis result (markdown)
+        """
+        start_time = time.time()
+        
+        # 프롬프트 가져오기
+        try:
+            prompt_template = get_prompt("method_doc")
+        except Exception:
+            from csa.aiwork.default_prompts import DEFAULT_PROMPTS
+            prompt_template = DEFAULT_PROMPTS.get("method_doc", "")
+
+        if not prompt_template:
+            logger.error("Method analysis prompt not found")
+            return ""
+            
+        # 프롬프트 구성
+        full_prompt = f"{prompt_template}\n\n```java\n{source_code}\n```"
+        
+        full_name = f"{class_name}.{method_name}" if class_name else method_name
+        
+        try:
+            logger.debug(f"AI Method Analysis Start: {full_name}")
+            response = self._call_llm(full_prompt)
+            clean_response = self._clean_response(response)
+            
+            elapsed = time.time() - start_time
+            logger.debug(f"AI Method Analysis Completed: {full_name} ({elapsed:.2f}s)")
+            
+            return clean_response
+            
+        except Exception as e:
+            logger.error(f"AI Method Analysis Failed: {full_name} - {e}")
+            raise e
+
 
 # 전역 AI Analyzer 인스턴스
 _ai_analyzer = None

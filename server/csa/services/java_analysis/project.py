@@ -61,6 +61,7 @@ from .utils import (
     extract_project_name,
     extract_sub_type,
     generate_lombok_methods,
+    is_dto_class,
     parse_annotations,
 )
 
@@ -411,7 +412,7 @@ def parse_inner_classes(
     return inner_classes
 
 
-def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None) -> tuple[Package, Class, list[Class], str]:
+def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True) -> tuple[Package, Class, list[Class], str]:
     """Parse a single Java file and return parsed entities."""
     logger = get_logger(__name__)
     
@@ -448,6 +449,30 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             return None, None, [], ""
         
         class_name = class_declaration.name
+
+        # Calculate source hashcode immediately
+        source_hashcode = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
+
+        # Check for existing analysis if DB is available (Early Skip)
+        skip_analysis_completely = False
+        if graph_db:
+             try:
+                analysis_info = graph_db.get_class_analysis_info(class_name, project_name)
+                if analysis_info and analysis_info.get("source_hashcode") == source_hashcode:
+                    # AI 분석을 요청한 경우, 소스가 변경되지 않았더라도 진행 (AI 분석 결과 갱신 등을 위해)
+                    # use_ai 플래그가 True이면 스킵하지 않음
+                    # 단, use_ai는 이 함수 호출 시점에는 아직 정확히 확정되지 않았을 수 있음 (env vs option)
+                    # 따라서 여기서 use_ai 인자를 확인하거나, 아래에서 결정된 값을 미리 계산해야 함.
+                    
+                    # use_ai 인자는 parse_single_java_file의 인자로 전달됨
+                    if not use_ai:
+                        logger.info(f"Skipping analysis for {class_name} (source unchanged, AI not requested)")
+                        return None, None, [], "SKIPPED_UNCHANGED"
+                    else:
+                        logger.info(f"Proceeding with analysis for {class_name} despite unchanged source (AI requested)")
+             except Exception as e:
+                 logger.warning(f"Failed to check existing hash for {class_name}: {e}")
+
         class_annotations = parse_annotations(class_declaration.annotations, "class") if hasattr(class_declaration, 'annotations') else []
         class_type = "interface" if isinstance(class_declaration, javalang.tree.InterfaceDeclaration) else "class"
         
@@ -505,10 +530,11 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                         ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
                 logger.warning(f"AI Class 분석 실패 ({class_name}): {e}")
-                ai_description = ""
+                ai_description = f"AI 분석 실패: {e}"
 
-        # DTO 클래스 소스 저장 여부 결정 (환경 변수로 제어)
-        skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
+        # DTO 클래스 소스 저장 여부 결정 (인자 우선, 없으면 환경변수-기본값 true로 변경 고려)
+        # skip_dto_source 인자가 있으므로 그대로 사용
+        class_source = file_content
         class_source = file_content
 
         if skip_dto_source and is_dto_class(class_name, file_path):
@@ -578,7 +604,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                         initial_value = str(declarator.initializer)
                 
                 # 필드 논리명 추출 시도 (DTO는 건너뛰기)
-                skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
+                 # skip_dto_source 인자 사용
                 if skip_dto_source and is_dto_class(class_name, file_path):
                     field_logical_name = ""  # DTO 필드 논리명 추출 건너뛰기 (성능 최적화)
                 else:
@@ -599,8 +625,9 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 )
                 class_node.properties.append(prop)
         
-        # 메서드 처리 (환경 변수로 DTO 생략 제어)
-        SKIP_DTO_METHODS = os.getenv("SKIP_DTO_METHODS", "true").lower() == "true"
+        # 메서드 처리 (인자로 제어)
+        SKIP_DTO_METHODS = skip_dto_methods
+        logger.info(f"Sub-type check: {sub_type}, Skip DTO Methods: {SKIP_DTO_METHODS}, Class Annotations: {[a.name for a in class_annotations]}")
 
         if SKIP_DTO_METHODS and sub_type == "dto":
             # DTO 메서드 분석 생략
@@ -609,6 +636,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             all_declarations = class_declaration.methods + class_declaration.constructors
             
             for declaration in all_declarations:
+                logger.debug(f"Processing method declaration: {declaration.name}")
                 local_var_map = field_map.copy()
                 params = []
                 for param in declaration.parameters:
@@ -684,18 +712,46 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 # AI 분석 수행 (오류 시 빈 문자열 반환)
                 method_ai_description = ""
                 # USE_AI_ANALYSIS 결정 로직은 위에서 계산된 use_ai 사용
-                if use_ai and AI_ANALYZER_AVAILABLE and method_source:
-                    analyzer = get_ai_analyzer()
-                    if analyzer.is_available():
-                        # class_name도 함께 전달하여 로그에 Class.Method 형식으로 표시
-                        method_ai_description = analyzer.analyze_method(
-                            method_source,
-                            method_name=declaration.name,
-                            class_name=class_name
-                        )
+                if use_ai:
+                    if not AI_ANALYZER_AVAILABLE:
+                         logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer not available")
+                    elif not method_source:
+                         logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: Empty method source")
+                    else:
+                        logger.info(f"Starting AI Analysis for method: {class_name}.{declaration.name}")
+                        try:
+                            analyzer = get_ai_analyzer()
+                            if analyzer.is_available():
+                                # class_name도 함께 전달하여 로그에 Class.Method 형식으로 표시
+                                method_ai_description = analyzer.analyze_method(
+                                    method_source,
+                                    method_name=declaration.name,
+                                    class_name=class_name
+                                )
+                                logger.info(f"AI Analysis completed for method: {class_name}.{declaration.name}")
+                            else:
+                                logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer is_available returned False")
+                        except Exception as ai_err:
+                            logger.error(f"AI Analysis failed for {class_name}.{declaration.name}: {ai_err}")
+                
+                 # DTO skipping logs are handled by caller/config usually, but here is where logic resides.
+                 # Actually, use_ai already accounts for skip_dto_methods via caller?
+                 # parse_single_java_file receives use_ai. But project.py logic:
+                 # line 506: use_ai = ai_options.get('use_ai', False) if ai_options else use_ai
+                 
+                 # The 'skip_dto_source' logic is for skipping FIELDS logical name.
+                 # The method logic is below. Method AI analysis is gated by `use_ai`.
+                 # Caller (handlers.py) passes `use_ai` which comes from request params.
+                 # If user unchecked "Include AI", use_ai is False.
+                 # If use_ai is True, but this is a DTO and skip_dto_methods is True, AI *should* be skipped.
+                 # Wait, does parse_single_java_file handle DTO skipping for AI?
+                 # No, `use_ai` is passed directly. 
+                 # However, `is_dto` calculated at line 715 is mostly for complexity/loc metrics.
+                 # If we want to skip AI for DTOs, we must check it here.
+
 
                 # DTO 클래스 메서드는 복잡도 측정 건너뛰기
-                skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
+                # skip_dto_source 사용 (기존 로직 유지)
                 is_dto = skip_dto_source and is_dto_class(class_name, file_path)
 
                 # 메서드 LOC 메트릭 계산
@@ -1544,6 +1600,7 @@ def parse_java_project_streaming(
         'mybatis_mappers': 0,
         'sql_statements': 0,
         'config_files': 0,
+        'unchanged_files': 0,
     }
 
     # 진행 상황 추적 (스레드 안전)
@@ -1731,6 +1788,13 @@ def parse_java_project_streaming(
 
                     # 파싱 실패 시 (에러 메시지가 package_name에 담김)
                     if class_node is None:
+                        # 변경 없음 (Skip) 처리
+                        if package_name == "SKIPPED_UNCHANGED":
+                            with progress_lock:
+                                processed_classes += 1
+                                stats['unchanged_files'] = stats.get('unchanged_files', 0) + 1
+                            continue
+
                         file_name = os.path.basename(file_path)
                         with progress_lock:
                             processed_classes += 1

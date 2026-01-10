@@ -461,7 +461,29 @@
         "complexityTooltipLarge": "Large (대형 서비스)",
         "complexityTooltipHigh": "High (리팩토링 필요)",
         "noSource": "소스 코드를 사용할 수 없습니다",
-        "sourceHash": "소스 해시"
+        "sourceHash": "소스 해시",
+        "reanalyze": "재분석"
+    },
+    "classAnalysis": {
+        "title": "클래스 개별 분석",
+        "parsingOptions": "분석 옵션",
+        "skipDtoSource": "DTO 소스 제외",
+        "skipDtoSourceDesc": "공간 절약을 위해 DTO 소스 코드를 저장하지 않습니다.",
+        "skipDtoMethods": "DTO 메서드 제외",
+        "skipDtoMethodsDesc": "DTO의 메서드/복잡도를 분석하지 않습니다.",
+        "dtoOptionsDisabled": "이 클래스는 DTO로 식별되지 않아 옵션이 비활성화되었습니다.",
+        "aiAnalysis": "AI 분석",
+        "includeAi": "AI 분석 포함",
+        "includeAiDesc": "AI 설명 및 인사이트를 생성합니다 (LLM 필요).",
+        "start": "분석 시작",
+        "stop": "중지",
+        "cancel": "취소",
+        "close": "닫기",
+        "completed": "완료됨",
+        "failed": "실패함",
+        "cancelled": "취소됨",
+        "processing": "처리 중...",
+        "initializing": "분석 작업 초기화 중..."
     },
     "methodDetails": {
         "title": "메서드 상세",

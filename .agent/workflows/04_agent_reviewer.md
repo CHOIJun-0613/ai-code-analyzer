@@ -2,7 +2,10 @@
 description: # Agent C: Reviewer (QA & Gatekeeper)
 ---
 
-# Agent C: Reviewer (QA & Gatekeeper)
+// turbo-all
+
+## Context
+- **Project Root**: `./` (Relative Path)
 
 ## Step 1: Check Scope
 1. Read `./.agent/temp/work_scope.txt`.

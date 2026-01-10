@@ -45,6 +45,32 @@ class ClassMixin:
             }
         return None
 
+    def get_file_path_for_class(self, class_name: str, project_name: str) -> Optional[str]:
+        """
+        Retrieves the file path for a given class name.
+
+        Args:
+            class_name: 클래스명
+            project_name: 프로젝트명
+
+        Returns:
+            str: 파일 경로 또는 None
+        """
+        return self._execute_read(self._get_file_path_for_class_tx, class_name, project_name)
+
+    @staticmethod
+    def _get_file_path_for_class_tx(tx, class_name: str, project_name: str) -> Optional[str]:
+        query = """
+        MATCH (c:Class {name: $class_name, project_name: $project_name})
+        RETURN c.file_path as file_path
+        LIMIT 1
+        """
+        result = tx.run(query, class_name=class_name, project_name=project_name)
+        record = result.single()
+        if record:
+            return record["file_path"]
+        return None
+
     def get_project_class_hashes(self, project_name: str) -> dict[str, dict]:
         """
         프로젝트 내 모든 클래스의 해시코드와 AI 설명을 조회합니다.

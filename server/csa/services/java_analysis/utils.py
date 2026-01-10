@@ -56,6 +56,7 @@ __all__ = [
     "extract_project_name",
     "extract_sub_type",
     "generate_lombok_methods",
+    "is_dto_class",
     "parse_annotations",
 ]
 def parse_annotations(annotations, target_type: str = "class") -> list[Annotation]:
@@ -341,3 +342,40 @@ def generate_lombok_methods(properties: list[Field], class_name: str, package_na
     
     return methods
 
+
+def is_dto_class(class_name: str, file_path: str = "") -> bool:
+    """
+    Check if the class is a DTO/VO/Entity class based on naming conventions.
+    
+    Args:
+        class_name: Name of the class
+        file_path: Optional file path for additional context
+        
+    Returns:
+        bool: True if DTO/VO/Entity, False otherwise
+    """
+    class_name_lower = class_name.lower()
+    
+    # Common suffixes for data transfer objects
+    dto_suffixes = [
+        "dto", "vo", "entity", "info", "form", "request", "response", 
+        "req", "res", "param", "command", "query"
+    ]
+    
+    # Check suffixes
+    for suffix in dto_suffixes:
+        if class_name_lower.endswith(suffix):
+            return True
+            
+    # Check packages if file_path is provided
+    # Adjust logic to avoid aggressive matching (e.g., 'control' having 'vo' inside?) No, simpler is safer.
+    if file_path:
+        path_lower = file_path.lower().replace("\\", "/")
+        dto_packages = [
+            "/dto/", "/vo/", "/entity/", "/model/", "/domain/", "/form/"
+        ]
+        for pkg in dto_packages:
+            if pkg in path_lower:
+                return True
+                
+    return False

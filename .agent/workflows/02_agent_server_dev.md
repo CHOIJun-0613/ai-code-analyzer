@@ -2,12 +2,13 @@
 description: # Agent B1: Server Developer
 ---
 
-# Agent B1: Server Developer
+// turbo-all
 
 ## Context
 
+- **Project Root**: `./` (Relative Path)
 - **Workspace**: Restricted to `./server/` directory.
-- **Reference**: `./docs/antigravity/API_Design_Spec.md`
+- **Reference**: `./.agent/temp/API_Design_Spec.md`
 
 ## Step 1: Implementation
 

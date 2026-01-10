@@ -111,10 +111,14 @@ const MethodDetails: React.FC = () => {
 
     const { overviewContent, flowChartContent } = useMemo(() => {
         if (!methodData?.ai_description) return { overviewContent: '', flowChartContent: '' };
-        // Split by the specific header
-        const parts = methodData.ai_description.split('### **[Flow Chart]**');
+
+        // Split by the specific header using regex for flexibility
+        // Matches: ## **[Flow Chart]**, ### **[Method Flowchart]**, etc.
+        const splitRegex = /#+\s*\*\*\[?(?:Method\s+)?Flow\s*Chart\]?\*\*/i;
+        const parts = methodData.ai_description.split(splitRegex);
+
         const overview = parts[0].trim();
-        let chart = parts.length > 1 ? parts[1].trim() : '';
+        let chart = parts.length > 1 ? parts.slice(1).join('').trim() : '';
 
         // Clean up markdown code blocks if present
         if (chart.startsWith('```mermaid')) {
@@ -634,27 +638,32 @@ const MethodDetails: React.FC = () => {
 
                     {activeTab === 'flowchart' && (
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                <GitMerge className="w-5 h-5 text-indigo-500" />
-                                {t('methodDetails.flowChartTab')}
-                            </h3>
-                            {flowChartContent ? (
-                                <div className="relative">
-                                    {/* AI Generated Badge */}
-                                    <div className="absolute -top-3 -left-3 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                                        <Sparkles className="w-3.5 h-3.5" />
-                                        <span>{t('classDetails.aiGenerated')}</span>
-                                    </div>
-                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-auto">
+                            <div className="flex items-center justify-between px-1 mb-4">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <GitMerge className="w-5 h-5 text-indigo-500" />
+                                    <span>
+                                        Flow Chart: <span className="font-mono text-indigo-600 dark:text-indigo-400">{methodData.class_name}.{methodData.name}</span>
+                                    </span>
+                                </h3>
+                            </div>
+
+                            <div className="relative">
+                                {/* AI Generated Badge */}
+                                <div className="absolute -top-3 -left-3 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <span>{t('classDetails.aiGenerated')}</span>
+                                </div>
+                                {flowChartContent ? (
+                                    <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-auto pt-6">
                                         <MermaidDiagram definition={flowChartContent} />
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                                    <GitMerge className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
-                                    <p className="text-slate-400 dark:text-slate-500 italic">{t('common.noData')}</p>
-                                </div>
-                            )}
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center py-20 bg-slate-50 dark:bg-slate-800/20 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 pt-10">
+                                        <GitMerge className="w-12 h-12 text-slate-300 dark:text-slate-700 mb-4" />
+                                        <p className="text-slate-400 dark:text-slate-500 italic">{t('common.noData')}</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     )}
 

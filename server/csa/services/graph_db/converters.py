@@ -49,6 +49,7 @@ def build_class_base_record(class_node: Class, package_name: str, project_name: 
         "LLOC": int(class_node.LLOC or 0),
         "CLOC": int(class_node.CLOC or 0),
         "code_complexity": int(class_node.code_complexity or 0),
+        "source_hashcode": class_node.source_hashcode or "",
     }
 
 def build_method_records(

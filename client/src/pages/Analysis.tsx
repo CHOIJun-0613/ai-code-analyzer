@@ -876,7 +876,7 @@ const Analysis: React.FC = () => {
 
 
 
-                        <div className="mt-8 bg-indigo-600 rounded-2xl p-6 text-white shadow-xl shadow-indigo-200">
+                        <div className="mt-8 bg-indigo-600 rounded-2xl p-6 text-white shadow-xl">
                             <div className="flex items-start justify-between mb-6">
                                 <div>
                                     <h3 className="text-xl font-bold flex items-center gap-2 mb-2">

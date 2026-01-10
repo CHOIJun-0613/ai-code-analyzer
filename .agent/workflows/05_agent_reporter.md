@@ -2,7 +2,10 @@
 description: # Agent D: Reporter (Documentation)
 ---
 
-# Agent D: Reporter (Documentation)
+// turbo-all
+
+## Context
+- **Project Root**: `./` (Relative Path)
 
 ## Step 1: Cleanup
 1. Remove temporary files:
@@ -14,7 +17,7 @@ description: # Agent D: Reporter (Documentation)
 ## Step 2: Final Documentation
 1. Compile the final report in `./docs/antigravity/`.
    - **Language**: Korean 
-   - **Filename**: `{{수정제목}}-{{일련번호}}-작업결과-YYYYMMDD.md`
+   - **Filename**: `{{작제목}}-{{일련번호}}-작업결과-YYYYMMDD.md`
    - **Contents**: Summary, Changed Files (Server/Client), Test Report.
 2. **Git Commit Suggestion**:
    - **Language**: Korean 
