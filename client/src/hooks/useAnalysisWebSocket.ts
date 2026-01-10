@@ -197,6 +197,10 @@ export const useAnalysisWebSocket = ({
               if (callbacksRef.current.onError) {
                 callbacksRef.current.onError(message.message || 'Unknown error');
               }
+              // "Job not found"는 치명적 에러이므로 재연결 하지 않고 종료
+              if (message.message === 'Job not found') {
+                ws.close(1000, 'Job not found (Fatal)');
+              }
               break;
 
             default:
