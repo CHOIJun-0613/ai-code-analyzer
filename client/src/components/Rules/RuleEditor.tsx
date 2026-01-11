@@ -1,5 +1,5 @@
 import React from 'react';
-import MarkdownEditor from '@uiw/react-markdown-editor';
+import Editor from '@monaco-editor/react';
 import { AnalysisRule } from '../../api/analysisRules';
 import { X, Save } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -13,6 +13,25 @@ interface RuleEditorProps {
 export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSave, onCancel }) => {
     const [rule, setRule] = React.useState<Partial<AnalysisRule>>(initialRule);
     const { t } = useTranslation();
+
+    // Dark 모드 감지
+    const [isDark, setIsDark] = React.useState(
+        document.documentElement.classList.contains('dark')
+    );
+
+    React.useEffect(() => {
+        // MutationObserver로 dark 클래스 변경 감지
+        const observer = new MutationObserver(() => {
+            setIsDark(document.documentElement.classList.contains('dark'));
+        });
+
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        return () => observer.disconnect();
+    }, []);
 
     const handleChange = (field: keyof AnalysisRule, value: any) => {
         setRule(prev => ({ ...prev, [field]: value }));
@@ -41,97 +60,83 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
 
                 {/* Body */}
                 <div className="flex-1 overflow-auto p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('rules.editor.name')}
-                        </label>
-                        <input
-                            type="text"
-                            value={rule.name || ''}
-                            onChange={(e) => handleChange('name', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                            placeholder={t('rules.editor.namePlaceholder')}
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('rules.editor.description')}
-                        </label>
-                        <input
-                            type="text"
-                            value={rule.description || ''}
-                            onChange={(e) => handleChange('description', e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                            placeholder={t('rules.editor.descriptionPlaceholder')}
-                        />
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
+                    {/* 상단 고정 필드들 */}
+                    <div className="flex-shrink-0 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {t('rules.editor.name')}
+                            </label>
                             <input
-                                type="checkbox"
-                                checked={rule.useYn ?? true}
-                                onChange={(e) => handleChange('useYn', e.target.checked)}
-                                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                                type="text"
+                                value={rule.name || ''}
+                                onChange={(e) => handleChange('name', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                placeholder={t('rules.editor.namePlaceholder')}
                             />
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {t('rules.editor.useYn')}
-                            </span>
-                        </label>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                {t('rules.editor.description')}
+                            </label>
+                            <input
+                                type="text"
+                                value={rule.description || ''}
+                                onChange={(e) => handleChange('description', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                                placeholder={t('rules.editor.descriptionPlaceholder')}
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={rule.useYn ?? true}
+                                    onChange={(e) => handleChange('useYn', e.target.checked)}
+                                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
+                                />
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    {t('rules.editor.useYn')}
+                                </span>
+                            </label>
+                        </div>
                     </div>
 
-                    <div className="flex-1 flex flex-col h-[500px]">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {/* Monaco Editor - 남은 공간을 모두 차지하고 내부 스크롤 */}
+                    <div className="flex-shrink-0">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                             {t('rules.editor.content')}
                         </label>
-                        <div className="rule-editor-wrapper flex-1 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
-                            <style>{`
-                                /* Font Family */
-                                .rule-editor-wrapper .w-md-editor, 
-                                .rule-editor-wrapper .w-md-editor .cm-line,
-                                .rule-editor-wrapper .cm-content,
-                                .rule-editor-wrapper .cm-scroller {
-                                    font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
-                                }
-
-                                /* Scroll Fix - Force height propagation and overflow */
-                                .rule-editor-wrapper,
-                                .rule-editor-wrapper .w-md-editor,
-                                .rule-editor-wrapper .w-md-editor-content,
-                                .rule-editor-wrapper .cm-editor,
-                                .rule-editor-wrapper .cm-scroller {
-                                    height: 100% !important;
-                                }
-                                .rule-editor-wrapper .cm-scroller {
-                                    overflow-y: auto !important;
-                                    overflow-x: hidden !important;
-                                }
-
-                                /* Dark Mode Text Colors - Use .dark ancestor selector */
-                                .dark .rule-editor-wrapper .w-md-editor {
-                                    background-color: #1f2937 !important;
-                                    color: #ffffff !important;
-                                }
-                                /* Force all text to white in dark mode */
-                                .dark .rule-editor-wrapper .w-md-editor * {
-                                    color: #ffffff !important;
-                                }
-                                
-                                /* Header Colors - Green (override the white forced above) */
-                                .dark .rule-editor-wrapper .cm-line span[class*="header"],
-                                .dark .rule-editor-wrapper .cm-line span[class*="heading"],
-                                .dark .rule-editor-wrapper .tok-heading {
-                                    color: #4ade80 !important; /* Green */
-                                    font-weight: bold !important;
-                                    text-decoration: none !important;
-                                }
-                            `}</style>
-                            <MarkdownEditor
+                        <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                            <Editor
+                                height="460px"
+                                defaultLanguage="markdown"
                                 value={rule.content || ''}
-                                height="100%"
-                                onChange={(value) => handleChange('content', value)}
-                                enableScroll={true}
+                                onChange={(value) => handleChange('content', value || '')}
+                                theme={isDark ? 'vs-dark' : 'light'}
+                                options={{
+                                    fontFamily: 'Pretendard, Consolas, Monaco, "Courier New", monospace',
+                                    fontSize: 15,
+                                    lineHeight: 1.8,
+                                    minimap: { enabled: false },
+                                    scrollBeyondLastLine: false,
+                                    wordWrap: 'on',
+                                    lineNumbers: 'on',
+                                    renderLineHighlight: 'all',
+                                    scrollbar: {
+                                        vertical: 'visible',
+                                        horizontal: 'visible',
+                                        verticalScrollbarSize: 12,
+                                        horizontalScrollbarSize: 12,
+                                    },
+                                    automaticLayout: true,
+                                    padding: { top: 12, bottom: 12 },
+                                    cursorBlinking: 'smooth',
+                                    cursorSmoothCaretAnimation: 'on',
+                                    smoothScrolling: true,
+                                    bracketPairColorization: { enabled: true },
+                                }}
                             />
                         </div>
                     </div>
