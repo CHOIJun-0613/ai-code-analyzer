@@ -19,6 +19,7 @@ const GroupManagement = lazy(() => import('./pages/Admin/GroupManagement'));
 const AiPromptManagement = lazy(() => import('./pages/Admin/AiPromptManagement'));
 const AnalysisHistoryList = lazy(() => import('./pages/AnalysisHistoryList'));
 const CodeAnalysisDashboard = lazy(() => import('./pages/CodeAnalysisDashboard'));
+const Rules = lazy(() => import('./pages/Rules'));
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
     const isLoggedIn = useAuthStore((state: AuthState) => state.isLoggedIn);
