@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getAiPrompts, updateAiPrompt, AiPrompt } from '../../api/aiPrompts';
-import { Edit2, Save, X, Bot, FileText, AlertCircle } from 'lucide-react';
+import { Edit2, Save, X, Bot, FileText, AlertCircle, Edit3, Eye } from 'lucide-react';
 import PromptEditor from '../../components/PromptEditor';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const AiPromptManagement: React.FC = () => {
     const { t } = useTranslation();
@@ -13,6 +15,7 @@ const AiPromptManagement: React.FC = () => {
     const [editContent, setEditContent] = useState('');
     const [editDescription, setEditDescription] = useState('');
     const [saving, setSaving] = useState(false);
+    const [editorTab, setEditorTab] = useState<'edit' | 'preview'>('edit');
 
     useEffect(() => {
         fetchPrompts();
@@ -183,12 +186,61 @@ const AiPromptManagement: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="flex-1 p-0 relative h-full overflow-hidden bg-white dark:bg-slate-900">
-                        <div className="absolute inset-0">
-                            <PromptEditor
-                                value={editContent}
-                                onChange={setEditContent}
-                            />
+                    <div className="flex-1 p-0 relative h-full overflow-hidden bg-white dark:bg-slate-900 flex flex-col">
+                        {/* Tab Buttons */}
+                        <div className="flex justify-end gap-1 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 px-4 py-2">
+                            <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+                                <button
+                                    type="button"
+                                    onClick={() => setEditorTab('edit')}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                        editorTab === 'edit'
+                                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    <Edit3 className="w-3.5 h-3.5" />
+                                    {t('common.edit', 'Edit')}
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setEditorTab('preview')}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                                        editorTab === 'preview'
+                                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                    }`}
+                                >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    {t('common.preview', 'Preview')}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Editor/Preview Content */}
+                        <div className="flex-1 relative overflow-hidden">
+                            {editorTab === 'edit' ? (
+                                <div className="absolute inset-0">
+                                    <PromptEditor
+                                        value={editContent}
+                                        onChange={setEditContent}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="absolute inset-0 overflow-auto bg-white dark:bg-slate-900 p-8">
+                                    {editContent ? (
+                                        <div className="markdown-content prose prose-sm dark:prose-invert max-w-none">
+                                            <Markdown remarkPlugins={[remarkGfm]}>{editContent}</Markdown>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full">
+                                            <p className="text-slate-400 dark:text-slate-500 italic text-sm">
+                                                {t('common.noContent', 'No content to preview')}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
