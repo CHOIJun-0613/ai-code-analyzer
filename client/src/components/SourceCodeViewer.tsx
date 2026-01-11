@@ -1,75 +1,102 @@
-import React, { useMemo, forwardRef } from 'react';
+import React, { forwardRef, useImperativeHandle } from 'react';
+import Editor from '@monaco-editor/react';
+import type { editor } from 'monaco-editor';
 
 interface SourceCodeViewerProps {
     source: string;
 }
 
-const SourceCodeViewer = forwardRef<HTMLPreElement, SourceCodeViewerProps>(({ source }, ref) => {
+export interface SourceCodeViewerHandle {
+    selectAll: () => void;
+    copyToClipboard: () => Promise<void>;
+}
 
-    const highlightedCode = useMemo(() => {
-        if (!source) return null;
+const SourceCodeViewer = forwardRef<SourceCodeViewerHandle, SourceCodeViewerProps>(({ source }, ref) => {
+    const [editorInstance, setEditorInstance] = React.useState<editor.IStandaloneCodeEditor | null>(null);
 
-        const tokens: React.ReactNode[] = [];
-        const regex = /(\/\/.*$|\/\*[\s\S]*?\*\/|"[^"]*"|'[^']*'|\b(?:abstract|assert|boolean|break|byte|case|catch|char|class|const|continue|default|do|double|else|enum|extends|final|finally|float|for|goto|if|implements|import|instanceof|int|interface|long|native|new|package|private|protected|public|return|short|static|strictfp|super|switch|synchronized|this|throw|throws|transient|try|void|volatile|while|true|false|null)\b|@\w+)/gm;
+    // Dark 모드 감지
+    const [isDark, setIsDark] = React.useState(
+        document.documentElement.classList.contains('dark')
+    );
 
-        let lastIndex = 0;
-        let match;
+    React.useEffect(() => {
+        // MutationObserver로 dark 클래스 변경 감지
+        const observer = new MutationObserver(() => {
+            setIsDark(document.documentElement.classList.contains('dark'));
+        });
 
-        while ((match = regex.exec(source)) !== null) {
-            // Push text before the match
-            if (match.index > lastIndex) {
-                tokens.push(source.slice(lastIndex, match.index));
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+
+        return () => observer.disconnect();
+    }, []);
+
+    // Expose methods to parent via ref
+    useImperativeHandle(ref, () => ({
+        selectAll: () => {
+            if (editorInstance) {
+                const model = editorInstance.getModel();
+                if (model) {
+                    const fullRange = model.getFullModelRange();
+                    editorInstance.setSelection(fullRange);
+                    editorInstance.focus();
+                }
             }
-
-            const token = match[0];
-            let className = '';
-
-            if (token.startsWith('//') || token.startsWith('/*')) {
-                className = 'text-slate-400 dark:text-slate-500 italic'; // Comment
-            } else if (token.startsWith('"') || token.startsWith("'")) {
-                className = 'text-green-600 dark:text-green-400'; // String
-            } else if (token.startsWith('@')) {
-                className = 'text-yellow-600 dark:text-yellow-400'; // Annotation
-            } else {
-                // Keywords
-                className = 'text-purple-600 dark:text-purple-400 font-bold';
+        },
+        copyToClipboard: async () => {
+            if (editorInstance) {
+                const selection = editorInstance.getSelection();
+                const model = editorInstance.getModel();
+                if (model && selection) {
+                    const selectedText = model.getValueInRange(selection);
+                    await navigator.clipboard.writeText(selectedText || source);
+                } else {
+                    await navigator.clipboard.writeText(source);
+                }
             }
-
-            tokens.push(
-                <span key={match.index} className={className}>
-                    {token}
-                </span>
-            );
-
-            lastIndex = regex.lastIndex;
         }
+    }));
 
-        // Push remaining text
-        if (lastIndex < source.length) {
-            tokens.push(source.slice(lastIndex));
-        }
-
-        return tokens;
-    }, [source]);
-
-    const lines = useMemo(() => source ? source.split('\n') : [], [source]);
+    const handleEditorMount = (editor: editor.IStandaloneCodeEditor) => {
+        setEditorInstance(editor);
+    };
 
     return (
-        <div className="bg-white dark:bg-[#1e1e1e] rounded-xl overflow-hidden text-sm border border-slate-200 dark:border-slate-900/10 shadow-inner h-[600px] flex font-mono transition-colors duration-300">
-            <div className="overflow-auto w-full h-full flex">
-                {/* Line Numbers */}
-                <div className="flex-none min-h-full bg-slate-50 dark:bg-[#1e1e1e] border-r border-slate-200 dark:border-[#333] flex flex-col text-right py-4 pr-3 pl-4 select-none text-slate-400 dark:text-[#6e7681] sticky left-0 z-10 transition-colors duration-300">
-                    {lines.map((_, i) => (
-                        <span key={i} className="leading-6">{i + 1}</span>
-                    ))}
-                </div>
-                {/* Code Content */}
-                <div className="flex-1 min-h-full min-w-0 bg-white dark:bg-[#1e1e1e] transition-colors duration-300">
-                    <pre ref={ref} className="m-0 p-4 leading-6 whitespace-pre text-slate-800 dark:text-[#d4d4d4] font-mono font-medium">
-                        {highlightedCode || source}
-                    </pre>
-                </div>
-            </div>
+        <div className="bg-white dark:bg-[#1e1e1e] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-900/10 shadow-inner h-[600px]">
+            <Editor
+                height="100%"
+                defaultLanguage="java"
+                value={source}
+                theme={isDark ? 'vs-dark' : 'light'}
+                onMount={handleEditorMount}
+                options={{
+                    fontFamily: 'Pretendard, Consolas, Monaco, "Courier New", monospace',
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                    minimap: { enabled: false },
+                    scrollBeyondLastLine: false,
+                    wordWrap: 'off',
+                    lineNumbers: 'on',
+                    renderLineHighlight: 'all',
+                    scrollbar: {
+                        vertical: 'visible',
+                        horizontal: 'visible',
+                        verticalScrollbarSize: 12,
+                        horizontalScrollbarSize: 12,
+                    },
+                    automaticLayout: true,
+                    readOnly: true,
+                    cursorStyle: 'line',
+                    cursorBlinking: 'smooth',
+                    smoothScrolling: true,
+                    bracketPairColorization: { enabled: true },
+                    contextmenu: true,
+                    selectionHighlight: true,
+                    occurrencesHighlight: true,
+                }}
+            />
         </div>
     );
 });

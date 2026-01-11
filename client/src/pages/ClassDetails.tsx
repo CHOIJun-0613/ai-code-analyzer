@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import ReportViewerModal from '../components/ReportViewerModal';
 import VirtualizedTable, { Column } from '../components/VirtualizedTable';
 import { ClassAnalysisModal } from '../components/ClassAnalysisModal';
-import SourceCodeViewer from '../components/SourceCodeViewer';
+import SourceCodeViewer, { SourceCodeViewerHandle } from '../components/SourceCodeViewer';
 import {
     Code2, FileCode, Braces,
     AlignLeft, Cpu, Database, GitBranch,
@@ -72,7 +72,7 @@ const ClassDetails: React.FC = () => {
     const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
     const [methodSearchQuery, setMethodSearchQuery] = useState('');
-    const codeRef = useRef<HTMLPreElement>(null);
+    const codeRef = useRef<SourceCodeViewerHandle>(null);
 
     // React Query: 클래스 상세 정보 조회
     const {
@@ -152,9 +152,9 @@ const ClassDetails: React.FC = () => {
     };
 
     const handleCopySource = async () => {
-        if (!classData?.source) return;
+        if (!codeRef.current) return;
         try {
-            await navigator.clipboard.writeText(classData.source);
+            await codeRef.current.copyToClipboard();
             setIsCopied(true);
             setTimeout(() => setIsCopied(false), 2000);
         } catch (err) {
@@ -263,15 +263,7 @@ const ClassDetails: React.FC = () => {
     ], []);
 
     const handleSelectAll = () => {
-        if (!codeRef.current) return;
-
-        const range = document.createRange();
-        range.selectNodeContents(codeRef.current);
-        const selection = window.getSelection();
-        if (selection) {
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
+        codeRef.current?.selectAll();
     };
 
     // useEffect 제거 - React Query가 자동으로 처리

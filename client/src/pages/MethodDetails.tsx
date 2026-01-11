@@ -13,7 +13,7 @@ import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axios from '../api/client';
 import MermaidDiagram from '../components/MermaidDiagram';
-import SourceCodeViewer from '../components/SourceCodeViewer';
+import SourceCodeViewer, { SourceCodeViewerHandle } from '../components/SourceCodeViewer';
 
 interface MethodCall {
     name: string;
@@ -70,7 +70,7 @@ const MethodDetails: React.FC = () => {
     const [activeTab, setActiveTab] = useState<'info' | 'inout' | 'source' | 'flowchart' | 'calls' | 'sequence'>('info');
     const [showComplexityHelp, setShowComplexityHelp] = useState(false);
     const [isCopied, setIsCopied] = useState(false);
-    const codeRef = useRef<HTMLPreElement>(null);
+    const codeRef = useRef<SourceCodeViewerHandle>(null);
 
     // React Query: 메서드 상세 정보 조회
     const {
@@ -132,9 +132,9 @@ const MethodDetails: React.FC = () => {
     }, [methodData?.ai_description]);
 
     const handleCopySource = async () => {
-        if (!methodData?.source) return;
+        if (!codeRef.current) return;
         try {
-            await navigator.clipboard.writeText(methodData.source);
+            await codeRef.current.copyToClipboard();
             setIsCopied(true);
             setTimeout(() => setIsCopied(false), 2000);
         } catch (err) {
@@ -143,14 +143,7 @@ const MethodDetails: React.FC = () => {
     };
 
     const handleSelectAll = () => {
-        if (!codeRef.current) return;
-        const range = document.createRange();
-        range.selectNodeContents(codeRef.current);
-        const selection = window.getSelection();
-        if (selection) {
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
+        codeRef.current?.selectAll();
     };
 
     // VirtualizedTable Column 정의 - Method Calls
