@@ -46,3 +46,16 @@ def update_prompt(
         return updated_prompt
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/import", response_model=dict)
+def import_prompts(
+    prompts: List[dict] = Body(...),
+    user_id: str = "admin" # TODO: Extract from token
+) -> Any:
+    """
+    Import AI Prompts (Overwrite).
+    """
+    try:
+        return ai_prompt_service.import_prompts(prompts, user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

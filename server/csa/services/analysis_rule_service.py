@@ -146,6 +146,68 @@ class AnalysisRuleService:
                 logger.error(f"Failed to update rule orders: {e}")
                 return False
 
+    def import_rules(self, rules: List[Dict], user_id: str = "admin") -> Dict[str, int]:
+        """
+        Import Analysis Rules from a list of dictionaries.
+        Same name rules (active) will be deactivated (Soft Delete).
+        New rules will be created as active.
+        """
+        pool = get_connection_pool()
+        summary = {"success": 0, "deactivated": 0, "failed": 0}
+
+        with pool.session() as session:
+            for rule in rules:
+                rule_name = rule.get("name")
+                if not rule_name:
+                    continue
+
+                try:
+                    with session.begin_transaction() as tx:
+                        # 1. Deactivate existing active rule with same name
+                        deactivate_query = """
+                        MATCH (r:AnalysisRule {name: $name})
+                        WHERE r.useYn = true
+                        SET r.useYn = false, r.updatedBy = 'system_import_disabled'
+                        RETURN count(r) as count
+                        """
+                        result = tx.run(deactivate_query, name=rule_name)
+                        deactivated = result.single()["count"]
+                        summary["deactivated"] += deactivated
+
+                        # 2. Create new rule
+                        create_query = "CREATE (r:AnalysisRule"
+                        if rule.get("isSystem"):
+                            create_query += ":System"
+                        
+                        create_query += """ {
+                            name: $name,
+                            description: $description,
+                            content: $content,
+                            useYn: true,
+                            order: $order,
+                            updatedAt: $updatedAt,
+                            updatedBy: $updatedBy
+                        })
+                        """
+                        
+                        tx.run(create_query,
+                            name=rule_name,
+                            description=rule.get("description", ""),
+                            content=rule.get("content", ""),
+                            order=rule.get("order", 0),
+                            updatedAt=datetime.datetime.now().isoformat(),
+                            updatedBy=user_id
+                        )
+                        tx.commit()
+                        summary["success"] += 1
+                        logger.info(f"Imported rule: {rule_name}")
+
+                except Exception as e:
+                    logger.error(f"Failed to import rule {rule_name}: {e}")
+                    summary["failed"] += 1
+        
+        return summary
+
     def _map_record_to_entity(self, record):
         return AnalysisRule(
             id=record["id"],

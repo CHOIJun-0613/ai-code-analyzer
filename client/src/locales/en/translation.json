@@ -62,7 +62,13 @@
             "descriptionPlaceholder": "Enter prompt description...",
             "save": "Save Changes",
             "saving": "Saving..."
-        }
+        },
+        "export": "Export Prompts",
+        "import": "Import Prompts",
+        "exportSuccess": "Prompts exported successfully",
+        "exportFailed": "Failed to export prompts",
+        "importSuccess": "Import Result - Success: {{success}}, Failed: {{failed}}",
+        "importFailed": "Failed to import prompts"
     },
     "settings": {
         "title": "Screen Settings",
@@ -566,9 +572,17 @@
             "saveSuccess": "Rule saved successfully.",
             "saveFailed": "Failed to save rule.",
             "deleteConfirm": "Are you sure you want to delete this rule?",
+            "deleteConfirmTitle": "Delete Rule",
+            "deleteConfirmMessage": "Are you sure you want to delete this rule? This action cannot be undone.",
             "deleteSuccess": "Rule deleted successfully.",
-            "deleteFailed": "Failed to delete rule."
-        }
+            "deleteFailed": "Failed to delete rule.",
+            "exportSuccess": "Rules exported successfully",
+            "exportFailed": "Failed to export rules",
+            "importSuccess": "Import Result - Success: {{success}}, Deactivated: {{deactivated}}, Failed: {{failed}}",
+            "importFailed": "Failed to import rules: Invalid format or server error"
+        },
+        "export": "Export Rules",
+        "import": "Import Rules"
     }
 }
 

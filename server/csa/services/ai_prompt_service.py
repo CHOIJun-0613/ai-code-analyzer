@@ -160,5 +160,52 @@ class AiPromptService:
             })
         """, name=name, content=content, description=description, now=now)
 
+    def import_prompts(self, prompts: List[Dict], user_id: str = "admin") -> Dict[str, int]:
+        """
+        Import AI Prompts from a list of dictionaries.
+        Uses MERGE to update existing prompts or create new ones.
+        """
+        pool = get_connection_pool()
+        summary = {"success": 0, "failed": 0}
+
+        with pool.session() as session:
+            for prompt in prompts:
+                prompt_name = prompt.get("name")
+                if not prompt_name:
+                    continue
+
+                try:
+                    with session.begin_transaction() as tx:
+                        # MERGE query to update or create
+                        query = """
+                        MERGE (p:AiPrompt {name: $name})
+                        SET p.content = $content,
+                            p.description = $description,
+                            p.updatedAt = $updatedAt,
+                            p.updatedBy = $updatedBy
+                        """
+                        # Add :System label if isSystem is true
+                        if prompt.get("is_system") or prompt.get("isSystem"):
+                             query += ", p:System"
+                        
+                        tx.run(query,
+                            name=prompt_name,
+                            content=prompt.get("content", ""),
+                            description=prompt.get("description", ""),
+                            updatedAt=datetime.datetime.now().isoformat(),
+                            updatedBy=user_id
+                        )
+                        tx.commit()
+                        summary["success"] += 1
+                        # Update Cache
+                        self._cache[prompt_name] = prompt.get("content", "")
+                        logger.info(f"Imported prompt: {prompt_name}")
+
+                except Exception as e:
+                    logger.error(f"Failed to import prompt {prompt_name}: {e}")
+                    summary["failed"] += 1
+        
+        return summary
+
 # Global Instance
 ai_prompt_service = AiPromptService.get_instance()

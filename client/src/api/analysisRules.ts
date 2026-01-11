@@ -44,4 +44,9 @@ export const analysisRuleApi = {
         const response = await client.put('/analysis-rules/reorder', orderMap);
         return response.data;
     },
+
+    importRules: async (rules: Partial<AnalysisRule>[]) => {
+        const response = await client.post<{ success: number, deactivated: number, failed: number }>('/analysis-rules/import', rules);
+        return response.data;
+    },
 };

@@ -23,4 +23,10 @@ export const updateAiPrompt = async (name: string, content: string, description?
     // The backend expects content embedded in the body: { "content": "..." }
     const response = await client.put(`/ai-prompts/${name}`, { content, description });
     return response.data;
+    return response.data;
+};
+
+export const importPrompts = async (prompts: Partial<AiPrompt>[]): Promise<{ success: number; failed: number }> => {
+    const response = await client.post('/ai-prompts/import', prompts);
+    return response.data;
 };

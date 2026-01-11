@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAiPrompts, updateAiPrompt, AiPrompt } from '../../api/aiPrompts';
-import { Edit2, Save, X, Bot, FileText, AlertCircle, Edit3, Eye } from 'lucide-react';
+import { getAiPrompts, updateAiPrompt, importPrompts, AiPrompt } from '../../api/aiPrompts';
+import { Edit2, Save, X, Bot, FileText, AlertCircle, Edit3, Eye, Download, Upload } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 import PromptEditor from '../../components/PromptEditor';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -16,6 +17,7 @@ const AiPromptManagement: React.FC = () => {
     const [editDescription, setEditDescription] = useState('');
     const [saving, setSaving] = useState(false);
     const [editorTab, setEditorTab] = useState<'edit' | 'preview'>('edit');
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         fetchPrompts();
@@ -69,6 +71,7 @@ const AiPromptManagement: React.FC = () => {
             setEditingPrompt(null);
             setEditContent('');
             setEditDescription('');
+            toast.success(t('common.saveSuccess', 'Saved successfully'));
         } catch (err: any) {
             setError(err.response?.data?.detail || t('common.errorSavingData'));
         } finally {
@@ -76,17 +79,138 @@ const AiPromptManagement: React.FC = () => {
         }
     };
 
+    const handleExport = async () => {
+        try {
+            const allPrompts = await getAiPrompts();
+            const jsonString = JSON.stringify(allPrompts, null, 2);
+
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timestamp = `${year}${month}${day}-${hours}${minutes}${seconds}`;
+            const fileName = `ai_prompt_export_data-${timestamp}.json`;
+
+            // Use File System Access API if available
+            if ('showSaveFilePicker' in window) {
+                try {
+                    const handle = await (window as any).showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'JSON Files',
+                            accept: { 'application/json': ['.json'] },
+                        }],
+                    });
+                    const writable = await handle.createWritable();
+                    await writable.write(jsonString);
+                    await writable.close();
+                    toast.success(t('aiPrompt.exportSuccess', 'Prompts exported successfully'));
+                } catch (err: any) {
+                    if (err.name !== 'AbortError') {
+                        console.error('Failed to save file:', err);
+                        toast.error(t('aiPrompt.exportFailed', 'Failed to export prompts'));
+                    }
+                }
+            } else {
+                // Fallback
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                toast.success(t('aiPrompt.exportSuccess', 'Prompts exported successfully'));
+            }
+        } catch (error) {
+            console.error('Failed to export prompts:', error);
+            toast.error(t('aiPrompt.exportFailed', 'Failed to export prompts'));
+        }
+    };
+
+    const handleImportClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        event.target.value = '';
+
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const content = e.target?.result as string;
+                const importedPrompts = JSON.parse(content);
+
+                if (!Array.isArray(importedPrompts)) {
+                    throw new Error('Invalid format: Root must be an array');
+                }
+
+                setLoading(true);
+                const result = await importPrompts(importedPrompts);
+
+                toast.success(
+                    t('aiPrompt.importSuccess',
+                        `Imported: {{success}}, Failed: {{failed}}`,
+                        result
+                    )
+                );
+                fetchPrompts();
+            } catch (error) {
+                console.error('Failed to import prompts:', error);
+                toast.error(t('aiPrompt.importFailed', 'Failed to import prompts'));
+            } finally {
+                setLoading(false);
+            }
+        };
+        reader.readAsText(file);
+    };
+
     if (loading) return <div className="p-8 text-center text-slate-500 dark:text-slate-400">Loading...</div>;
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center gap-3">
-                <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
-                    <Bot className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+            <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                    <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl">
+                        <Bot className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('aiPrompt.title')}</h1>
+                        <p className="text-slate-500 dark:text-slate-400 mt-1">{t('aiPrompt.subtitle')}</p>
+                    </div>
                 </div>
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white">{t('aiPrompt.title')}</h1>
-                    <p className="text-slate-500 dark:text-slate-400 mt-1">{t('aiPrompt.subtitle')}</p>
+                <div className="flex items-center gap-2">
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileChange}
+                        className="hidden"
+                        accept=".json"
+                    />
+                    <button
+                        onClick={handleExport}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        title={t('aiPrompt.export', 'Export Prompts')}
+                    >
+                        <Download size={16} />
+                        {t('aiPrompt.export', 'Export')}
+                    </button>
+                    <button
+                        onClick={handleImportClick}
+                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                        title={t('aiPrompt.import', 'Import Prompts')}
+                    >
+                        <Upload size={16} />
+                        {t('aiPrompt.import', 'Import')}
+                    </button>
                 </div>
             </div>
 
@@ -193,11 +317,10 @@ const AiPromptManagement: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setEditorTab('edit')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                                        editorTab === 'edit'
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${editorTab === 'edit'
                                             ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                        }`}
                                 >
                                     <Edit3 className="w-3.5 h-3.5" />
                                     {t('common.edit', 'Edit')}
@@ -205,11 +328,10 @@ const AiPromptManagement: React.FC = () => {
                                 <button
                                     type="button"
                                     onClick={() => setEditorTab('preview')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                                        editorTab === 'preview'
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${editorTab === 'preview'
                                             ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
                                             : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-                                    }`}
+                                        }`}
                                 >
                                     <Eye className="w-3.5 h-3.5" />
                                     {t('common.preview', 'Preview')}

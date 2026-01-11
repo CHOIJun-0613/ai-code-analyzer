@@ -199,7 +199,13 @@
             "descriptionPlaceholder": "프롬프트 설명을 입력하세요...",
             "save": "변경사항 저장",
             "saving": "저장 중..."
-        }
+        },
+        "export": "프롬프트 내보내기",
+        "import": "프롬프트 가져오기",
+        "exportSuccess": "프롬프트 내보내기에 성공했습니다.",
+        "exportFailed": "프롬프트 내보내기에 실패했습니다.",
+        "importSuccess": "가져오기 결과 - 성공: {{success}}, 실패: {{failed}}",
+        "importFailed": "프롬프트 가져오기에 실패했습니다."
     },
     "aiAnalysis": {
         "title": "코드 AI 분석",
@@ -566,9 +572,17 @@
             "saveSuccess": "규칙이 저장되었습니다.",
             "saveFailed": "규칙 저장에 실패했습니다.",
             "deleteConfirm": "정말로 이 규칙을 삭제하시겠습니까?",
+            "deleteConfirmTitle": "규칙 삭제",
+            "deleteConfirmMessage": "이 규칙을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.",
             "deleteSuccess": "규칙이 삭제되었습니다.",
-            "deleteFailed": "규칙 삭제에 실패했습니다."
-        }
+            "deleteFailed": "규칙 삭제에 실패했습니다.",
+            "exportSuccess": "분석 규칙이 성공적으로 저장되었습니다.",
+            "exportFailed": "분석 규칙 저장에 실패했습니다.",
+            "importSuccess": "가져오기 완료 - 성공: {{success}}, 비활성: {{deactivated}}, 실패: {{failed}}",
+            "importFailed": "규칙 가져오기 실패: 파일 형식 오류 또는 서버 오류"
+        },
+        "export": "규칙 저장하기",
+        "import": "규칙 불러오기"
     }
 }
 

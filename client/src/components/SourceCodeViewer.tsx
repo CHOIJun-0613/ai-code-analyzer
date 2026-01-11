@@ -94,7 +94,7 @@ const SourceCodeViewer = forwardRef<SourceCodeViewerHandle, SourceCodeViewerProp
                     bracketPairColorization: { enabled: true },
                     contextmenu: true,
                     selectionHighlight: true,
-                    occurrencesHighlight: true,
+                    occurrencesHighlight: 'singleFile',
                 }}
             />
         </div>

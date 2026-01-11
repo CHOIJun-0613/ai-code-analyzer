@@ -100,3 +100,17 @@ def delete_rule(rule_id: int) -> Any:
             raise HTTPException(status_code=404, detail="Rule not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/import", response_model=Dict[str, int])
+def import_rules(
+    rules: List[Dict[str, Any]] = Body(...),
+    user_id: str = "admin" # TODO: Extract from token
+) -> Any:
+    """
+    분석 규칙을 일괄 등록(Import)한다.
+    기존에 동일한 이름의 규칙이 있다면 비활성화(Soft Delete)하고 새 버전을 생성한다.
+    """
+    try:
+        return analysis_rule_service.import_rules(rules, user_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

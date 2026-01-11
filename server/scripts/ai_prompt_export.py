@@ -2,6 +2,7 @@
 import sys
 import os
 import json
+import argparse
 from datetime import datetime
 
 # Add server directory to sys.path
@@ -12,10 +13,10 @@ sys.path.append(server_dir)
 from app.core.config import settings
 from csa.services.graph_db import GraphDB
 
-def export_prompts():
+def export_prompts(output_dir=None):
     """
     Export AI Prompts from Neo4j to a JSON file.
-    DB에 저장된 프롬프트 데이터를 JSON 파일로 내보냅니다.
+    Neo4j에서 AI 프롬프트 데이터를 조회하여 JSON 파일로 저장합니다.
     """
     print("Starting AI Prompt Export...")
     
@@ -31,52 +32,56 @@ def export_prompts():
         print(f"Failed to connect to Neo4j: {e}")
         return
 
-    # 쿼리 실행 (Execute Query)
-    # AiPrompt 노드의 모든 속성을 조회합니다.
+    prompts = []
+    
+    # Query Prompts
     query = """
     MATCH (p:AiPrompt)
     RETURN p.name as name, 
            p.content as content, 
            p.description as description, 
            p.updatedAt as updatedAt, 
-           p.updatedBy as updatedBy
+           p.updatedBy as updatedBy,
+           'System' IN labels(p) as is_system
     ORDER BY p.name
     """
     
     try:
-        results = []
         with db.driver.session(database=db.database) as session:
             result = session.run(query)
             for record in result:
-                results.append({
+                prompts.append({
                     "name": record["name"],
                     "content": record["content"],
                     "description": record["description"],
                     "updatedAt": record["updatedAt"],
-                    "updatedBy": record["updatedBy"]
+                    "updatedBy": record["updatedBy"],
+                    "isSystem": record["is_system"]
                 })
         
-        print(f"Found {len(results)} prompts in database.")
+        print(f"Found {len(prompts)} prompts in database.")
         
-        if not results:
-            print("Warning: No prompts found to export.")
-        
-        # 데이터 저장 폴더 확인 (Check data directory)
-        data_dir = os.path.join(current_dir, "data")
-        if not os.path.exists(data_dir):
-            os.makedirs(data_dir)
-            print(f"Created data directory: {data_dir}")
+        if not prompts:
+            print("No prompts found to export.")
+            return
 
-        # 파일 저장 (Save to file)
-        date_str = datetime.now().strftime("%Y%m%d")
-        filename = f"ai_prompt_export_data-{date_str}.json"
-        output_path = os.path.join(data_dir, filename)
-        
-        with open(output_path, 'w', encoding='utf-8') as f:
-            json.dump(results, f, indent=2, ensure_ascii=False)
+        # Prepare Output File
+        if not output_dir:
+            output_dir = os.path.join(current_dir, "data")
             
-        print(f"Export successfully completed.")
-        print(f"File saved to: {output_path}")
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+            
+        date_str = datetime.now().strftime("%Y%m%d-%H%M%S")
+        filename = f"ai_prompt_export_data-{date_str}.json"
+        file_path = os.path.join(output_dir, filename)
+        
+        # Save to JSON
+        with open(file_path, 'w', encoding='utf-8') as f:
+            json.dump(prompts, f, indent=4, ensure_ascii=False)
+            
+        print(f"Successfully exported {len(prompts)} prompts to:")
+        print(f"{file_path}")
         
     except Exception as e:
         print(f"Error during export: {e}")
@@ -84,4 +89,8 @@ def export_prompts():
         db.close()
 
 if __name__ == "__main__":
-    export_prompts()
+    parser = argparse.ArgumentParser(description='Export AI Prompts from Neo4j to JSON')
+    parser.add_argument('output_dir', nargs='?', help='Directory to save the JSON file (optional)')
+    args = parser.parse_args()
+    
+    export_prompts(args.output_dir)
