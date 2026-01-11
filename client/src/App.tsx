@@ -100,9 +100,15 @@ function App() {
                             <AiPromptManagement />
                         </Suspense>
                     } />
+
+                    <Route path="rules" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <Rules />
+                        </Suspense>
+                    } />
                 </Route>
             </Routes>
-        </Router>
+        </Router >
     );
 }
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, RefreshCw, Save } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { analysisRuleApi, AnalysisRule } from '../api/analysisRules';

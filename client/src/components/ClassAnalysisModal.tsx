@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 
-import { X, Play, RefreshCw, Terminal, Loader2, CheckCircle, AlertCircle, Settings, Box } from 'lucide-react';
+import { X, Play, RefreshCw, Terminal, Loader2, CheckCircle, AlertCircle, Box } from 'lucide-react';
 import client from '../api/client';
 import { useAnalysisWebSocket } from '../hooks/useAnalysisWebSocket';
 import toast from 'react-hot-toast';
@@ -52,7 +52,7 @@ export const ClassAnalysisModal: React.FC<ClassAnalysisModalProps> = ({
         onLog: (log) => {
             setLogs(prev => [...prev, log]);
         },
-        onProgress: (p) => {
+        onProgress: (_p) => {
             // Progress parsed from logs usually, but if sent via WS:
             // console.debug('Progress:', p);
         },
