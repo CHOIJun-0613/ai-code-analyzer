@@ -117,11 +117,10 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                                 <button
                                     type="button"
                                     onClick={() => setEditorTab('edit')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                                        editorTab === 'edit'
-                                            ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                    }`}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${editorTab === 'edit'
+                                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                        }`}
                                 >
                                     <Edit3 className="w-3.5 h-3.5" />
                                     {t('common.edit', 'Edit')}
@@ -129,11 +128,10 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                                 <button
                                     type="button"
                                     onClick={() => setEditorTab('preview')}
-                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                                        editorTab === 'preview'
-                                            ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
-                                            : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                                    }`}
+                                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${editorTab === 'preview'
+                                        ? 'bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 shadow-sm'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                                        }`}
                                 >
                                     <Eye className="w-3.5 h-3.5" />
                                     {t('common.preview', 'Preview')}
@@ -143,7 +141,7 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                         <div className="border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
                             {editorTab === 'edit' ? (
                                 <Editor
-                                    height="460px"
+                                    height="430px"
                                     defaultLanguage="markdown"
                                     value={rule.content || ''}
                                     onChange={(value) => handleChange('content', value || '')}
@@ -172,7 +170,7 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                                     }}
                                 />
                             ) : (
-                                <div className="h-[460px] overflow-auto bg-white dark:bg-gray-900 p-6">
+                                <div className="h-[430px] overflow-auto bg-white dark:bg-gray-900 p-6">
                                     {rule.content ? (
                                         <div className="markdown-content prose prose-sm dark:prose-invert max-w-none">
                                             <Markdown remarkPlugins={[remarkGfm]}>{rule.content}</Markdown>
@@ -188,6 +186,7 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                             )}
                         </div>
                     </div>
+
                 </div>
 
                 {/* Footer */}

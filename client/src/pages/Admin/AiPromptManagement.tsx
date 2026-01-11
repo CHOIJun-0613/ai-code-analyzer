@@ -318,8 +318,8 @@ const AiPromptManagement: React.FC = () => {
                                     type="button"
                                     onClick={() => setEditorTab('edit')}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${editorTab === 'edit'
-                                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                                         }`}
                                 >
                                     <Edit3 className="w-3.5 h-3.5" />
@@ -329,8 +329,8 @@ const AiPromptManagement: React.FC = () => {
                                     type="button"
                                     onClick={() => setEditorTab('preview')}
                                     className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${editorTab === 'preview'
-                                            ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                                        ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                                         }`}
                                 >
                                     <Eye className="w-3.5 h-3.5" />
@@ -340,29 +340,31 @@ const AiPromptManagement: React.FC = () => {
                         </div>
 
                         {/* Editor/Preview Content */}
-                        <div className="flex-1 relative overflow-hidden">
-                            {editorTab === 'edit' ? (
-                                <div className="absolute inset-0">
-                                    <PromptEditor
-                                        value={editContent}
-                                        onChange={setEditContent}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="absolute inset-0 overflow-auto bg-white dark:bg-slate-900 p-8">
-                                    {editContent ? (
-                                        <div className="markdown-content prose prose-sm dark:prose-invert max-w-none">
-                                            <Markdown remarkPlugins={[remarkGfm]}>{editContent}</Markdown>
-                                        </div>
-                                    ) : (
-                                        <div className="flex items-center justify-center h-full">
-                                            <p className="text-slate-400 dark:text-slate-500 italic text-sm">
-                                                {t('common.noContent', 'No content to preview')}
-                                            </p>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
+                        <div className="flex-1 bg-slate-50 dark:bg-slate-950 p-4 overflow-hidden">
+                            <div className="relative h-full overflow-hidden bg-white dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+                                {editorTab === 'edit' ? (
+                                    <div className="absolute inset-0">
+                                        <PromptEditor
+                                            value={editContent}
+                                            onChange={setEditContent}
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="absolute inset-0 overflow-auto bg-white dark:bg-slate-900 p-8">
+                                        {editContent ? (
+                                            <div className="markdown-content prose prose-sm dark:prose-invert max-w-none">
+                                                <Markdown remarkPlugins={[remarkGfm]}>{editContent}</Markdown>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center justify-center h-full">
+                                                <p className="text-slate-400 dark:text-slate-500 italic text-sm">
+                                                    {t('common.noContent', 'No content to preview')}
+                                                </p>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
