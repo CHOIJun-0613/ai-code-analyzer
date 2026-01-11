@@ -54,7 +54,7 @@ def reorder_rules(
 @router.put("/{rule_id}", response_model=AnalysisRule)
 def update_rule(
     rule_id: int,
-    name: str = Body(..., embed=True),
+    name: str = Body(None, embed=True),
     description: str = Body(None, embed=True),
     content: str = Body(None, embed=True),
     useYn: bool = Body(None, embed=True),

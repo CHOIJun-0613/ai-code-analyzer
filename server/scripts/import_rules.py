@@ -6,8 +6,10 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 server_dir = os.path.dirname(current_dir)
 sys.path.append(server_dir)
 
+from dotenv import load_dotenv
 from csa.services.analysis_rule_service import analysis_rule_service
 from csa.utils.logger import get_logger
+from csa.dbwork.connection_pool import initialize_pool_from_env
 
 logger = get_logger(__name__, command="import_rules")
 
@@ -17,6 +19,9 @@ def import_rules():
     이미 존재하는 경우(이름 기준) 건너뛰거나 업데이트할 수 있지만,
     여기서는 관리자가 직접 실행한다고 가정하고 없으면 생성한다.
     """
+    load_dotenv(os.path.join(server_dir, ".env"))
+    initialize_pool_from_env()
+    
     rules_dir = os.path.join(server_dir, "rules")
     if not os.path.exists(rules_dir):
         logger.error(f"Rules directory not found: {rules_dir}")

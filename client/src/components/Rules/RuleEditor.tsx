@@ -32,7 +32,7 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        {initialRule.id ? t('rules.editRule', 'Edit Analysis Rule') : t('rules.newRule', 'New Analysis Rule')}
+                        {initialRule.id ? t('rules.editor.title') : t('rules.newRule')}
                     </h2>
                     <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
                         <X size={24} />
@@ -43,27 +43,27 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                 <div className="flex-1 overflow-auto p-6 space-y-4">
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('rules.name', 'Rule Name')}
+                            {t('rules.editor.name')}
                         </label>
                         <input
                             type="text"
                             value={rule.name || ''}
                             onChange={(e) => handleChange('name', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                            placeholder="e.g. Check Null Safety"
+                            placeholder={t('rules.editor.namePlaceholder')}
                         />
                     </div>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('rules.description', 'Description')}
+                            {t('rules.editor.description')}
                         </label>
                         <input
                             type="text"
                             value={rule.description || ''}
                             onChange={(e) => handleChange('description', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                            placeholder="Brief description of the rule"
+                            placeholder={t('rules.editor.descriptionPlaceholder')}
                         />
                     </div>
 
@@ -76,16 +76,57 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                                 className="rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500"
                             />
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {t('rules.active', 'Active')}
+                                {t('rules.editor.useYn')}
                             </span>
                         </label>
                     </div>
 
                     <div className="flex-1 flex flex-col h-[500px]">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            {t('rules.content', 'Rule Content (Markdown)')}
+                            {t('rules.editor.content')}
                         </label>
-                        <div className="flex-1 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                        <div className="rule-editor-wrapper flex-1 border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden">
+                            <style>{`
+                                /* Font Family */
+                                .rule-editor-wrapper .w-md-editor, 
+                                .rule-editor-wrapper .w-md-editor .cm-line,
+                                .rule-editor-wrapper .cm-content,
+                                .rule-editor-wrapper .cm-scroller {
+                                    font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol" !important;
+                                }
+
+                                /* Scroll Fix - Force height propagation and overflow */
+                                .rule-editor-wrapper,
+                                .rule-editor-wrapper .w-md-editor,
+                                .rule-editor-wrapper .w-md-editor-content,
+                                .rule-editor-wrapper .cm-editor,
+                                .rule-editor-wrapper .cm-scroller {
+                                    height: 100% !important;
+                                }
+                                .rule-editor-wrapper .cm-scroller {
+                                    overflow-y: auto !important;
+                                    overflow-x: hidden !important;
+                                }
+
+                                /* Dark Mode Text Colors - Use .dark ancestor selector */
+                                .dark .rule-editor-wrapper .w-md-editor {
+                                    background-color: #1f2937 !important;
+                                    color: #ffffff !important;
+                                }
+                                /* Force all text to white in dark mode */
+                                .dark .rule-editor-wrapper .w-md-editor * {
+                                    color: #ffffff !important;
+                                }
+                                
+                                /* Header Colors - Green (override the white forced above) */
+                                .dark .rule-editor-wrapper .cm-line span[class*="header"],
+                                .dark .rule-editor-wrapper .cm-line span[class*="heading"],
+                                .dark .rule-editor-wrapper .tok-heading {
+                                    color: #4ade80 !important; /* Green */
+                                    font-weight: bold !important;
+                                    text-decoration: none !important;
+                                }
+                            `}</style>
                             <MarkdownEditor
                                 value={rule.content || ''}
                                 height="100%"
@@ -102,14 +143,14 @@ export const RuleEditor: React.FC<RuleEditorProps> = ({ rule: initialRule, onSav
                         onClick={onCancel}
                         className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-600"
                     >
-                        {t('common.cancel', 'Cancel')}
+                        {t('rules.editor.cancel')}
                     </button>
                     <button
                         onClick={handleSave}
                         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                         <Save size={16} />
-                        {t('common.save', 'Save')}
+                        {t('rules.editor.save')}
                     </button>
                 </div>
             </div>

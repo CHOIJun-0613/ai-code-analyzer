@@ -61,9 +61,16 @@ const SortableItem = ({ rule, onEdit, onDelete, onToggleUse }: SortableItemProps
                 <GripVertical size={20} />
             </div>
 
+            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 font-bold text-sm mr-2 shrink-0">
+                {rule.order + 1}
+            </div>
+
             <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                <div className="flex items-center gap-2 mb-1">
+                    <h3
+                        onClick={() => onEdit(rule)}
+                        className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    >
                         {rule.name}
                     </h3>
                     {rule.isSystem && (

@@ -535,6 +535,40 @@
         "zoomIn": "Zoom In",
         "zoomOut": "Zoom Out",
         "resetZoom": "Reset to 100%"
+    },
+    "rules": {
+        "title": "Analysis Rules",
+        "subtitle": "Manage code analysis rules",
+        "newRule": "New Rule",
+        "table": {
+            "name": "Name",
+            "content": "Content",
+            "useYn": "Active",
+            "description": "Description",
+            "actions": "Actions",
+            "order": "Order"
+        },
+        "editor": {
+            "title": "Edit Rule",
+            "name": "Rule Name",
+            "namePlaceholder": "Enter rule name",
+            "description": "Description",
+            "descriptionPlaceholder": "Enter rule description",
+            "content": "Content (Markdown)",
+            "useYn": "Active",
+            "save": "Save Changes",
+            "saving": "Saving...",
+            "cancel": "Cancel",
+            "delete": "Delete"
+        },
+        "messages": {
+            "loadFailed": "Failed to load rules.",
+            "saveSuccess": "Rule saved successfully.",
+            "saveFailed": "Failed to save rule.",
+            "deleteConfirm": "Are you sure you want to delete this rule?",
+            "deleteSuccess": "Rule deleted successfully.",
+            "deleteFailed": "Failed to delete rule."
+        }
     }
 }
 

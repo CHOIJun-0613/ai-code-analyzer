@@ -19,14 +19,14 @@ export interface RuleOrder {
 
 export const analysisRuleApi = {
     getAll: async (activeOnly: boolean = false) => {
-        const response = await client.get<AnalysisRule[]>('/analysis-rules', {
+        const response = await client.get<AnalysisRule[]>('/analysis-rules/', {
             params: { active_only: activeOnly },
         });
         return response.data;
     },
 
     create: async (data: Partial<AnalysisRule>) => {
-        const response = await client.post<AnalysisRule>('/analysis-rules', data);
+        const response = await client.post<AnalysisRule>('/analysis-rules/', data);
         return response.data;
     },
 

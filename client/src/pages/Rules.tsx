@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, BookOpen } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 import { analysisRuleApi, AnalysisRule } from '../api/analysisRules';
@@ -20,7 +20,7 @@ const Rules: React.FC = () => {
             setRules(data);
         } catch (error) {
             console.error('Failed to load rules:', error);
-            toast.error(t('rules.loadError', 'Failed to load rules'));
+            toast.error(t('rules.messages.loadFailed', 'Failed to load rules'));
         } finally {
             setLoading(false);
         }
@@ -46,15 +46,15 @@ const Rules: React.FC = () => {
     };
 
     const handleDelete = async (id: number) => {
-        if (!window.confirm(t('rules.deleteConfirm', 'Are you sure you want to delete this rule?'))) return;
+        if (!window.confirm(t('rules.messages.deleteConfirm', 'Are you sure you want to delete this rule?'))) return;
 
         try {
             await analysisRuleApi.delete(id);
-            toast.success(t('rules.deleteSuccess', 'Rule deleted successfully'));
+            toast.success(t('rules.messages.deleteSuccess', 'Rule deleted successfully'));
             loadRules(); // Reload to refresh list
         } catch (error) {
             console.error('Failed to delete rule:', error);
-            toast.error(t('rules.deleteError', 'Failed to delete rule'));
+            toast.error(t('rules.messages.deleteFailed', 'Failed to delete rule'));
         }
     };
 
@@ -62,10 +62,10 @@ const Rules: React.FC = () => {
         try {
             await analysisRuleApi.update(rule.id, { useYn: !rule.useYn });
             setRules(prev => prev.map(r => r.id === rule.id ? { ...r, useYn: !rule.useYn } : r));
-            toast.success(t('rules.updateSuccess', 'Rule updated successfully'));
+            toast.success(t('rules.messages.saveSuccess', 'Rule updated successfully'));
         } catch (error) {
             console.error('Failed to update rule:', error);
-            toast.error(t('rules.updateError', 'Failed to update rule'));
+            toast.error(t('rules.messages.saveFailed', 'Failed to update rule'));
         }
     };
 
@@ -77,7 +77,7 @@ const Rules: React.FC = () => {
             // No toast needed for drag/drop unless error, to keep it smooth
         } catch (error) {
             console.error('Failed to reorder rules:', error);
-            toast.error(t('rules.reorderError', 'Failed to reorder rules'));
+            toast.error(t('rules.messages.saveFailed', 'Failed to reorder rules'));
             loadRules(); // Revert on error
         }
     };
@@ -87,17 +87,17 @@ const Rules: React.FC = () => {
             if (ruleData.id) {
                 // Update
                 await analysisRuleApi.update(ruleData.id, ruleData);
-                toast.success(t('rules.saveSuccess', 'Rule saved successfully'));
+                toast.success(t('rules.messages.saveSuccess', 'Rule saved successfully'));
             } else {
                 // Create
                 await analysisRuleApi.create(ruleData);
-                toast.success(t('rules.createSuccess', 'Rule created successfully'));
+                toast.success(t('rules.messages.saveSuccess', 'Rule created successfully'));
             }
             setEditingRule(null);
             loadRules();
         } catch (error) {
             console.error('Failed to save rule:', error);
-            toast.error(t('rules.saveError', 'Failed to save rule'));
+            toast.error(t('rules.messages.saveFailed', 'Failed to save rule'));
         }
     };
 
@@ -105,13 +105,18 @@ const Rules: React.FC = () => {
         <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900">
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                <div>
-                    <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        {t('rules.title', 'Analysis Rules')}
-                    </h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                        {t('rules.subtitle', 'Manage code analysis rules')}
-                    </p>
+                <div className="flex items-center gap-4">
+                    <div className="p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                        <BookOpen className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                            {t('rules.title')}
+                        </h1>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            {t('rules.subtitle')}
+                        </p>
+                    </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -126,26 +131,28 @@ const Rules: React.FC = () => {
                         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                         <Plus size={20} />
-                        {t('rules.newRule', 'New Rule')}
+                        {t('rules.newRule')}
                     </button>
                 </div>
             </div>
 
             {/* List */}
             <div className="flex-1 overflow-auto p-6">
-                <div className="max-w-5xl mx-auto">
+                <div className="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800">
                     {loading && rules.length === 0 ? (
                         <div className="flex justify-center items-center h-32">
                             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                         </div>
                     ) : (
-                        <RuleList
-                            rules={rules}
-                            onReorder={handleReorder}
-                            onEdit={handleEdit}
-                            onDelete={handleDelete}
-                            onToggleUse={handleToggleUse}
-                        />
+                        <div className="p-4">
+                            <RuleList
+                                rules={rules}
+                                onReorder={handleReorder}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onToggleUse={handleToggleUse}
+                            />
+                        </div>
                     )}
                 </div>
             </div>
