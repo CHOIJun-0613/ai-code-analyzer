@@ -41,6 +41,9 @@ class AnalysisRequest(BaseModel):
     model_name: Optional[str] = None
     api_endpoint: Optional[str] = None
     
+    # Source Code Options
+    charset: str = "UTF-8"
+    
     # Advanced Source Options
     use_streaming_parse: bool = True
     java_parse_workers: int = 8
@@ -83,6 +86,7 @@ def trigger_analysis(
         "sequence_diagram_include_packages": data.pop("sequence_diagram_include_packages", None),
         "log_level": data.pop("log_level", "INFO"),
         "exclude_patterns": data.pop("exclude_patterns", None),
+        "charset": data.pop("charset", "UTF-8"),
     }
     
     data["ai_options"] = ai_options
@@ -159,6 +163,9 @@ def upload_and_analyze(
     model_name: Optional[str] = Form(None),
     api_endpoint: Optional[str] = Form(None),
     
+    # Source Code Options
+    charset: str = Form("UTF-8"),
+    
     # Advanced Options (Form)
     use_streaming_parse: bool = Form(True),
     java_parse_workers: int = Form(8),
@@ -205,7 +212,9 @@ def upload_and_analyze(
             "java_complexity_threshold": java_complexity_threshold,
             "sequence_diagram_include_packages": sequence_diagram_include_packages,
             "log_level": log_level,
+            "log_level": log_level,
             "exclude_patterns": exclude_patterns,
+            "charset": charset,
         }
             
         data = {

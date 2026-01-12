@@ -30,6 +30,7 @@ class ProjectMixin:
             "p.path = $path, "
             "p.framework = COALESCE(p.framework, $framework), "
             "p.repository = COALESCE(p.repository, $repository), "
+            "p.charset = COALESCE(p.charset, $charset), "
             "p.updated_at = $updated_at, "
             "p.created_at = COALESCE(p.created_at, $created_at), "
             "p.total_file_count = $total_file_count, "
@@ -43,7 +44,14 @@ class ProjectMixin:
             "p.total_PLOC = $total_PLOC, "
             "p.total_LLOC = $total_LLOC, "
             "p.total_CLOC = $total_CLOC, "
-            "p.sequence_diagram_include_packages = $sequence_diagram_include_packages"
+            "p.sequence_diagram_include_packages = $sequence_diagram_include_packages "
+            "WITH p "
+            "CALL { "
+            "  WITH p "
+            "  WHERE p.application_name IS NOT NULL AND p.application_name <> '' "
+            "  MERGE (a:Application {name: p.application_name}) "
+            "  MERGE (a)-[:HAS_PROJECT]->(p) "
+            "} "
         )
         tx.run(
             project_query,
@@ -55,6 +63,7 @@ class ProjectMixin:
             path=project.path or "",
             framework=project.framework or "",
             repository=project.repository or "",
+            charset=project.charset or "UTF-8",
             updated_at=current_timestamp,
             created_at=created_at,
             total_file_count=int(project.total_file_count or 0),

@@ -8,7 +8,17 @@ from csa.services.graph_db.base import GraphDBBase
 
 
 class ApplicationMixin:
-    """Handle Spring bean, endpoint, config, and test nodes."""
+    """Handle Application, Spring bean, endpoint, config, and test nodes."""
+
+    def add_application(self, name: str) -> None:
+        """Add or update an Application node."""
+        if not name:
+            return
+        self._execute_write(self._create_application_node_tx, name)
+
+    def get_all_applications(self) -> List[dict]:
+        """Retrieve all application names."""
+        return self._execute_read(self._get_all_applications_tx)
 
     def add_bean(self, bean: Bean, project_name: str) -> None:
         """Add or update a Spring bean node."""
@@ -47,6 +57,21 @@ class ApplicationMixin:
         if not test_classes:
             return
         self._execute_write(self._create_test_classes_batch_tx, test_classes, project_name)
+
+    @staticmethod
+    def _create_application_node_tx(tx, name: str) -> None:
+        query = (
+            "MERGE (a:Application {name: $name}) "
+            "SET a:Analysis, a.updated_at = $updated_at"
+        )
+        current_timestamp = GraphDBBase._get_current_timestamp()
+        tx.run(query, name=name, updated_at=current_timestamp)
+
+    @staticmethod
+    def _get_all_applications_tx(tx) -> List[dict]:
+        query = "MATCH (a:Application) RETURN a.name as name ORDER BY name"
+        result = tx.run(query)
+        return [{"name": record["name"]} for record in result]
 
     @staticmethod
     def _create_bean_node_tx(tx, bean: Bean, project_name: str) -> None:

@@ -234,3 +234,5 @@ target_src/sml-pds-online/
 client/node_modules
 
 data-dumps/backup/
+
+.agent/temp/*

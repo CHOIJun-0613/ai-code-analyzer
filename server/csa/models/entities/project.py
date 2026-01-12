@@ -11,6 +11,7 @@ class Project(BaseModel):
     path: str = ""  # 프로젝트 경로
     framework: str = ""  # 프레임워크 (예: Spring, BXM)
     repository: str = ""  # 저장소 (예: Github URL)
+    charset: str = "UTF-8"  # 소스 코드 캐릭터셋 (기본값: UTF-8)
     created_at: str = ""  # 생성 시간
     updated_at: str = ""  # 마지막 업데이트 시간
 

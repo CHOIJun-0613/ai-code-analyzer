@@ -185,8 +185,12 @@ def analyze_project(
     
     # Configuration from options
     seq_packages = ""
-    if source_options and 'sequence_diagram_include_packages' in source_options:
-        seq_packages = source_options['sequence_diagram_include_packages'] or ""
+    charset = "UTF-8"
+    if source_options:
+        if 'sequence_diagram_include_packages' in source_options:
+            seq_packages = source_options['sequence_diagram_include_packages'] or ""
+        if 'charset' in source_options:
+            charset = source_options['charset'] or "UTF-8"
 
     project_entity = Project(
         name=effective_project_name,
@@ -198,6 +202,7 @@ def analyze_project(
         created_at=timestamp,
         updated_at=timestamp,
         sequence_diagram_include_packages=seq_packages,
+        charset=charset,
     )
     project_name = project_entity.name
 

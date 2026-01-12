@@ -19,6 +19,7 @@ export const createAnalysisSchema = (t: TFunction) => z.object({
   scope: z.string(),
   analysisTarget: z.enum(['all', 'program', 'db']),
   saveStrategy: z.enum(['delete', 'update']),
+  charset: z.string(),
 
   // Advanced Options
   javaParseWorkers: z.number().int().min(1).max(32),

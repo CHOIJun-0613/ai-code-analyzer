@@ -1429,7 +1429,7 @@ class AdaptiveBatchSizer:
         return int(self.current_size)
 
 
-def estimate_file_complexity(file_path: str) -> int:
+def estimate_file_complexity(file_path: str, charset: str = 'utf-8') -> int:
     """
     파일 복잡도 추정 (빠른 휴리스틱 분석)
 
@@ -1438,12 +1438,13 @@ def estimate_file_complexity(file_path: str) -> int:
 
     Args:
         file_path: Java 파일 경로
+        charset: 파일 인코딩 (기본값: utf-8)
 
     Returns:
         int: 복잡도 점수 (높을수록 복잡)
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, 'r', encoding=charset) as f:
             content = f.read()
 
         # 라인 수
@@ -1479,7 +1480,7 @@ def estimate_file_complexity(file_path: str) -> int:
             return 0
 
 
-def is_dto_class(class_name: str, file_path: str = None) -> bool:
+def is_dto_class(class_name: str, file_path: str = None, charset: str = 'utf-8') -> bool:
     """
     DTO 클래스 여부 판별
 
@@ -1490,6 +1491,7 @@ def is_dto_class(class_name: str, file_path: str = None) -> bool:
     Args:
         class_name: 클래스명
         file_path: 파일 경로 (선택사항, 더 정확한 판별을 위해)
+        charset: 파일 인코딩
 
     Returns:
         bool: DTO 클래스 여부
@@ -1502,7 +1504,7 @@ def is_dto_class(class_name: str, file_path: str = None) -> bool:
     # 2. 파일 내용 기반 체크 (선택적)
     if file_path and os.path.exists(file_path):
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, 'r', encoding=charset) as f:
                 content = f.read()
 
             # 필드 수 카운트 (private, protected 필드)
@@ -1524,7 +1526,7 @@ def is_dto_class(class_name: str, file_path: str = None) -> bool:
     return False
 
 
-def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True) -> tuple:
+def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True, charset: str = 'utf-8') -> tuple:
     """
     병렬 처리용 파싱 래퍼 함수 (Neo4j 연결 없이 파싱만 수행)
 
@@ -1541,7 +1543,7 @@ def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: di
 
     try:
         package_node, class_node, inner_classes, package_name = parse_single_java_file(
-            file_path, project_name, None, ai_options, use_ai=use_ai, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods
+            file_path, project_name, None, ai_options, use_ai=use_ai, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods, charset=charset
         )
 
         # 처리 시간 계산 및 로깅
@@ -1652,6 +1654,13 @@ def parse_java_project_streaming(
             else:
                 exclude_patterns = []
 
+    # Charset 설정
+    charset = "utf-8"
+    if source_options and 'charset' in source_options:
+        charset = source_options['charset']
+
+    logger.info(f"Using charset: {charset}")
+
     logger.info("Java 파일 수집 중...")
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
 
@@ -1662,7 +1671,7 @@ def parse_java_project_streaming(
     # 파일 복잡도 기반 정렬 (복잡한 파일을 먼저 처리 - 워크로드 균형 개선)
     logger.info("파일 복잡도 분석 중...")
     complexity_start = time.time()
-    file_complexities = [(f, estimate_file_complexity(f)) for f in java_files]
+    file_complexities = [(f, estimate_file_complexity(f, charset=charset)) for f in java_files]
 
     # 복잡도 임계값 설정 (환경 변수로 제어 가능, 기본값: 50000)
     # 복잡도 임계값 설정 (source_options > 환경 변수 > 기본값 50000)
@@ -1739,7 +1748,7 @@ def parse_java_project_streaming(
 
     for file_path in java_files:
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, 'r', encoding=charset) as f:
                 content = f.read(500)  # 첫 500자만 읽기 (package는 파일 상단에 위치)
                 match = package_pattern.search(content)
                 if match:
@@ -1783,7 +1792,7 @@ def parse_java_project_streaming(
     with ThreadPoolExecutor(max_workers=parallel_workers) as executor:
         # 모든 파일을 병렬로 파싱 제출
         future_to_file = {
-            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods): file_path
+            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods, charset=charset): file_path
             for file_path in java_files
         }
 

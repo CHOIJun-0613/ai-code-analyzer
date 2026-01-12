@@ -52,7 +52,18 @@ const Analysis: React.FC = () => {
             sequenceDiagramIncludePackages: '',
             excludePatterns: '',
             logLevel: 'INFO',
+            charset: 'UTF-8',
         },
+    });
+
+    // Fetch Applications
+    const { data: applications = [] } = useQuery({
+        queryKey: ['applications'],
+        queryFn: async () => {
+            const res = await client.get('/applications');
+            return res.data || [];
+        },
+        staleTime: 5 * 60 * 1000,
     });
 
     // XState 머신을 사용한 상태 관리
@@ -326,6 +337,7 @@ const Analysis: React.FC = () => {
                 uploadFormData.append('file', formData.file);
                 if (formData.projectName) uploadFormData.append('project_name', formData.projectName);
                 if (formData.applicationName) uploadFormData.append('application_name', formData.applicationName);
+                uploadFormData.append('charset', formData.charset);
 
                 // Save Strategy
                 if (formData.saveStrategy === 'delete') {
@@ -374,6 +386,7 @@ const Analysis: React.FC = () => {
                     project_name: formData.projectName,
                     application_name: formData.applicationName,
                     db_script_path: formData.dbScriptPath,
+                    charset: formData.charset,
 
                     // Save Strategy
                     clean: formData.saveStrategy === 'delete',
@@ -629,7 +642,29 @@ const Analysis: React.FC = () => {
                     </div>
 
                     <form onSubmit={handleConfirmation} className="p-6 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="relative">
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                                    {t('analysis.applicationName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span>
+                                </label>
+                                <input
+                                    list="application-list"
+                                    type="text"
+                                    placeholder={t('analysis.applicationNamePlaceholder')}
+                                    {...register('applicationName')}
+                                    maxLength={30}
+                                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
+                                />
+                                <datalist id="application-list">
+                                    {applications.map((app: any) => (
+                                        <option key={app.name} value={app.name} />
+                                    ))}
+                                </datalist>
+                                {errors.applicationName && (
+                                    <p className="text-sm text-red-600 mt-1">{errors.applicationName.message}</p>
+                                )}
+                            </div>
+
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.projectName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
                                 <input
@@ -639,18 +674,18 @@ const Analysis: React.FC = () => {
                                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
                                 />
                             </div>
+
                             <div>
-                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.applicationName')} <span className="text-slate-400 font-normal">{t('analysis.optional')}</span></label>
-                                <input
-                                    type="text"
-                                    placeholder={t('analysis.applicationNamePlaceholder')}
-                                    {...register('applicationName')}
-                                    maxLength={30}
+                                <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">{t('analysis.charset')}</label>
+                                <select
+                                    {...register('charset')}
                                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-200 outline-none"
-                                />
-                                {errors.applicationName && (
-                                    <p className="text-sm text-red-600 mt-1">{errors.applicationName.message}</p>
-                                )}
+                                >
+                                    <option value="UTF-8">UTF-8</option>
+                                    <option value="EUC-KR">EUC-KR</option>
+                                    <option value="MS949">MS949</option>
+                                    <option value="ISO-8859-1">ISO-8859-1</option>
+                                </select>
                             </div>
                         </div>
 
