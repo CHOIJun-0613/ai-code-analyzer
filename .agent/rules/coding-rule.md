@@ -25,4 +25,3 @@ trigger: always_on
 - **가상환경 필수:** 모든 실행은 가상환경(venv)이 활성화된 상태에서 수행되어야 한다.
 - **실행 명령:**
   - Windows: `cd server && runvenv.bat`
-  - Mac/Linux: `cd server && source venv/bin/activate && python main.py` (또는 이에 준하는 스크립트)
