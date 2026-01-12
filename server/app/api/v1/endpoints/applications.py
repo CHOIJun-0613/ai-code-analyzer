@@ -7,7 +7,7 @@ from csa.services.graph_db import GraphDB
 
 router = APIRouter()
 
-@router.get("/", response_model=List[dict])
+@router.get("", response_model=List[dict])
 def get_applications(
     current_user: UserInDB = Depends(get_current_user)
 ):

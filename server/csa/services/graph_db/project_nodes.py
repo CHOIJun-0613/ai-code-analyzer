@@ -46,12 +46,11 @@ class ProjectMixin:
             "p.total_CLOC = $total_CLOC, "
             "p.sequence_diagram_include_packages = $sequence_diagram_include_packages "
             "WITH p "
-            "CALL { "
-            "  WITH p "
-            "  WHERE p.application_name IS NOT NULL AND p.application_name <> '' "
+            "WITH p "
+            "FOREACH (_ IN CASE WHEN p.application_name IS NOT NULL AND p.application_name <> '' THEN [1] ELSE [] END | "
             "  MERGE (a:Application {name: p.application_name}) "
             "  MERGE (a)-[:HAS_PROJECT]->(p) "
-            "} "
+            ") "
         )
         tx.run(
             project_query,
