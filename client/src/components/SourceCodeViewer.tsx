@@ -7,6 +7,11 @@ interface SourceCodeViewerProps {
     language?: string;
 }
 
+export interface SourceCodeViewerHandle {
+    selectAll: () => void;
+    copyToClipboard: () => Promise<void>;
+}
+
 // ...
 
 const SourceCodeViewer = forwardRef<SourceCodeViewerHandle, SourceCodeViewerProps>(({ source, language = 'java' }, ref) => {

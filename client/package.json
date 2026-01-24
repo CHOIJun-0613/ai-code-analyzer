@@ -20,6 +20,7 @@
     "@uiw/react-markdown-editor": "^6.0.0",
     "@xstate/react": "^6.0.0",
     "axios": "^1.6.8",
+    "dagre": "^0.8.5",
     "exceljs": "^4.4.0",
     "html-to-image": "^1.11.11",
     "html2canvas": "^1.4.1",
@@ -36,13 +37,16 @@
     "react-markdown": "^9.0.1",
     "react-router-dom": "^6.22.3",
     "react-window": "^2.2.3",
+    "reactflow": "^11.11.4",
     "remark-gfm": "^4.0.0",
     "xstate": "^5.25.0",
     "zod": "^4.3.4",
     "zustand": "^4.5.2"
+
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
+    "@types/dagre": "^0.7.53",
     "@types/html2canvas": "^1.0.0",
     "@types/jspdf": "^2.0.0",
     "@types/node": "^20.12.7",
@@ -59,5 +63,6 @@
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5"
+
   }
 }

@@ -4,9 +4,10 @@ import { List } from 'react-window';
 const ListAny = List as any;
 
 // Type definition (extracted locally since we can't rely on named export)
-type RowComponentProps<T = any> = {
+type RowComponentProps = {
   index: number;
   style: React.CSSProperties;
+  data: any; // react-window passes 'data' prop which corresponds to itemData
   [key: string]: any;
 };
 
@@ -27,16 +28,7 @@ export interface Column<T> {
   fixed?: boolean;
 }
 
-interface RowProps<T> {
-  items: T[];
-  columns: Column<T>[];
-  onRowClick?: (item: T, index: number) => void;
-  hoverable: boolean;
-  striped: boolean;
-  rowClassName?: (item: T, index: number) => string;
-  cellClassName: string;
-  columnWidths: Record<string, number>;
-}
+
 
 export interface VirtualizedTableProps<T> {
   /** 데이터 배열 */
@@ -165,7 +157,7 @@ function VirtualizedTable<T>({
 
   // 행 렌더링 컴포넌트
   const RowComponent = useCallback(
-    (props: RowComponentProps<RowProps<T>>) => {
+    (props: RowComponentProps) => {
       // rowProps applied to List are spread here, along with index and style
       const { index, style, items, columns, onRowClick, hoverable, striped, rowClassName, cellClassName, columnWidths } = props;
 
@@ -190,7 +182,7 @@ function VirtualizedTable<T>({
           `}
           onClick={() => onRowClick && onRowClick(item, index)}
         >
-          {columns.map((column) => {
+          {columns.map((column: Column<T>) => {
             const cellAlign = column.align || 'left';
             const alignClass =
               cellAlign === 'center'

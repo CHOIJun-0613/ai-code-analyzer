@@ -131,6 +131,27 @@ DEFAULT_PROMPTS: Dict[str, str] = {
             |------|------|
             | users | id = #userId |
         ---
+        ### **[SQL Flow JSON]**
+        - SQL의 데이터 흐름(Lineage)을 시각화하기 위한 JSON 데이터를 생성합니다.
+        - **Node**: 테이블, 서브쿼리, 또는 결과셋을 노드로 정의합니다.
+        - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다.
+        - **반드시 아래 JSON 스키마를 준수하여 ```json ...``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
+        **JSON 스키마 예시:**
+        ```json
+        {
+          "summary": "1줄 요약",
+          "nodes": [
+            { "id": "table_A", "type": "table", "label": "Table A", "columns": ["id", "name"] },
+            { "id": "table_B", "type": "table", "label": "Table B", "columns": ["id", "ref_id"] },
+            { "id": "result", "type": "target", "label": "Result", "columns": ["name", "ref_id"] }
+          ],
+          "edges": [
+            { "source": "table_A.id", "target": "table_B.id", "type": "join", "condition": "A.id = B.id" },
+            { "source": "table_A.name", "target": "result.name", "type": "select" }
+          ]
+        }
+        ```
+        ---
         ### **[Considerations]**
         - 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿으로 기술합니다.
         - 예시: 
@@ -150,6 +171,25 @@ DEFAULT_PROMPTS: Dict[str, str] = {
             |------|------|
             | users | id = #userId |
         ---
+        ### **[SQL Flow JSON]**
+        - SQL의 데이터 흐름(Lineage)을 시각화하기 위한 JSON 데이터를 생성합니다.
+        - **Node**: 테이블, 서브쿼리, 또는 결과셋을 노드로 정의합니다.
+        - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다.
+        - **반드시 아래 JSON 스키마를 준수하여 ```json ...``` 코드 블록으로 작성하세요.**
+        **JSON 스키마 예시:**
+        ```json
+        {
+          "summary": "1줄 요약",
+          "nodes": [
+            { "id": "users", "type": "table", "label": "users", "columns": ["id", "name", "email"] },
+            { "id": "input_data", "type": "source", "label": "Input Data", "columns": ["id", "name", "email"] }
+          ],
+          "edges": [
+            { "source": "input_data", "target": "users", "type": "insert", "condition": "PK check" }
+          ]
+        }
+        ```
+        ---
         ### **[Considerations]**
         - 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿으로 기술합니다.
         - 예시: 
@@ -160,9 +200,9 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         **제약사항:**
         - 각 SQL 분석은 반드시 `---SQL#1---`, `---SQL#2---` 형식으로 시작합니다 (# 기호 필수!)
         - 각 SQL 분석은 반드시 `---END#1---`, `---END#2---` 형식으로 끝나야 합니다.(# 기호 필수)
-        - **절대로 코드 블록(```sql, ```java 등)을 생성하지 마세요.**
-        - **절대로 예시 쿼리나 테스트 코드를 생성하지 마세요.**
-        - 각 SQL 분석은 30줄 이내로 유지하고, 불필요한 서두나 마무리 문구는 생략합니다.
+        - **JSON 데이터는 반드시 유효한 JSON 포맷이어야 합니다.**
+        - **절대로 코드 블록(```sql, ```java 등)을 생성하지 마세요.** (JSON 블록은 제외)
+        - 각 SQL 분석은 50줄 이내로 유지하고, 불필요한 서두나 마무리 문구는 생략합니다.
         - 순수한 텍스트 형식의 Markdown만 출력하세요.
         - 모든 SQL에 대해 반드시 분석 결과를 제공해야 합니다.
         """

@@ -33,16 +33,21 @@ interface SqlDetailData {
     }[];
 }
 
+import SqlFlowViewer from '../components/SqlFlowViewer';
+
+// ... (inside component)
+
 const SqlDetails: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const { projectName, sqlId } = useParams<{ projectName: string, sqlId: string }>();
     const [searchParams] = useSearchParams();
     const mapperName = searchParams.get('mapper');
-    const [activeTab, setActiveTab] = React.useState<'analysis' | 'sql' | 'calledBy'>('analysis');
+    const [activeTab, setActiveTab] = React.useState<'analysis' | 'flow' | 'sql' | 'calledBy'>('analysis');
     const [showComplexityHelp, setShowComplexityHelp] = React.useState(false);
 
     const { data: sqlData, isLoading, error } = useQuery<SqlDetailData>({
+        // ... (existing useQuery options)
         queryKey: ['sqls', projectName, sqlId, mapperName],
         queryFn: async () => {
             const { data } = await axios.get<SqlDetailData>(
@@ -56,46 +61,37 @@ const SqlDetails: React.FC = () => {
         enabled: !!(projectName && sqlId)
     });
 
-    const { overviewContent, flowChartContent } = React.useMemo(() => {
-        if (!sqlData?.ai_description) return { overviewContent: '', flowChartContent: '' };
+    const { overviewContent, flowData } = React.useMemo(() => {
+        if (!sqlData?.ai_description) return { overviewContent: '', flowData: null };
 
-        // Split by the specific header using regex
-        const splitRegex = /#+\s*\*\*\[?(?:Visual\s+)?Flow(?:\s*Chart)?\]?\*\*/i;
-        const parts = sqlData.ai_description.split(splitRegex);
+        let content = sqlData.ai_description;
+        let flowJson = null;
 
-        const overview = parts[0].trim();
-        let chart = parts.length > 1 ? parts.slice(1)[0] : ''; // Take the section after header
+        // Try to extract JSON block for SQL Flow
+        const jsonMatch = content.match(/```json([\s\S]*?)```/);
+        if (jsonMatch) {
+            try {
+                const parsed = JSON.parse(jsonMatch[1]);
+                // Basic validation: check for nodes and edges
+                if (parsed.nodes && parsed.edges) {
+                    flowJson = parsed;
+                }
 
-        // The chart section might have subsequent sections (like Tables & Conditions), so we should be careful.
-        // Actually, the prompt puts Visual Flow before Tables. So splitting by Visual Flow gives:
-        // [0]: Operation...
-        // [1]: Mermaid Code... --- ### Tables...
+                // Remove the whole [SQL Flow JSON] section
+                const sectionRegex = /###\s*\*\*\[SQL Flow JSON\]\*\*[\s\S]*?(?=---|$)/i;
+                content = content.replace(sectionRegex, '');
 
-        // Let's refine: The prompt structure is defined sequences.
-        // But simplest way is extracting mermaid code block from the whole text or the part.
+            } catch (e) {
+                console.error("Failed to parse SQL Flow JSON", e);
+            }
+        }
 
-        // If we want to display the flowchart separately, we should extract it and REMOVE it from overview.
-        // But current prompt puts it IN BETWEEN sections.
-
-        // Strategy: 
-        // 1. Extract mermaid block anywhere in text for the Visual Tab/Section
-        // 2. Render the whole text in Description (excluding the mermaid block if it looks ugly as code) 
-        // OR better: use custom renderer in Markdown component to render <MermaidDiagram> instead of <pre><code>
-
-        // Let's try Custom Renderer approach for SqlDetails to keep it simple in one description tab or separate?
-        // User asked for "similar to Method flowchart". Method has a separate TAB or dedicated section.
-
-        // Let's extract all mermaid blocks and use the first one as the Flow Chart.
-        const mermaidMatch = sqlData.ai_description.match(/```mermaid([\s\S]*?)```/);
-        const extractedChart = mermaidMatch ? mermaidMatch[1].trim() : '';
-
-        // Overview is everything MINUS the mermaid block (to avoid duplication if we show it specially)
-        // Or we just keep it and let Markdown renderer handle it.
-        // Let's keep the content clean.
+        // Also clean up any large whitespace left
+        content = content.trim();
 
         return {
-            overviewContent: sqlData.ai_description,
-            flowChartContent: extractedChart
+            overviewContent: content,
+            flowData: flowJson
         };
     }, [sqlData?.ai_description]);
 
@@ -256,7 +252,17 @@ const SqlDetails: React.FC = () => {
                             }`}
                     >
                         <Activity className="w-4 h-4" />
-                        {t('sqlDetails.analysis', 'Analysis')}
+                        {t('sqlDetails.overview', 'Overview')}
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('flow')}
+                        className={`px-6 py-4 text-sm font-medium flex items-center gap-2 border-b-2 transition-colors ${activeTab === 'flow'
+                            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-slate-50/50 dark:bg-slate-800/50'
+                            : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
+                            }`}
+                    >
+                        <GitMerge className="w-4 h-4" />
+                        {t('sqlDetails.flow', 'SQL Flow')}
                     </button>
                     <button
                         onClick={() => setActiveTab('sql')}
@@ -301,7 +307,7 @@ const SqlDetails: React.FC = () => {
                                         <span>{t('classDetails.aiGenerated', 'AI Generated')}</span>
                                     </div>
                                     <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto text-slate-700 dark:text-slate-300">
-                                        {sqlData.ai_description ? (
+                                        {overviewContent ? (
                                             <Markdown
                                                 remarkPlugins={[remarkGfm]}
                                                 components={{
@@ -332,7 +338,7 @@ const SqlDetails: React.FC = () => {
                                                     }
                                                 }}
                                             >
-                                                {sqlData.ai_description}
+                                                {overviewContent}
                                             </Markdown>
                                         ) : (
                                             <span className="text-slate-400 dark:text-slate-500 italic block">
@@ -341,6 +347,39 @@ const SqlDetails: React.FC = () => {
                                         )}
                                     </div>
                                 </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {activeTab === 'flow' && (
+                        <div className="p-8 h-[600px] animate-in fade-in slide-in-from-bottom-2 duration-300 flex flex-col">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
+                                    {t('sqlDetails.flow', 'SQL Flow')}
+                                </h3>
+                            </div>
+                            <div className="flex-1 w-full min-h-0 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
+                                {/* AI Generated Badge - positioned top-left inside the component */}
+                                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg">
+                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <span>{t('classDetails.aiGenerated', 'AI Generated')}</span>
+                                </div>
+
+                                {flowData ? (
+                                    <div className="w-full h-full">
+                                        {/* Wrapper div to ensure separate stacking context if needed, though SqlFlowViewer has its own container */}
+                                        <SqlFlowViewer data={flowData} />
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
+                                        <GitMerge className="w-12 h-12 mb-4 opacity-20" />
+                                        <p className="text-lg font-medium">{t('sqlDetails.noFlowData', 'No SQL Flow data available')}</p>
+                                        <p className="text-sm mt-2 max-w-sm text-center opacity-75">
+                                            {t('sqlDetails.runAnalysisHint', 'Run AI analysis with the latest prompt to generate SQL Flow visualization.')}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
