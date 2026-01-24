@@ -6,6 +6,7 @@ from app.models.user import UserInDB
 from app.services.analysis_wrapper import start_analysis
 from csa.services.analysis.neo4j_writer import connect_to_neo4j_db
 from app.core.config import settings
+from app.core.database import get_db
 from csa.utils.logger import get_logger
 
 router = APIRouter()
@@ -57,3 +58,55 @@ def trigger_class_analysis(
 
     job_id = start_analysis(params, current_user.username) 
     return {"job_id": job_id}
+
+@router.get("/classes")
+def search_classes(
+    project_name: Optional[str] = None,
+    package_name: Optional[str] = None,
+    class_name: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50
+):
+    pool = get_db()
+    
+    where_clauses = []
+    params = {}
+    
+    query = """
+    MATCH (p:Project)-[:CONTAINS]->(pkg:Package)-[:CONTAINS]->(c:Class)
+    """
+    
+    if project_name:
+        where_clauses.append("toLower(p.name) CONTAINS toLower($project_name)")
+        params["project_name"] = project_name
+    
+    if package_name:
+         where_clauses.append("toLower(pkg.name) CONTAINS toLower($package_name)")
+         params["package_name"] = package_name
+
+    if class_name:
+         where_clauses.append("(toLower(c.name) CONTAINS toLower($class_name) OR toLower(c.logical_name) CONTAINS toLower($class_name))")
+         params["class_name"] = class_name
+         
+    if where_clauses:
+        query += " WHERE " + " AND ".join(where_clauses)
+        
+    query += """
+    RETURN p.name as project_name, 
+           pkg.name as package_name, 
+           c.name as class_name, 
+           c.logical_name as logical_name
+    ORDER BY p.name, pkg.name, c.name
+    SKIP $skip
+    LIMIT $limit
+    """
+    params["skip"] = skip
+    params["limit"] = limit
+
+    try:
+        with pool.session() as session:
+            result = session.run(query, **params)
+            return [dict(record) for record in result]
+    except Exception as e:
+        logger.error(f"Search classes failed: {e}")
+        raise HTTPException(status_code=500, detail="Database error during search")

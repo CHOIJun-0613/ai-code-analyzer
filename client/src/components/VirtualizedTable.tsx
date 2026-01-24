@@ -1,5 +1,14 @@
 import React, { useCallback, useState, useEffect, useRef } from 'react';
-import { List, RowComponentProps } from 'react-window';
+import { List } from 'react-window';
+
+const ListAny = List as any;
+
+// Type definition (extracted locally since we can't rely on named export)
+type RowComponentProps<T = any> = {
+  index: number;
+  style: React.CSSProperties;
+  [key: string]: any;
+};
 
 export interface Column<T> {
   /** 컬럼 키 (고유 식별자) */
@@ -19,7 +28,7 @@ export interface Column<T> {
 }
 
 interface RowProps<T> {
-  data: T[];
+  items: T[];
   columns: Column<T>[];
   onRowClick?: (item: T, index: number) => void;
   hoverable: boolean;
@@ -54,6 +63,10 @@ export interface VirtualizedTableProps<T> {
   rowClassName?: (item: T, index: number) => string;
   /** 커스텀 셀 클래스명 */
   cellClassName?: string;
+  /** 스크롤이 끝에 도달했을 때 콜백 */
+  onEndReached?: () => void;
+  /** 데이터 로딩 임계값 (남은 행 수) */
+  onEndReachedThreshold?: number;
 }
 
 /**
@@ -90,6 +103,8 @@ function VirtualizedTable<T>({
   loading = false,
   rowClassName,
   cellClassName = '',
+  onEndReached,
+  onEndReachedThreshold = 5,
 }: VirtualizedTableProps<T>) {
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [isResizing, setIsResizing] = useState(false);
@@ -107,6 +122,15 @@ function VirtualizedTable<T>({
         columnKey
       };
       setIsResizing(true);
+    }
+  };
+
+  // React Window 2.x API uses onRowsRendered instead of onItemsRendered
+  // and provides stopIndex instead of visibleStopIndex
+  const handleRowsRendered = ({ stopIndex }: { stopIndex: number }) => {
+    // console.log('handleRowsRendered', stopIndex, data.length, onEndReachedThreshold);
+    if (onEndReached && data.length > 0 && stopIndex >= data.length - onEndReachedThreshold) {
+      onEndReached();
     }
   };
 
@@ -142,8 +166,15 @@ function VirtualizedTable<T>({
   // 행 렌더링 컴포넌트
   const RowComponent = useCallback(
     (props: RowComponentProps<RowProps<T>>) => {
-      const { index, style, data: rowData, columns, onRowClick, hoverable, striped, rowClassName, cellClassName, columnWidths } = props;
-      const item = rowData[index];
+      // rowProps applied to List are spread here, along with index and style
+      const { index, style, items, columns, onRowClick, hoverable, striped, rowClassName, cellClassName, columnWidths } = props;
+
+      if (!items) {
+        // console.error('RowComponent: items is undefined', props);
+        return null;
+      }
+
+      const item = items[index];
       const isClickable = !!onRowClick;
       const customRowClass = rowClassName ? rowClassName(item, index) : '';
 
@@ -193,8 +224,8 @@ function VirtualizedTable<T>({
     []
   );
 
-  // 로딩 상태
-  if (loading) {
+  // 로딩 상태 (데이터가 없을 때만 표시)
+  if (loading && data.length === 0) {
     return (
       <div className="flex items-center justify-center bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800" style={{ height }}>
         <div className="text-center">
@@ -280,15 +311,17 @@ function VirtualizedTable<T>({
         })}
       </div>
 
-      {/* 가상 스크롤 리스트 */}
-      <List
-        defaultHeight={height - headerHeight}
+      {/* 가상 스크롤 리스트 (react-window 2.x API) */}
+      <ListAny
+        height={height - headerHeight}
+        width="100%"
         rowCount={data.length}
         rowHeight={rowHeight}
         overscanCount={5}
+        onRowsRendered={handleRowsRendered}
         rowComponent={RowComponent}
         rowProps={{
-          data,
+          items: data,
           columns,
           onRowClick,
           hoverable,

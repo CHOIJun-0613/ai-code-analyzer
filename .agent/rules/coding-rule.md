@@ -4,7 +4,17 @@ trigger: always_on
 
 # Antigravity Project Rules
 
+## 0. **CRITICAL: PROCESS & LANGUAGE (MANDATORY)**
+
+- **언어 원칙 (Language):**
+  - **모든 생각(Thought), 대화(Chat), 문서(Docs), 주석(Comment)은 반드시 '한국어(Korean)'로 작성한다.**
+  - 이 규칙은 다른 모든 규칙보다 우선한다. (English used only for code symbols).
+- **워크플로우 준수 (Workflows):**
+  - 작업을 시작하기 전에 반드시 `.agent/workflows` 디렉토리를 확인한다.
+  - `/devstart` 등 사용자의 명시적 명령이 없더라도, 새로운 작업 시작 시 관련 워크플로우(`devstart.md` 등) 존재 여부를 체크하고 이를 따른다.
+
 ## 1. 코딩 스타일 및 아키텍처 (Coding Style & Architecture)
+
 - **표준 준수:**
   - PEP 8(4칸 들여쓰기)을 엄격히 준수한다.
   - 네이밍: 변수/함수는 `snake_case`, 클래스는 `PascalCase`, 상수는 `UPPER_CASE`를 사용한다.
@@ -22,6 +32,7 @@ trigger: always_on
   - `.env` 파일과 `pydantic-settings` (혹은 유사 Helper)를 통해 환경 변수로 관리한다.
 
 ## 2. 서버 실행 및 환경 관리 (Server Execution)
+
 - **가상환경 필수:** 모든 실행은 가상환경(venv)이 활성화된 상태에서 수행되어야 한다.
 - **실행 명령:**
   - Windows: `cd server && runvenv.bat`

@@ -46,6 +46,16 @@
         "lastModified": "Last Modified",
         "noProjects": "No projects found matching your search."
     },
+    "classList": {
+        "title": "Class List",
+        "subtitle": "Search and view classes across all projects",
+        "searchPlaceholder": "Search by class name...",
+        "filterProject": "Project",
+        "filterPackage": "Package",
+        "allProjects": "All Projects",
+        "allPackages": "All Packages",
+        "noClasses": "No classes found matching your search."
+    },
     "aiPrompt": {
         "title": "AI Prompt Management",
         "subtitle": "Manage and tune system prompts used for AI analysis.",
@@ -299,7 +309,7 @@
         "searchPackages": "Search packages...",
         "searchClasses": "Search classes (physical or logical name)...",
         "items": "Items",
-        "resultsFound": "results found",
+        "resultsFound": "Search Classes: {{count}}",
         "selectPackageHint": "Select a package to view its classes or search globally",
         "noClassesFound": "No classes found",
         "noClassesMatch": "No classes match your search",
