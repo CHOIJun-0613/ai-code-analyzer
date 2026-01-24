@@ -596,6 +596,64 @@
         },
         "export": "Export Rules",
         "import": "Import Rules"
+    },
+    "sqlList": {
+        "title": "SQL List",
+        "subtitle": "Search and view SQL statements across project",
+        "filterProject": "Project Name (Required)",
+        "filterMapper": "Filter by Mapper",
+        "searchPlaceholder": "Search by SQL ID...",
+        "mapperName": "Mapper",
+        "sqlId": "SQL ID",
+        "sqlType": "Type",
+        "complexity": "Complexity",
+        "project": "Project",
+        "enterProject": "Please enter a project name to view SQLs",
+        "noSqls": "No SQL statements found",
+        "fetchError": "Failed to fetch SQL list"
+    },
+    "sqlDetails": {
+        "title": "SQL Details",
+        "notFound": "SQL statement not found.",
+        "sqlContent": "SQL Content",
+        "analysis": "Analysis",
+        "metadata": "Metadata",
+        "calledBy": "Called By",
+        "noCallers": "No usage found.",
+        "noAiDescription": "No AI analysis available.",
+        "complexityHelp": {
+            "title": "SQL Complexity Guideline",
+            "calculationBasis": "Calculation Basis",
+            "calculationDesc": "Starting from a base score of 1, add 1 point for each of the following:",
+            "basis": {
+                "tables": "Tables",
+                "joins": "Joins",
+                "subqueries": "Subqueries",
+                "where": "WHERE conditions",
+                "groupBy": "GROUP BY columns",
+                "orderBy": "ORDER BY columns",
+                "having": "HAVING conditions"
+            },
+            "rangeTitle": "Complexity Range",
+            "ranges": {
+                "simple": {
+                    "level": "simple",
+                    "desc": "Simple SQL"
+                },
+                "medium": {
+                    "level": "medium",
+                    "desc": "Structure becoming complex, inspection recommended"
+                },
+                "complex": {
+                    "level": "complex",
+                    "desc": "Many JOINs/Subqueries, consider refactoring"
+                },
+                "veryComplex": {
+                    "level": "very_complex",
+                    "desc": "High maintenance burden, top priority for refactoring"
+                }
+            }
+        }
     }
 }
 

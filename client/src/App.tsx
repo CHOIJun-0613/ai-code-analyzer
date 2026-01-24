@@ -10,6 +10,8 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ProjectList = lazy(() => import('./pages/ProjectList'));
 const ClassList = lazy(() => import('./pages/ClassList'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
+const SqlList = lazy(() => import('./pages/SqlList'));
+const SqlDetails = lazy(() => import('./pages/SqlDetails'));
 const ClassDetails = lazy(() => import('./pages/ClassDetails'));
 const MethodDetails = lazy(() => import('./pages/MethodDetails'));
 const Analysis = lazy(() => import('./pages/Analysis'));
@@ -49,6 +51,16 @@ function App() {
                     <Route path="classes" element={
                         <Suspense fallback={<LoadingSpinner />}>
                             <ClassList />
+                        </Suspense>
+                    } />
+                    <Route path="sqls" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <SqlList />
+                        </Suspense>
+                    } />
+                    <Route path="projects/:projectName/sqls/:sqlId" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <SqlDetails />
                         </Suspense>
                     } />
                     <Route path="projects/:projectName" element={

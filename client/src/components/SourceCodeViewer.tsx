@@ -4,14 +4,12 @@ import type { editor } from 'monaco-editor';
 
 interface SourceCodeViewerProps {
     source: string;
+    language?: string;
 }
 
-export interface SourceCodeViewerHandle {
-    selectAll: () => void;
-    copyToClipboard: () => Promise<void>;
-}
+// ...
 
-const SourceCodeViewer = forwardRef<SourceCodeViewerHandle, SourceCodeViewerProps>(({ source }, ref) => {
+const SourceCodeViewer = forwardRef<SourceCodeViewerHandle, SourceCodeViewerProps>(({ source, language = 'java' }, ref) => {
     const [editorInstance, setEditorInstance] = React.useState<editor.IStandaloneCodeEditor | null>(null);
 
     // Dark 모드 감지
@@ -67,7 +65,7 @@ const SourceCodeViewer = forwardRef<SourceCodeViewerHandle, SourceCodeViewerProp
         <div className="bg-white dark:bg-[#1e1e1e] rounded-xl overflow-hidden border border-slate-200 dark:border-slate-900/10 shadow-inner h-[600px]">
             <Editor
                 height="100%"
-                defaultLanguage="java"
+                defaultLanguage={language}
                 value={source}
                 theme={isDark ? 'vs-dark' : 'light'}
                 onMount={handleEditorMount}

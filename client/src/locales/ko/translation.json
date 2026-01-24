@@ -594,6 +594,64 @@
         },
         "export": "규칙 저장하기",
         "import": "규칙 불러오기"
+    },
+    "sqlList": {
+        "title": "SQL 목록",
+        "subtitle": "프로젝트 내 SQL 문을 검색하고 조회합니다",
+        "filterProject": "프로젝트명 (필수)",
+        "filterMapper": "매퍼 필터",
+        "searchPlaceholder": "SQL ID로 검색...",
+        "mapperName": "매퍼",
+        "sqlId": "SQL ID",
+        "sqlType": "유형",
+        "complexity": "복잡도",
+        "project": "프로젝트",
+        "enterProject": "SQL을 조회하려면 프로젝트명을 입력하세요",
+        "noSqls": "SQL 문이 없습니다",
+        "fetchError": "SQL 목록을 불러오는데 실패했습니다"
+    },
+    "sqlDetails": {
+        "title": "SQL 상세",
+        "notFound": "SQL 문을 찾을 수 없습니다.",
+        "sqlContent": "SQL 내용",
+        "analysis": "분석",
+        "metadata": "메타데이터",
+        "calledBy": "호출 메서드",
+        "noCallers": "호출 정보가 없습니다.",
+        "noAiDescription": "AI 분석 설명이 없습니다.",
+        "complexityHelp": {
+            "title": "SQL 복잡도 산정 기준",
+            "calculationBasis": "산정 방법",
+            "calculationDesc": "기본값 1에서 시작하여 다음 요소들이 발견될 때마다 1점씩 가산됩니다:",
+            "basis": {
+                "tables": "테이블 수",
+                "joins": "JOIN 수",
+                "subqueries": "서브쿼리 수",
+                "where": "WHERE 조건 수",
+                "groupBy": "GROUP BY 컬럼 수",
+                "orderBy": "ORDER BY 컬럼 수",
+                "having": "HAVING 조건 수"
+            },
+            "rangeTitle": "복잡도 범위",
+            "ranges": {
+                "simple": {
+                    "level": "simple",
+                    "desc": "단순 SQL"
+                },
+                "medium": {
+                    "level": "medium",
+                    "desc": "구조가 조금 복잡해지기 시작한 단계라 추가 점검 대상"
+                },
+                "complex": {
+                    "level": "complex",
+                    "desc": "JOIN, 조건, 서브쿼리가 많아진 상태이므로 리팩터링을 적극 고려"
+                },
+                "veryComplex": {
+                    "level": "very_complex",
+                    "desc": "유지보수 부담이 크다고 보는 단계로, 우선적으로 리팩터링 후보"
+                }
+            }
+        }
     }
 }
 

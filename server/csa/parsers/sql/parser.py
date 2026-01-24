@@ -136,6 +136,31 @@ class SQLParser:
         sql = re.sub(r"/\*.*?\*/", "", sql, flags=re.DOTALL)
         return sql
 
+    def _split_ignoring_parentheses(self, text: str, delimiter: str = ",") -> List[str]:
+        """Split text by delimiter, ignoring delimiters within parentheses."""
+        result = []
+        current = []
+        paren_depth = 0
+        
+        for char in text:
+            if char == "(":
+                paren_depth += 1
+                current.append(char)
+            elif char == ")":
+                if paren_depth > 0:
+                    paren_depth -= 1
+                current.append(char)
+            elif char == delimiter and paren_depth == 0:
+                result.append("".join(current).strip())
+                current = []
+            else:
+                current.append(char)
+        
+        if current:
+            result.append("".join(current).strip())
+            
+        return [r for r in result if r]
+
     def _analyse_select_sql(self, result: SQLAnalysisResult) -> None:
         sql = result.cleaned_sql
         result.tables = self._extract_tables(sql)
@@ -222,11 +247,15 @@ class SQLParser:
         table_section = after_from[:stop_position].strip()
 
         # 쉼표로 구분된 테이블 파싱
-        parts = [part.strip() for part in table_section.split(",")]
+        parts = self._split_ignoring_parentheses(table_section)
         for part in parts:
             if not part:
                 continue
             # 테이블명과 alias 추출 (schema.table 지원)
+            # 서브쿼리는 제외 (괄호로 시작하는 경우)
+            if part.startswith('('):
+                continue
+
             match = re.match(r'([\w.]+)(?:\s+(?:AS\s+)?(\w+))?', part, re.IGNORECASE)
             if match:
                 table_name = match.group(1)

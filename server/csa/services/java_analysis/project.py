@@ -671,22 +671,32 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     original_start_line = declaration.position.line - 1
                     start_line = original_start_line
                     
-                    brace_count = 0
-                    end_line = start_line
                     found_opening_brace = False
-                    for i in range(start_line, len(lines)):
-                        line = lines[i]
-                        for char in line:
-                            if char == '{':
-                                brace_count += 1
-                                found_opening_brace = True
-                            elif char == '}':
-                                brace_count -= 1
-                                if found_opening_brace and brace_count == 0:
-                                    end_line = i
-                                    break
-                        if found_opening_brace and brace_count == 0:
-                            break
+                    
+                    # 메서드 바디가 있는 경우 (일반 메서드)
+                    if declaration.body is not None:
+                        for i in range(start_line, len(lines)):
+                            line = lines[i]
+                            for char in line:
+                                if char == '{':
+                                    brace_count += 1
+                                    found_opening_brace = True
+                                elif char == '}':
+                                    brace_count -= 1
+                                    if found_opening_brace and brace_count == 0:
+                                        end_line = i
+                                        break
+                            if found_opening_brace and brace_count == 0:
+                                break
+                    # 메서드 바디가 없는 경우 (인터페이스, 추상 메서드) -> 세미콜론 찾기
+                    else:
+                        for i in range(start_line, len(lines)):
+                            line = lines[i]
+                            # 주석 처리되지 않은 세미콜론 찾기 (단순화된 로직)
+                            # TODO: 문자열/주석 내 세미콜론 제외 등 정교한 파싱 필요 시 보완
+                            if ';' in line:
+                                end_line = i
+                                break
                     
                     # 어노테이션 위치 고려하여 시작 라인 조정
                     if hasattr(declaration, 'annotations') and declaration.annotations:
