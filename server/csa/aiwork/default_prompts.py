@@ -78,11 +78,9 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         아래 요구사항을 모두 충족하는 한국어 Markdown 보고서를 생성하세요.
 
         **출력 형식:**
-        - `### **[Operation]**` 섹션: 수행하는 CRUD 목적과 데이터 흐름을 5문장 이내로 설명합니다. 문장과 문장사이는 부드럽게 연결하세요.
-        - `### **[Visual Flow]**` 섹션:
-            - 데이터의 흐름(테이블 -> 조인/필터 -> 결과)을 Mermaid flowchart TD 코드로 작성합니다.
-            - 반드시 ```mermaid ... ``` 코드 블록으로 감싸주세요.
-            - 노드 이름은 테이블명이나 주요 연산(JOIN, WHERE 등)을 사용하세요.
+        - `### **[Operation]**` 섹션: 수행하는 CRUD 목적과 데이터 흐름을 5문장 이내로 설명해서 불릿 형태로 기술합니다.
+            - 예시: 사용자 ID를 기준으로 단일 레코드를 조회하는 SELECT 문입니다.
+            
         - `### **[Tables & Conditions]**` 섹션: 
             - 주요 테이블, 조인 조건, 필터를 테이블(그리드) 형태로 정리합니다.
             - 예시:
@@ -90,14 +88,38 @@ DEFAULT_PROMPTS: Dict[str, str] = {
             |--------|------|------|
             | 테이블A | 조인 조건A | 필터A |
             | 테이블B | 조인 조건B | 필터B |
+        - `### **[SQL Flow JSON]**` 섹션:
+            - SQL의 데이터 흐름(Lineage)을 시각화하기 위한 JSON 데이터를 생성합니다.
+            - **Node**: 테이블, 서브쿼리, 또는 결과셋을 노드로 정의합니다.
+            - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다.
+            - **반드시 아래 JSON 스키마를 준수하여 ```json ... ``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
+        **JSON 스키마 예시:**
+        ```json
+        {
+          "summary": "1줄 요약",
+          "nodes": [
+            { "id": "table_A", "type": "table", "label": "Table A", "columns": ["id", "name"] },
+            { "id": "table_B", "type": "table", "label": "Table B", "columns": ["id", "ref_id"] },
+            { "id": "result", "type": "target", "label": "Result", "columns": ["name", "ref_id"] }
+          ],
+          "edges": [
+            { "source": "table_A.id", "target": "table_B.id", "type": "join", "condition": "A.id = B.id" },
+            { "source": "table_A.name", "target": "result.name", "type": "select", "condition": "Filtering condition (WHERE)" }
+          ]
+        }
+        ```
+        - **Edge의 condition 필드**: 
+            - JOIN의 경우 ON 절 조건을 기입합니다.
+            - SELECT/FILTER의 경우 WHERE 절 조건을 기입합니다. (예: `id = #{id}`)
         - `### **[Considerations]**` 섹션: 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿 목록 형태로 기술합니다.
         - 필요한 경우 입력 파라미터나 바인딩 변수의 의미를 간단히 언급합니다.
-        - 'Operation', 'Visual Flow', 'Tables & Conditions', 'Considerations' 각 섹션 사이는 빈 줄과 '---'로 구분합니다.
-     
+        - 'Operation', 'Tables & Conditions', 'SQL Flow JSON', 'Considerations' 각 섹션 사이는 빈 줄과 '---'로 구분합니다.
         **제약사항:**
-        - **Mermaid를 제외한 다른 코드 블록(```sql, ```java 등)은 생성하지 마세요.**
+        - **JSON 데이터는 반드시 유효한 JSON 포맷이어야 합니다.**
+        - **절대로 코드 블록(```sql, ```java 등)을 생성하지 마세요.** (JSON 블록은 제외)
         - **절대로 예시 쿼리나 테스트 코드를 생성하지 마세요.**
-        - 전체 길이는 15줄 이내로 유지하고(Mermaid 제외), 불필요한 서두나 마무리 문구는 생략합니다.
+        - 전체 길이는 제한 없으나, 설명은 핵심 위주로 작성합니다.
+        - 불필요한 서두나 마무리 문구는 생략합니다.
         - 순수한 텍스트 형식의 Markdown만 출력하세요.
         """
     ).strip(),
@@ -121,8 +143,7 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         ---SQL#1---
         ### **[Operation]**
         - 수행하는 CRUD 목적과 데이터 흐름을 5문장 이내로 설명해서 불릿 형태로 기술합니다.
-        - 예시: 사용자 ID를 기준으로 단일 레코드를 조회하는 SELECT 문입니다.
-        - 각 문장사이에 빈 줄을 추가합니다.
+            - 예시: 사용자 ID를 기준으로 단일 레코드를 조회하는 SELECT 문입니다.
         ---
         ### **[Tables & Conditions]**
         - 주요 테이블, 조인 조건, 필터를 테이블(그리드) 형태로 정리합니다.
@@ -134,8 +155,8 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         ### **[SQL Flow JSON]**
         - SQL의 데이터 흐름(Lineage)을 시각화하기 위한 JSON 데이터를 생성합니다.
         - **Node**: 테이블, 서브쿼리, 또는 결과셋을 노드로 정의합니다.
-        - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다.
-        - **반드시 아래 JSON 스키마를 준수하여 ```json ...``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
+        - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다. **주의: WHERE, GROUP BY, ORDER BY, LIMIT 등의 연산은 해당 연산이 적용되어 생성되는 '결과 노드'를 Target으로 하는 Edge로 표현해야 합니다.** (즉, Source(테이블) -> [연산] -> Target(결과))
+        - **반드시 아래 JSON 스키마를 준수하여 ```json ... ``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
         **JSON 스키마 예시:**
         ```json
         {
@@ -147,10 +168,15 @@ DEFAULT_PROMPTS: Dict[str, str] = {
           ],
           "edges": [
             { "source": "table_A.id", "target": "table_B.id", "type": "join", "condition": "A.id = B.id" },
-            { "source": "table_A.name", "target": "result.name", "type": "select" }
+            { "source": "table_A.name", "target": "result.name", "type": "select", "condition": "Filtering condition (WHERE)" }
           ]
         }
         ```
+        - **Edge의 condition 필드**: 
+            - JOIN의 경우 ON 절 조건을 기입합니다.
+            - SELECT/FILTER의 경우 WHERE 절 조건을 기입합니다.
+            - ORDER BY, GROUP BY, LIMIT 등도 Edge의 type과 condition에 명시합니다. (예: type="order_by", condition="id DESC")
+            - **중요: Filter(Where, Order by 등)는 '소스 테이블'에서 '결과 노드'로 가는 과정에 위치해야 하므로, Edge의 Source는 '이전 단계(테이블)', Target은 '현재 단계(결과)'가 되어야 합니다.**
         ---
         ### **[Considerations]**
         - 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿으로 기술합니다.
@@ -159,50 +185,10 @@ DEFAULT_PROMPTS: Dict[str, str] = {
             - 단일 레코드 조회로 성능 영향은 최소화됩니다.
         ---END#1---
 
-        ---SQL#2---
-        ### **[Operation]**
-        - 수행하는 CRUD 목적과 데이터 흐름을 5문장 이내로 설명해서 불릿 형태로 기술합니다.
-        - 예시: 새로운 사용자 정보를 users 테이블에 삽입하는 INSERT 문입니다.
-        ---
-        ### **[Tables & Conditions]**
-        - 주요 테이블, 조인 조건, 필터를 테이블(그리드) 형태로 정리합니다.
-        - 예시: 
-            | 테이블 | 조건 |
-            |------|------|
-            | users | id = #userId |
-        ---
-        ### **[SQL Flow JSON]**
-        - SQL의 데이터 흐름(Lineage)을 시각화하기 위한 JSON 데이터를 생성합니다.
-        - **Node**: 테이블, 서브쿼리, 또는 결과셋을 노드로 정의합니다.
-        - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다.
-        - **반드시 아래 JSON 스키마를 준수하여 ```json ...``` 코드 블록으로 작성하세요.**
-        **JSON 스키마 예시:**
-        ```json
-        {
-          "summary": "1줄 요약",
-          "nodes": [
-            { "id": "users", "type": "table", "label": "users", "columns": ["id", "name", "email"] },
-            { "id": "input_data", "type": "source", "label": "Input Data", "columns": ["id", "name", "email"] }
-          ],
-          "edges": [
-            { "source": "input_data", "target": "users", "type": "insert", "condition": "PK check" }
-          ]
-        }
-        ```
-        ---
-        ### **[Considerations]**
-        - 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿으로 기술합니다.
-        - 예시: 
-            - 트랜잭션: 커밋 전까지 다른 세션에서 보이지 않습니다.
-            - 제약조건: email은 UNIQUE 제약이 있을 가능성이 높습니다.
-        ---END#2---
-
         **제약사항:**
-        - 각 SQL 분석은 반드시 `---SQL#1---`, `---SQL#2---` 형식으로 시작합니다 (# 기호 필수!)
-        - 각 SQL 분석은 반드시 `---END#1---`, `---END#2---` 형식으로 끝나야 합니다.(# 기호 필수)
+        - 각 SQL 분석은 반드시 `---SQL#1---` 형식으로 시작하고 `---END#1---` 형식으로 끝나야 합니다.
         - **JSON 데이터는 반드시 유효한 JSON 포맷이어야 합니다.**
         - **절대로 코드 블록(```sql, ```java 등)을 생성하지 마세요.** (JSON 블록은 제외)
-        - 각 SQL 분석은 50줄 이내로 유지하고, 불필요한 서두나 마무리 문구는 생략합니다.
         - 순수한 텍스트 형식의 Markdown만 출력하세요.
         - 모든 SQL에 대해 반드시 분석 결과를 제공해야 합니다.
         """
