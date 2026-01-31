@@ -621,7 +621,9 @@
         "metadata": "메타데이터",
         "calledBy": "호출 메서드",
         "noCallers": "호출 정보가 없습니다.",
-        "noAiDescription": "AI 분석 설명이 없습니다.",
+        "noAiDescription": "No AI analysis available.",
+        "viewJson": "JSON 보기",
+        "viewFlow": "Flow 보기",
         "complexityHelp": {
             "title": "SQL 복잡도 산정 기준",
             "calculationBasis": "산정 방법",

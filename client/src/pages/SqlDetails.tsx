@@ -45,6 +45,7 @@ const SqlDetails: React.FC = () => {
     const mapperName = searchParams.get('mapper');
     const [activeTab, setActiveTab] = React.useState<'analysis' | 'flow' | 'sql' | 'calledBy'>('analysis');
     const [showComplexityHelp, setShowComplexityHelp] = React.useState(false);
+    const [viewMode, setViewMode] = React.useState<'flow' | 'json'>('flow');
 
     const { data: sqlData, isLoading, error } = useQuery<SqlDetailData>({
         // ... (existing useQuery options)
@@ -358,28 +359,43 @@ const SqlDetails: React.FC = () => {
                                     <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
                                     {t('sqlDetails.flow', 'SQL Flow')}
                                 </h3>
+                                <button
+                                    onClick={() => setViewMode(prev => prev === 'flow' ? 'json' : 'flow')}
+                                    className="px-3 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm flex items-center gap-2"
+                                >
+                                    <Code className="w-4 h-4" />
+                                    {viewMode === 'flow' ? t('sqlDetails.viewJson', 'JSON 보기') : t('sqlDetails.viewFlow', 'Flow 보기')}
+                                </button>
                             </div>
-                            <div className="flex-1 w-full min-h-0 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
-                                {/* AI Generated Badge - positioned top-left inside the component */}
-                                <div className="absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg">
+                            <div className="relative flex-1 w-full min-h-0 mt-4">
+                                {/* AI Generated Badge */}
+                                <div className="absolute -top-3 -left-3 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg">
                                     <Sparkles className="w-3.5 h-3.5" />
                                     <span>{t('classDetails.aiGenerated', 'AI Generated')}</span>
                                 </div>
 
-                                {flowData ? (
-                                    <div className="w-full h-full">
-                                        {/* Wrapper div to ensure separate stacking context if needed, though SqlFlowViewer has its own container */}
-                                        <SqlFlowViewer data={flowData} />
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
-                                        <GitMerge className="w-12 h-12 mb-4 opacity-20" />
-                                        <p className="text-lg font-medium">{t('sqlDetails.noFlowData', 'No SQL Flow data available')}</p>
-                                        <p className="text-sm mt-2 max-w-sm text-center opacity-75">
-                                            {t('sqlDetails.runAnalysisHint', 'Run AI analysis with the latest prompt to generate SQL Flow visualization.')}
-                                        </p>
-                                    </div>
-                                )}
+                                <div className="w-full h-full bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
+
+                                    {flowData ? (
+                                        <div className="w-full h-full">
+                                            {viewMode === 'flow' ? (
+                                                <SqlFlowViewer data={flowData} />
+                                            ) : (
+                                                <div className="w-full h-full pt-10">
+                                                    <SourceCodeViewer source={JSON.stringify(flowData, null, 2)} language="json" />
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
+                                            <GitMerge className="w-12 h-12 mb-4 opacity-20" />
+                                            <p className="text-lg font-medium">{t('sqlDetails.noFlowData', 'No SQL Flow data available')}</p>
+                                            <p className="text-sm mt-2 max-w-sm text-center opacity-75">
+                                                {t('sqlDetails.runAnalysisHint', 'Run AI analysis with the latest prompt to generate SQL Flow visualization.')}
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     )}

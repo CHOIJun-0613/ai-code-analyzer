@@ -5,6 +5,7 @@ interface Column {
     name: string;
     type?: string;
     constraints?: string[];
+    comment?: string;
 }
 
 interface TableNodeData {
@@ -43,29 +44,46 @@ const TableNode = ({ data, isConnectable, targetPosition = Position.Top, sourceP
     const styles = getVariantStyles(data.variant);
 
     return (
-        <div className={`rounded-lg shadow-md border min-w-[200px] overflow-hidden ${styles.container}`}>
-            <Handle type="target" position={targetPosition} isConnectable={isConnectable} className="!bg-slate-400 w-3 h-3" />
+        <div className={`rounded-lg shadow-md border min-w-[200px] overflow-hidden group ${styles.container} relative`}>
+            {/* Main Target Handle */}
+            <Handle
+                type="target"
+                position={targetPosition}
+                isConnectable={isConnectable}
+                className="!bg-slate-500 dark:!bg-slate-400 w-3 h-3 border-2 border-white dark:border-slate-800"
+                style={{
+                    // Explicit centering for clean node-to-node connections
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 10
+                }}
+            />
 
             {/* Header: Table Name */}
-            <div className={`px-3 py-2 border-b flex justify-between items-center ${styles.header}`}>
-                <span className="font-bold text-sm line-clamp-1" title={data.label}>
-                    {data.label}
+            <div className={`px-3 py-2 border-b flex justify-center items-center text-center ${styles.header}`}>
+                <span className="font-bold text-sm leading-tight whitespace-pre-wrap" title={data.label}>
+                    {data.label.replace(/\s*\(/, '\n(')}
                 </span>
             </div>
 
-            {/* Body: Columns */}
+            {/* Body: Columns (No handles for cleaner flow) */}
             <div className="p-0">
                 {data.columns && data.columns.length > 0 ? (
                     data.columns.map((col, index) => (
                         <div
                             key={`${col.name}-${index}`}
-                            className={`px-3 py-1.5 flex justify-between items-center text-xs border-b last:border-0 transition-colors ${styles.row}`}
+                            className={`relative px-3 py-1.5 flex justify-between items-center text-xs border-b last:border-0 transition-colors ${styles.row}`}
                         >
-                            <div className="flex items-center gap-2 overflow-hidden">
-                                {/* PK/FK Indicators could go here if we had that info parsed specifically */}
+                            <div className="flex items-center gap-2 overflow-hidden w-full">
+                                {/* PK/FK Indicators could go here */}
                                 <span className={`font-medium truncate ${styles.text}`} title={col.name}>
                                     {col.name}
                                 </span>
+                                {col.comment && (
+                                    <span className="text-gray-400 dark:text-gray-500 text-[10px] ml-1 truncate max-w-[100px]" title={col.comment}>
+                                        ({col.comment})
+                                    </span>
+                                )}
                             </div>
                             <span className="text-slate-400 dark:text-slate-500 text-[10px] ml-2 shrink-0">
                                 {col.type}
@@ -80,7 +98,18 @@ const TableNode = ({ data, isConnectable, targetPosition = Position.Top, sourceP
                 )}
             </div>
 
-            <Handle type="source" position={sourcePosition} isConnectable={isConnectable} className="!bg-slate-400 w-3 h-3" />
+            {/* Main Source Handle */}
+            <Handle
+                type="source"
+                position={sourcePosition}
+                isConnectable={isConnectable}
+                className="!bg-slate-500 dark:!bg-slate-400 w-3 h-3 border-2 border-white dark:border-slate-800"
+                style={{
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    zIndex: 10
+                }}
+            />
         </div>
     );
 };
