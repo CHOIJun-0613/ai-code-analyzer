@@ -446,9 +446,277 @@ const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
         });
 
 
-        // Group edges by Source-Target pair
-        const edgeGroups = new Map<string, any[]>();
+        // =========================================================================
+        // ENHANCED LOGIC: WHERE, ORDER BY, LIMIT 노드를 별도로 생성하고 순차적으로 연결
+        // =========================================================================
+
+        // Step 1: 엣지를 타입별로 그룹화
+        const whereEdges: any[] = [];
+        const orderByEdges: any[] = [];
+        const limitEdges: any[] = [];
+        const otherFlowEdges: any[] = [];
+        const filterConditionEdges: any[] = []; // 입력 파라미터 -> 테이블 연결
+
         processedDataEdges.forEach((edge: any) => {
+            const type = edge.type ? edge.type.toLowerCase() : '';
+
+            // WHERE 조건 (select 타입이고 condition이 있는 경우)
+            if ((type === 'select' || type === 'filter') && edge.condition) {
+                whereEdges.push(edge);
+            }
+            // ORDER BY
+            else if (type === 'order_by' || type.includes('order')) {
+                orderByEdges.push(edge);
+            }
+            // LIMIT
+            else if (type === 'limit' || type.includes('rownum') || type.includes('top')) {
+                limitEdges.push(edge);
+            }
+            // 입력 파라미터 -> 테이블 필터 조건
+            else if (type === 'filter_condition') {
+                filterConditionEdges.push(edge);
+            }
+            // 기타 데이터 흐름 엣지
+            else {
+                otherFlowEdges.push(edge);
+            }
+        });
+
+        // Step 2: 노드 체인 구성
+        // 구조: Input Parameters -> Table -> WHERE -> ORDER BY -> Subquery Result -> LIMIT -> Final Result
+
+        let chainNodes: string[] = [];
+        const createdNodeIds = new Set<string>();
+
+        // WHERE 노드 생성
+        if (whereEdges.length > 0) {
+            const whereEdge = whereEdges[0];
+            const sourceId = resolveNodeId(whereEdge.source);
+            const targetId = resolveNodeId(whereEdge.target);
+            const whereNodeId = `${sourceId}_${targetId}_where`;
+
+            if (!createdNodeIds.has(whereNodeId)) {
+                processedNodes.push({
+                    id: whereNodeId,
+                    type: 'default',
+                    data: {
+                        label: `WHERE\n${whereEdge.condition || ''}`
+                    },
+                    position: { x: 0, y: 0 },
+                    className: 'sql-flow-condition-node',
+                    style: {
+                        background: '#fff7ed',
+                        border: '2px solid #f97316',
+                        borderRadius: '12px',
+                        padding: '12px 16px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: '#c2410c',
+                        width: 280,
+                        textAlign: 'center',
+                        boxShadow: '0 2px 6px rgba(249, 115, 22, 0.15)',
+                        whiteSpace: 'pre-wrap'
+                    }
+                });
+                createdNodeIds.add(whereNodeId);
+                chainNodes.push(whereNodeId);
+
+                // Input Parameters -> WHERE 연결
+                if (filterConditionEdges.length > 0) {
+                    filterConditionEdges.forEach((paramEdge) => {
+                        const paramSource = resolveNodeId(paramEdge.source);
+                        // sourceHandle: input_params.#{metMngNo} -> #{metMngNo}
+                        const sourceHandle = paramEdge.source.includes('.')
+                            ? paramEdge.source.split('.').pop()
+                            : paramEdge.source;
+
+                        processedEdges.push({
+                            id: `e_param_${sourceHandle}_to_where`,
+                            source: paramSource,
+                            sourceHandle: sourceHandle,
+                            target: whereNodeId,
+                            type: 'default',
+                            animated: false,
+                            style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+                            markerEnd: { type: MarkerType.ArrowClosed }
+                        });
+                    });
+                }
+
+                // Table -> WHERE 연결
+                processedEdges.push({
+                    id: `e_${sourceId}_to_where`,
+                    source: sourceId,
+                    target: whereNodeId,
+                    type: 'default',
+                    animated: false,
+                    style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+                    markerEnd: { type: MarkerType.ArrowClosed }
+                });
+
+                // WHERE -> 다음 노드 연결은 나중에 처리
+            }
+        }
+
+        // ORDER BY 노드 생성
+        if (orderByEdges.length > 0) {
+            const orderEdge = orderByEdges[0];
+            const sourceId = resolveNodeId(orderEdge.source);
+            const targetId = resolveNodeId(orderEdge.target);
+            const orderNodeId = `${sourceId}_${targetId}_orderby`;
+
+            if (!createdNodeIds.has(orderNodeId)) {
+                processedNodes.push({
+                    id: orderNodeId,
+                    type: 'default',
+                    data: {
+                        label: `ORDER BY\n${orderEdge.condition || ''}`
+                    },
+                    position: { x: 0, y: 0 },
+                    className: 'sql-flow-condition-node',
+                    style: {
+                        background: '#fff7ed',
+                        border: '2px solid #f97316',
+                        borderRadius: '12px',
+                        padding: '12px 16px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: '#c2410c',
+                        width: 200,
+                        textAlign: 'center',
+                        boxShadow: '0 2px 6px rgba(249, 115, 22, 0.15)',
+                        whiteSpace: 'pre-wrap'
+                    }
+                });
+                createdNodeIds.add(orderNodeId);
+                chainNodes.push(orderNodeId);
+            }
+        }
+
+        // LIMIT 노드 생성
+        if (limitEdges.length > 0) {
+            const limitEdge = limitEdges[0];
+            const sourceId = resolveNodeId(limitEdge.source);
+            const targetId = resolveNodeId(limitEdge.target);
+            const limitNodeId = `${sourceId}_${targetId}_limit`;
+
+            if (!createdNodeIds.has(limitNodeId)) {
+                processedNodes.push({
+                    id: limitNodeId,
+                    type: 'default',
+                    data: {
+                        label: `LIMIT\n${limitEdge.condition || ''}`
+                    },
+                    position: { x: 0, y: 0 },
+                    className: 'sql-flow-condition-node',
+                    style: {
+                        background: '#fff7ed',
+                        border: '2px solid #f97316',
+                        borderRadius: '12px',
+                        padding: '12px 16px',
+                        fontSize: '11px',
+                        fontWeight: '600',
+                        color: '#c2410c',
+                        width: 200,
+                        textAlign: 'center',
+                        boxShadow: '0 2px 6px rgba(249, 115, 22, 0.15)',
+                        whiteSpace: 'pre-wrap'
+                    }
+                });
+                createdNodeIds.add(limitNodeId);
+                chainNodes.push(limitNodeId);
+            }
+        }
+
+        // Step 3: 체인 연결
+        // 올바른 흐름: Table -> WHERE -> ORDER BY -> Subquery Result -> LIMIT -> Final Result
+
+        let currentChainSource = '';
+
+        // WHERE 노드가 있으면 체인 시작
+        if (whereEdges.length > 0 && chainNodes.length > 0) {
+            const whereNodeId = chainNodes[0];
+            const whereEdge = whereEdges[0];
+            const subqueryId = resolveNodeId(whereEdge.target);
+
+            currentChainSource = whereNodeId;
+
+            // ORDER BY가 있으면 WHERE -> ORDER BY
+            if (orderByEdges.length > 0 && chainNodes.length > 1) {
+                const orderNodeId = chainNodes[1];
+                processedEdges.push({
+                    id: `e_where_to_order`,
+                    source: whereNodeId,
+                    target: orderNodeId,
+                    type: 'default',
+                    animated: false,
+                    style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+                    markerEnd: { type: MarkerType.ArrowClosed }
+                });
+
+                // ORDER BY -> Subquery Result
+                processedEdges.push({
+                    id: `e_order_to_subquery`,
+                    source: orderNodeId,
+                    target: subqueryId,
+                    type: 'default',
+                    animated: false,
+                    style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+                    markerEnd: { type: MarkerType.ArrowClosed }
+                });
+
+                currentChainSource = subqueryId;
+            } else {
+                // WHERE -> Subquery Result (ORDER BY 없는 경우)
+                processedEdges.push({
+                    id: `e_where_to_subquery`,
+                    source: whereNodeId,
+                    target: subqueryId,
+                    type: 'default',
+                    animated: false,
+                    style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+                    markerEnd: { type: MarkerType.ArrowClosed }
+                });
+
+                currentChainSource = subqueryId;
+            }
+        }
+
+        // LIMIT 노드가 있으면 Subquery Result -> LIMIT -> Final Result
+        if (limitEdges.length > 0) {
+            const limitEdge = limitEdges[0];
+            const limitIndex = chainNodes.findIndex(id => id.includes('_limit'));
+            const limitNodeId = limitIndex >= 0 ? chainNodes[limitIndex] : `limit_node`;
+            const sourceId = resolveNodeId(limitEdge.source);
+            const targetId = resolveNodeId(limitEdge.target);
+
+            // currentChainSource가 설정되어 있으면 사용, 아니면 sourceId 사용
+            const actualSource = currentChainSource || sourceId;
+
+            processedEdges.push({
+                id: `e_subquery_to_limit`,
+                source: actualSource,
+                target: limitNodeId,
+                type: 'default',
+                animated: false,
+                style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+                markerEnd: { type: MarkerType.ArrowClosed }
+            });
+
+            processedEdges.push({
+                id: `e_limit_to_result`,
+                source: limitNodeId,
+                target: targetId,
+                type: 'default',
+                animated: false,
+                style: { stroke: '#94a3b8', strokeWidth: 1.5 },
+                markerEnd: { type: MarkerType.ArrowClosed }
+            });
+        }
+
+        // Step 4: 기타 데이터 흐름 엣지 처리 (기존 로직 유지)
+        const edgeGroups = new Map<string, any[]>();
+        otherFlowEdges.forEach((edge: any) => {
             const sourceId = resolveNodeId(edge.source);
             const targetId = resolveNodeId(edge.target);
             const key = `${sourceId}||${targetId}`;
@@ -456,7 +724,6 @@ const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
             if (!edgeGroups.has(key)) {
                 edgeGroups.set(key, []);
             }
-            // Preserve original source/target info for handle mapping later
             edgeGroups.get(key)?.push({
                 ...edge,
                 originalSource: edge.data?.originalSource || sourceId,
