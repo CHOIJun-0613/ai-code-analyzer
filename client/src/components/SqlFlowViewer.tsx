@@ -40,7 +40,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => 
     dagreGraph.setGraph({
         rankdir: direction,
         nodesep: 50,
-        ranksep: 100
+        ranksep: 200  // 노드 간 수평 간격 (엣지 라벨 UPDATE, INSERT, result 등 표시 공간 확보)
     });
 
     nodes.forEach((node) => {
@@ -188,7 +188,7 @@ const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
                 target: target,
                 label: edge.label,
                 type: 'default',
-                animated: edgeType === 'input_ref',
+                animated: false,
                 style: {
                     stroke: edgeType === 'input_ref' ? '#3b82f6' : '#94a3b8',
                     strokeWidth: 1.5,

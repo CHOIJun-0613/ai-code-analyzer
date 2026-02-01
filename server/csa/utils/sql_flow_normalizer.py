@@ -81,7 +81,7 @@ def normalize_sql_flow(raw_json: Dict[str, Any]) -> Dict[str, Any]:
             normalized["nodes"].append(normalized_node)
 
     # 3. 엣지에서 operation 노드 추출 및 생성
-    operation_nodes, modified_edges = _extract_operation_nodes(
+    operation_nodes, modified_edges, source_to_op_mapping = _extract_operation_nodes(
         raw_json.get("edges", []),
         node_ids
     )
@@ -90,7 +90,7 @@ def normalize_sql_flow(raw_json: Dict[str, Any]) -> Dict[str, Any]:
     # 4. 엣지 정규화
     node_ids.update(n["id"] for n in operation_nodes)
     for edge in modified_edges:
-        normalized_edge = _normalize_edge(edge, node_ids)
+        normalized_edge = _normalize_edge(edge, node_ids, source_to_op_mapping)
         if normalized_edge:
             # 중복 엣지 방지
             edge_key = f"{normalized_edge['source']}->{normalized_edge['target']}"
@@ -175,11 +175,13 @@ def _extract_operation_nodes(
     이를 별도의 operation 노드로 변환합니다.
 
     Returns:
-        (새로 생성된 operation 노드 목록, 수정된 엣지 목록)
+        (새로 생성된 operation 노드 목록, 수정된 엣지 목록, 소스→operation 매핑)
     """
     operation_nodes = []
     modified_edges = []
     created_ops = set()
+    # 소스 테이블 → 첫 번째 operation 노드 매핑 (input_ref 리다이렉트용)
+    source_to_op_mapping: Dict[str, str] = {}
 
     for edge in edges:
         edge_type = edge.get("type", "").lower()
@@ -227,6 +229,11 @@ def _extract_operation_nodes(
                 })
                 created_ops.add(op_node_id)
 
+                # 소스 테이블 → operation 노드 매핑 (첫 번째만 저장)
+                # WHERE가 가장 먼저 적용되므로 input_ref는 여기로 연결
+                if source_base not in source_to_op_mapping:
+                    source_to_op_mapping[source_base] = op_node_id
+
             # 엣지 수정: source -> op_node -> target
             modified_edges.append({
                 "source": source_base,
@@ -243,7 +250,7 @@ def _extract_operation_nodes(
             # 일반 엣지는 그대로 유지
             modified_edges.append(edge)
 
-    return operation_nodes, modified_edges
+    return operation_nodes, modified_edges, source_to_op_mapping
 
 
 def _get_node_base_id(node_ref: str) -> str:
@@ -258,10 +265,15 @@ def _get_node_base_id(node_ref: str) -> str:
 
 def _normalize_edge(
     edge: Dict[str, Any],
-    valid_node_ids: set
+    valid_node_ids: set,
+    source_to_op_mapping: Optional[Dict[str, str]] = None
 ) -> Optional[Dict[str, Any]]:
     """
     엣지를 정규화합니다.
+
+    input_ref 타입 엣지의 경우, 타겟이 소스 테이블이고 해당 테이블에
+    연결된 operation 노드가 있으면 operation 노드로 리다이렉트합니다.
+    (Y자 형태 연결: Input Parameters → WHERE/필터 노드)
     """
     source = edge.get("source", "")
     target = edge.get("target", "")
@@ -271,6 +283,18 @@ def _normalize_edge(
     source = _get_node_base_id(source)
     target = _get_node_base_id(target)
 
+    # 엣지 타입 정규화 (먼저 결정)
+    if edge_type in ("reference", "filter_condition", "input_ref"):
+        normalized_type = "input_ref"
+    else:
+        normalized_type = "data_flow"
+
+    # input_ref 엣지: 타겟을 operation 노드로 리다이렉트
+    # (Input Parameters → 소스 테이블 대신 → WHERE/필터 노드로 연결)
+    if normalized_type == "input_ref" and source_to_op_mapping:
+        if target in source_to_op_mapping:
+            target = source_to_op_mapping[target]
+
     # 유효하지 않은 노드 ID는 건너뜀
     if source not in valid_node_ids or target not in valid_node_ids:
         # 노드가 없으면 건너뜀 (컬럼 매핑 엣지일 가능성)
@@ -279,12 +303,6 @@ def _normalize_edge(
     # select 타입 + condition 없음 = 단순 컬럼 매핑 → 제외
     if edge_type == "select" and not edge.get("condition"):
         return None
-
-    # 엣지 타입 정규화
-    if edge_type in ("reference", "filter_condition", "input_ref"):
-        normalized_type = "input_ref"
-    else:
-        normalized_type = "data_flow"
 
     normalized = {
         "source": source,

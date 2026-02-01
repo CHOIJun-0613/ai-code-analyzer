@@ -118,7 +118,7 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         | GROUP BY | `GROUP_BY` | 그룹화가 있으면 필수 |
         | INNER/LEFT JOIN | `JOIN` | 조인이 있으면 필수 |
 
-        **JSON 스키마 예시:**
+        **JSON 스키마 예시 (SELECT):**
         ```json
         {
           "summary": "USER 테이블에서 특정 조건의 사용자 조회",
@@ -156,6 +156,51 @@ DEFAULT_PROMPTS: Dict[str, str] = {
           ]
         }
         ```
+
+        **JSON 스키마 예시 (UPDATE - WHERE 필수!):**
+        ```json
+        {
+          "summary": "USER 테이블에서 특정 사용자의 정보 업데이트",
+          "nodes": [
+            {
+              "id": "input_params",
+              "type": "inputParams",
+              "label": "Input Parameters",
+              "columns": [
+                { "name": "#{userName}", "comment": "변경할 사용자명 (SET)" },
+                { "name": "#{userId}", "comment": "사용자 ID (WHERE 조건)" }
+              ]
+            },
+            {
+              "id": "user_table",
+              "type": "table",
+              "label": "USER",
+              "columns": [{ "name": "USER_ID", "comment": "사용자 ID" }, { "name": "USER_NAME", "comment": "사용자명" }]
+            },
+            {
+              "id": "where_op",
+              "type": "operation",
+              "label": "WHERE",
+              "operationType": "WHERE",
+              "condition": "USER_ID = #{userId}"
+            },
+            {
+              "id": "result",
+              "type": "result",
+              "label": "UPDATE 완료",
+              "columns": [{ "name": "USER_NAME", "comment": "변경된 사용자명" }]
+            }
+          ],
+          "edges": [
+            { "source": "input_params", "target": "where_op", "type": "input_ref" },
+            { "source": "user_table", "target": "where_op", "type": "data_flow" },
+            { "source": "where_op", "target": "result", "type": "data_flow", "label": "UPDATE" }
+          ]
+        }
+        ```
+
+        **⚠️ UPDATE/DELETE 문 주의:** WHERE 조건이 있으면 반드시 WHERE operation 노드를 생성하세요!
+
         - `### **[Considerations]**` 섹션: 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿 목록 형태로 기술합니다.
         - 필요한 경우 입력 파라미터나 바인딩 변수의 의미를 간단히 언급합니다.
         - 'Operation', 'Tables & Conditions', 'SQL Flow JSON', 'Considerations' 각 섹션 사이는 빈 줄과 '---'로 구분합니다.
@@ -290,6 +335,51 @@ DEFAULT_PROMPTS: Dict[str, str] = {
           ]
         }
         ```
+
+        **JSON 스키마 예시 (UPDATE - WHERE 필수!):**
+        ```json
+        {
+          "summary": "USER 테이블에서 특정 사용자의 정보 업데이트",
+          "nodes": [
+            {
+              "id": "input_params",
+              "type": "inputParams",
+              "label": "Input Parameters",
+              "columns": [
+                { "name": "#{userName}", "comment": "변경할 사용자명 (SET)" },
+                { "name": "#{userId}", "comment": "사용자 ID (WHERE 조건)" }
+              ]
+            },
+            {
+              "id": "user_table",
+              "type": "table",
+              "label": "USER",
+              "columns": [{ "name": "USER_ID", "comment": "사용자 ID" }, { "name": "USER_NAME", "comment": "사용자명" }]
+            },
+            {
+              "id": "where_op",
+              "type": "operation",
+              "label": "WHERE",
+              "operationType": "WHERE",
+              "condition": "USER_ID = #{userId}"
+            },
+            {
+              "id": "result",
+              "type": "result",
+              "label": "UPDATE 완료",
+              "columns": [{ "name": "USER_NAME", "comment": "변경된 사용자명" }]
+            }
+          ],
+          "edges": [
+            { "source": "input_params", "target": "where_op", "type": "input_ref" },
+            { "source": "user_table", "target": "where_op", "type": "data_flow" },
+            { "source": "where_op", "target": "result", "type": "data_flow", "label": "UPDATE" }
+          ]
+        }
+        ```
+
+        **⚠️ UPDATE/DELETE 문 주의:** WHERE 조건이 있으면 반드시 WHERE operation 노드를 생성하세요!
+
         ---
         ### **[Considerations]**
         - 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿으로 기술합니다.
