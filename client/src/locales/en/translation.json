@@ -56,6 +56,18 @@
         "allPackages": "All Packages",
         "noClasses": "No classes found matching your search."
     },
+    "methodList": {
+        "title": "Method List",
+        "subtitle": "Search and view methods across all projects",
+        "searchPlaceholder": "Search by method name...",
+        "methodName": "Method Name",
+        "filterProject": "Project",
+        "filterPackage": "Package",
+        "methodsFound": "Methods Found: {{count}}",
+        "noMethods": "No methods found matching your search.",
+        "logicalName": "Method Logical Name",
+        "className": "Class Name"
+    },
     "aiPrompt": {
         "title": "AI Prompt Management",
         "subtitle": "Manage and tune system prompts used for AI analysis.",
@@ -482,6 +494,7 @@
         "complexityTooltipLarge": "Large (Large Service)",
         "complexityTooltipHigh": "High (Refactoring Required)",
         "noSource": "No source code available",
+        "dtoSourcePlaceholder": "// Source code for DTO classes may not be saved as it is auto-generated. Please contact the administrator if needed.",
         "sourceHash": "Source Hash",
         "reanalyze": "Re-analyze"
     },
@@ -520,6 +533,7 @@
         "noParameters": "No parameters",
         "noExceptions": "No exceptions defined",
         "noCalls": "No method call information available",
+        "dtoAnalysisWarning": "As this is a method of a DTO class (auto-generated), analysis might be skipped. Please contact the administrator if analysis data is missing.",
         "callOrder": "Order",
         "targetMethod": "Target Method",
         "targetLogicalName": "Target Logical Name",

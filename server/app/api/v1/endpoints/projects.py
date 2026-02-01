@@ -223,7 +223,7 @@ def get_method_details(project_name: str, class_name: str, method_name: str, pac
     MATCH (c)-[:HAS_METHOD]->(m:Method {name: $method_name})
     OPTIONAL MATCH (m)-[:ANNOTATED_WITH]->(anno:Annotation)
     OPTIONAL MATCH (m)-[:THROWS]->(exc:Exception)
-    RETURN m, collect(distinct anno.name) as anno_names, collect(distinct exc.name) as exceptions
+    RETURN m, c.sub_type as class_sub_type, collect(distinct anno.name) as anno_names, collect(distinct exc.name) as exceptions
     """
 
     
@@ -265,6 +265,7 @@ def get_method_details(project_name: str, class_name: str, method_name: str, pac
         # Use the collected annotation names
         method_data["annotations"] = result_method["anno_names"]
         method_data["exceptions"] = result_method["exceptions"]
+        method_data["class_sub_type"] = result_method["class_sub_type"]
 
         method_data["class_name"] = class_name
         method_data["package_name"] = package

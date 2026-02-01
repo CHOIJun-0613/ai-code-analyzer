@@ -57,6 +57,18 @@
         "allPackages": "전체 패키지",
         "noClasses": "검색 결과가 없습니다."
     },
+    "methodList": {
+        "title": "메서드 목록",
+        "subtitle": "프로젝트 내 모든 메서드를 검색하고 상세 정보를 조회합니다",
+        "searchPlaceholder": "메서드 이름으로 검색...",
+        "methodName": "메서드명",
+        "filterProject": "프로젝트",
+        "filterPackage": "패키지",
+        "methodsFound": "검색된 메서드: {{count}}개",
+        "noMethods": "검색 결과가 없습니다.",
+        "logicalName": "메서드 논리명",
+        "className": "Class 명"
+    },
     "settings": {
         "title": "화면 설정",
         "appearance": "화면 설정",
@@ -478,6 +490,7 @@
         "complexityTooltipLarge": "Large (대형 서비스)",
         "complexityTooltipHigh": "High (리팩토링 필요)",
         "noSource": "소스 코드를 사용할 수 없습니다",
+        "dtoSourcePlaceholder": "// DTO 클래스 코드는 자동 생성되기 때문에 소스코드를 DB에 저장하지 않았을 수도 있습니다. 관리자에게 문의하시기 바랍니다.",
         "sourceHash": "소스 해시",
         "reanalyze": "재분석"
     },
@@ -516,6 +529,7 @@
         "noParameters": "파라미터 없음",
         "noExceptions": "정의된 예외 없음",
         "noCalls": "호출하는 메서드 정보가 없습니다",
+        "dtoAnalysisWarning": "DTO 클래스의 메서드는 자동생성되기 때문에 분석과정을 생략하였을 수도 있습니다. 분석 정보가 조회되지 않는다면 관리자에게 문의하시기 바랍니다.",
         "callOrder": "순서",
         "targetMethod": "대상 메서드",
         "targetLogicalName": "대상 논리명",

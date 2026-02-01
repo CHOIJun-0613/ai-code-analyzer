@@ -9,6 +9,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const ProjectList = lazy(() => import('./pages/ProjectList'));
 const ClassList = lazy(() => import('./pages/ClassList'));
+const MethodList = lazy(() => import('./pages/MethodList'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const SqlList = lazy(() => import('./pages/SqlList'));
 const SqlDetails = lazy(() => import('./pages/SqlDetails'));
@@ -51,6 +52,11 @@ function App() {
                     <Route path="classes" element={
                         <Suspense fallback={<LoadingSpinner />}>
                             <ClassList />
+                        </Suspense>
+                    } />
+                    <Route path="methods" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <MethodList />
                         </Suspense>
                     } />
                     <Route path="sqls" element={

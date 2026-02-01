@@ -19,5 +19,7 @@ from app.api.v1.endpoints import analysis_rules
 api_router.include_router(analysis_rules.router, prefix="/analysis-rules", tags=["analysis-rules"])
 from app.api.v1.endpoints import sqls
 api_router.include_router(sqls.router, tags=["sqls"])
+from app.api.v1.endpoints import methods
+api_router.include_router(methods.router, tags=["methods"])
 api_router.include_router(websocket.router, tags=["websocket"])
 

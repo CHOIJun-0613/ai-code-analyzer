@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Search, X, Database, Code, FileText } from 'lucide-react';
 import VirtualizedTable, { Column } from '../components/VirtualizedTable';
-import toast from 'react-hot-toast';
 
 interface SqlItem {
     id: string;
@@ -32,54 +32,59 @@ const SqlList: React.FC = () => {
     const [debouncedMapper, setDebouncedMapper] = useState(mapperFilter);
     const [debouncedSqlId, setDebouncedSqlId] = useState(sqlIdFilter);
 
-    // Data State
-    const [sqls, setSqls] = useState<SqlItem[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
-
-    // Debounce Project
+    // Apply debounce
     useEffect(() => {
         const timer = setTimeout(() => {
             setDebouncedProject(projectFilter);
             setDebouncedMapper(mapperFilter);
             setDebouncedSqlId(sqlIdFilter);
+
+            // Update URL params
             const params = new URLSearchParams();
             if (projectFilter) params.set('project', projectFilter);
             if (mapperFilter) params.set('mapper', mapperFilter);
             if (sqlIdFilter) params.set('sqlId', sqlIdFilter);
             setSearchParams(params, { replace: true });
         }, 500);
+
         return () => clearTimeout(timer);
     }, [projectFilter, mapperFilter, sqlIdFilter, setSearchParams]);
 
+    // Fetch SQLs (Infinite Query)
+    const {
+        data,
+        isLoading,
+        isError,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
+    } = useInfiniteQuery<SqlItem[]>({
+        queryKey: ['sqls', debouncedProject, debouncedMapper, debouncedSqlId],
+        queryFn: async ({ pageParam = 0 }) => {
+            const response = await axios.get<SqlItem[]>(`/api/v1/sqls`, {
+                params: {
+                    project_name: debouncedProject || undefined,
+                    mapper_name: debouncedMapper || undefined,
+                    sql_id: debouncedSqlId || undefined,
+                    limit: 50,
+                    skip: pageParam
+                }
+            });
+            return response.data;
+        },
+        getNextPageParam: (lastPage, allPages) => {
+            const nextSkip = lastPage.length === 50 ? allPages.length * 50 : undefined;
+            return nextSkip;
+        },
+        initialPageParam: 0
+    });
 
-    // Fetch SQLs when project changes
-    useEffect(() => {
-        const fetchSqls = async () => {
-            setIsLoading(true);
-            try {
-                const response = await axios.get<SqlItem[]>(`/api/v1/sqls`, {
-                    params: {
-                        project_name: debouncedProject || undefined,
-                        mapper_name: mapperFilter || undefined,
-                        sql_id: sqlIdFilter || undefined,
-                        limit: 100
-                    }
-                });
-                setSqls(response.data);
-            } catch (error) {
-                console.error("Failed to fetch SQLs", error);
-                toast.error(t('sqlList.fetchError', "Failed to fetch SQL list"));
-                setSqls([]);
-            } finally {
-                setIsLoading(false);
-            }
-        };
+    const flattenedSqls = useMemo(() => {
+        return data?.pages.flatMap(page => page) || [];
+    }, [data]);
 
-        fetchSqls();
-    }, [debouncedProject, debouncedMapper, debouncedSqlId, t]);
 
-    // Use server side filtering now
-    const filteredSqls = sqls;
 
 
     // Columns Definition
@@ -247,19 +252,29 @@ const SqlList: React.FC = () => {
 
             {/* Content Table */}
             <div className="flex-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-                {isLoading && sqls.length === 0 ? (
+                {isError ? (
+                    <div className="flex flex-col items-center justify-center h-full text-red-500 gap-2">
+                        <span className="font-semibold">Failed to load SQLs</span>
+                        <span className="text-sm text-slate-500">{(error as Error)?.message}</span>
+                    </div>
+                ) : isLoading && !data ? (
                     <div className="flex items-center justify-center h-full">
                         <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                 ) : (
                     <VirtualizedTable
-                        data={filteredSqls}
+                        data={flattenedSqls}
                         columns={columns}
                         height={600}
                         rowHeight={60}
                         headerHeight={45}
                         hoverable
                         emptyMessage={t('sqlList.noSqls', 'No SQL statements found')}
+                        onEndReached={() => {
+                            if (hasNextPage && !isFetchingNextPage) {
+                                fetchNextPage();
+                            }
+                        }}
                         onRowClick={(item) => {
                             // Navigate to SQL Details
                             // Encode both project and sqlId. Also pass mapperName as it might be needed for identification if ID is not unique globally
@@ -269,11 +284,16 @@ const SqlList: React.FC = () => {
                     />
                 )}
 
-                {debouncedProject && !isLoading && (
-                    <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 flex justify-between items-center">
-                        <span>{t('projectDetails.resultsFound', { count: filteredSqls.length }) as string}</span>
-                    </div>
-                )}
+                {/* Footer with count and loading state */}
+                <div className="px-4 py-2 bg-slate-50 dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700 text-xs text-slate-500 dark:text-slate-400 flex justify-between items-center">
+                    <span>{t('projectDetails.resultsFound', { count: flattenedSqls.length }) as string}</span>
+                    {isFetchingNextPage && (
+                        <span className="flex items-center gap-2">
+                            <div className="w-3 h-3 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+                            Loading more...
+                        </span>
+                    )}
+                </div>
             </div>
         </div>
     );

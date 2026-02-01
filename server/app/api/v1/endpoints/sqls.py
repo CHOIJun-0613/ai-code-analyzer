@@ -19,6 +19,7 @@ def search_sqls(
     mapper_name: Optional[str] = None,
     sql_id: Optional[str] = None,
     limit: int = 100,
+    skip: int = 0,
     current_user: Any = Depends(deps.get_current_user)
 ):
     """
@@ -27,39 +28,37 @@ def search_sqls(
     pool = get_db()
     
     where_clauses = []
-    params = {"limit": limit}
+    params = {"limit": limit, "skip": skip}
     
     query = """
     MATCH (s:SqlStatement)
     """
     
-    # We want to join with Mapper optionally to get logical name
-    # But if we filter by mapper_name, we should MATCH it.
-    # Let's keep it simple: MATCH (s) OPTIONAL MATCH (m)
+    # Check if we have filters that apply to SqlStatement (s) only
+    s_filters = []
+    if project_name:
+        s_filters.append("toLower(s.project_name) CONTAINS toLower($project_name)")
+        params["project_name"] = project_name
     
+    # For sql_id, we check s.id and s.logical_name. logical_name is on s.
+    if sql_id:
+         s_filters.append("(toLower(s.id) CONTAINS toLower($sql_id) OR (s.logical_name IS NOT NULL AND toLower(s.logical_name) CONTAINS toLower($sql_id)))")
+         params["sql_id"] = sql_id
+         
+    if s_filters:
+        query += " WHERE " + " AND ".join(s_filters)
+        
     query += """
     OPTIONAL MATCH (m:MyBatisMapper {name: s.mapper_name})
     """
-    # Note: Mapper might rely on project_name to be unique? 
-    # Usually mapper name is unique enough, but let's be careful multiple projects don't double count if they share mapper name but different node?
-    # In our model, we key by project_name too. So `m` match should strict on project if s has it.
     
-    # Actually, simpler:
-    # MATCH (s:SqlStatement)
-    # WHERE ...
-    # OPTIONAL MATCH (m:MyBatisMapper {name: s.mapper_name, project_name: s.project_name})
-    
-    if project_name:
-        where_clauses.append("toLower(s.project_name) CONTAINS toLower($project_name)")
-        params["project_name"] = project_name
-        
+    # Mapper name filter is tricky because it involves 'm' (optional) or 's' (mapper_name property)
+    # If we filter by mapper_name, we want to match:
+    # 1. s.mapper_name contains keyword
+    # 2. OR m.logical_name contains keyword
     if mapper_name:
-        where_clauses.append("(toLower(s.mapper_name) CONTAINS toLower($mapper_name) OR (m IS NOT NULL AND toLower(m.logical_name) CONTAINS toLower($mapper_name)))")
+        query += " WITH s, m WHERE (toLower(s.mapper_name) CONTAINS toLower($mapper_name) OR (m IS NOT NULL AND toLower(m.logical_name) CONTAINS toLower($mapper_name)))"
         params["mapper_name"] = mapper_name
-        
-    if sql_id:
-        where_clauses.append("(toLower(s.id) CONTAINS toLower($sql_id) OR toLower(s.logical_name) CONTAINS toLower($sql_id))")
-        params["sql_id"] = sql_id
 
     if where_clauses:
         query += " WHERE " + " AND ".join(where_clauses)
@@ -67,6 +66,7 @@ def search_sqls(
     query += """
     RETURN s, m.logical_name as mapper_logical_name
     ORDER BY s.project_name, s.mapper_name, s.id
+    SKIP $skip
     LIMIT $limit
     """
     

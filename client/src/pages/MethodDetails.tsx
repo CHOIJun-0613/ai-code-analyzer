@@ -52,6 +52,7 @@ interface MethodData {
     annotations?: string[];
     exceptions?: string[];
     class_name: string;
+    class_sub_type?: string;
     package_name: string;
     calls: MethodCall[];
 }
@@ -267,6 +268,21 @@ const MethodDetails: React.FC = () => {
                     </div>
                 </div>
             </div>
+
+            {/* DTO Warning Alert */}
+            {methodData.class_sub_type === 'dto' && (
+                <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex items-start gap-3">
+                    <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                        <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300 mb-1">
+                            DTO Method
+                        </h4>
+                        <p className="text-sm text-amber-700 dark:text-amber-400">
+                            {t('methodDetails.dtoAnalysisWarning')}
+                        </p>
+                    </div>
+                </div>
+            )}
 
             {/* Metrics Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

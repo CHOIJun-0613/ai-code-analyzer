@@ -609,7 +609,15 @@ const ClassDetails: React.FC = () => {
                                 </div>
                             )}
 
-                            <SourceCodeViewer ref={codeRef} source={classData.source || `// ${t('classDetails.noSource')}`} />
+                            <SourceCodeViewer
+                                ref={codeRef}
+                                source={
+                                    classData.source ||
+                                    (classData.sub_type === 'dto'
+                                        ? t('classDetails.dtoSourcePlaceholder')
+                                        : `// ${t('classDetails.noSource')}`)
+                                }
+                            />
                         </div>
                     )}
 
