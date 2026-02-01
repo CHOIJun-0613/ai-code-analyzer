@@ -67,6 +67,8 @@ class SQLParser:
                 self._analyse_update_sql(result)
             elif sql_type_upper == "DELETE":
                 self._analyse_delete_sql(result)
+            elif sql_type_upper == "MERGE":
+                self._analyse_merge_sql(result)
 
             result.complexity_score = self._calculate_complexity_score(result)
             return result
@@ -191,6 +193,10 @@ class SQLParser:
             if columns_match:
                 columns = [col.strip() for col in columns_match.group(1).split(",")]
                 result.columns = [{"name": col, "table": table_name} for col in columns]
+
+        # VALUES 절의 subquery 추출
+        result.subqueries = self._extract_subqueries(sql)
+
         result.parameters = self._extract_parameters(sql)
 
     def _analyse_update_sql(self, result: SQLAnalysisResult) -> None:
@@ -214,6 +220,54 @@ class SQLParser:
             table_name = table_match.group(1)
             result.tables = [{"name": table_name, "alias": None}]
         result.where_conditions = self._extract_clause(sql, "WHERE")
+        result.parameters = self._extract_parameters(sql)
+
+    def _analyse_merge_sql(self, result: SQLAnalysisResult) -> None:
+        """MERGE 문 분석"""
+        sql = result.cleaned_sql
+
+        # MERGE INTO target_table 추출
+        merge_match = re.search(r"MERGE\s+INTO\s+([\w.]+)(?:\s+(\w+))?", sql, re.IGNORECASE)
+        if merge_match:
+            table_name = merge_match.group(1)
+            alias = merge_match.group(2)
+            result.tables = [{"name": table_name, "alias": alias}]
+
+            # UPDATE SET 절의 컬럼 추출
+            update_match = re.search(r"WHEN\s+MATCHED\s+THEN\s+UPDATE\s+SET\s+(.*?)(?:WHEN|$)", sql, re.IGNORECASE | re.DOTALL)
+            if update_match:
+                set_clause = update_match.group(1).strip()
+                assignments = [assign.strip() for assign in self._split_ignoring_parentheses(set_clause, ",")]
+                columns = []
+                for assign in assignments:
+                    if "=" in assign:
+                        col_part = assign.split("=")[0].strip()
+                        # A.COLUMN 형식에서 COLUMN만 추출
+                        col_name = col_part.split(".")[-1].strip()
+                        if col_name:
+                            columns.append(col_name)
+
+                result.columns = [{"name": col, "table": table_name} for col in columns]
+
+            # INSERT 절의 컬럼 추출 (UPDATE가 없는 경우)
+            if not result.columns:
+                insert_match = re.search(r"WHEN\s+NOT\s+MATCHED\s+THEN\s+INSERT\s*\((.*?)\)", sql, re.IGNORECASE | re.DOTALL)
+                if insert_match:
+                    columns_str = insert_match.group(1)
+                    columns = []
+                    for col in self._split_ignoring_parentheses(columns_str, ","):
+                        col = col.strip()
+                        # A.COLUMN 형식에서 COLUMN만 추출
+                        col_name = col.split(".")[-1].strip()
+                        if col_name:
+                            columns.append(col_name)
+                    result.columns = [{"name": col, "table": table_name} for col in columns]
+
+        # ON 조건 (WHERE 조건처럼 처리)
+        on_match = re.search(r"ON\s*\((.*?)\)", sql, re.IGNORECASE | re.DOTALL)
+        if on_match:
+            result.where_conditions = [on_match.group(1).strip()]
+
         result.parameters = self._extract_parameters(sql)
 
     def _extract_tables(self, sql: str) -> List[Dict[str, Optional[str]]]:

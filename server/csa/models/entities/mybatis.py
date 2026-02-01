@@ -18,7 +18,7 @@ class MyBatisMapper(BaseModel):
 
 class MyBatisSqlStatement(BaseModel):
     """Represents a MyBatis SQL statement."""
-    
+
     id: str  # Method name or statement ID
     logical_name: str = ""
     sql_type: str  # "SELECT", "INSERT", "UPDATE", "DELETE"
@@ -30,6 +30,7 @@ class MyBatisSqlStatement(BaseModel):
     annotations: list[str] = []  # MyBatis annotations
     description: str = ""  # Brief description of the SQL statement
     ai_description: str = ""  # AI-generated description of the SQL statement
+    flow_json: dict = {}  # SQL Flow JSON (정적 분석 또는 AI 생성)
 
 
 class MyBatisResultMap(BaseModel):

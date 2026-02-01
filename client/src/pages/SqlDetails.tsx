@@ -68,15 +68,14 @@ const SqlDetails: React.FC = () => {
     });
 
     const { overviewContent, flowData } = React.useMemo(() => {
-        if (!sqlData?.ai_description) return { overviewContent: '', flowData: sqlData?.flow_json || null };
+        // 1. flow_json 우선 사용 (정적 분석 또는 AI 생성)
+        let flowJson = sqlData?.flow_json || null;
 
-        let content = sqlData.ai_description;
+        // 2. ai_description은 Overview 내용용으로만 사용
+        let content = sqlData?.ai_description || '';
 
-        // 서버에서 정규화된 flow_json 우선 사용
-        let flowJson = sqlData.flow_json || null;
-
-        // flow_json이 없으면 ai_description에서 추출 (fallback)
-        if (!flowJson) {
+        // 3. flow_json이 없으면 ai_description에서 추출 시도 (fallback)
+        if (!flowJson && content) {
             const jsonMatch = content.match(/```json([\s\S]*?)```/);
             if (jsonMatch) {
                 try {
@@ -85,20 +84,22 @@ const SqlDetails: React.FC = () => {
                         flowJson = parsed;
                     }
                 } catch (e) {
-                    console.error("Failed to parse SQL Flow JSON", e);
+                    console.error("Failed to parse SQL Flow JSON from ai_description", e);
                 }
             }
         }
 
-        // Remove the whole [SQL Flow JSON] section from overview content
-        const sectionRegex = /###\s*\*\*\[SQL Flow JSON\]\*\*[\s\S]*?(?=---|$)/i;
-        content = content.replace(sectionRegex, '').trim();
+        // 4. Overview 내용에서 [SQL Flow JSON] 섹션 제거
+        if (content) {
+            const sectionRegex = /###\s*\*\*\[SQL Flow JSON\]\*\*[\s\S]*?(?=---|$)/i;
+            content = content.replace(sectionRegex, '').trim();
+        }
 
         return {
             overviewContent: content,
             flowData: flowJson
         };
-    }, [sqlData?.ai_description, sqlData?.flow_json]);
+    }, [sqlData?.flow_json, sqlData?.ai_description]);
 
     if (isLoading) {
         return (
@@ -306,11 +307,6 @@ const SqlDetails: React.FC = () => {
                                     {t('common.description', 'Description')}
                                 </h3>
                                 <div className="relative mt-4">
-                                    {/* AI Generated Badge */}
-                                    <div className="absolute -top-3 -left-3 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg z-10">
-                                        <Sparkles className="w-3.5 h-3.5" />
-                                        <span>{t('classDetails.aiGenerated', 'AI Generated')}</span>
-                                    </div>
                                     <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto text-slate-700 dark:text-slate-300">
                                         {overviewContent ? (
                                             <Markdown
@@ -372,12 +368,6 @@ const SqlDetails: React.FC = () => {
                                 </button>
                             </div>
                             <div className="relative flex-1 w-full min-h-0 mt-4">
-                                {/* AI Generated Badge */}
-                                <div className="absolute -top-3 -left-3 z-20 flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-indigo-500 text-white text-xs font-bold rounded-full shadow-lg">
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                    <span>{t('classDetails.aiGenerated', 'AI Generated')}</span>
-                                </div>
-
                                 <div className="w-full h-full bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 relative overflow-hidden">
 
                                     {flowData ? (
@@ -385,7 +375,7 @@ const SqlDetails: React.FC = () => {
                                             {viewMode === 'flow' ? (
                                                 <SqlFlowViewer data={flowData} />
                                             ) : (
-                                                <div className="w-full h-full pt-10">
+                                                <div className="w-full h-full">
                                                     <SourceCodeViewer source={JSON.stringify(flowData, null, 2)} language="json" />
                                                 </div>
                                             )}

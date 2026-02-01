@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import ReactFlow, {
     MiniMap,
     Controls,
@@ -12,7 +13,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import dagre from 'dagre';
-import { Maximize2, Minimize2 } from 'lucide-react';
+import { Maximize2, Minimize2, Eye, EyeOff } from 'lucide-react';
 import TableNode from './SqlFlow/TableNode';
 import InputParamsNode from './SqlFlow/InputParamsNode';
 
@@ -78,9 +79,11 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[], direction = 'LR') => 
  * 정규화된 SQL Flow JSON을 ReactFlow 노드/엣지로 변환
  */
 const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
+    const { t } = useTranslation();
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [isFullscreen, setIsFullscreen] = React.useState(false);
+    const [showEdges, setShowEdges] = React.useState(true);
 
     useEffect(() => {
         if (!data || !data.nodes || !data.edges) return;
@@ -194,7 +197,8 @@ const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
                     strokeWidth: 1.5,
                     strokeDasharray: edgeType === 'input_ref' ? '5,5' : undefined
                 },
-                markerEnd: { type: MarkerType.ArrowClosed }
+                markerEnd: { type: MarkerType.ArrowClosed },
+                hidden: !showEdges
             });
         });
 
@@ -207,7 +211,7 @@ const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
 
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
-    }, [data, setNodes, setEdges]);
+    }, [data, showEdges, setNodes, setEdges]);
 
     const toggleFullscreen = () => {
         const element = document.getElementById('sql-flow-container');
@@ -235,6 +239,16 @@ const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
     return (
         <div id="sql-flow-container" className={`relative w-full h-[500px] bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-inner ${isFullscreen ? 'h-screen' : ''}`}>
             <div className="absolute top-4 right-4 z-10 flex gap-2">
+                {/* 흐름도 토글 버튼 */}
+                <button
+                    onClick={() => setShowEdges(prev => !prev)}
+                    className="p-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg shadow border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                    title={showEdges ? t('sqlDetails.hideFlowEdges') : t('sqlDetails.showFlowEdges')}
+                >
+                    {showEdges ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+
+                {/* 전체화면 버튼 */}
                 <button
                     onClick={toggleFullscreen}
                     className="p-2 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-lg shadow border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"

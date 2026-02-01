@@ -17,6 +17,7 @@ from csa.models.graph_entities import (
 )
 from csa.services.graph_db import GraphDB
 from csa.services.sql_parser import SQLParser
+from csa.services.sql_flow import SQLFlowGenerator
 from csa.utils.logger import get_logger
 
 # AI 분석 서비스
@@ -91,6 +92,20 @@ def extract_sql_statements_from_mappers(mybatis_mappers: list[MyBatisMapper], pr
                 sql_statement.tables = sql_analysis_dict.get('tables', [])
                 sql_statement.columns = sql_analysis_dict.get('columns', [])
                 sql_statement.complexity_score = sql_analysis_dict.get('complexity_score', 0)
+
+                # SQL Flow JSON 생성 (정적 분석)
+                try:
+                    flow_json = SQLFlowGenerator.generate_flow_json(
+                        sql_analysis=sql_analysis,
+                        sql_content=sql_content,
+                        sql_id=sql_dict.get('id', '')
+                    )
+                    if flow_json and flow_json.get("nodes"):
+                        sql_statement.flow_json = flow_json
+                except Exception as e:
+                    from csa.utils.logger import get_logger
+                    logger = get_logger(__name__)
+                    logger.debug(f"Failed to generate SQL Flow for {sql_statement.id}: {e}")
 
                 # 디버깅 로그: tables가 비어있는 경우 (DEBUG 레벨에서만 출력)
                 if not sql_statement.tables:

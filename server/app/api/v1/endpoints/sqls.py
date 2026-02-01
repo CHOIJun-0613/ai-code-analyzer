@@ -1,3 +1,4 @@
+import json
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -150,11 +151,28 @@ def get_sql_details(project_name: str, sql_id: str, mapper_name: str = None):
             
         sql_data["called_by"] = called_by
 
-        # SQL Flow JSON 정규화
-        ai_description = sql_data.get("ai_description")
-        if ai_description:
-            flow_json = normalize_and_extract(ai_description)
-            if flow_json:
-                sql_data["flow_json"] = flow_json
+        # SQL Flow JSON 처리
+        # 1. DB에 저장된 flow_json 우선 사용
+        flow_json_str = sql_data.get("flow_json")
+        if flow_json_str and flow_json_str.strip():
+            try:
+                flow_json = json.loads(flow_json_str) if isinstance(flow_json_str, str) else flow_json_str
+                if flow_json and isinstance(flow_json, dict) and flow_json.get("nodes"):
+                    sql_data["flow_json"] = flow_json
+                else:
+                    # 빈 객체이거나 유효하지 않으면 ai_description에서 추출 시도
+                    flow_json = None
+            except (json.JSONDecodeError, TypeError):
+                flow_json = None
+        else:
+            flow_json = None
+
+        # 2. DB에 flow_json이 없으면 ai_description에서 추출 (fallback)
+        if not flow_json:
+            ai_description = sql_data.get("ai_description")
+            if ai_description:
+                flow_json = normalize_and_extract(ai_description)
+                if flow_json:
+                    sql_data["flow_json"] = flow_json
 
         return sql_data

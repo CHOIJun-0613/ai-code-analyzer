@@ -347,7 +347,7 @@ def parse_inner_classes(
                                     if found_opening_brace and brace_count == 0:
                                         end_line = i
                                         break
-                        if found_opening_brace and brace_count == 0:
+                            if found_opening_brace and brace_count == 0:
                                 break
 
                         # 어노테이션 위치 고려하여 시작 라인 조정
@@ -664,15 +664,18 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 
                 modifiers = list(declaration.modifiers)
                 method_annotations = parse_annotations(declaration.annotations, "method") if hasattr(declaration, 'annotations') else []
-                
+
                 method_metadata = ""
+                method_source = ""
                 if declaration.position:
                     lines = file_content.splitlines(keepends=True)
                     original_start_line = declaration.position.line - 1
                     start_line = original_start_line
-                    
+
                     found_opening_brace = False
-                    
+                    brace_count = 0
+                    end_line = start_line
+
                     # 메서드 바디가 있는 경우 (일반 메서드)
                     if declaration.body is not None:
                         for i in range(start_line, len(lines)):

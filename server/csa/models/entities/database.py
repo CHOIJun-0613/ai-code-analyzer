@@ -24,6 +24,7 @@ class SqlStatement(BaseModel):
     tables: list[dict[str, str]] = []  # 테이블 정보
     columns: list[dict[str, str]] = []  # 컬럼 정보
     complexity_score: int = 0  # SQL 복잡도 점수
+    flow_json: dict[str, Any] = {}  # SQL Flow JSON (정적 분석 또는 AI 생성)
 
 
 class Database(BaseModel):

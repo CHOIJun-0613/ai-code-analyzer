@@ -199,7 +199,7 @@ class PersistenceMixin:
             "s.result_map = $result_map, s.annotations = $annotations, "
             "s.project_name = $project_name, s.description = $description, s.ai_description = $ai_description, "
             "s.complexity_score = $complexity_score, s.tables = $tables, s.columns = $columns, "
-            "s.sql_analysis = $sql_analysis, s.updated_at = $updated_at"
+            "s.sql_analysis = $sql_analysis, s.flow_json = $flow_json, s.updated_at = $updated_at"
         )
         tx.run(
             sql_query,
@@ -219,6 +219,7 @@ class PersistenceMixin:
             tables=json.dumps(sql_statement.tables),
             columns=json.dumps(sql_statement.columns),
             sql_analysis=json.dumps(sql_statement.sql_analysis),
+            flow_json=json.dumps(sql_statement.flow_json) if sql_statement.flow_json else "",
             updated_at=current_timestamp,
         )
 
@@ -424,9 +425,9 @@ class PersistenceMixin:
         """배치로 여러 SQL Statement를 한 번의 트랜잭션에 저장"""
         current_timestamp = GraphDBBase._get_current_timestamp()
         sql_query = (
-                "UNWIND $statements AS s "
-                "MERGE (stmt:SqlStatement {id: s.id, mapper_name: s.mapper_name}) "
-                "SET stmt:Analysis, stmt.logical_name = s.logical_name, "
+            "UNWIND $statements AS s "
+            "MERGE (stmt:SqlStatement {id: s.id, mapper_name: s.mapper_name}) "
+            "SET stmt:Analysis, stmt.logical_name = s.logical_name, "
             "stmt.sql_type = s.sql_type, "
             "stmt.sql_content = s.sql_content, "
             "stmt.parameter_type = s.parameter_type, "
@@ -440,6 +441,7 @@ class PersistenceMixin:
             "stmt.tables = s.tables, "
             "stmt.columns = s.columns, "
             "stmt.sql_analysis = s.sql_analysis, "
+            "stmt.flow_json = s.flow_json, "
             "stmt.updated_at = s.updated_at"
         )
         statements_data = [
@@ -460,6 +462,7 @@ class PersistenceMixin:
                 'tables': json.dumps(stmt.tables),
                 'columns': json.dumps(stmt.columns),
                 'sql_analysis': json.dumps(stmt.sql_analysis),
+                'flow_json': json.dumps(stmt.flow_json) if stmt.flow_json else "",
                 'updated_at': current_timestamp,
             }
             for stmt in sql_statements
