@@ -80,8 +80,8 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         **출력 형식:**
         - `### **[Operation]**` 섹션: 수행하는 CRUD 목적과 데이터 흐름을 5문장 이내로 설명해서 불릿 형태로 기술합니다.
             - 예시: 사용자 ID를 기준으로 단일 레코드를 조회하는 SELECT 문입니다.
-            
-        - `### **[Tables & Conditions]**` 섹션: 
+
+        - `### **[Tables & Conditions]**` 섹션:
             - 주요 테이블, 조인 조건, 필터를 테이블(그리드) 형태로 정리합니다.
             - 예시:
             | 테이블 | 조인 조건 | 필터 |
@@ -90,27 +90,72 @@ DEFAULT_PROMPTS: Dict[str, str] = {
             | 테이블B | 조인 조건B | 필터B |
         - `### **[SQL Flow JSON]**` 섹션:
             - SQL의 데이터 흐름(Lineage)을 시각화하기 위한 JSON 데이터를 생성합니다.
-            - **Node**: 테이블, 서브쿼리, 또는 결과셋을 노드로 정의합니다.
-            - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다.
-            - **반드시 아래 JSON 스키마를 준수하여 ```json ... ``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
+            - **반드시 아래 정규화된 스키마를 준수하여 ```json ... ``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
+
+        #### **정규화된 스키마 규칙:**
+
+        **1. 노드 타입 (5가지만 사용)**
+        | Type | 설명 | 사용 시점 |
+        |------|------|----------|
+        | `inputParams` | 입력 파라미터 그룹 | `#{var}` 변수가 있을 때 |
+        | `table` | 데이터베이스 테이블 | FROM/JOIN 대상 테이블 |
+        | `subquery` | 서브쿼리 결과셋 | 인라인 뷰, CTE |
+        | `operation` | SQL 연산 노드 | WHERE, ORDER BY, LIMIT, GROUP BY, JOIN |
+        | `result` | 최종 결과 | SELECT 결과셋 |
+
+        **2. 엣지 규칙 (중요!)**
+        - **엣지는 반드시 노드 ID 간 연결만 허용** (컬럼 레벨 연결 금지!)
+        - 올바른 예: `{ "source": "user_table", "target": "where_op" }`
+        - 잘못된 예: `{ "source": "user_table.id", "target": "result.id" }` ← 금지!
+        - **엣지 타입**: `input_ref` (입력 참조) 또는 `data_flow` (데이터 흐름) 만 사용
+
+        **3. operation 노드 필수 생성 조건**
+        | SQL 절 | operationType | 생성 필수 |
+        |--------|---------------|----------|
+        | WHERE | `WHERE` | 조건이 있으면 필수 |
+        | ORDER BY | `ORDER_BY` | 정렬이 있으면 필수 |
+        | LIMIT/ROWNUM | `LIMIT` | 제한이 있으면 필수 |
+        | GROUP BY | `GROUP_BY` | 그룹화가 있으면 필수 |
+        | INNER/LEFT JOIN | `JOIN` | 조인이 있으면 필수 |
+
         **JSON 스키마 예시:**
         ```json
         {
-          "summary": "1줄 요약",
+          "summary": "USER 테이블에서 특정 조건의 사용자 조회",
           "nodes": [
-            { "id": "table_A", "type": "table", "label": "Table A", "columns": ["id", "name"] },
-            { "id": "table_B", "type": "table", "label": "Table B", "columns": ["id", "ref_id"] },
-            { "id": "result", "type": "target", "label": "Result", "columns": ["name", "ref_id"] }
+            {
+              "id": "input_params",
+              "type": "inputParams",
+              "label": "Input Parameters",
+              "columns": [{ "name": "#{userId}", "comment": "사용자 ID" }]
+            },
+            {
+              "id": "user_table",
+              "type": "table",
+              "label": "USER",
+              "columns": [{ "name": "USER_ID", "comment": "사용자 ID" }]
+            },
+            {
+              "id": "where_op",
+              "type": "operation",
+              "label": "WHERE",
+              "operationType": "WHERE",
+              "condition": "USER_ID = #{userId}"
+            },
+            {
+              "id": "result",
+              "type": "result",
+              "label": "Result",
+              "columns": [{ "name": "userId", "comment": "사용자 ID" }]
+            }
           ],
           "edges": [
-            { "source": "table_A.id", "target": "table_B.id", "type": "join", "condition": "A.id = B.id" },
-            { "source": "table_A.name", "target": "result.name", "type": "select", "condition": "Filtering condition (WHERE)" }
+            { "source": "input_params", "target": "where_op", "type": "input_ref" },
+            { "source": "user_table", "target": "where_op", "type": "data_flow" },
+            { "source": "where_op", "target": "result", "type": "data_flow", "label": "result" }
           ]
         }
         ```
-        - **Edge의 condition 필드**: 
-            - JOIN의 경우 ON 절 조건을 기입합니다.
-            - SELECT/FILTER의 경우 WHERE 절 조건을 기입합니다. (예: `id = #{id}`)
         - `### **[Considerations]**` 섹션: 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿 목록 형태로 기술합니다.
         - 필요한 경우 입력 파라미터나 바인딩 변수의 의미를 간단히 언급합니다.
         - 'Operation', 'Tables & Conditions', 'SQL Flow JSON', 'Considerations' 각 섹션 사이는 빈 줄과 '---'로 구분합니다.
@@ -118,6 +163,7 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         - **JSON 데이터는 반드시 유효한 JSON 포맷이어야 합니다.**
         - **절대로 코드 블록(```sql, ```java 등)을 생성하지 마세요.** (JSON 블록은 제외)
         - **절대로 예시 쿼리나 테스트 코드를 생성하지 마세요.**
+        - **엣지는 반드시 노드 ID 간 연결만 허용합니다. 컬럼 레벨 연결(table.column)은 금지!**
         - 전체 길이는 제한 없으나, 설명은 핵심 위주로 작성합니다.
         - 불필요한 서두나 마무리 문구는 생략합니다.
         - 순수한 텍스트 형식의 Markdown만 출력하세요.
@@ -147,40 +193,107 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         ---
         ### **[Tables & Conditions]**
         - 주요 테이블, 조인 조건, 필터를 테이블(그리드) 형태로 정리합니다.
-        - 예시: 
+        - 예시:
             | 테이블 | 조건 |
             |------|------|
             | users | id = #userId |
         ---
         ### **[SQL Flow JSON]**
         - SQL의 데이터 흐름(Lineage)을 시각화하기 위한 JSON 데이터를 생성합니다.
-        - **Node**: 테이블, 서브쿼리, 또는 결과셋을 노드로 정의합니다.
-        - **Edge**: 데이터가 이동하는 흐름(Select, Join 등)을 정의합니다. **주의: WHERE, GROUP BY, ORDER BY, LIMIT 등의 연산은 해당 연산이 적용되어 생성되는 '결과 노드'를 Target으로 하는 Edge로 표현해야 합니다.** (즉, Source(테이블) -> [연산] -> Target(결과))
-        - **반드시 아래 JSON 스키마를 준수하여 ```json ... ``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
-        **JSON 스키마 예시:**
+        - **반드시 아래 정규화된 스키마를 준수하여 ```json ... ``` 코드 블록으로 작성하세요.** (주석은 포함하지 마세요)
+
+        #### **정규화된 스키마 규칙:**
+
+        **1. 노드 타입 (5가지만 사용)**
+        | Type | 설명 | 사용 시점 |
+        |------|------|----------|
+        | `inputParams` | 입력 파라미터 그룹 | `#{var}` 변수가 있을 때 |
+        | `table` | 데이터베이스 테이블 | FROM/JOIN 대상 테이블 |
+        | `subquery` | 서브쿼리 결과셋 | 인라인 뷰, CTE |
+        | `operation` | SQL 연산 노드 | WHERE, ORDER BY, LIMIT, GROUP BY, JOIN |
+        | `result` | 최종 결과 | SELECT 결과셋 |
+
+        **2. 엣지 규칙 (중요!)**
+        - **엣지는 반드시 노드 ID 간 연결만 허용** (컬럼 레벨 연결 금지!)
+        - 올바른 예: `{ "source": "user_table", "target": "where_op" }`
+        - 잘못된 예: `{ "source": "user_table.id", "target": "result.id" }` ← 금지!
+        - **엣지 타입**: `input_ref` (입력 참조) 또는 `data_flow` (데이터 흐름) 만 사용
+
+        **3. operation 노드 필수 생성 조건**
+        | SQL 절 | operationType | 생성 필수 |
+        |--------|---------------|----------|
+        | WHERE | `WHERE` | 조건이 있으면 필수 |
+        | ORDER BY | `ORDER_BY` | 정렬이 있으면 필수 |
+        | LIMIT/ROWNUM | `LIMIT` | 제한이 있으면 필수 |
+        | GROUP BY | `GROUP_BY` | 그룹화가 있으면 필수 |
+        | INNER/LEFT JOIN | `JOIN` | 조인이 있으면 필수 |
+
+        **JSON 스키마 예시 (단순 SELECT):**
         ```json
         {
-          "summary": "1줄 요약",
+          "summary": "USER 테이블에서 특정 조건의 사용자 조회",
           "nodes": [
-            { "id": "table_A", "type": "table", "label": "Table A", "columns": ["id", "name"] },
-            { "id": "table_B", "type": "table", "label": "Table B", "columns": ["id", "ref_id"] },
-            { "id": "result", "type": "target", "label": "Result", "columns": ["name", "ref_id"] }
+            {
+              "id": "input_params",
+              "type": "inputParams",
+              "label": "Input Parameters",
+              "columns": [{ "name": "#{userId}", "comment": "사용자 ID" }]
+            },
+            {
+              "id": "user_table",
+              "type": "table",
+              "label": "USER",
+              "columns": [{ "name": "USER_ID", "comment": "사용자 ID" }]
+            },
+            {
+              "id": "where_op",
+              "type": "operation",
+              "label": "WHERE",
+              "operationType": "WHERE",
+              "condition": "USER_ID = #{userId}"
+            },
+            {
+              "id": "result",
+              "type": "result",
+              "label": "Result",
+              "columns": [{ "name": "userId", "comment": "사용자 ID" }]
+            }
           ],
           "edges": [
-            { "source": "table_A.id", "target": "table_B.id", "type": "join", "condition": "A.id = B.id" },
-            { "source": "table_A.name", "target": "result.name", "type": "select", "condition": "Filtering condition (WHERE)" }
+            { "source": "input_params", "target": "where_op", "type": "input_ref" },
+            { "source": "user_table", "target": "where_op", "type": "data_flow" },
+            { "source": "where_op", "target": "result", "type": "data_flow", "label": "result" }
           ]
         }
         ```
-        - **Edge의 condition 필드**: 
-            - JOIN의 경우 ON 절 조건을 기입합니다.
-            - SELECT/FILTER의 경우 WHERE 절 조건을 기입합니다.
-            - ORDER BY, GROUP BY, LIMIT 등도 Edge의 type과 condition에 명시합니다. (예: type="order_by", condition="id DESC")
-            - **중요: Filter(Where, Order by 등)는 '소스 테이블'에서 '결과 노드'로 가는 과정에 위치해야 하므로, Edge의 Source는 '이전 단계(테이블)', Target은 '현재 단계(결과)'가 되어야 합니다.**
+
+        **JSON 스키마 예시 (서브쿼리 + ORDER BY + LIMIT):**
+        ```json
+        {
+          "summary": "조건에 맞는 최신 데이터 1건 조회",
+          "nodes": [
+            { "id": "input_params", "type": "inputParams", "label": "Input Parameters", "columns": [...] },
+            { "id": "data_table", "type": "table", "label": "DATA_TABLE", "columns": [...] },
+            { "id": "where_op", "type": "operation", "label": "WHERE", "operationType": "WHERE", "condition": "STATUS = #{status}" },
+            { "id": "order_op", "type": "operation", "label": "ORDER BY", "operationType": "ORDER_BY", "condition": "CREATED_AT DESC" },
+            { "id": "subquery_result", "type": "subquery", "label": "서브쿼리 결과", "columns": [...] },
+            { "id": "limit_op", "type": "operation", "label": "LIMIT", "operationType": "LIMIT", "condition": "ROWNUM <= 1" },
+            { "id": "result", "type": "result", "label": "Result", "columns": [...] }
+          ],
+          "edges": [
+            { "source": "input_params", "target": "where_op", "type": "input_ref" },
+            { "source": "data_table", "target": "where_op", "type": "data_flow" },
+            { "source": "where_op", "target": "order_op", "type": "data_flow" },
+            { "source": "order_op", "target": "subquery_result", "type": "data_flow" },
+            { "source": "subquery_result", "target": "limit_op", "type": "data_flow" },
+            { "source": "limit_op", "target": "result", "type": "data_flow", "label": "result" }
+          ]
+        }
+        ```
         ---
         ### **[Considerations]**
         - 인덱스 활용, 잠금, 트랜잭션, 에러 가능성 등 주의사항을 불릿으로 기술합니다.
-        - 예시: 
+        - 예시:
             - 인덱스: id 컬럼에 인덱스가 필요합니다.
             - 단일 레코드 조회로 성능 영향은 최소화됩니다.
         ---END#1---
@@ -189,6 +302,7 @@ DEFAULT_PROMPTS: Dict[str, str] = {
         - 각 SQL 분석은 반드시 `---SQL#1---` 형식으로 시작하고 `---END#1---` 형식으로 끝나야 합니다.
         - **JSON 데이터는 반드시 유효한 JSON 포맷이어야 합니다.**
         - **절대로 코드 블록(```sql, ```java 등)을 생성하지 마세요.** (JSON 블록은 제외)
+        - **엣지는 반드시 노드 ID 간 연결만 허용합니다. 컬럼 레벨 연결(table.column)은 금지!**
         - 순수한 텍스트 형식의 Markdown만 출력하세요.
         - 모든 SQL에 대해 반드시 분석 결과를 제공해야 합니다.
         """

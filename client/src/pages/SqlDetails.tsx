@@ -31,6 +31,11 @@ interface SqlDetailData {
         package_name: string;
         class_logical_name?: string;
     }[];
+    flow_json?: {  // 서버에서 정규화된 SQL Flow JSON
+        summary: string;
+        nodes: any[];
+        edges: any[];
+    };
 }
 
 import SqlFlowViewer from '../components/SqlFlowViewer';
@@ -63,38 +68,37 @@ const SqlDetails: React.FC = () => {
     });
 
     const { overviewContent, flowData } = React.useMemo(() => {
-        if (!sqlData?.ai_description) return { overviewContent: '', flowData: null };
+        if (!sqlData?.ai_description) return { overviewContent: '', flowData: sqlData?.flow_json || null };
 
         let content = sqlData.ai_description;
-        let flowJson = null;
 
-        // Try to extract JSON block for SQL Flow
-        const jsonMatch = content.match(/```json([\s\S]*?)```/);
-        if (jsonMatch) {
-            try {
-                const parsed = JSON.parse(jsonMatch[1]);
-                // Basic validation: check for nodes and edges
-                if (parsed.nodes && parsed.edges) {
-                    flowJson = parsed;
+        // 서버에서 정규화된 flow_json 우선 사용
+        let flowJson = sqlData.flow_json || null;
+
+        // flow_json이 없으면 ai_description에서 추출 (fallback)
+        if (!flowJson) {
+            const jsonMatch = content.match(/```json([\s\S]*?)```/);
+            if (jsonMatch) {
+                try {
+                    const parsed = JSON.parse(jsonMatch[1]);
+                    if (parsed.nodes && parsed.edges) {
+                        flowJson = parsed;
+                    }
+                } catch (e) {
+                    console.error("Failed to parse SQL Flow JSON", e);
                 }
-
-                // Remove the whole [SQL Flow JSON] section
-                const sectionRegex = /###\s*\*\*\[SQL Flow JSON\]\*\*[\s\S]*?(?=---|$)/i;
-                content = content.replace(sectionRegex, '');
-
-            } catch (e) {
-                console.error("Failed to parse SQL Flow JSON", e);
             }
         }
 
-        // Also clean up any large whitespace left
-        content = content.trim();
+        // Remove the whole [SQL Flow JSON] section from overview content
+        const sectionRegex = /###\s*\*\*\[SQL Flow JSON\]\*\*[\s\S]*?(?=---|$)/i;
+        content = content.replace(sectionRegex, '').trim();
 
         return {
             overviewContent: content,
             flowData: flowJson
         };
-    }, [sqlData?.ai_description]);
+    }, [sqlData?.ai_description, sqlData?.flow_json]);
 
     if (isLoading) {
         return (

@@ -6,6 +6,7 @@ from pydantic import BaseModel
 from app.api import deps
 from app.core.database import get_db
 from csa.utils.logger import get_logger
+from csa.utils.sql_flow_normalizer import normalize_and_extract
 
 logger = get_logger(__name__)
 
@@ -148,5 +149,12 @@ def get_sql_details(project_name: str, sql_id: str, mapper_name: str = None):
             })
             
         sql_data["called_by"] = called_by
-        
+
+        # SQL Flow JSON 정규화
+        ai_description = sql_data.get("ai_description")
+        if ai_description:
+            flow_json = normalize_and_extract(ai_description)
+            if flow_json:
+                sql_data["flow_json"] = flow_json
+
         return sql_data
