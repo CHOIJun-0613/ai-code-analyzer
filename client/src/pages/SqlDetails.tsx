@@ -26,6 +26,7 @@ interface SqlDetailData {
     complexity_score?: number;
     tables?: string; // stringified json
     columns?: string; // stringified json
+    updated_at?: string; // 분석 일시
     called_by?: {
         method_name: string;
         class_name: string;
@@ -168,6 +169,19 @@ const SqlDetails: React.FC = () => {
                         {sqlData.logical_name && (
                             <p className="text-lg text-slate-600 dark:text-slate-300">
                                 {sqlData.logical_name}
+                            </p>
+                        )}
+                        {sqlData.updated_at && (
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                                Generated {new Date(sqlData.updated_at).toLocaleString('en-US', {
+                                    year: 'numeric',
+                                    month: '2-digit',
+                                    day: '2-digit',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    second: '2-digit',
+                                    hour12: false
+                                }).replace(/(\d+)\/(\d+)\/(\d+),/, '$3. $1. $2.')}
                             </p>
                         )}
                     </div>
@@ -322,20 +336,17 @@ const SqlDetails: React.FC = () => {
 
 
                             <div>
-                                <div className="relative">
-                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                        <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
-                                        {t('common.description', 'Description')}
-                                    </h3>
-                                    {overviewContent && (
-                                        <div className="absolute -top-2 -left-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-md shadow-lg flex items-center gap-1.5 text-white text-xs font-bold">
+                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                    <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
+                                    {t('common.description', 'Description')}
+                                </h3>
+                                <div className="relative mt-4">
+                                    <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto text-slate-700 dark:text-slate-300">
+                                        {/* AI 배지 - 항상 표시 */}
+                                        <div className="absolute -top-2 -left-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-md shadow-lg flex items-center gap-1.5 text-white text-xs font-bold z-10">
                                             <Sparkles className="w-3 h-3" />
                                             <span>AI</span>
                                         </div>
-                                    )}
-                                </div>
-                                <div className="relative mt-4">
-                                    <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto text-slate-700 dark:text-slate-300">
                                         {overviewContent ? (
                                             <Markdown
                                                 remarkPlugins={[remarkGfm]}

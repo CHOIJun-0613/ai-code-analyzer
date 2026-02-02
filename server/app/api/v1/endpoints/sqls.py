@@ -113,12 +113,12 @@ def get_sql_details(project_name: str, sql_id: str, mapper_name: str = None):
     MATCH (s:SqlStatement {id: $sql_id})
     WHERE toLower(s.project_name) = toLower($project_name)
     """
-    
+
     if mapper_name:
         query_sql += " AND s.mapper_name = $mapper_name"
-    
+
     query_sql += """
-    RETURN s
+    RETURN s, s.updated_at as updated_at
     """
     
     # 2. Fetch Calling Methods (Reverse Impact)
@@ -212,6 +212,7 @@ def trigger_sql_analysis(
     Returns:
         job_id를 포함한 응답
     """
+    logger.info(f"=== SQL 재분석 API 호출됨 === project={project_name}, sql_id={sql_id}, mapper={mapper_name}")
     pool = get_db()
 
     # 1. SQL 노드 존재 확인 및 데이터 조회
@@ -261,7 +262,8 @@ def trigger_sql_analysis(
             SET s.complexity_score = $complexity_score,
                 s.tables = $tables,
                 s.columns = $columns,
-                s.flow_json = $flow_json
+                s.flow_json = $flow_json,
+                s.updated_at = datetime()
             RETURN s
             """
 
