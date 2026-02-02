@@ -683,7 +683,7 @@
         "subtitle": "AI-based SQL Analysis",
         "aiAnalysis": "AI Analysis",
         "includeAi": "Include AI Analysis",
-        "includeAiDesc": "Generate AI description and SQL Flow visualization",
+        "includeAiDesc": "Generate SQL statement overview through AI analysis",
         "force": "Force Re-analysis",
         "forceDesc": "Overwrite existing AI description even if it exists",
         "sqlInfo": "SQL Information",

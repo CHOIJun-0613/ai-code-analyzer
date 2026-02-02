@@ -681,7 +681,7 @@
         "subtitle": "AI 기반 SQL 분석",
         "aiAnalysis": "AI 분석",
         "includeAi": "AI 분석 포함",
-        "includeAiDesc": "AI 설명 및 SQL Flow 시각화 생성",
+        "includeAiDesc": "AI 분석을 통한 SQL문 개요 생성",
         "force": "기존 설명 덮어쓰기",
         "forceDesc": "기존 AI 설명이 있어도 새로 생성",
         "sqlInfo": "SQL 정보",

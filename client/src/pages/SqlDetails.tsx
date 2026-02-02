@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { ArrowLeft, Code, Activity, Layers, Database, AlertCircle, HelpCircle, Check, GitMerge, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Code, Activity, Layers, Database, AlertCircle, HelpCircle, Check, GitMerge, RefreshCw, Sparkles } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MermaidDiagram from '../components/MermaidDiagram';
@@ -322,10 +322,18 @@ const SqlDetails: React.FC = () => {
 
 
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                    <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
-                                    {t('common.description', 'Description')}
-                                </h3>
+                                <div className="relative">
+                                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <div className="w-1 h-6 bg-indigo-500 rounded-full"></div>
+                                        {t('common.description', 'Description')}
+                                    </h3>
+                                    {overviewContent && (
+                                        <div className="absolute -top-2 -left-2 px-2 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-md shadow-lg flex items-center gap-1.5 text-white text-xs font-bold">
+                                            <Sparkles className="w-3 h-3" />
+                                            <span>AI</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <div className="relative mt-4">
                                     <div className="markdown-content border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50/50 dark:bg-[#1e1e1e] max-h-[600px] overflow-y-auto text-slate-700 dark:text-slate-300">
                                         {overviewContent ? (

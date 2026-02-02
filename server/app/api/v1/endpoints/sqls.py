@@ -10,6 +10,8 @@ from app.models.user import UserInDB
 from app.services.analysis_wrapper import start_ai_analysis
 from csa.utils.logger import get_logger
 from csa.utils.sql_flow_normalizer import normalize_and_extract
+from csa.parsers.sql.parser import SQLParser
+from csa.services.sql_flow.generator import SQLFlowGenerator
 
 logger = get_logger(__name__)
 
@@ -197,7 +199,7 @@ def trigger_sql_analysis(
     current_user: UserInDB = Depends(deps.get_current_user)
 ) -> Dict[str, str]:
     """
-    특정 SQL Statement에 대한 AI 재분석 실행
+    특정 SQL Statement에 대한 코드 정적 분석 및 AI 재분석 실행
 
     Args:
         project_name: 프로젝트 이름
@@ -212,12 +214,12 @@ def trigger_sql_analysis(
     """
     pool = get_db()
 
-    # 1. SQL 노드 존재 확인
+    # 1. SQL 노드 존재 확인 및 데이터 조회
     query = """
     MATCH (s:SqlStatement {id: $sql_id})
     WHERE toLower(s.project_name) = toLower($project_name)
     AND s.mapper_name = $mapper_name
-    RETURN s
+    RETURN s.sql_content as sql_content, s.sql_type as sql_type
     """
 
     with pool.session() as session:
@@ -229,28 +231,82 @@ def trigger_sql_analysis(
                 detail=f"SQL {sql_id} not found in project {project_name} and mapper {mapper_name}"
             )
 
-    # 2. AI enrichment 작업 시작
-    if not request.include_ai:
-        raise HTTPException(
-            status_code=400,
-            detail="AI analysis must be enabled for SQL re-analysis"
+        sql_content = result[0].get("sql_content", "")
+        sql_type = result[0].get("sql_type", "SELECT")
+
+        # 2. 코드 정적 분석 실행 (SQLParser)
+        logger.info(f"SQL 정적 분석 시작: sql_id={sql_id}")
+
+        try:
+            sql_parser = SQLParser()
+            sql_analysis = sql_parser.parse_sql_statement(sql_content, sql_type)
+
+            # 3. SQL Flow JSON 생성
+            flow_json = SQLFlowGenerator.generate_flow_json(
+                sql_analysis=sql_analysis,
+                sql_content=sql_content,
+                sql_id=sql_id
+            )
+
+            # 4. 테이블/컬럼 정보를 JSON 문자열로 변환
+            tables_json = json.dumps(sql_analysis.tables) if sql_analysis.tables else "[]"
+            columns_json = json.dumps(sql_analysis.columns) if sql_analysis.columns else "[]"
+            flow_json_str = json.dumps(flow_json) if flow_json else "{}"
+
+            # 5. Neo4j에 정적 분석 결과 업데이트
+            update_query = """
+            MATCH (s:SqlStatement {id: $sql_id})
+            WHERE toLower(s.project_name) = toLower($project_name)
+            AND s.mapper_name = $mapper_name
+            SET s.complexity_score = $complexity_score,
+                s.tables = $tables,
+                s.columns = $columns,
+                s.flow_json = $flow_json
+            RETURN s
+            """
+
+            session.run(
+                update_query,
+                sql_id=sql_id,
+                project_name=project_name,
+                mapper_name=mapper_name,
+                complexity_score=sql_analysis.complexity_score,
+                tables=tables_json,
+                columns=columns_json,
+                flow_json=flow_json_str
+            )
+
+            logger.info(
+                f"SQL 정적 분석 완료: sql_id={sql_id}, "
+                f"complexity={sql_analysis.complexity_score}, "
+                f"tables={len(sql_analysis.tables)}, "
+                f"columns={len(sql_analysis.columns)}"
+            )
+
+        except Exception as e:
+            logger.error(f"SQL 정적 분석 실패: sql_id={sql_id}, error={e}")
+            # 정적 분석 실패 시에도 계속 진행 (AI 분석은 실행)
+
+    # 6. AI enrichment 작업 시작 (선택사항)
+    if request.include_ai:
+        # AI 설정 준비
+        ai_config = request.ai_options or {}
+
+        # AI 분석 작업 시작 (단일 SQL만 처리)
+        job_id = start_ai_analysis(
+            project_name=project_name,
+            node_type="sql",
+            limit=1,
+            clean=request.force,  # force=True이면 기존 ai_description 덮어쓰기
+            ai_config=ai_config,
+            user_id=current_user.username,
+            target_sql_id=sql_id,
+            target_mapper_name=mapper_name
         )
 
-    # AI 설정 준비
-    ai_config = request.ai_options or {}
-
-    # 3. AI 분석 작업 시작 (단일 SQL만 처리)
-    job_id = start_ai_analysis(
-        project_name=project_name,
-        node_type="sql",
-        limit=1,
-        clean=request.force,  # force=True이면 기존 ai_description 덮어쓰기
-        ai_config=ai_config,
-        user_id=current_user.username,
-        target_sql_id=sql_id,
-        target_mapper_name=mapper_name
-    )
-
-    logger.info(f"SQL 재분석 작업 시작: job_id={job_id}, sql_id={sql_id}, mapper={mapper_name}")
-
-    return {"job_id": job_id}
+        logger.info(f"SQL AI 분석 작업 시작: job_id={job_id}, sql_id={sql_id}, mapper={mapper_name}")
+        return {"job_id": job_id}
+    else:
+        # AI 분석 없이 정적 분석만 수행한 경우
+        logger.info(f"SQL 재분석 완료 (정적 분석만): sql_id={sql_id}")
+        return {"job_id": "static_analysis_only", "status": "completed"}

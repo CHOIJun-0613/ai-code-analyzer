@@ -137,7 +137,18 @@ export const SqlAnalysisModal: React.FC<SqlAnalysisModalProps> = ({
             );
 
             if (res.data && res.data.job_id) {
-                setJobId(res.data.job_id);
+                const jobIdResult = res.data.job_id;
+
+                // 정적 분석만 수행한 경우 (AI 분석 없음)
+                if (jobIdResult === 'static_analysis_only') {
+                    setAnalysisStatus('success');
+                    setStep('completed');
+                    toast.success(t('sqlAnalysis.completed', 'SQL analysis completed successfully'));
+                    if (onAnalysisComplete) onAnalysisComplete();
+                } else {
+                    // AI 분석이 포함된 경우 WebSocket으로 진행상황 추적
+                    setJobId(jobIdResult);
+                }
             }
         } catch (error) {
             console.error("Failed to start SQL analysis", error);
