@@ -1,17 +1,26 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 
 from app.api import deps
 from app.core.database import get_db
+from app.models.user import UserInDB
+from app.services.analysis_wrapper import start_ai_analysis
 from csa.utils.logger import get_logger
 from csa.utils.sql_flow_normalizer import normalize_and_extract
 
 logger = get_logger(__name__)
 
 router = APIRouter()
+
+
+class SqlAnalysisRequest(BaseModel):
+    """SQL 재분석 요청 모델"""
+    include_ai: bool = True
+    force: bool = True  # 기존 ai_description 덮어쓰기
+    ai_options: Optional[Dict[str, Any]] = None
 
 
 @router.get("/sqls")
@@ -176,3 +185,72 @@ def get_sql_details(project_name: str, sql_id: str, mapper_name: str = None):
                     sql_data["flow_json"] = flow_json
 
         return sql_data
+
+
+@router.post("/projects/{project_name}/sqls/{sql_id}/analyze")
+def trigger_sql_analysis(
+    project_name: str,
+    sql_id: str,
+    mapper_name: str,
+    request: SqlAnalysisRequest,
+    background_tasks: BackgroundTasks,
+    current_user: UserInDB = Depends(deps.get_current_user)
+) -> Dict[str, str]:
+    """
+    특정 SQL Statement에 대한 AI 재분석 실행
+
+    Args:
+        project_name: 프로젝트 이름
+        sql_id: SQL Statement ID
+        mapper_name: MyBatis Mapper 이름 (query parameter)
+        request: 분석 요청 파라미터
+        background_tasks: FastAPI 백그라운드 작업
+        current_user: 현재 사용자
+
+    Returns:
+        job_id를 포함한 응답
+    """
+    pool = get_db()
+
+    # 1. SQL 노드 존재 확인
+    query = """
+    MATCH (s:SqlStatement {id: $sql_id})
+    WHERE toLower(s.project_name) = toLower($project_name)
+    AND s.mapper_name = $mapper_name
+    RETURN s
+    """
+
+    with pool.session() as session:
+        result = session.run(query, sql_id=sql_id, project_name=project_name, mapper_name=mapper_name).data()
+
+        if not result:
+            raise HTTPException(
+                status_code=404,
+                detail=f"SQL {sql_id} not found in project {project_name} and mapper {mapper_name}"
+            )
+
+    # 2. AI enrichment 작업 시작
+    if not request.include_ai:
+        raise HTTPException(
+            status_code=400,
+            detail="AI analysis must be enabled for SQL re-analysis"
+        )
+
+    # AI 설정 준비
+    ai_config = request.ai_options or {}
+
+    # 3. AI 분석 작업 시작 (단일 SQL만 처리)
+    job_id = start_ai_analysis(
+        project_name=project_name,
+        node_type="sql",
+        limit=1,
+        clean=request.force,  # force=True이면 기존 ai_description 덮어쓰기
+        ai_config=ai_config,
+        user_id=current_user.username,
+        target_sql_id=sql_id,
+        target_mapper_name=mapper_name
+    )
+
+    logger.info(f"SQL 재분석 작업 시작: job_id={job_id}, sql_id={sql_id}, mapper={mapper_name}")
+
+    return {"job_id": job_id}

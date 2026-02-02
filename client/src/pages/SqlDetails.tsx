@@ -1,13 +1,14 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { ArrowLeft, Code, Activity, Layers, Database, AlertCircle, Sparkles, HelpCircle, Check, GitMerge } from 'lucide-react';
+import { ArrowLeft, Code, Activity, Layers, Database, AlertCircle, HelpCircle, Check, GitMerge, RefreshCw } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MermaidDiagram from '../components/MermaidDiagram';
 import SourceCodeViewer from '../components/SourceCodeViewer';
+import { SqlAnalysisModal } from '../components/SqlAnalysisModal';
 
 // ... (inside component)
 
@@ -45,12 +46,14 @@ import SqlFlowViewer from '../components/SqlFlowViewer';
 const SqlDetails: React.FC = () => {
     const { t } = useTranslation();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
     const { projectName, sqlId } = useParams<{ projectName: string, sqlId: string }>();
     const [searchParams] = useSearchParams();
     const mapperName = searchParams.get('mapper');
     const [activeTab, setActiveTab] = React.useState<'analysis' | 'flow' | 'sql' | 'calledBy'>('analysis');
     const [showComplexityHelp, setShowComplexityHelp] = React.useState(false);
     const [viewMode, setViewMode] = React.useState<'flow' | 'json'>('flow');
+    const [isAnalysisModalOpen, setIsAnalysisModalOpen] = React.useState(false);
 
     const { data: sqlData, isLoading, error } = useQuery<SqlDetailData>({
         // ... (existing useQuery options)
@@ -66,6 +69,13 @@ const SqlDetails: React.FC = () => {
         },
         enabled: !!(projectName && sqlId)
     });
+
+    const handleAnalysisComplete = React.useCallback(() => {
+        // Invalidate query to refresh SQL data
+        queryClient.invalidateQueries({
+            queryKey: ['sqls', projectName, sqlId, mapperName]
+        });
+    }, [queryClient, projectName, sqlId, mapperName]);
 
     const { overviewContent, flowData } = React.useMemo(() => {
         // 1. flow_json 우선 사용 (정적 분석 또는 AI 생성)
@@ -132,34 +142,44 @@ const SqlDetails: React.FC = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
             {/* Header */}
-            <div className="flex items-center gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
-                <button
-                    onClick={() => navigate(-1)}
-                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500 dark:text-slate-400"
-                    title={t('common.back', 'Back')}
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                </button>
-                <div>
-                    <div className="flex items-center gap-3 mb-1">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold ring-1 ring-inset uppercase ${sqlData.sql_type?.toUpperCase() === 'SELECT' ? 'bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30' :
-                            sqlData.sql_type?.toUpperCase() === 'INSERT' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:ring-green-400/30' :
-                                sqlData.sql_type?.toUpperCase() === 'UPDATE' ? 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/30' :
-                                    sqlData.sql_type?.toUpperCase() === 'DELETE' ? 'bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-400/10 dark:text-red-400 dark:ring-red-400/30' :
-                                        'bg-slate-50 text-slate-600 ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20'
-                            }`}>
-                            {sqlData.sql_type}
-                        </span>
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-mono">
-                            {sqlData.id}
-                        </h1>
+            <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
+                <div className="flex items-center gap-4">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500 dark:text-slate-400"
+                        title={t('common.back', 'Back')}
+                    >
+                        <ArrowLeft className="w-5 h-5" />
+                    </button>
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold ring-1 ring-inset uppercase ${sqlData.sql_type?.toUpperCase() === 'SELECT' ? 'bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30' :
+                                sqlData.sql_type?.toUpperCase() === 'INSERT' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:ring-green-400/30' :
+                                    sqlData.sql_type?.toUpperCase() === 'UPDATE' ? 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/30' :
+                                        sqlData.sql_type?.toUpperCase() === 'DELETE' ? 'bg-red-50 text-red-700 ring-red-600/10 dark:bg-red-400/10 dark:text-red-400 dark:ring-red-400/30' :
+                                            'bg-slate-50 text-slate-600 ring-slate-500/10 dark:bg-slate-400/10 dark:text-slate-400 dark:ring-slate-400/20'
+                                }`}>
+                                {sqlData.sql_type}
+                            </span>
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-mono">
+                                {sqlData.id}
+                            </h1>
+                        </div>
+                        {sqlData.logical_name && (
+                            <p className="text-lg text-slate-600 dark:text-slate-300">
+                                {sqlData.logical_name}
+                            </p>
+                        )}
                     </div>
-                    {sqlData.logical_name && (
-                        <p className="text-lg text-slate-600 dark:text-slate-300">
-                            {sqlData.logical_name}
-                        </p>
-                    )}
                 </div>
+                <button
+                    onClick={() => setIsAnalysisModalOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm"
+                    title={t('sqlDetails.reanalyzeDesc', 'Re-run AI analysis for this SQL statement')}
+                >
+                    <RefreshCw className="w-4 h-4" />
+                    {t('sqlDetails.reanalyze', 'Re-analyze')}
+                </button>
             </div>
 
             {/* Top Section: Analysis & Metadata Grid */}
@@ -554,6 +574,20 @@ const SqlDetails: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* SQL Analysis Modal */}
+            <SqlAnalysisModal
+                isOpen={isAnalysisModalOpen}
+                onClose={() => setIsAnalysisModalOpen(false)}
+                projectName={projectName || ''}
+                sqlData={{
+                    id: sqlData.id,
+                    mapper_name: sqlData.mapper_name,
+                    sql_type: sqlData.sql_type,
+                    sql_content: sqlData.sql_content
+                }}
+                onAnalysisComplete={handleAnalysisComplete}
+            />
         </div>
     );
 };

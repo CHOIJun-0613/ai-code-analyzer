@@ -672,7 +672,31 @@
             }
         },
         "hideFlowEdges": "흐름도 감추기",
-        "showFlowEdges": "흐름도 보이기"
+        "showFlowEdges": "흐름도 보이기",
+        "reanalyze": "재분석",
+        "reanalyzeDesc": "SQL 문에 대한 AI 분석 재실행"
+    },
+    "sqlAnalysis": {
+        "title": "SQL 재분석",
+        "subtitle": "AI 기반 SQL 분석",
+        "aiAnalysis": "AI 분석",
+        "includeAi": "AI 분석 포함",
+        "includeAiDesc": "AI 설명 및 SQL Flow 시각화 생성",
+        "force": "기존 설명 덮어쓰기",
+        "forceDesc": "기존 AI 설명이 있어도 새로 생성",
+        "sqlInfo": "SQL 정보",
+        "initializing": "SQL 분석 초기화 중...",
+        "processing": "처리 중...",
+        "completed": "분석 완료",
+        "failed": "분석 실패",
+        "cancelled": "분석 취소됨",
+        "start": "분석 시작",
+        "stop": "중지",
+        "close": "닫기",
+        "cancel": "취소",
+        "startFailed": "SQL 분석 시작 실패",
+        "stopSuccess": "분석이 중지되었습니다",
+        "stopFailed": "분석 중지 실패"
     }
 }
 

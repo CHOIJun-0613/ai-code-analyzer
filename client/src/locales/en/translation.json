@@ -674,7 +674,31 @@
             }
         },
         "hideFlowEdges": "Hide Flow",
-        "showFlowEdges": "Show Flow"
+        "showFlowEdges": "Show Flow",
+        "reanalyze": "Re-analyze",
+        "reanalyzeDesc": "Re-run AI analysis for this SQL statement"
+    },
+    "sqlAnalysis": {
+        "title": "SQL Re-analysis",
+        "subtitle": "AI-based SQL Analysis",
+        "aiAnalysis": "AI Analysis",
+        "includeAi": "Include AI Analysis",
+        "includeAiDesc": "Generate AI description and SQL Flow visualization",
+        "force": "Force Re-analysis",
+        "forceDesc": "Overwrite existing AI description even if it exists",
+        "sqlInfo": "SQL Information",
+        "initializing": "Initializing SQL analysis...",
+        "processing": "Processing...",
+        "completed": "Analysis completed",
+        "failed": "Analysis failed",
+        "cancelled": "Analysis cancelled",
+        "start": "Start Analysis",
+        "stop": "Stop",
+        "close": "Close",
+        "cancel": "Cancel",
+        "startFailed": "Failed to start SQL analysis",
+        "stopSuccess": "Analysis stopped",
+        "stopFailed": "Failed to stop analysis"
     }
 }
 

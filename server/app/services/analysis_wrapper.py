@@ -180,3 +180,107 @@ def cancel_job_status(job_id: str):
         if "logs" not in jobs[job_id]:
             jobs[job_id]["logs"] = []
         jobs[job_id]["logs"].append("Cancellation requested by user...")
+
+
+def start_ai_analysis(
+    project_name: str,
+    node_type: str = "all",
+    limit: Optional[int] = None,
+    clean: bool = False,
+    ai_config: Optional[Dict] = None,
+    user_id: Optional[str] = None,
+    target_class_name: Optional[str] = None,
+    target_method_name: Optional[str] = None,
+    target_mapper_name: Optional[str] = None,
+    target_sql_id: Optional[str] = None,
+    concurrent_requests: Optional[int] = None,
+) -> str:
+    """
+    AI 재분석 작업 시작
+
+    Args:
+        project_name: 프로젝트 이름
+        node_type: 노드 타입 (class, method, sql, all)
+        limit: 최대 처리 노드 수
+        clean: 기존 ai_description 덮어쓰기
+        ai_config: AI 설정 (provider, model_name, api_key, api_endpoint)
+        user_id: 사용자 ID
+        target_class_name: 특정 클래스만 분석 (선택)
+        target_method_name: 특정 메서드만 분석 (선택)
+        target_mapper_name: 특정 Mapper만 분석 (선택)
+        target_sql_id: 특정 SQL만 분석 (선택)
+        concurrent_requests: 동시 요청 수
+
+    Returns:
+        job_id: 작업 ID
+    """
+    import json
+    from app.api.v1.endpoints.ai_analysis import AIEnrichRequest, run_enrichment_task
+    from app.services.user_service import UserService
+    from app.core.config import settings
+
+    # Generate Job ID
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%Y%m%d-%H%M%S")
+    millis = f"{int(now.microsecond / 1000):03d}"
+
+    if not user_id:
+        user_id = get_client_id() or "unknown"
+
+    rand = f"{random.randint(0, 99999):05d}"
+    job_id = f"{timestamp}-{millis}-{user_id}-{rand}"
+
+    # AI Enrichment용 jobs dict 가져오기 (ai_analysis.py에서)
+    from app.api.v1.endpoints.ai_analysis import jobs as ai_jobs
+
+    # 사용자 AI 설정 로드
+    try:
+        user_ai_prefs_str = UserService.get_user_ai_preferences(user_id)
+        user_ai_prefs = json.loads(user_ai_prefs_str)
+    except:
+        user_ai_prefs = {}
+
+    # AI 설정 준비
+    ai_config_override = None
+    if ai_config:
+        from app.api.v1.endpoints.ai_analysis import AIConfigOverride
+        ai_config_override = AIConfigOverride(**ai_config)
+
+    # Request 객체 생성
+    request = AIEnrichRequest(
+        project_name=project_name,
+        node_type=node_type,
+        limit=limit,
+        clean=clean,
+        class_name=target_class_name,
+        concurrent_requests=concurrent_requests,
+        ai_config=ai_config_override,
+        log_level="INFO"
+    )
+
+    # Neo4j 설정
+    neo4j_config = {
+        "uri": settings.NEO4J_URI,
+        "user": settings.NEO4J_USER,
+        "password": settings.NEO4J_PASSWORD,
+        "database": settings.NEO4J_DATABASE or "neo4j",
+    }
+
+    # Job 등록
+    ai_jobs[job_id] = {
+        "id": job_id,
+        "user_id": user_id,
+        "status": "pending",
+        "params": request.dict(),
+        "logs": [],
+        "created_at": now.isoformat()
+    }
+
+    # 백그라운드 스레드 시작
+    thread = threading.Thread(
+        target=run_enrichment_task,
+        args=(job_id, request, user_ai_prefs, neo4j_config, user_id)
+    )
+    thread.start()
+
+    return job_id
