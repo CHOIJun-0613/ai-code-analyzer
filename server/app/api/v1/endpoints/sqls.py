@@ -13,6 +13,13 @@ from csa.utils.sql_flow_normalizer import normalize_and_extract
 from csa.parsers.sql.parser import SQLParser
 from csa.services.sql_flow.generator import SQLFlowGenerator
 
+# AI jobs dict import (정적 분석 로그 추가용)
+import sys
+if 'app.api.v1.endpoints.ai_analysis' in sys.modules:
+    from app.api.v1.endpoints.ai_analysis import jobs as ai_jobs
+else:
+    ai_jobs = None
+
 logger = get_logger(__name__)
 
 router = APIRouter()
@@ -238,9 +245,14 @@ def trigger_sql_analysis(
         # 2. 코드 정적 분석 실행 (SQLParser)
         logger.info(f"SQL 정적 분석 시작: sql_id={sql_id}")
 
+        # 정적 분석 로그를 수집할 리스트
+        static_analysis_logs = []
+        static_analysis_logs.append(f"[정적 분석] SQL 코드 정적 분석 시작: {sql_id}")
+
         try:
             sql_parser = SQLParser()
             sql_analysis = sql_parser.parse_sql_statement(sql_content, sql_type)
+            static_analysis_logs.append(f"[정적 분석] SQL 파싱 완료 (타입: {sql_type})")
 
             # 3. SQL Flow JSON 생성
             flow_json = SQLFlowGenerator.generate_flow_json(
@@ -248,6 +260,7 @@ def trigger_sql_analysis(
                 sql_content=sql_content,
                 sql_id=sql_id
             )
+            static_analysis_logs.append(f"[정적 분석] SQL Flow JSON 생성 완료")
 
             # 4. 테이블/컬럼 정보를 JSON 문자열로 변환
             tables_json = json.dumps(sql_analysis.tables) if sql_analysis.tables else "[]"
@@ -278,6 +291,12 @@ def trigger_sql_analysis(
                 flow_json=flow_json_str
             )
 
+            static_analysis_logs.append(
+                f"[정적 분석] 완료 - 복잡도: {sql_analysis.complexity_score}, "
+                f"테이블: {len(sql_analysis.tables)}개, "
+                f"컬럼: {len(sql_analysis.columns)}개"
+            )
+
             logger.info(
                 f"SQL 정적 분석 완료: sql_id={sql_id}, "
                 f"complexity={sql_analysis.complexity_score}, "
@@ -287,6 +306,7 @@ def trigger_sql_analysis(
 
         except Exception as e:
             logger.error(f"SQL 정적 분석 실패: sql_id={sql_id}, error={e}")
+            static_analysis_logs.append(f"[정적 분석] 실패: {str(e)}")
             # 정적 분석 실패 시에도 계속 진행 (AI 분석은 실행)
 
     # 6. AI enrichment 작업 시작 (선택사항)
@@ -306,9 +326,22 @@ def trigger_sql_analysis(
             target_mapper_name=mapper_name
         )
 
+        # 정적 분석 로그를 AI job의 초기 로그로 추가
+        try:
+            from app.api.v1.endpoints.ai_analysis import jobs as ai_jobs
+            if job_id in ai_jobs and "logs" in ai_jobs[job_id]:
+                # 정적 분석 로그를 맨 앞에 추가
+                ai_jobs[job_id]["logs"] = static_analysis_logs + ai_jobs[job_id]["logs"]
+        except Exception as e:
+            logger.warning(f"정적 분석 로그 추가 실패: {e}")
+
         logger.info(f"SQL AI 분석 작업 시작: job_id={job_id}, sql_id={sql_id}, mapper={mapper_name}")
         return {"job_id": job_id}
     else:
         # AI 분석 없이 정적 분석만 수행한 경우
         logger.info(f"SQL 재분석 완료 (정적 분석만): sql_id={sql_id}")
-        return {"job_id": "static_analysis_only", "status": "completed"}
+        return {
+            "job_id": "static_analysis_only",
+            "status": "completed",
+            "logs": static_analysis_logs
+        }

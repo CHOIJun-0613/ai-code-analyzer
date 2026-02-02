@@ -141,6 +141,10 @@ export const SqlAnalysisModal: React.FC<SqlAnalysisModalProps> = ({
 
                 // 정적 분석만 수행한 경우 (AI 분석 없음)
                 if (jobIdResult === 'static_analysis_only') {
+                    // 정적 분석 로그 표시
+                    if (res.data.logs && Array.isArray(res.data.logs)) {
+                        setLogs(res.data.logs);
+                    }
                     setAnalysisStatus('success');
                     setStep('completed');
                     toast.success(t('sqlAnalysis.completed', 'SQL analysis completed successfully'));
