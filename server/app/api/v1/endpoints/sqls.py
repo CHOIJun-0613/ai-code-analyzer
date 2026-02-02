@@ -267,6 +267,10 @@ def trigger_sql_analysis(
             columns_json = json.dumps(sql_analysis.columns) if sql_analysis.columns else "[]"
             flow_json_str = json.dumps(flow_json) if flow_json else "{}"
 
+            # 현재 시간 (기존 포맷과 동일하게)
+            from datetime import datetime
+            updated_at = datetime.now().strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
+
             # 5. Neo4j에 정적 분석 결과 업데이트
             update_query = """
             MATCH (s:SqlStatement {id: $sql_id})
@@ -276,7 +280,7 @@ def trigger_sql_analysis(
                 s.tables = $tables,
                 s.columns = $columns,
                 s.flow_json = $flow_json,
-                s.updated_at = datetime()
+                s.updated_at = $updated_at
             RETURN s
             """
 
@@ -288,7 +292,8 @@ def trigger_sql_analysis(
                 complexity_score=sql_analysis.complexity_score,
                 tables=tables_json,
                 columns=columns_json,
-                flow_json=flow_json_str
+                flow_json=flow_json_str,
+                updated_at=updated_at
             )
 
             static_analysis_logs.append(

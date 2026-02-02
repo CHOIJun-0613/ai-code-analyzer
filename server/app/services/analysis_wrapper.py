@@ -253,6 +253,8 @@ def start_ai_analysis(
         limit=limit,
         clean=clean,
         class_name=target_class_name,
+        sql_id=target_sql_id,
+        mapper_name=target_mapper_name,
         concurrent_requests=concurrent_requests,
         ai_config=ai_config_override,
         log_level="INFO"

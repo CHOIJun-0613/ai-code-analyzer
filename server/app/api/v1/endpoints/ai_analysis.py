@@ -33,6 +33,8 @@ class AIEnrichRequest(BaseModel):
     limit: Optional[int] = None
     clean: bool = False
     class_name: Optional[str] = None
+    sql_id: Optional[str] = None  # 특정 SQL만 분석
+    mapper_name: Optional[str] = None  # 특정 Mapper의 SQL만 분석
     concurrent_requests: Optional[int] = None
     batch_size: Optional[int] = None
     use_llm_merge: bool = False
@@ -206,8 +208,8 @@ def run_enrichment_task(
             use_llm_merge=request.use_llm_merge,
             target_class_name=target_class_name,
             target_method_name=None,
-            target_mapper_name=None,
-            target_sql_id=None,
+            target_mapper_name=request.mapper_name,
+            target_sql_id=request.sql_id,
             force=force_mode,
             stop_check_callback=check_stop
         )
