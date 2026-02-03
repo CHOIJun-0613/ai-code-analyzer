@@ -5,7 +5,8 @@ SQL 파서 결과를 기반으로 정적 분석을 통해 SQL Flow JSON을 생�
 """
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+import re
+from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import asdict
 
 from csa.parsers.sql.parser import SQLAnalysisResult
@@ -44,18 +45,21 @@ class SQLFlowGenerator:
             # 노드 ID 카운터
             operation_counter = {"count": 0}
 
+            # 원본 SQL에서 코멘트 추출
+            comment_map = SQLFlowGenerator._extract_comments_from_sql(sql_content)
+
             # 1. 입력 파라미터 노드 생성
             input_node_id = None
             if sql_analysis.parameters:
                 input_node_id = "input_params"
-                input_node = SQLFlowGenerator._create_input_params_node(sql_analysis.parameters)
+                input_node = SQLFlowGenerator._create_input_params_node(sql_analysis.parameters, comment_map)
                 nodes.append(input_node)
 
             # 2. 테이블 노드 생성
             table_node_ids = []
             for table_info in sql_analysis.tables:
                 table_id = SQLFlowGenerator._create_table_id(table_info)
-                table_node = SQLFlowGenerator._create_table_node(table_info, sql_analysis.columns)
+                table_node = SQLFlowGenerator._create_table_node(table_info, sql_analysis.columns, comment_map)
                 nodes.append(table_node)
                 table_node_ids.append(table_id)
 
@@ -134,11 +138,18 @@ class SQLFlowGenerator:
 
                 # 결과 노드들
                 update_result_id = "result_update"
+                update_result_columns = []
+                for col in sql_analysis.columns:
+                    col_name = col.get("name", "")
+                    if col_name:
+                        col_comment = comment_map.get(col_name, "")
+                        update_result_columns.append({"name": col_name, "comment": col_comment})
+
                 update_result_node = {
                     "id": update_result_id,
                     "type": "result",
                     "label": "UPDATE 완료",
-                    "columns": sql_analysis.columns
+                    "columns": update_result_columns
                 }
                 nodes.append(update_result_node)
 
@@ -149,11 +160,18 @@ class SQLFlowGenerator:
                 })
 
                 insert_result_id = "result_insert"
+                insert_result_columns = []
+                for col in sql_analysis.columns:
+                    col_name = col.get("name", "")
+                    if col_name:
+                        col_comment = comment_map.get(col_name, "")
+                        insert_result_columns.append({"name": col_name, "comment": col_comment})
+
                 insert_result_node = {
                     "id": insert_result_id,
                     "type": "result",
                     "label": "INSERT 완료",
-                    "columns": sql_analysis.columns
+                    "columns": insert_result_columns
                 }
                 nodes.append(insert_result_node)
 
@@ -278,12 +296,20 @@ class SQLFlowGenerator:
                 # INSERT VALUES의 서브쿼리는 일반적으로 조회를 수행하므로
                 # 원본 테이블에서 직접 데이터를 읽는 경우로 표현
                 subquery_node_id = "subquery_1"
-                subquery_columns = SQLFlowGenerator._extract_columns_from_subquery(sql_analysis.subqueries[0])
+                subquery_columns = SQLFlowGenerator._extract_columns_from_subquery(sql_analysis.subqueries[0], comment_map)
+                if not subquery_columns:
+                    subquery_columns = []
+                    for col in sql_analysis.columns:
+                        col_name = col.get("name", "")
+                        if col_name:
+                            col_comment = comment_map.get(col_name, "")
+                            subquery_columns.append({"name": col_name, "comment": col_comment})
+
                 subquery_node = {
                     "id": subquery_node_id,
                     "type": "subquery",
                     "label": "Subquery (Values)",
-                    "columns": subquery_columns if subquery_columns else sql_analysis.columns
+                    "columns": subquery_columns
                 }
                 nodes.append(subquery_node)
 
@@ -300,7 +326,7 @@ class SQLFlowGenerator:
                 sql_analysis.order_by_columns and SQLFlowGenerator._has_limit_clause(sql_content)
             ):
                 subquery_node_id = "subquery_1"
-                subquery_node = SQLFlowGenerator._create_subquery_node(sql_analysis.columns, subquery_node_id)
+                subquery_node = SQLFlowGenerator._create_subquery_node(sql_analysis.columns, subquery_node_id, comment_map)
                 nodes.append(subquery_node)
 
                 if prev_node_id:
@@ -330,7 +356,7 @@ class SQLFlowGenerator:
             # 6. 결과 노드 생성
             result_node_id = "result"
             result_label = SQLFlowGenerator._generate_result_label(sql_analysis.sql_type, sql_content)
-            result_node = SQLFlowGenerator._create_result_node(sql_analysis.columns, result_node_id, result_label)
+            result_node = SQLFlowGenerator._create_result_node(sql_analysis.columns, result_node_id, result_label, comment_map)
             nodes.append(result_node)
 
             # 최종 노드 -> 결과
@@ -367,18 +393,20 @@ class SQLFlowGenerator:
     # === 노드 생성 헬퍼 메서드 ===
 
     @staticmethod
-    def _create_input_params_node(parameters: List[Dict[str, str]]) -> Dict[str, Any]:
+    def _create_input_params_node(parameters: List[Dict[str, str]], comment_map: Dict[str, str]) -> Dict[str, Any]:
         """입력 파라미터 노드 생성"""
         columns = []
         for param in parameters:
             param_name = param.get("name", "")
             if param_name:
-                columns.append({"name": f"#{{{param_name}}}"})
+                param_key = f"#{{{param_name}}}"
+                param_comment = comment_map.get(param_key, "")
+                columns.append({"name": param_key, "comment": param_comment})
             elif param.get("type") == "positional":
                 # Positional 파라미터
                 count = param.get("count", 0)
                 for i in range(int(count) if count else 1):
-                    columns.append({"name": "?"})
+                    columns.append({"name": "?", "comment": ""})
 
         return {
             "id": "input_params",
@@ -388,10 +416,13 @@ class SQLFlowGenerator:
         }
 
     @staticmethod
-    def _create_table_node(table_info: Dict[str, str], all_columns: List[Dict[str, str]]) -> Dict[str, Any]:
+    def _create_table_node(table_info: Dict[str, str], all_columns: List[Dict[str, str]], comment_map: Dict[str, str]) -> Dict[str, Any]:
         """테이블 노드 생성"""
         table_name = table_info.get("name", "")
         table_id = SQLFlowGenerator._create_table_id(table_info)
+
+        # 테이블 코멘트 추출
+        table_comment = comment_map.get(f"TABLE:{table_name}", "")
 
         # 테이블의 컬럼 추출
         columns = []
@@ -402,16 +433,18 @@ class SQLFlowGenerator:
             # 테이블 매칭 (이름 또는 alias)
             if col_table == table_name or col_table == table_info.get("alias", ""):
                 if col_name and col_name != "*":
-                    columns.append({"name": col_name})
+                    col_comment = comment_map.get(col_name, "")
+                    columns.append({"name": col_name, "comment": col_comment})
 
         # 컬럼이 없으면 기본 표시
         if not columns:
-            columns.append({"name": "*"})
+            columns.append({"name": "*", "comment": ""})
 
         return {
             "id": table_id,
             "type": "table",
             "label": table_name,
+            "comment": table_comment,
             "columns": columns
         }
 
@@ -491,13 +524,17 @@ class SQLFlowGenerator:
         }
 
     @staticmethod
-    def _create_subquery_node(columns: List[Dict[str, str]], node_id: str) -> Dict[str, Any]:
+    def _create_subquery_node(columns: List[Dict[str, str]], node_id: str, comment_map: Dict[str, str] = None) -> Dict[str, Any]:
         """서브쿼리 노드 생성"""
+        if comment_map is None:
+            comment_map = {}
+
         node_columns = []
         for col in columns:
             col_name = col.get("name", "")
             if col_name and col_name != "*":
-                node_columns.append({"name": col_name})
+                col_comment = comment_map.get(col_name, "")
+                node_columns.append({"name": col_name, "comment": col_comment})
 
         return {
             "id": node_id,
@@ -507,13 +544,14 @@ class SQLFlowGenerator:
         }
 
     @staticmethod
-    def _create_result_node(columns: List[Dict[str, str]], node_id: str, label: str) -> Dict[str, Any]:
+    def _create_result_node(columns: List[Dict[str, str]], node_id: str, label: str, comment_map: Dict[str, str]) -> Dict[str, Any]:
         """결과 노드 생성"""
         node_columns = []
         for col in columns:
             col_name = col.get("name", "")
             if col_name and col_name != "*":
-                node_columns.append({"name": col_name})
+                col_comment = comment_map.get(col_name, "")
+                node_columns.append({"name": col_name, "comment": col_comment})
 
         return {
             "id": node_id,
@@ -637,16 +675,18 @@ class SQLFlowGenerator:
             return "Result"
 
     @staticmethod
-    def _extract_columns_from_subquery(subquery: str) -> List[Dict[str, str]]:
+    def _extract_columns_from_subquery(subquery: str, comment_map: Dict[str, str] = None) -> List[Dict[str, str]]:
         """서브쿼리에서 SELECT 컬럼 추출"""
         if not subquery:
             return []
+
+        if comment_map is None:
+            comment_map = {}
 
         columns = []
         # SELECT ... FROM 패턴 추출
         select_match = None
         try:
-            import re
             select_match = re.search(r"SELECT\s+(.*?)\s+FROM", subquery, re.IGNORECASE | re.DOTALL)
         except:
             return []
@@ -688,9 +728,77 @@ class SQLFlowGenerator:
             # alias가 있는 경우 제거
             col_name = col_part.split()[-1] if ' ' in col_part else col_part
             if col_name:
-                columns.append({"name": col_name})
+                col_comment = comment_map.get(col_name, "")
+                columns.append({"name": col_name, "comment": col_comment})
 
         return columns
+
+    @staticmethod
+    def _extract_comments_from_sql(sql_content: str) -> Dict[str, str]:
+        """
+        SQL 원본에서 인라인 코멘트를 추출하여 매핑합니다.
+
+        패턴:
+        - TABLE_NAME /* 테이블 코멘트 */ -> TABLE:TABLE_NAME
+        - COLUMN_NAME /* 컬럼 코멘트 */ -> COLUMN_NAME
+        - #{paramName} /* 파라미터 코멘트 */ -> #{paramName}
+
+        Args:
+            sql_content: 원본 SQL 문
+
+        Returns:
+            {식별자: 코멘트} 딕셔너리
+        """
+        comment_map = {}
+
+        if not sql_content:
+            return comment_map
+
+        try:
+            # 1. 테이블 코멘트 추출
+            # 패턴: INSERT INTO TABLE_NAME /* 코멘트 */ 또는 FROM TABLE_NAME /* 코멘트 */
+            table_patterns = [
+                r'(?:INSERT\s+INTO|FROM|UPDATE|DELETE\s+FROM|MERGE\s+INTO)\s+(\w+)\s*/\*\s*([^*]+)\s*\*/',
+                r'(?:JOIN)\s+(\w+)\s*/\*\s*([^*]+)\s*\*/'
+            ]
+
+            for pattern in table_patterns:
+                matches = re.finditer(pattern, sql_content, re.IGNORECASE | re.MULTILINE)
+                for match in matches:
+                    table_name = match.group(1).strip()
+                    comment = match.group(2).strip()
+                    comment_map[f"TABLE:{table_name}"] = comment
+
+            # 2. 컬럼 및 파라미터 코멘트 추출
+            # 패턴: 식별자 /* 코멘트 */
+            # 식별자는: 일반 컬럼명, #{paramName} 형태의 MyBatis 파라미터
+            identifier_pattern = r'([\w.]+|#\{[\w.]+\})\s*/\*\s*([^*]+)\s*\*/'
+
+            matches = re.finditer(identifier_pattern, sql_content, re.MULTILINE)
+            for match in matches:
+                identifier = match.group(1).strip()
+                comment = match.group(2).strip()
+
+                # 이미 처리된 테이블 코멘트는 건너뛰기
+                if f"TABLE:{identifier}" in comment_map:
+                    continue
+
+                # 파라미터 형태 (#{name})인 경우 그대로 저장
+                if identifier.startswith('#{'):
+                    comment_map[identifier] = comment
+                # 일반 컬럼명인 경우
+                else:
+                    # schema.table.column 또는 table.column 형태에서 컬럼명만 추출
+                    col_parts = identifier.split('.')
+                    col_name = col_parts[-1]  # 마지막 부분이 컬럼명
+                    comment_map[col_name] = comment
+
+            logger.debug(f"Extracted {len(comment_map)} comments from SQL")
+
+        except Exception as e:
+            logger.warning(f"Failed to extract comments from SQL: {e}")
+
+        return comment_map
 
 
 __all__ = ["SQLFlowGenerator"]

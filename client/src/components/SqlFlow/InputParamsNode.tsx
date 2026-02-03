@@ -1,9 +1,14 @@
 import { memo } from 'react';
 import { Handle, Position, NodeProps } from 'reactflow';
 
+interface Param {
+    name: string;
+    comment?: string;
+}
+
 interface InputParamsNodeData {
     label: string;
-    params: string[];
+    params: string[] | Param[];
 }
 
 const InputParamsNode = ({ data, isConnectable }: NodeProps<InputParamsNodeData>) => {
@@ -19,16 +24,28 @@ const InputParamsNode = ({ data, isConnectable }: NodeProps<InputParamsNodeData>
             {/* Body: Parameters List */}
             <div className="p-0">
                 {data.params && data.params.length > 0 ? (
-                    data.params.map((param, index) => (
-                        <div
-                            key={`${param}-${index}`}
-                            className="px-3 py-2 flex items-center text-xs border-b border-blue-100 dark:border-blue-800 last:border-0 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
-                        >
-                            <span className="font-mono font-medium text-blue-700 dark:text-blue-300 truncate" title={param}>
-                                {param}
-                            </span>
-                        </div>
-                    ))
+                    data.params.map((param, index) => {
+                        const paramName = typeof param === 'string' ? param : param.name;
+                        const paramComment = typeof param === 'string' ? undefined : param.comment;
+
+                        return (
+                            <div
+                                key={`${paramName}-${index}`}
+                                className="px-3 py-1.5 flex justify-between items-center text-xs border-b border-blue-100 dark:border-blue-800 last:border-0 hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
+                            >
+                                <div className="flex items-center gap-2 overflow-hidden w-full">
+                                    <span className="font-mono font-medium text-blue-700 dark:text-blue-300 truncate" title={paramName}>
+                                        {paramName}
+                                    </span>
+                                    {paramComment && (
+                                        <span className="text-gray-400 dark:text-gray-500 text-[10px] ml-1 truncate max-w-[100px]" title={paramComment}>
+                                            ({paramComment})
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })
                 ) : (
                     <div className="p-2 text-xs text-blue-400 italic text-center">
                         No Parameters

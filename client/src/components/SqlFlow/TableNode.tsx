@@ -10,6 +10,7 @@ interface Column {
 
 interface TableNodeData {
     label: string; // Table Name
+    comment?: string; // Table Comment
     columns?: Column[];
     variant?: 'source' | 'target' | 'default';
 }
@@ -61,8 +62,14 @@ const TableNode = ({ data, isConnectable, targetPosition = Position.Top, sourceP
 
             {/* Header: Table Name */}
             <div className={`px-3 py-2 border-b flex justify-center items-center text-center ${styles.header}`}>
-                <span className="font-bold text-sm leading-tight whitespace-pre-wrap" title={data.label}>
+                <span className="font-bold text-sm leading-tight whitespace-pre-wrap" title={data.comment ? `${data.label}\n${data.comment}` : data.label}>
                     {data.label.replace(/\s*\(/, '\n(')}
+                    {data.comment && (
+                        <>
+                            <br />
+                            <span className="font-normal text-xs opacity-80">({data.comment})</span>
+                        </>
+                    )}
                 </span>
             </div>
 

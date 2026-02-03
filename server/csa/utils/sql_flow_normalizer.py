@@ -133,6 +133,11 @@ def _normalize_node(node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         "label": node.get("label", node_id),
     }
 
+    # comment 필드 추가 (테이블, 서브쿼리, result 노드에 적용)
+    if normalized_type in ("table", "subquery", "result"):
+        comment = node.get("comment", "")
+        normalized["comment"] = comment
+
     # columns 정규화
     columns = node.get("columns", [])
     if columns:

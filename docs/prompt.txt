@@ -216,6 +216,7 @@
       "id": "user_table",
       "type": "table",
       "label": "USER",
+      "comment": "사용자 테이블",
       "columns": [
         { "name": "USER_ID", "comment": "사용자 ID" },
         { "name": "USER_NAME", "comment": "사용자명" },

@@ -147,9 +147,10 @@ const SqlFlowViewer: React.FC<SqlFlowProps> = ({ data }) => {
             // 노드 데이터 구성
             const nodeData: any = {
                 label: node.label || nodeId,
+                comment: node.comment || undefined,
                 columns: columns.length > 0 ? columns : undefined,
                 variant: variant,
-                params: nodeType === 'inputparams' ? columns.map((c: any) => c.name) : undefined
+                params: nodeType === 'inputparams' ? columns : undefined
             };
 
             // operation 노드의 경우 라벨에 조건 포함
