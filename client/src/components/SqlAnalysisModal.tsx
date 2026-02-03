@@ -226,12 +226,23 @@ export const SqlAnalysisModal: React.FC<SqlAnalysisModalProps> = ({
                                 </h3>
 
                                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 space-y-3 border border-slate-200 dark:border-slate-700">
-                                    <label className="flex items-center justify-between cursor-pointer group">
+                                    <label
+                                        className={`flex items-center justify-between cursor-pointer group p-3 rounded-xl border transition-all ${settings.includeAi
+                                            ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-500'
+                                            : 'border-transparent hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                                            }`}
+                                    >
                                         <div className="flex-1">
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                                            <span className={`text-sm font-medium transition-colors ${settings.includeAi
+                                                ? 'text-indigo-900 dark:text-indigo-100'
+                                                : 'text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                                                }`}>
                                                 {t('sqlAnalysis.includeAi', 'Include AI Analysis')}
                                             </span>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">
+                                            <p className={`text-xs ${settings.includeAi
+                                                ? 'text-indigo-700/80 dark:text-indigo-300/80'
+                                                : 'text-slate-500 dark:text-slate-400'
+                                                }`}>
                                                 {t('sqlAnalysis.includeAiDesc', 'Generate AI description and SQL Flow visualization')}
                                             </p>
                                         </div>

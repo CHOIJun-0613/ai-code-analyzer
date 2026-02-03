@@ -1,17 +1,5 @@
-feat: 분석 로그 관리 화면 개선 및 AI Provider 로직 수정
+style: SQL/Class 재분석 팝업 옵션 선택 가시성 개선
 
-1. server/csa/services/graph_db/analysis_history.py
-  - delete_analysis_histories 메서드 추가: 로그 일괄 삭제 기능 지원
-
-2. server/app/api/v1/endpoints/analysis.py
-  - POST /history/delete 엔드포인트 추가: 로그 일괄 삭제 API 구현
-
-3. client/src/pages/AnalysisHistoryList.tsx
-  - 로그 목록에 체크박스 및 로그 삭제 버튼 추가
-  - 다중 선택 및 일괄 삭제 프론트엔드 로직 구현
-
-4. client/src/locales/*/translation.json
-  - 일괄 삭제 관련 다국어 메시지 추가
-
-5. server/csa/services/java_analysis/project.py
-  - AI Analyzer 초기화 로직 개선: Class/Method 분석 시 Provider 설정 일관성 보장
+- AI 분석 포함 옵션의 선택 상태를 명확히 하기 위해 스타일 개선
+- 선택 시 배경색(Indigo) 및 테두리 적용으로 시각적 피드백 강화
+- 다크 모드 지원

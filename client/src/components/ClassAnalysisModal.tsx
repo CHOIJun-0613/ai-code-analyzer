@@ -258,10 +258,25 @@ export const ClassAnalysisModal: React.FC<ClassAnalysisModalProps> = ({
                                     {t('classAnalysis.aiAnalysis', 'AI Analysis')}
                                 </h3>
                                 <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-4 border border-slate-200 dark:border-slate-700">
-                                    <label className="flex items-center justify-between cursor-pointer group">
+                                    <label
+                                        className={`flex items-center justify-between cursor-pointer group p-3 rounded-xl border transition-all ${settings.includeAi
+                                            ? 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-500'
+                                            : 'border-transparent hover:bg-slate-200/50 dark:hover:bg-slate-700/50'
+                                            }`}
+                                    >
                                         <div className="flex-1">
-                                            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{t('classAnalysis.includeAi', 'Include AI Analysis')}</span>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">{t('classAnalysis.includeAiDesc', 'Generate AI description and insights (Requires LLM).')}</p>
+                                            <span className={`text-sm font-medium transition-colors ${settings.includeAi
+                                                ? 'text-indigo-900 dark:text-indigo-100'
+                                                : 'text-slate-700 dark:text-slate-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400'
+                                                }`}>
+                                                {t('classAnalysis.includeAi', 'Include AI Analysis')}
+                                            </span>
+                                            <p className={`text-xs ${settings.includeAi
+                                                ? 'text-indigo-700/80 dark:text-indigo-300/80'
+                                                : 'text-slate-500 dark:text-slate-400'
+                                                }`}>
+                                                {t('classAnalysis.includeAiDesc', 'Generate AI description and insights (Requires LLM).')}
+                                            </p>
                                         </div>
                                         <div className={`w-11 h-6 bg-gray-200 dark:bg-slate-700 rounded-full peer peer-focus:ring-4 peer-focus:ring-indigo-300 dark:peer-focus:ring-indigo-800 relative transition-colors ${settings.includeAi ? 'bg-indigo-600 dark:bg-indigo-600' : ''}`}>
                                             <input
