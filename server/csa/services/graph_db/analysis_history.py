@@ -147,3 +147,25 @@ class AnalysisHistoryMixin:
             result = session.run(query, node_id=node_id)
             consume_result = result.consume()
             return consume_result.counters.nodes_deleted > 0
+
+    def delete_analysis_histories(self, node_ids: List[str]) -> int:
+        """
+        Delete multiple analysis history records by their IDs.
+        
+        Args:
+            node_ids: List of Neo4j elementIds of the history nodes.
+            
+        Returns:
+            Number of deleted nodes.
+        """
+        query = """
+        MATCH (h:AnalysisHistory)
+        WHERE elementId(h) IN $node_ids
+        DETACH DELETE h
+        """
+        
+        with self._driver.session(database=self._database) as session:
+            result = session.run(query, node_ids=node_ids)
+            consume_result = result.consume()
+            return consume_result.counters.nodes_deleted
+

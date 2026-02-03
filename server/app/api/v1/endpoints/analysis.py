@@ -1,6 +1,6 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form, Body
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import shutil
 import os
 import tempfile
@@ -306,3 +306,34 @@ def delete_analysis_history(
     finally:
         db.close()
 
+@router.post("/history/delete")
+def delete_bulk_analysis_history(
+    ids: List[str] = Body(...),
+    current_user: UserInDB = Depends(get_current_user)
+):
+    """Delete multiple analysis history records."""
+    # Check admin permission
+    is_admin = False
+    if current_user.groups:
+        for group in current_user.groups:
+             if hasattr(group, 'name') and group.name == 'Administrators':
+                 is_admin = True
+                 break
+             elif isinstance(group, dict) and group.get('name') == 'Administrators':
+                 is_admin = True
+                 break
+                 
+    if not is_admin:
+        raise HTTPException(status_code=403, detail="Only administrators can delete history")
+
+    if not ids:
+        return {"success": True, "message": "No IDs provided", "deleted_count": 0}
+
+    db = GraphDB(settings.NEO4J_URI, settings.NEO4J_USER, settings.NEO4J_PASSWORD, settings.NEO4J_DATABASE)
+    try:
+        deleted_count = db.delete_analysis_histories(ids)
+        return {"success": True, "message": f"{deleted_count} history records deleted", "deleted_count": deleted_count}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to delete histories: {str(e)}")
+    finally:
+        db.close()

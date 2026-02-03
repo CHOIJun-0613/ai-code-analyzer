@@ -227,7 +227,11 @@
         "statusCompleted": "Completed",
         "statusFailed": "Failed",
         "statusCancelled": "Cancelled",
-        "statusCancelling": "Cancelling"
+        "statusCancelling": "Cancelling",
+        "deleteBulkLogTitle": "Delete Analysis Logs",
+        "deleteBulkLogConfirm": "Are you sure you want to delete {{count}} selected logs?",
+        "deleteLog": "Delete Log",
+        "deleteBulkSuccess": "{{count}} logs deleted successfully"
     },
     "aiAnalysis": {
         "title": "AI Code Analysis",

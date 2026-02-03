@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
-import { Trash2, RefreshCw, Search, FileText, Settings, X, ArrowUpDown, ArrowUp, ArrowDown, History } from 'lucide-react';
+import { Trash2, RefreshCw, Search, FileText, Settings, X, ArrowUpDown, ArrowUp, ArrowDown, History, CheckSquare, Square } from 'lucide-react';
 
 import ConfirmModal from '../components/ConfirmModal';
 import toast from 'react-hot-toast';
@@ -38,17 +38,21 @@ const AnalysisHistoryList: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig | null>({ key: 'start_time', direction: 'desc' });
+    
+    // Selection State
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
     // Modal State
     const [selectedSummary, setSelectedSummary] = useState<{ id: string, content: string } | null>(null);
     const [selectedOptions, setSelectedOptions] = useState<{ id: string, content: string, title: string } | null>(null);
-    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string, jobId: string } | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ id: string | null, ids?: string[], jobId?: string } | null>(null);
 
     const fetchHistory = async () => {
         setIsLoading(true);
         try {
             const res = await client.get<AnalysisHistory[]>('/analysis/history');
             setHistory(res.data);
+            setSelectedIds(new Set()); // Reset selection on refresh
         } catch (error) {
             console.error("Failed to fetch history", error);
         } finally {
@@ -64,13 +68,33 @@ const AnalysisHistoryList: React.FC = () => {
         setDeleteConfirm({ id, jobId });
     };
 
+    const handleBulkDelete = () => {
+        if (selectedIds.size === 0) return;
+        setDeleteConfirm({ 
+            id: null, 
+            ids: Array.from(selectedIds),
+            jobId: `${selectedIds.size} logs` 
+        });
+    }
+
     const executeDelete = async () => {
         if (!deleteConfirm) return;
 
         try {
-            await client.delete(`/analysis/history/${deleteConfirm.id}`);
-            setHistory(prev => prev.filter(item => item.id !== deleteConfirm.id));
-            toast.success(t('analysis.deleteSuccess') || "Log deleted successfully");
+            if (deleteConfirm.ids && deleteConfirm.ids.length > 0) {
+                // Batch Delete
+                const res = await client.post('/analysis/history/delete', deleteConfirm.ids);
+                if (res.data.success) {
+                    setHistory(prev => prev.filter(item => !deleteConfirm.ids!.includes(item.id)));
+                    setSelectedIds(new Set());
+                    toast.success(t('analysis.deleteBulkSuccess', { count: res.data.deleted_count }) || `${res.data.deleted_count} logs deleted successfully`);
+                }
+            } else if (deleteConfirm.id) {
+                // Single Delete
+                await client.delete(`/analysis/history/${deleteConfirm.id}`);
+                setHistory(prev => prev.filter(item => item.id !== deleteConfirm.id));
+                toast.success(t('analysis.deleteSuccess') || "Log deleted successfully");
+            }
         } catch (error) {
             console.error("Failed to delete history", error);
             toast.error(t('analysis.deleteFailed') || "Failed to delete history record");
@@ -132,6 +156,29 @@ const AnalysisHistoryList: React.FC = () => {
         return sortableItems;
     }, [history, sortConfig, searchTerm]);
 
+    // Selection Logic
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            const allIds = new Set(sortedHistory.map(item => item.id));
+            setSelectedIds(allIds);
+        } else {
+            setSelectedIds(new Set());
+        }
+    };
+
+    const handleSelectRow = (id: string) => {
+        const newSelected = new Set(selectedIds);
+        if (newSelected.has(id)) {
+            newSelected.delete(id);
+        } else {
+            newSelected.add(id);
+        }
+        setSelectedIds(newSelected);
+    };
+
+    const isAllSelected = sortedHistory.length > 0 && selectedIds.size === sortedHistory.length;
+    const isIndeterminate = selectedIds.size > 0 && selectedIds.size < sortedHistory.length;
+
     const SortIcon = ({ columnKey }: { columnKey: SortKey }) => {
         if (sortConfig?.key !== columnKey) return <ArrowUpDown className="w-4 h-4 text-slate-300 ml-1 opacity-0 group-hover:opacity-50 transition-opacity" />;
         return sortConfig.direction === 'asc'
@@ -177,13 +224,23 @@ const AnalysisHistoryList: React.FC = () => {
                         className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/10 outline-none text-sm transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     />
                 </div>
-                <button
-                    onClick={fetchHistory}
-                    className="flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow"
-                >
-                    <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
-                    Refresh
-                </button>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={handleBulkDelete}
+                        disabled={selectedIds.size === 0}
+                        className={`flex items-center gap-2 px-4 py-2 text-white bg-red-500 hover:bg-red-600 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed`}
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        {t('analysis.deleteLog') || "Delete Log"}
+                    </button>
+                    <button
+                        onClick={fetchHistory}
+                        className="flex items-center gap-2 px-4 py-2 text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800 hover:bg-white dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 rounded-lg transition-all text-sm font-medium shadow-sm hover:shadow"
+                    >
+                        <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+                        Refresh
+                    </button>
+                </div>
             </div>
 
             {/* Table */}
@@ -192,6 +249,15 @@ const AnalysisHistoryList: React.FC = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                             <tr>
+                                <th className="px-4 py-4 w-10">
+                                    <input 
+                                        type="checkbox" 
+                                        className="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-4 w-4"
+                                        checked={isAllSelected}
+                                        ref={input => { if (input) input.indeterminate = isIndeterminate; }}
+                                        onChange={handleSelectAll}
+                                    />
+                                </th>
                                 {renderSortableHeader(t('analysis.jobId') || "Job ID", 'job_id')}
                                 <th className="px-6 py-4 whitespace-nowrap">{t('analysis.analysisType') || "Analysis Type"}</th>
                                 {renderSortableHeader(t('analysis.project') || "Project", 'project_name')}
@@ -207,7 +273,7 @@ const AnalysisHistoryList: React.FC = () => {
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                             {isLoading ? (
                                 <tr>
-                                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500">
+                                    <td colSpan={11} className="px-6 py-12 text-center text-slate-500">
                                         <div className="flex flex-col items-center gap-2">
                                             <RefreshCw className="w-6 h-6 animate-spin text-indigo-400" />
                                             <span>Loading history...</span>
@@ -216,13 +282,21 @@ const AnalysisHistoryList: React.FC = () => {
                                 </tr>
                             ) : sortedHistory.length === 0 ? (
                                 <tr>
-                                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500 italic">
+                                    <td colSpan={11} className="px-6 py-12 text-center text-slate-500 italic">
                                         No history records found.
                                     </td>
                                 </tr>
                             ) : (
                                 sortedHistory.map((item) => (
                                     <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
+                                        <td className="px-4 py-4">
+                                            <input 
+                                                type="checkbox" 
+                                                className="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-4 w-4"
+                                                checked={selectedIds.has(item.id)}
+                                                onChange={() => handleSelectRow(item.id)}
+                                            />
+                                        </td>
                                         <td className="px-6 py-4 font-mono text-xs text-slate-600 dark:text-slate-400">
                                             {item.job_id}
                                         </td>
@@ -399,8 +473,10 @@ const AnalysisHistoryList: React.FC = () => {
                 isOpen={!!deleteConfirm}
                 onClose={() => setDeleteConfirm(null)}
                 onConfirm={executeDelete}
-                title={t('analysis.deleteLogTitle') || "Delete Analysis Log"}
-                message={deleteConfirm ? `${t('analysis.deleteLogConfirm') || "Are you sure you want to delete the log for Job ID:"} ${deleteConfirm.jobId}?` : ""}
+                title={deleteConfirm?.ids ? (t('analysis.deleteBulkLogTitle') || "Delete Analysis Logs") : (t('analysis.deleteLogTitle') || "Delete Analysis Log")}
+                message={deleteConfirm?.ids ? 
+                         (t('analysis.deleteBulkLogConfirm', {count: deleteConfirm.ids.length}) || `Are you sure you want to delete ${deleteConfirm.ids.length} selected logs?`) : 
+                         deleteConfirm ? `${t('analysis.deleteLogConfirm') || "Are you sure you want to delete the log for Job ID:"} ${deleteConfirm.jobId}?` : ""}
                 confirmText={t('common.delete') || "Delete"}
                 variant="danger"
             />

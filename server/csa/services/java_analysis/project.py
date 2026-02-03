@@ -525,18 +525,25 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 elif force_reanalysis:
                     logger.info(f"Force reanalysis enabled - performing AI analysis for {class_name}")
 
+                # AI Analyzer 초기화 (Class/Method 공통)
+                analyzer = None
                 if not skip_ai:
-                    analyzer = None
                     if ai_options and AIAnalyzer and AIConfig:
                         # worker-specific analyzer
-                        config = AIConfig(ai_options)
-                        analyzer = AIAnalyzer(config)
-                    else:
-                        # global analyzer
+                        try:
+                            config = AIConfig(ai_options)
+                            analyzer = AIAnalyzer(config)
+                        except Exception as e:
+                            logger.warning(f"Failed to initialize AI Analyzer with options: {e}")
+                            analyzer = None
+                    
+                    if not analyzer:
+                        # global analyzer or fallback
                         analyzer = get_ai_analyzer()
-                        
-                    if analyzer and analyzer.is_available():
-                        ai_description = analyzer.analyze_class(file_content, class_name)
+
+
+                if analyzer and analyzer.is_available():
+                    ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
                 logger.warning(f"AI Class 분석 실패 ({class_name}): {e}")
                 ai_description = f"AI 분석 실패: {e}"
@@ -749,8 +756,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     else:
                         logger.info(f"Starting AI Analysis for method: {class_name}.{declaration.name}")
                         try:
-                            analyzer = get_ai_analyzer()
-                            if analyzer.is_available():
+                            # analyzer는 위에서 초기화된 인스턴스 사용
+                            if analyzer and analyzer.is_available():
                                 # class_name도 함께 전달하여 로그에 Class.Method 형식으로 표시
                                 method_ai_description = analyzer.analyze_method(
                                     method_source,
@@ -759,7 +766,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                                 )
                                 logger.info(f"AI Analysis completed for method: {class_name}.{declaration.name}")
                             else:
-                                logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer is_available returned False")
+                                logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer is not available or not initialized")
                         except Exception as ai_err:
                             logger.error(f"AI Analysis failed for {class_name}.{declaration.name}: {ai_err}")
                 

@@ -205,7 +205,11 @@
         "statusCompleted": "완료됨",
         "statusFailed": "실패",
         "statusCancelled": "취소됨",
-        "statusCancelling": "취소 중"
+        "statusCancelling": "취소 중",
+        "deleteBulkLogTitle": "분석 로그 일괄 삭제",
+        "deleteBulkLogConfirm": "선택한 {{count}}개의 로그를 삭제하시겠습니까?",
+        "deleteLog": "로그 삭제",
+        "deleteBulkSuccess": "{{count}}개의 로그가 성공적으로 삭제되었습니다"
     },
     "aiPrompt": {
         "title": "AI 분석 프롬프트 관리",
