@@ -268,6 +268,10 @@ def start_ai_analysis(
         "database": settings.NEO4J_DATABASE or "neo4j",
     }
 
+    # 개별 항목 재분석 여부 판단
+    # target_class_name, target_method_name, target_sql_id 중 하나라도 있으면 재분석
+    is_reanalysis = bool(target_class_name or target_method_name or target_sql_id or target_mapper_name)
+
     # Job 등록
     ai_jobs[job_id] = {
         "id": job_id,
@@ -281,7 +285,7 @@ def start_ai_analysis(
     # 백그라운드 스레드 시작
     thread = threading.Thread(
         target=run_enrichment_task,
-        args=(job_id, request, user_ai_prefs, neo4j_config, user_id)
+        args=(job_id, request, user_ai_prefs, neo4j_config, user_id, is_reanalysis)
     )
     thread.start()
 

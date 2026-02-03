@@ -412,8 +412,13 @@ def parse_inner_classes(
     return inner_classes
 
 
-def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True, charset: str = 'utf-8') -> tuple[Package, Class, list[Class], str]:
-    """Parse a single Java file and return parsed entities."""
+def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True, charset: str = 'utf-8', force_reanalysis: bool = False) -> tuple[Package, Class, list[Class], str]:
+    """
+    Parse a single Java file and return parsed entities.
+
+    Args:
+        force_reanalysis: If True, skip hash_code check and always perform analysis (for reanalysis feature)
+    """
     logger = get_logger(__name__)
     
     with open(file_path, 'r', encoding=charset) as f:
@@ -455,7 +460,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
 
         # Check for existing analysis if DB is available (Early Skip)
         skip_analysis_completely = False
-        if graph_db:
+        if graph_db and not force_reanalysis:
              try:
                 analysis_info = graph_db.get_class_analysis_info(class_name, project_name)
                 if analysis_info and analysis_info.get("source_hashcode") == source_hashcode:
@@ -463,7 +468,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     # use_ai 플래그가 True이면 스킵하지 않음
                     # 단, use_ai는 이 함수 호출 시점에는 아직 정확히 확정되지 않았을 수 있음 (env vs option)
                     # 따라서 여기서 use_ai 인자를 확인하거나, 아래에서 결정된 값을 미리 계산해야 함.
-                    
+
                     # use_ai 인자는 parse_single_java_file의 인자로 전달됨
                     if not use_ai:
                         logger.info(f"Skipping analysis for {class_name} (source unchanged, AI not requested)")
@@ -472,6 +477,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                         logger.info(f"Proceeding with analysis for {class_name} despite unchanged source (AI requested)")
              except Exception as e:
                  logger.warning(f"Failed to check existing hash for {class_name}: {e}")
+        elif force_reanalysis:
+            logger.info(f"Force reanalysis enabled for {class_name} - skipping hash check")
 
         class_annotations = parse_annotations(class_declaration.annotations, "class") if hasattr(class_declaration, 'annotations') else []
         class_type = "interface" if isinstance(class_declaration, javalang.tree.InterfaceDeclaration) else "class"
@@ -507,7 +514,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             try:
                 # Check for existing analysis if DB is available
                 skip_ai = False
-                if graph_db:
+                if graph_db and not force_reanalysis:
                     analysis_info = graph_db.get_class_analysis_info(class_name, project_name)
                     if analysis_info and analysis_info.get("source_hashcode") == source_hashcode:
                         existing_ai_desc = analysis_info.get("ai_description")
@@ -515,6 +522,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                             ai_description = existing_ai_desc
                             skip_ai = True
                             logger.info(f"Skipping AI analysis for {class_name} (source unchanged)")
+                elif force_reanalysis:
+                    logger.info(f"Force reanalysis enabled - performing AI analysis for {class_name}")
 
                 if not skip_ai:
                     analyzer = None

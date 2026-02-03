@@ -157,6 +157,7 @@
         "analysisType": "분석 유형",
         "typeStatic": "정적",
         "typeAi": "AI",
+        "typeReanalysis": "재분석",
         "view": "보기",
         "project": "프로젝트",
         "user": "사용자",

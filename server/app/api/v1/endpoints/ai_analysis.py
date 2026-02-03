@@ -79,7 +79,8 @@ def run_enrichment_task(
     request: AIEnrichRequest,
     user_ai_prefs: Dict[str, Any],
     neo4j_config: Dict[str, str],
-    user_id: str
+    user_id: str,
+    is_reanalysis: bool = False
 ):
     """Background task to run AI enrichment."""
     
@@ -247,9 +248,18 @@ def run_enrichment_task(
         s_success = stats.get('success_count', 0) if 'stats' in locals() else 0
         s_failed = stats.get('fail_count', 0) if 'stats' in locals() else 0
         s_skipped = stats.get('skipped_count', 0) if 'stats' in locals() else 0
-        
+
+        # 재분석 여부에 따라 summary 제목 변경
+        if is_reanalysis:
+            summary_title = "REANALYSIS SUMMARY (STATIC + AI)"
+        else:
+            summary_title = "AI ANALYSIS SUMMARY"
+
         summary_lines = [
-            "========== AI ANALYSIS SUMMARY ==========",
+            "=" * 80,
+            f"                    {summary_title}",
+            "=" * 80,
+            "",
             f"Project: {request.project_name}",
             f"Target Node Type: {request.node_type.upper()}",
             f"Status: {result_status}",
@@ -257,17 +267,34 @@ def run_enrichment_task(
             f"End Time: {end_time.strftime('%Y-%m-%d %H:%M:%S')}",
             f"Duration: {duration_str}",
             "",
-            f"AI Provider: {ai_options.get('provider', 'Unknown')}",
-            f"Model Name: {ai_options.get('model_name', 'Unknown')}",
-            f"Max Tokens: {max_tokens}",
-            f"Use LLM Merge: {request.use_llm_merge}",
-            "",
-            f"Total Processed: {s_total}",
-            f"Success: {s_success}",
-            f"Failed: {s_failed}",
-            f"Skipped: {s_skipped}",
-            "========================================="
         ]
+
+        # 재분석 시 대상 정보 추가
+        if is_reanalysis:
+            if request.class_name:
+                summary_lines.append(f"Target Class: {request.class_name}")
+            if request.sql_id:
+                summary_lines.append(f"Target SQL ID: {request.sql_id}")
+            if request.mapper_name:
+                summary_lines.append(f"Target Mapper: {request.mapper_name}")
+            if request.class_name or request.sql_id or request.mapper_name:
+                summary_lines.append("")
+
+        summary_lines.extend([
+            "[AI Configuration]",
+            f"  - AI Provider: {ai_options.get('provider', 'Unknown')}",
+            f"  - Model Name: {ai_options.get('model_name', 'Unknown')}",
+            f"  - Max Tokens: {max_tokens}",
+            f"  - Use LLM Merge: {request.use_llm_merge}",
+            "",
+            "[Analysis Results]",
+            f"  - Total Processed: {s_total}",
+            f"  - Success: {s_success}",
+            f"  - Failed: {s_failed}",
+            f"  - Skipped: {s_skipped}",
+            "",
+            "=" * 80
+        ])
         
         if result_status == "Failed":
              summary_lines.insert(3, f"Error: {jobs[job_id].get('error', 'Unknown error')}")
@@ -320,6 +347,11 @@ def run_enrichment_task(
                 except:
                     preferences_ai_json = "{}"
 
+                # 분석 타입 결정
+                # - AI: 전체 프로젝트 일괄 AI 분석
+                # - Reanalysis: 개별 항목 재분석 (클래스, SQL 등)
+                analysis_type = "Reanalysis" if is_reanalysis else "AI"
+
                 db.save_analysis_history(
                     job_id=job_id,
                     start_time=start_time,
@@ -332,7 +364,7 @@ def run_enrichment_task(
                     project_name=request.project_name,
                     preferences="{}", # Static options empty for AI-only run
                     preferences_ai=preferences_ai_json,
-                    analysis_type="AI",
+                    analysis_type=analysis_type,
                 )
             except Exception as history_exc:
                 task_logger.error(f"Failed to save analysis history: {history_exc}")

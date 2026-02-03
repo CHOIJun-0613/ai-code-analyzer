@@ -365,7 +365,10 @@ def analyze_project(
                     preferences_json = "{}"
                     preferences_ai_json = "{}"
 
-                analysis_type = "AI" if use_ai_analysis else "Static"
+                # 분석 타입 결정
+                # - Static: 정적 분석만
+                # - Reanalysis: 정적 분석 + AI 분석 (통합 재분석)
+                analysis_type = "Reanalysis" if use_ai_analysis else "Static"
 
                 db.save_analysis_history(
                     job_id=job_id,
@@ -401,6 +404,14 @@ def analyze_single_class(
     """
     Analyze a single Java class file and update the Graph DB.
     """
+    # Analysis History Tracking
+    overall_start_time = datetime.now()
+    analysis_status = "Failed"  # Default status
+    job_id = get_job_id() or "Server CLI analysis"
+    user_id = get_client_id() or "Server CLI"
+    summary_text = ""
+    db_was_none = graph_db is None
+
     if not os.path.exists(target_file_path):
         return {"success": False, "message": f"File not found: {target_file_path}"}
 
@@ -425,67 +436,177 @@ def analyze_single_class(
 
     logger.info(f"Analysis Params - Use AI: {use_ai_analysis}, AI Options: {ai_options}, Skip DTO Source: {skip_dto_source}, Skip DTO Methods: {skip_dto_methods}")
 
-    # 1. Parse File
-    package_node, class_node, inner_classes, source_hashcode = parse_single_java_file(
-        target_file_path, 
-        project_name, 
-        graph_db, 
-        ai_options, 
-        use_ai_analysis,
-        skip_dto_source=skip_dto_source,
-        skip_dto_methods=skip_dto_methods
-    )
+    try:
+        # 1. Parse File
+        # force_reanalysis=True: 재분석 시 hash_code 체크 건너뛰고 무조건 분석 진행
+        package_node, class_node, inner_classes, source_hashcode = parse_single_java_file(
+            target_file_path,
+            project_name,
+            graph_db,
+            ai_options,
+            use_ai_analysis,
+            skip_dto_source=skip_dto_source,
+            skip_dto_methods=skip_dto_methods,
+            force_reanalysis=True
+        )
 
-    if not class_node:
-        if source_hashcode == "SKIPPED_UNCHANGED":
-            return {"success": True, "message": "Skipped (Unchanged)"}
-        return {"success": False, "message": "Failed to parse class"}
+        if not class_node:
+            if source_hashcode == "SKIPPED_UNCHANGED":
+                summary_text = "Class analysis skipped (unchanged)"
+                return {"success": True, "message": "Skipped (Unchanged)"}
+            summary_text = "Failed to parse class"
+            return {"success": False, "message": "Failed to parse class"}
 
-    # 2. Construct Artifacts
-    all_classes = [class_node] + inner_classes
-    pkgs = [package_node] if package_node else []
-    
-    class_to_pkg = {}
-    if package_node:
-        for c in all_classes:
-            class_to_pkg[c.name] = package_node.name
+        # 2. Construct Artifacts
+        all_classes = [class_node] + inner_classes
+        pkgs = [package_node] if package_node else []
 
-    from datetime import datetime
-    timestamp = datetime.now()
-
-    artifacts = JavaAnalysisArtifacts(
-        packages=pkgs,
-        classes=all_classes,
-        class_to_package_map=class_to_pkg,
-        
-        beans=[],
-        dependencies=[],
-        endpoints=[],
-        mybatis_mappers=[],
-        jpa_entities=[],
-        jpa_repositories=[],
-        jpa_queries=[],
-        config_files=[],
-        test_classes=[],
-        sql_statements=[],
-        project_name=project_name,
-        metadata={}
-    )
-
-    # 3. Save to Neo4j
-    if graph_db:
-        # Save Class and Package
+        class_to_pkg = {}
         if package_node:
-            graph_db.add_package(package_node, project_name)
-        
-        for c in all_classes:
-            graph_db.add_class(c, package_node.name if package_node else "", project_name)
-            
-        # Save derived objects (Beans, Mybatis, etc.) using the helper that extracts them
-        from csa.services.analysis.neo4j_writer import add_single_class_objects
-        add_single_class_objects(graph_db, class_node, package_node.name if package_node else "", project_name, logger)
-        
-    return {"success": True, "message": f"Class {class_node.name} re-analyzed successfully"}
+            for c in all_classes:
+                class_to_pkg[c.name] = package_node.name
+
+        timestamp = datetime.now()
+
+        artifacts = JavaAnalysisArtifacts(
+            packages=pkgs,
+            classes=all_classes,
+            class_to_package_map=class_to_pkg,
+
+            beans=[],
+            dependencies=[],
+            endpoints=[],
+            mybatis_mappers=[],
+            jpa_entities=[],
+            jpa_repositories=[],
+            jpa_queries=[],
+            config_files=[],
+            test_classes=[],
+            sql_statements=[],
+            project_name=project_name,
+            metadata={}
+        )
+
+        # 3. Save to Neo4j
+        if graph_db:
+            # Save Class and Package
+            if package_node:
+                graph_db.add_package(package_node, project_name)
+
+            for c in all_classes:
+                graph_db.add_class(c, package_node.name if package_node else "", project_name)
+
+            # Save derived objects (Beans, Mybatis, etc.) using the helper that extracts them
+            from csa.services.analysis.neo4j_writer import add_single_class_objects
+            add_single_class_objects(graph_db, class_node, package_node.name if package_node else "", project_name, logger)
+
+        analysis_status = "Completed"
+
+        # 재분석 summary 구성
+        summary_lines = []
+        summary_lines.append("=" * 80)
+        if use_ai_analysis:
+            summary_lines.append("                    CLASS REANALYSIS SUMMARY (Static + AI)")
+        else:
+            summary_lines.append("                    CLASS REANALYSIS SUMMARY (Static)")
+        summary_lines.append("=" * 80)
+        summary_lines.append("")
+        summary_lines.append(f"Project: {project_name}")
+        summary_lines.append(f"Class: {class_node.name}")
+        if package_node:
+            summary_lines.append(f"Package: {package_node.name}")
+        summary_lines.append(f"File Path: {target_file_path}")
+        summary_lines.append("")
+        summary_lines.append("[Static Analysis Results]")
+        summary_lines.append(f"  - Methods: {len(class_node.methods)}")
+        summary_lines.append(f"  - Fields: {len(class_node.properties)}")
+        summary_lines.append(f"  - Annotations: {len(class_node.annotations) if hasattr(class_node, 'annotations') and class_node.annotations else 0}")
+        summary_lines.append(f"  - Class Type: {class_node.type}")
+        if hasattr(class_node, 'sub_type') and class_node.sub_type:
+            summary_lines.append(f"  - Sub Type: {class_node.sub_type}")
+
+        if use_ai_analysis:
+            summary_lines.append("")
+            summary_lines.append("[AI Analysis Results]")
+            summary_lines.append(f"  - AI Description: {'Generated' if class_node.ai_description else 'Not Generated'}")
+            if ai_options:
+                summary_lines.append(f"  - AI Provider: {ai_options.get('provider', 'N/A')}")
+                summary_lines.append(f"  - Model: {ai_options.get('model_name', 'N/A')}")
+
+        summary_lines.append("")
+        summary_lines.append("Status: Completed")
+        summary_lines.append("=" * 80)
+
+        summary_text = "\n".join(summary_lines)
+        return {"success": True, "message": summary_text}
+
+    except Exception as exc:
+        analysis_status = "Failed"
+        summary_text = f"Class analysis failed: {exc}"
+        logger.error("Single class analysis error: %s", exc)
+        return {"success": False, "error": str(exc)}
+
+    finally:
+        if graph_db and job_id:
+            try:
+                overall_end_time = datetime.now()
+                duration_delta = overall_end_time - overall_start_time
+                total_seconds = int(duration_delta.total_seconds())
+                hours, remainder = divmod(total_seconds, 3600)
+                minutes, seconds = divmod(remainder, 60)
+                duration_str = f"{hours:02d}:{minutes:02d}:{seconds:02d}"
+
+                if not summary_text:
+                    summary_text = f"Analysis {analysis_status}."
+
+                # Construct preferences JSON
+                import json
+                preferences_dict = {
+                    "target_file": target_file_path,
+                    "skip_dto_source": skip_dto_source,
+                    "skip_dto_methods": skip_dto_methods,
+                    "use_ai_analysis": use_ai_analysis,
+                }
+
+                preferences_ai_dict = {}
+                if use_ai_analysis and ai_options:
+                    preferences_ai_dict = {
+                        "ai_options": ai_options,
+                        "use_ai_analysis": use_ai_analysis,
+                    }
+
+                try:
+                    preferences_json = json.dumps(preferences_dict, ensure_ascii=False)
+                    preferences_ai_json = json.dumps(preferences_ai_dict, ensure_ascii=False) if preferences_ai_dict else "{}"
+                except Exception:
+                    preferences_json = "{}"
+                    preferences_ai_json = "{}"
+
+                # 분석 타입 결정
+                # - Static: 정적 분석만
+                # - Reanalysis: 정적 분석 + AI 분석 (통합 재분석)
+                analysis_type = "Reanalysis" if use_ai_analysis else "Static"
+
+                graph_db.save_analysis_history(
+                    job_id=job_id,
+                    start_time=overall_start_time,
+                    end_time=overall_end_time,
+                    duration=duration_str,
+                    file_count=1,  # Single class analysis
+                    result=analysis_status,
+                    user_id=user_id,
+                    summary=summary_text,
+                    project_name=project_name,
+                    preferences=preferences_json,
+                    preferences_ai=preferences_ai_json,
+                    analysis_type=analysis_type,
+                )
+            except Exception as history_exc:
+                logger.error(f"Failed to save analysis history: {history_exc}")
+
+            # Close DB only if we created it
+            if db_was_none:
+                graph_db.close()
 
 __all__ = ["analyze_project", "analyze_single_class"]
 

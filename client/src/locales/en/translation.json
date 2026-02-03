@@ -181,6 +181,7 @@
         "analysisType": "Analysis Type",
         "typeStatic": "Static",
         "typeAi": "AI",
+        "typeReanalysis": "Reanalysis",
         "view": "View",
         "project": "Project",
         "user": "User",

@@ -227,11 +227,19 @@ const AnalysisHistoryList: React.FC = () => {
                                             {item.job_id}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${item.analysis_type === 'AI'
-                                                ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
-                                                : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                                                item.analysis_type === 'AI'
+                                                    ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
+                                                    : item.analysis_type === 'Reanalysis'
+                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
+                                                    : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
                                                 }`}>
-                                                {item.analysis_type === 'AI' ? (t('analysis.typeAi') || "AI") : (t('analysis.typeStatic') || "Static")}
+                                                {item.analysis_type === 'AI'
+                                                    ? (t('analysis.typeAi') || "AI")
+                                                    : item.analysis_type === 'Reanalysis'
+                                                    ? (t('analysis.typeReanalysis') || "Reanalysis")
+                                                    : (t('analysis.typeStatic') || "Static")
+                                                }
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 font-medium text-slate-900 dark:text-white">
@@ -267,11 +275,32 @@ const AnalysisHistoryList: React.FC = () => {
                                             <button
                                                 onClick={() => {
                                                     const isAi = item.analysis_type === 'AI';
-                                                    const content = isAi ? (item.preferences_ai || "{}") : item.preferences;
+                                                    const isReanalysis = item.analysis_type === 'Reanalysis';
+
+                                                    let content;
+                                                    if (isReanalysis) {
+                                                        // 재분석: 정적 + AI 옵션 모두 표시
+                                                        try {
+                                                            const staticOpts = JSON.parse(item.preferences || "{}");
+                                                            const aiOpts = JSON.parse(item.preferences_ai || "{}");
+                                                            const combined = {
+                                                                "Static Analysis Options": staticOpts,
+                                                                "AI Analysis Options": aiOpts
+                                                            };
+                                                            content = JSON.stringify(combined, null, 2);
+                                                        } catch {
+                                                            content = item.preferences || "{}";
+                                                        }
+                                                    } else if (isAi) {
+                                                        content = item.preferences_ai || "{}";
+                                                    } else {
+                                                        content = item.preferences;
+                                                    }
+
                                                     const title = t('analysis.analysisOptions') || "Analysis Options";
                                                     handleViewOptions(item.job_id, content, title);
                                                 }}
-                                                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-500 transition-colors"
+                                                className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded hover:text-indigo-200 dark:hover:text-indigo-400 hover:border-indigo-200 dark:hover:border-indigo-500 transition-colors"
                                             >
                                                 <Settings className="w-3.5 h-3.5" />
                                                 {t('analysis.view') || "View"}
