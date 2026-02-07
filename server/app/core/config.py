@@ -4,6 +4,9 @@ from pydantic_settings import BaseSettings
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Code Analyzer"
     API_V1_STR: str = "/api/v1"
+    SERVER_HOST: str = "0.0.0.0"
+    SERVER_PORT: int = 8000
+    SERVER_RELOAD: bool = True
     SECRET_KEY: str = "YOUR_SECRET_KEY"  # Should be changed in production
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7

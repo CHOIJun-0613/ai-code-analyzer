@@ -1,120 +1,136 @@
-# AI Code Analyzer - Server
+﻿# AI Code Analyzer Server
 
-**FastAPI**와 **Neo4j**로 구축된 AI Code Analyzer의 백엔드 서버입니다.
+`server/`는 AI Code Analyzer의 백엔드(FastAPI)와 정적 분석 엔진(CSA CLI)을 포함하는 실행 단위입니다.
 
-## 개요
-이 서버는 다음의 핵심 로직을 제공합니다:
-- **정적 코드 분석**: Java/DB 파일을 파싱하여 Neo4j에 저장 (`csa` 모듈 기반).
-- **사용자 관리**: JWT 기반 인증, 사용자/그룹/권한 관리.
-- **프로젝트 관리**: 대시보드 통계, 프로젝트 계층 구조 조회.
-- **분석 실행**: API를 통한 분석 트리거 (로컬 경로 및 파일 업로드 지원).
+## 1. 구성 개요
+- FastAPI API 서버: `app/`
+- 정적 분석 엔진/CLI: `csa/`
+- 마이그레이션/운영 스크립트: `migrations/`, `scripts/`
+- 서버 테스트: `tests/`
+- 환경 변수 예시: `env.example`
 
-## 디렉토리 구조
-```
+## 2. 디렉터리 구조
+```text
 server/
-├── app/
-│   ├── api/            # API 라우트 정의 (v1)
-│   ├── core/           # 핵심 설정, 데이터베이스, 보안 로직
-│   ├── models/         # API 요청/응답용 Pydantic 모델
-│   ├── services/       # 비즈니스 로직 (사용자 서비스, 분석 래퍼)
-│   └── main.py         # FastAPI 진입점
-├── csa/                # 핵심 분석 엔진 (레거시/공유 로직)
-│   ├── models/         # 그래프 엔티티 모델
-│   │   └── entities/   # 모듈화된 엔티티 정의 (project.py, class_model.py 등)
-├── requirements.txt    # Python 의존성
-├── .env.example        # 환경 변수 템플릿
-└── README.md           # 이 파일
+├─ app/                      # FastAPI 애플리케이션
+│  ├─ api/v1/endpoints/      # API 엔드포인트
+│  ├─ core/                  # 설정, 보안, DB 연결
+│  ├─ models/                # API 모델
+│  └─ services/              # API 서비스 레이어
+├─ csa/                      # 정적 분석 엔진 + CLI
+│  ├─ cli/                   # Click 기반 CLI
+│  ├─ parsers/               # Java/SQL/DDL 파서
+│  ├─ services/              # 분석 파이프라인/리포트/그래프 저장
+│  ├─ diagrams/              # 시퀀스/영향도 다이어그램 생성
+│  ├─ aiwork/                # AI 분석/프롬프트/프로바이더
+│  └─ models/                # 분석 엔티티 모델
+├─ migrations/               # DB/설정 마이그레이션 스크립트
+├─ scripts/                  # 운영/관리 스크립트
+├─ tests/                    # 서버 테스트
+├─ requirements.txt
+└─ env.example
 ```
 
-## 설정 및 설치
+## 3. 사전 요구사항
+- Python 3.10+
+- Neo4j 5.x 권장
 
-### 1. 사전 요구사항
-- Python 3.10 이상
-- Neo4j 데이터베이스 (버전 5.x 권장)
-
-### 2. 가상 환경
-`server` 디렉토리 내에서 가상 환경을 생성하고 사용하는 것을 권장합니다.
+## 4. 설치 및 실행
+`server` 폴더에서 작업하는 것을 권장합니다.
 
 ```bash
-# server 디렉토리로 이동
 cd server
-
-# 가상 환경 생성
 python -m venv .venv
-
-# 활성화 (Windows)
 .venv\Scripts\activate
-
-# 활성화 (Linux/Mac)
-source .venv/bin/activate
-```
-
-### 3. 의존성 설치
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. 환경 설정
-`server/` 디렉토리에 `.env` 파일을 생성하세요. `.env.example`을 복사하여 사용할 수 있습니다.
-```ini
-# 프로젝트 설정
-PROJECT_NAME="AI Code Analyzer"
-API_V1_STR="/api/v1"
-
-# Neo4j 설정
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=your_password
-NEO4J_DATABASE=neo4j
-
-# 분석 설정
-# JAVA_SOURCE_FOLDER=... (선택 사항, 기본값 사용)
-# LOG_LEVEL=INFO
-```
-
-## 서버 실행
-
-### 개발 모드
-가상 환경을 활성화한 상태에서 실행해야 합니다.
+`.env` 파일을 준비합니다.
 
 ```bash
-# 가상 환경 활성화 (Windows)
-.venv\Scripts\activate
-
-# 서버 실행
-uvicorn app.main:app --reload --port 8000
+copy env.example .env
 ```
-서버는 `http://localhost:8000`에서 시작됩니다.
 
-### API 문서
-서버 실행 후 대화형 API 문서를 확인할 수 있습니다:
-- **Swagger UI**: `http://localhost:8000/docs`
-- **ReDoc**: `http://localhost:8000/redoc`
+서버 실행(`.env`의 `SERVER_HOST`, `SERVER_PORT`, `SERVER_RELOAD` 사용):
 
-## 주요 기능 및 엔드포인트
+```bash
+python run_server.py
+```
 
-### 인증 (Authentication)
-- `POST /api/v1/login/access-token`: JWT 토큰 발급.
+또는 Windows 배치 파일:
 
-### 사용자 (Users)
-- `POST /api/v1/users/users/`: 새 사용자 생성.
-- `GET /api/v1/users/users/{user_id}`: 사용자 상세 정보 조회.
+```bash
+start_server.bat
+```
 
-### 분석 (Analysis)
-- `POST /api/v1/analysis/analyze`: 서버 측 경로에 대한 분석 트리거.
-- `POST /api/v1/analysis/analyze/upload`: Zip 파일 업로드 및 분석 트리거.
-- `GET /api/v1/analysis/analyze/{job_id}`: 분석 상태 확인.
+## 5. API 진입점
+- 앱 엔트리: `app/main.py`
+- API 라우터: `app/api/v1/api.py`
+- 기본 Prefix: `/api/v1`
 
-### 프로젝트 (Projects)
-- `GET /api/v1/projects/`: 분석된 모든 프로젝트 목록 조회.
-- `GET /api/v1/projects/{project_name}/stats`: 프로젝트 통계 조회.
-- `GET /api/v1/projects/{project_name}/hierarchy`: 패키지/클래스 계층 구조 조회.
+문서 URL:
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
 
-## 개발 참고 사항
-- `csa/` 디렉토리는 기존 CLI 도구에서 포팅된 핵심 로직을 포함합니다.
-- `app/services/analysis_wrapper.py`는 FastAPI 환경과 `csa` 로직을 연결하는 역할을 합니다.
-- **주요 리팩토링 사항 (2025.12)**:
-    - `graph_entities.py`: 거대한 모델 파일을 `server/csa/models/entities/` 아래에 도메인별로 분리하여 유지보수성을 개선했습니다.
-    - `project_nodes.py` & `class_nodes.py`: 데이터 변환 로직을 분리하고, DB 저장 로직을 배치 처리 방식으로 통합하여 중복을 제거하고 성능을 최적화했습니다.
-    - **테스트**: `server/tests/` 디렉토리에 리팩토링 검증을 위한 테스트 케이스가 추가되었습니다.
+주요 라우터 그룹:
+- `auth`, `users`, `groups`
+- `analysis`, `projects`, `reports`, `class-reports`
+- `applications`, `classes`, `methods`, `sqls`
+- `ai`, `ai-prompts`, `analysis-rules`, `websocket`
 
+## 6. CLI 사용
+CSA CLI 엔트리:
+
+```bash
+cd server
+python -m csa.cli.main --help
+```
+
+주요 명령:
+- `analyze`
+- `ai-enrich`
+- `sequence`
+- `class-spec`
+- `impact-analysis`
+- `crud-matrix`, `crud-analysis`, `crud-visualization`, `table-summary`, `table-impact`
+- `db-analysis`, `db-call-chain`, `db-call-diagram`, `db-statistics`
+- `query`, `list-classes`, `list-methods`
+
+예시:
+
+```bash
+python -m csa.cli.main analyze --all-objects --clean --project-name <project>
+python -m csa.cli.main sequence --class-name UserController --method-name getUser --format mermaid
+python -m csa.cli.main crud-matrix --project-name <project> --output-format excel
+python -m csa.cli.main impact-analysis --table-name USER --project-name <project> --generate-diagram
+python -m csa.cli.main ai-enrich --project-name <project> --node-type class --concurrent 10
+```
+
+## 7. 환경 변수 핵심 항목
+주요 키(상세는 `env.example` 참고):
+- Neo4j: `NEO4J_URI`, `NEO4J_USER`, `NEO4J_PASSWORD`, `NEO4J_DATABASE`
+- 서버 기동: `SERVER_HOST`, `SERVER_PORT`, `SERVER_RELOAD`
+- 분석 입력: `JAVA_SOURCE_FOLDER`, `DB_SCRIPT_FOLDER`
+- 파싱/성능: `USE_STREAMING_PARSE`, `JAVA_PARSE_WORKERS`, `JAVA_FILE_PARSE_TIMEOUT`, `NEO4J_BATCH_SIZE`
+- 출력 경로: `SEQUENCE_DIAGRAM_OUTPUT_DIR`, `CRUD_MATRIX_OUTPUT_DIR`, `CLASS_SPEC_OUTPUT_DIR`, `IMPACT_ANALYSIS_OUTPUT_DIR`
+- AI: `USE_AI_ANALYSIS`, `AI_PROVIDER`, `CONCURRENT_AI_REQUESTS`, `MAX_TOKENS`
+
+## 8. 테스트 실행
+서버 디렉터리 기준:
+
+```bash
+cd server
+pytest
+```
+
+특정 테스트 예시:
+
+```bash
+pytest tests/unit/test_chunking_strategy.py
+```
+
+## 9. 운영 시 주의사항
+- 대용량 소스(`target_src/`) 분석 시 시간/메모리 사용량이 큽니다.
+- 재분석 전 그래프 정리가 필요하면 `analyze --clean` 사용을 검토해 주세요.
+- AI 분석은 비용/시간 영향이 커서 필요 시에만 활성화하는 것을 권장합니다.
+- `.env` 및 API 키/토큰은 커밋하지 마세요.
