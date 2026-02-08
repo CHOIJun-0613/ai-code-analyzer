@@ -180,7 +180,7 @@ export const ClassAnalysisModal: React.FC<ClassAnalysisModalProps> = ({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh]">
+            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-5xl overflow-hidden border border-slate-200 dark:border-slate-700 flex flex-col max-h-[85vh]">
 
                 {/* Header */}
                 <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-white dark:bg-slate-800">
@@ -294,7 +294,7 @@ export const ClassAnalysisModal: React.FC<ClassAnalysisModalProps> = ({
                         </div>
                     ) : (
                         // Log View
-                        <div className="flex flex-col h-[400px]">
+                        <div className="flex flex-col h-[520px]">
                             <div className="bg-slate-950 p-4 flex-1 overflow-y-auto font-mono text-xs md:text-sm text-slate-300">
                                 {logs.length === 0 && (
                                     <div className="text-slate-600 italic text-center py-10">

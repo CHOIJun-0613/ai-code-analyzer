@@ -4,7 +4,7 @@ from typing import Dict, Optional
 from csa.services.analyze_service import analyze_project, analyze_single_class
 from csa.services.analyze_service import analyze_project
 from csa.utils.logger import get_logger, JobIdFilter
-from csa.utils.context import get_client_id, set_job_id, set_client_id
+from csa.utils.context import get_client_id, set_job_id, set_client_id, set_language
 from app.core.config import settings
 import datetime
 import random
@@ -32,11 +32,13 @@ class JobLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-def run_analysis_task(job_id: str, params: dict, user_id: str):
+def run_analysis_task(job_id: str, params: dict, user_id: str, language: str = "ko"):
     # Set job context
     set_job_id(job_id)
     # Set client context for this thread using the passed user_id
     set_client_id(user_id)
+    # Set language context for this thread
+    set_language(language)
 
     jobs[job_id]["status"] = "running"
     
@@ -71,9 +73,11 @@ def run_analysis_task(job_id: str, params: dict, user_id: str):
     
     root_logger.addHandler(analysis_file_handler)
     
+    from csa.utils.i18n import _t
+
     try:
         # Initial log
-        logger.info(f"Starting analysis job: {job_id}")
+        logger.info(_t("analysis.start", job_id=job_id))
         
         if params.get('analysis_target') == 'target_file':
              result = analyze_single_class(
@@ -112,14 +116,14 @@ def run_analysis_task(job_id: str, params: dict, user_id: str):
             )
         jobs[job_id]["status"] = "completed" if result.get("success") else "failed"
         jobs[job_id]["result"] = result
-        logger.info(f"Analysis job {job_id} completed with status: {jobs[job_id]['status']}")
-        
+        logger.info(_t("analysis.completed", job_id=job_id, status=jobs[job_id]['status']))
+
     except KeyboardInterrupt:
-        logger.warning(f"Analysis job {job_id} canceled by user")
+        logger.warning(_t("analysis.canceled", job_id=job_id))
         jobs[job_id]["status"] = "canceled"
         jobs[job_id]["error"] = "Analysis canceled by user"
     except Exception as e:
-        logger.error(f"Analysis failed: {e}")
+        logger.error(_t("analysis.failed", error=str(e)))
         jobs[job_id]["status"] = "failed"
         jobs[job_id]["error"] = str(e)
     finally:
@@ -129,7 +133,7 @@ def run_analysis_task(job_id: str, params: dict, user_id: str):
         log_handler.close()
         analysis_file_handler.close()
 
-def start_analysis(params: dict, user_id: str = None) -> str:
+def start_analysis(params: dict, user_id: str = None, language: str = "ko") -> str:
     # YYYYMMDD-HHMMSS-mmm-USERID-RAND5
     now = datetime.datetime.now()
     timestamp = now.strftime("%Y%m%d-%H%M%S")
@@ -153,7 +157,7 @@ def start_analysis(params: dict, user_id: str = None) -> str:
         "logs": [],
         "created_at": str(uuid.uuid1()) # timestamp
     }
-    thread = threading.Thread(target=run_analysis_task, args=(job_id, params, user_id))
+    thread = threading.Thread(target=run_analysis_task, args=(job_id, params, user_id, language))
     thread.start()
     return job_id
 
@@ -179,7 +183,8 @@ def cancel_job_status(job_id: str):
         jobs[job_id]["status"] = "cancelling"
         if "logs" not in jobs[job_id]:
             jobs[job_id]["logs"] = []
-        jobs[job_id]["logs"].append("Cancellation requested by user...")
+        from csa.utils.i18n import _t
+        jobs[job_id]["logs"].append(_t("analysis.cancel_requested"))
 
 
 def start_ai_analysis(
@@ -194,6 +199,7 @@ def start_ai_analysis(
     target_mapper_name: Optional[str] = None,
     target_sql_id: Optional[str] = None,
     concurrent_requests: Optional[int] = None,
+    language: str = "ko",
 ) -> str:
     """
     AI 재분석 작업 시작
@@ -285,7 +291,8 @@ def start_ai_analysis(
     # 백그라운드 스레드 시작
     thread = threading.Thread(
         target=run_enrichment_task,
-        args=(job_id, request, user_ai_prefs, neo4j_config, user_id, is_reanalysis)
+        args=(job_id, request, user_ai_prefs, neo4j_config, user_id, is_reanalysis),
+        kwargs={"language": language}
     )
     thread.start()
 

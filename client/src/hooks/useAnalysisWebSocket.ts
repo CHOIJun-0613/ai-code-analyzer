@@ -133,10 +133,13 @@ export const useAnalysisWebSocket = ({
       }
 
       // WebSocket URL 결정
-      // 개발 환경: ws://localhost:8000
+      // 개발 환경: ws://localhost:18000 (VITE_SERVER_PORT)
       // 프로덕션: wss://your-domain.com
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = window.location.hostname === 'localhost' ? 'localhost:8000' : window.location.host;
+      const serverPort = import.meta.env.VITE_SERVER_PORT || '18000'; // Default to 18000 if not set
+      const host = window.location.hostname === 'localhost'
+        ? `${window.location.hostname}:${serverPort}`
+        : window.location.host;
       const wsUrl = `${protocol}//${host}/api/v1/ws/${jobType}/${jobId}`;
 
       console.log(`[WebSocket] Connecting to: ${wsUrl}`);

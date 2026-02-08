@@ -42,9 +42,10 @@ except Exception as e:
 @click.pass_context
 def cli(ctx):
     """CSA CLI entrypoint."""
-    # Click에서 호출된 명령어 이름을 컨텍스트에 저장
-    # (이 시점에는 명령어가 결정되지 않았으므로, result_callback 사용)
-    pass
+    # CLI 실행 시 LOG_LANGUAGE 환경변수로 로그 언어 설정
+    from csa.utils.context import set_language
+    log_language = os.getenv("LOG_LANGUAGE", "ko")
+    set_language(log_language)
 
 
 register_graph_queries(cli)

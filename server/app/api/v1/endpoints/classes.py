@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_language_from_header
 from app.models.user import UserInDB
 from app.services.analysis_wrapper import start_analysis
 from csa.services.analysis.neo4j_writer import connect_to_neo4j_db
@@ -23,7 +23,8 @@ def trigger_class_analysis(
     project_name: str,
     class_name: str,
     request: AnalysisRequest,
-    current_user: UserInDB = Depends(get_current_user)
+    current_user: UserInDB = Depends(get_current_user),
+    language: str = Depends(get_language_from_header),
 ):
     # 1. Lookup file path
     file_path = None
@@ -56,7 +57,7 @@ def trigger_class_analysis(
         "clean": False # Ensure clean is false
     }
 
-    job_id = start_analysis(params, current_user.username) 
+    job_id = start_analysis(params, current_user.username, language=language)
     return {"job_id": job_id}
 
 @router.get("/classes")

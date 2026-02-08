@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form, Body
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Form, Body, Request
 from pydantic import BaseModel
 from typing import Optional, List
 import shutil
@@ -7,7 +7,7 @@ import tempfile
 import zipfile
 from app.services.analysis_wrapper import start_analysis, get_job_status, get_active_job
 from fastapi import Depends
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_language_from_header
 from app.models.user import UserInDB
 from csa.utils.context import set_client_id
 
@@ -61,10 +61,13 @@ class AnalysisRequest(BaseModel):
 @router.post("/analyze")
 def trigger_analysis(
     request: AnalysisRequest,
+    http_request: Request,
     current_user: UserInDB = Depends(get_current_user)
 ):
     # Set client_id context for this request (used for logging and job ID)
     set_client_id(current_user.username)
+    # Set language context from Accept-Language header
+    language = get_language_from_header(http_request)
 
     # TODO: Validate path exists
     data = request.dict()
@@ -92,7 +95,7 @@ def trigger_analysis(
     data["ai_options"] = ai_options
     data["source_options"] = source_options
     
-    job_id = start_analysis(data, user_id=current_user.username)
+    job_id = start_analysis(data, user_id=current_user.username, language=language)
     return {"job_id": job_id, "status": "pending"}
 
 @router.get("/active")
@@ -177,7 +180,8 @@ def upload_and_analyze(
     use_ai_analysis: bool = Form(False),
     concurrent_ai_requests: int = Form(15),
     ai_enrichment_batch_size: int = Form(50),
-    current_user: UserInDB = Depends(get_current_user)
+    current_user: UserInDB = Depends(get_current_user),
+    language: str = Depends(get_language_from_header),
 ):
     # Set client_id context for this request (used for logging and job ID)
     set_client_id(current_user.username)
@@ -231,8 +235,8 @@ def upload_and_analyze(
             "use_ai_analysis": use_ai_analysis
         }
         
-        job_id = start_analysis(data, user_id=current_user.username)
-        
+        job_id = start_analysis(data, user_id=current_user.username, language=language)
+
         # Cleanup is handled by background task eventually, 
         # but here we just return the job_id. 
         # Note: In a real app, we shouldn't delete temp_dir immediately 

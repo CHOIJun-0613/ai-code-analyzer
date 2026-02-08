@@ -23,3 +23,14 @@ def get_job_id() -> str:
 def set_job_id(job_id: str):
     """현재 컨텍스트의 작업 ID 설정"""
     job_id_ctx.set(job_id)
+
+# 로그 언어 저장을 위한 ContextVar
+language_ctx: ContextVar[Optional[str]] = ContextVar("language", default=None)
+
+def get_language() -> str:
+    """현재 컨텍스트의 언어를 반환 (없으면 'ko')"""
+    return language_ctx.get() or "ko"
+
+def set_language(language: str):
+    """현재 컨텍스트의 언어 설정"""
+    language_ctx.set(language)

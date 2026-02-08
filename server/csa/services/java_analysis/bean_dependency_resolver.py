@@ -22,6 +22,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from csa.utils.i18n import _t
+
 if TYPE_CHECKING:
     from csa.services.graph_db import GraphDB
     from logging import Logger
@@ -60,32 +62,32 @@ def resolve_bean_dependencies_from_neo4j(
         >>> resolve_bean_dependencies_from_neo4j(db, "my-project", logger)
     """
     logger.info("=" * 80)
-    logger.info("Bean 의존성 해결 시작 (Neo4j 기반)")
+    logger.info(_t("bean.resolve.header"))
     logger.info("=" * 80)
-    logger.info(f"프로젝트: {project_name}")
+    logger.info(_t("bean.resolve.project", project_name=project_name))
     logger.info("")
 
     # Phase 1: Field injection 해결
-    logger.info("Phase 1: Field injection 의존성 해결 중...")
+    logger.info(_t("bean.resolve.phase1"))
     field_count = _resolve_field_injections(db, project_name, logger)
-    logger.info(f"✓ Field injection 완료: {field_count}개 의존성 생성")
+    logger.info(_t("bean.resolve.field_done", count=field_count))
     logger.info("")
 
     # Phase 2: Constructor injection 해결
-    logger.info("Phase 2: Constructor injection 의존성 해결 중...")
+    logger.info(_t("bean.resolve.phase2"))
     constructor_count = _resolve_constructor_injections(db, project_name, logger)
-    logger.info(f"✓ Constructor injection 완료: {constructor_count}개 의존성 생성")
+    logger.info(_t("bean.resolve.constructor_done", count=constructor_count))
     logger.info("")
 
     # Phase 3: Setter injection 해결
-    logger.info("Phase 3: Setter injection 의존성 해결 중...")
+    logger.info(_t("bean.resolve.phase3"))
     setter_count = _resolve_setter_injections(db, project_name, logger)
-    logger.info(f"✓ Setter injection 완료: {setter_count}개 의존성 생성")
+    logger.info(_t("bean.resolve.setter_done", count=setter_count))
     logger.info("")
 
     total_count = field_count + constructor_count + setter_count
     logger.info("=" * 80)
-    logger.info(f"Bean 의존성 해결 완료: 총 {total_count}개 의존성 생성")
+    logger.info(_t("bean.resolve.total", count=total_count))
     logger.info("=" * 80)
 
 

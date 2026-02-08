@@ -10,6 +10,7 @@ from csa.models.analysis import JavaAnalysisArtifacts
 from csa.services.analysis.options import determine_project_name
 from csa.services.graph_db import GraphDB
 from csa.services.java_parser import parse_java_project_full
+from csa.utils.i18n import _t
 
 
 def analyze_full_project_java(
@@ -50,7 +51,7 @@ def analyze_full_project_java(
         use_streaming = os.getenv("USE_STREAMING_PARSE", "false").lower() == "true"
 
     if use_streaming:
-        logger.info("Using STREAMING parsing mode (memory efficient)")
+        logger.info(_t("pipeline.streaming_mode"))
         return _analyze_with_streaming(
             java_source_folder, 
             project_name, 
@@ -64,7 +65,7 @@ def analyze_full_project_java(
             skip_dto_methods
         )
     else:
-        logger.info("Using BATCH parsing mode (traditional)")
+        logger.info(_t("pipeline.batch_mode"))
         return _analyze_with_batch(
             java_source_folder, 
             project_name, 
@@ -115,8 +116,8 @@ def _analyze_with_streaming(
     detected_project_name = extract_project_name(java_source_folder)
     final_project_name = determine_project_name(project_name, detected_project_name, logger)
 
-    logger.info("Project name: %s", final_project_name)
-    logger.info("Parsing Java project at: %s", java_source_folder)
+    logger.info(_t("pipeline.project_name", name=final_project_name))
+    logger.info(_t("pipeline.parsing_at", path=java_source_folder))
 
     # 시작 시간 기록
     from datetime import datetime
@@ -140,7 +141,7 @@ def _analyze_with_streaming(
     stats['start_time'] = start_time
     stats['end_time'] = end_time
 
-    logger.info("Streaming parsing complete:")
+    logger.info(_t("pipeline.streaming_complete"))
     logger.info("  - Packages: %s", stats['packages'])
     logger.info("  - Classes: %s", stats['classes'])
     logger.info("  - Beans: %s", stats['beans'])
@@ -149,9 +150,9 @@ def _analyze_with_streaming(
     # Method -> SqlStatement CALLS 관계 생성 (스트리밍 모드)
     if stats.get('sql_statements', 0) > 0:
         logger.info("")
-        logger.info("Creating Method -> SqlStatement CALLS relationships...")
+        logger.info(_t("neo4j.method_sql_start"))
         relationships_created = graph_db.create_method_sql_relationships(final_project_name)
-        logger.info("Created %s Method -> SqlStatement relationships", relationships_created)
+        logger.info(_t("neo4j.method_sql_done", count=relationships_created))
 
     # JavaAnalysisArtifacts 생성 (빈 리스트로, 실제 데이터는 Neo4j에 있음)
     artifacts = JavaAnalysisArtifacts(
@@ -204,7 +205,7 @@ def _analyze_with_batch(
     Returns:
         Tuple[JavaAnalysisArtifacts, str]: 분석 결과 및 프로젝트명
     """
-    logger.info("Parsing Java project at: %s", java_source_folder)
+    logger.info(_t("pipeline.parsing_at", path=java_source_folder))
     (
         packages_to_add,
         classes_to_add,
@@ -230,8 +231,8 @@ def _analyze_with_batch(
     )
 
     final_project_name = determine_project_name(project_name, detected_project_name, logger)
-    logger.info("Project name: %s", final_project_name)
-    logger.info("Found %s packages and %s classes.", len(packages_to_add), len(classes_to_add))
+    logger.info(_t("pipeline.project_name", name=final_project_name))
+    logger.info(_t("pipeline.found_packages_classes", packages=len(packages_to_add), classes=len(classes_to_add)))
 
     artifacts = JavaAnalysisArtifacts(
         packages=packages_to_add,
@@ -261,8 +262,8 @@ def parse_java_with_concurrency(
 ) -> JavaAnalysisArtifacts:
     """Placeholder for concurrent parsing; falls back to single-threaded parsing."""
     if concurrent:
-        logger.warning("Concurrent processing requested but not yet implemented. Using single-threaded processing.")
-        logger.info("Using single-threaded processing")
+        logger.warning(_t("pipeline.concurrent_not_impl"))
+        logger.info(_t("pipeline.using_singlethread"))
 
     artifacts, _ = analyze_full_project_java(java_source_folder, None, logger)
     return artifacts

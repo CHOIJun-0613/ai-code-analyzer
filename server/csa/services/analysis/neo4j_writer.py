@@ -14,6 +14,7 @@ from csa.models.analysis import JavaAnalysisArtifacts, JavaAnalysisStats
 from csa.models.graph_entities import Project
 from csa.services.analysis.summary import calculate_java_statistics, get_java_stats_from_neo4j
 from csa.services.graph_db import GraphDB
+from csa.utils.i18n import _t
 from csa.utils.project_statistics import calculate_project_statistics
 from csa.services.java_parser import (
     analyze_bean_dependencies,
@@ -35,15 +36,15 @@ def connect_to_neo4j_db(
     logger,
 ) -> GraphDB:
     """Initialise (or reuse) a Neo4j connection pool and GraphDB instance."""
-    logger.info("Connecting to Neo4j at %s...", neo4j_uri)
+    logger.info(_t("neo4j.connecting", uri=neo4j_uri))
     pool = get_connection_pool()
     if not pool.is_initialized():
         pool_size = int(os.getenv("NEO4J_POOL_SIZE", "10"))
-        logger.info("Initializing Neo4j connection pool with %s connections...", pool_size)
+        logger.info(_t("neo4j.init_pool", pool_size=pool_size))
         pool.initialize(neo4j_uri, neo4j_user, neo4j_password, neo4j_database, pool_size)
-        logger.info("Connected to Neo4j at %s (database: %s)", neo4j_uri, neo4j_database)
+        logger.info(_t("neo4j.connected", uri=neo4j_uri, database=neo4j_database))
     else:
-        logger.info("Using existing connection pool (database: %s)", neo4j_database)
+        logger.info(_t("neo4j.using_existing_pool", database=neo4j_database))
 
     return GraphDB(neo4j_uri, neo4j_user, neo4j_password, neo4j_database)
 
@@ -62,7 +63,7 @@ def _session_scope(db: GraphDB):
 
 def clean_java_objects(db: GraphDB, logger) -> None:
     """Remove previously stored Java-related nodes."""
-    logger.info("Cleaning Java objects...")
+    logger.info(_t("neo4j.clean_java"))
     def _execute(session):
         session.run("MATCH (n:Package) DETACH DELETE n")
         session.run("MATCH (n:Class) DETACH DELETE n")
@@ -82,7 +83,7 @@ def clean_java_objects(db: GraphDB, logger) -> None:
 
 def clean_db_objects(db: GraphDB, logger) -> None:
     """Remove previously stored database-related nodes."""
-    logger.info("Cleaning database objects...")
+    logger.info(_t("neo4j.clean_db"))
     def _execute(session):
         session.run("MATCH (n:Database) DETACH DELETE n")
         session.run("MATCH (n:Table) DETACH DELETE n")
@@ -99,7 +100,7 @@ def _log_progress(prefix: str, current: int, total: int, last_percent: int, logg
     percent = int((current / total) * 100) if total else 100
     if percent >= last_percent + 10 or current == total:
         last_percent = percent
-        logger.info("   - %s 진행률 [%s/%s] (%s%%)", prefix, current, total, percent)
+        logger.info(_t("neo4j.save_progress", prefix=prefix, current=current, total=total, percent=percent))
     return last_percent
 
 
@@ -126,74 +127,74 @@ def add_springboot_objects(
 ) -> None:
     """Persist Spring Boot–related artifacts to Neo4j."""
     if beans:
-        logger.info("DB 저장 -  %s Spring Beans to database...", len(beans))
+        logger.info(_t("neo4j.save_beans", count=len(beans)))
         start_time = time.time()
         last_percent = 0
         for idx, bean in enumerate(beans, 1):
             db.add_bean(bean, project_name)
-            last_percent = _log_progress("beans 저장", idx, len(beans), last_percent, logger)
+            last_percent = _log_progress("Beans", idx, len(beans), last_percent, logger)
         _log_duration("Added Spring Beans", len(beans), start_time, logger)
 
     if dependencies:
-        logger.info("DB 저장 -  %s Bean dependencies to database...", len(dependencies))
+        logger.info(_t("neo4j.save_dependencies", count=len(dependencies)))
         start_time = time.time()
         for dependency in dependencies:
             db.add_bean_dependency(dependency, project_name)
         _log_duration("Added Bean dependencies", len(dependencies), start_time, logger)
 
     if endpoints:
-        logger.info("DB 저장 -  %s REST endpoints to database...", len(endpoints))
+        logger.info(_t("neo4j.save_endpoints", count=len(endpoints)))
         start_time = time.time()
         for endpoint in endpoints:
             db.add_endpoint(endpoint, project_name)
         _log_duration("Added REST endpoints", len(endpoints), start_time, logger)
 
     if mybatis_mappers:
-        logger.info("DB 저장 -  %s MyBatis mappers to database...", len(mybatis_mappers))
+        logger.info(_t("neo4j.save_mybatis", count=len(mybatis_mappers)))
         start_time = time.time()
         for mapper in mybatis_mappers:
             db.add_mybatis_mapper(mapper, project_name)
         _log_duration("Added MyBatis mappers", len(mybatis_mappers), start_time, logger)
 
     if jpa_entities:
-        logger.info("DB 저장 -  %s JPA entities to database...", len(jpa_entities))
+        logger.info(_t("neo4j.save_jpa_entities", count=len(jpa_entities)))
         start_time = time.time()
         for entity in jpa_entities:
             db.add_jpa_entity(entity, project_name)
         _log_duration("Added JPA entities", len(jpa_entities), start_time, logger)
 
     if jpa_repositories:
-        logger.info("DB 저장 -  %s JPA repositories to database...", len(jpa_repositories))
+        logger.info(_t("neo4j.save_jpa_repos", count=len(jpa_repositories)))
         start_time = time.time()
         for repository in jpa_repositories:
             db.add_jpa_repository(repository, project_name)
         _log_duration("Added JPA repositories", len(jpa_repositories), start_time, logger)
 
     if jpa_queries:
-        logger.info("DB 저장 -  %s JPA queries to database...", len(jpa_queries))
+        logger.info(_t("neo4j.save_jpa_queries", count=len(jpa_queries)))
         start_time = time.time()
         last_percent = 0
         for idx, query in enumerate(jpa_queries, 1):
             db.add_jpa_query(query, project_name)
-            last_percent = _log_progress("jpa_queries 저장", idx, len(jpa_queries), last_percent, logger)
+            last_percent = _log_progress("JPA Queries", idx, len(jpa_queries), last_percent, logger)
         _log_duration("Added JPA queries", len(jpa_queries), start_time, logger)
 
     if config_files:
-        logger.info("DB 저장 -  %s configuration files to database...", len(config_files))
+        logger.info(_t("neo4j.save_config", count=len(config_files)))
         start_time = time.time()
         for config in config_files:
             db.add_config_file(config, project_name)
         _log_duration("Added configuration files", len(config_files), start_time, logger)
 
     if test_classes:
-        logger.info("DB 저장 -  %s test classes to database...", len(test_classes))
+        logger.info(_t("neo4j.save_test", count=len(test_classes)))
         start_time = time.time()
         for test_class in test_classes:
             db.add_test_class(test_class, project_name)
         _log_duration("Added test classes", len(test_classes), start_time, logger)
 
     if sql_statements:
-        logger.info("DB 저장 -  %s SQL statements to database...", len(sql_statements))
+        logger.info(_t("neo4j.save_sql", count=len(sql_statements)))
         start_time = time.time()
         last_percent = 0
         relationships: list[dict[str, str]] = []
@@ -205,7 +206,7 @@ def add_springboot_objects(
                     "sql_id": sql_statement.id,
                 }
             )
-            last_percent = _log_progress("sql_statements 저장", idx, len(sql_statements), last_percent, logger)
+            last_percent = _log_progress("SQL Statements", idx, len(sql_statements), last_percent, logger)
         if relationships:
             db.add_mapper_sql_relationships_batch(relationships, project_name)
         _log_duration("Added SQL statements", len(sql_statements), start_time, logger)
@@ -229,37 +230,37 @@ def add_single_class_objects(
     sql_statements = extract_sql_statements_from_mappers(mybatis_mappers, project_name)
 
     if beans:
-        logger.info("DB 저장 -  %s Spring Beans to database...", len(beans))
+        logger.info(_t("neo4j.save_beans", count=len(beans)))
         for bean in beans:
             db.add_bean(bean, project_name)
 
     if dependencies:
-        logger.info("DB 저장 -  %s Bean dependencies to database...", len(dependencies))
+        logger.info(_t("neo4j.save_dependencies", count=len(dependencies)))
         for dependency in dependencies:
             db.add_bean_dependency(dependency, project_name)
 
     if endpoints:
-        logger.info("DB 저장 -  %s REST endpoints to database...", len(endpoints))
+        logger.info(_t("neo4j.save_endpoints", count=len(endpoints)))
         for endpoint in endpoints:
             db.add_endpoint(endpoint, project_name)
 
     if mybatis_mappers:
-        logger.info("DB 저장 -  %s MyBatis mappers to database...", len(mybatis_mappers))
+        logger.info(_t("neo4j.save_mybatis", count=len(mybatis_mappers)))
         for mapper in mybatis_mappers:
             db.add_mybatis_mapper(mapper, project_name)
 
     if jpa_entities:
-        logger.info("DB 저장 -  %s JPA entities to database...", len(jpa_entities))
+        logger.info(_t("neo4j.save_jpa_entities", count=len(jpa_entities)))
         for entity in jpa_entities:
             db.add_jpa_entity(entity, project_name)
 
     if test_classes:
-        logger.info("DB 저장 -  %s test classes to database...", len(test_classes))
+        logger.info(_t("neo4j.save_test", count=len(test_classes)))
         for test_class in test_classes:
             db.add_test_class(test_class, project_name)
 
     if sql_statements:
-        logger.info("DB 저장 -  %s SQL statements to database...", len(sql_statements))
+        logger.info(_t("neo4j.save_sql", count=len(sql_statements)))
         relationships: list[dict[str, str]] = []
         for sql_statement in sql_statements:
             db.add_sql_statement(sql_statement, project_name)
@@ -510,7 +511,7 @@ def add_single_class_objects_streaming(
 
 def _add_packages(db: GraphDB, packages: Sequence[object], project_name: str, logger) -> None:
     """Helper for writing package nodes."""
-    logger.info("DB 저장 -  %s packages...", len(packages))
+    logger.info(_t("neo4j.save_packages", count=len(packages)))
     for package in packages:
         db.add_package(package, project_name)
 
@@ -525,12 +526,12 @@ def _add_classes(
     """Persist class nodes into Neo4j."""
 
     total = len(classes)
-    logger.info("DB 저장 -  %s classes...", total)
+    logger.info(_t("neo4j.save_classes", count=total))
     last_percent = 0
     for idx, class_obj in enumerate(classes, 1):
         package_name = class_to_package_map.get(class_obj.name, "unknown")
         db.add_class(class_obj, package_name, project_name)
-        last_percent = _log_progress("classes 저장", idx, total, last_percent, logger)
+        last_percent = _log_progress("Classes", idx, total, last_percent, logger)
 
 
 def save_java_objects_to_neo4j(
@@ -579,7 +580,7 @@ def save_java_objects_to_neo4j(
 
         db = connect_to_neo4j_db(neo4j_uri, neo4j_user, neo4j_password, neo4j_database, logger)
 
-    logger.info("DB 저장 -  project: %s", project_name or "<unknown>")
+    logger.info(_t("neo4j.save_project", project_name=project_name or "<unknown>"))
     if not project.created_at:
         project.created_at = datetime.now().strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
     project.updated_at = datetime.now().strftime("%Y/%m/%d %H:%M:%S.%f")[:-3]
@@ -592,20 +593,20 @@ def save_java_objects_to_neo4j(
         if not java_source_folder and project.path:
             java_source_folder = project.path
             
-    logger.info(f"Project 통계 집계 시작: clean={clean}, java_source_folder={java_source_folder}")
+    logger.info(_t("project.stats_start", clean=clean, folder=java_source_folder))
 
     # 스트리밍 모드 확인
-    logger.info(f"스트리밍 모드: {use_streaming_env}")
+    logger.info(_t("project.streaming_mode", enabled=use_streaming_env))
 
     # 스트리밍 모드이거나 artifacts.classes가 비어있으면 Neo4j에서 조회
     if streaming_mode:
         # Neo4j에서 모든 클래스를 조회하여 통계 계산
-        logger.info("Neo4j에서 모든 클래스를 조회하여 통계 계산 중...")
+        logger.info(_t("project.query_neo4j_stats"))
         from csa.utils.project_statistics import calculate_project_statistics_from_neo4j
         project = calculate_project_statistics_from_neo4j(db, project, project_name, java_source_folder)
     else:
         # 배치 모드: artifacts의 클래스 사용
-        logger.info(f"배치 모드: artifacts.classes 수 = {len(artifacts.classes)}")
+        logger.info(_t("project.batch_mode_classes", count=len(artifacts.classes)))
 
         # artifacts.classes가 리스트인지 딕셔너리인지 확인
         if isinstance(artifacts.classes, dict):
@@ -630,16 +631,16 @@ def save_java_objects_to_neo4j(
                      project.total_other_analyzed_file_count)
 
     logger.info("=" * 80)
-    logger.info("프로젝트 통계: 전체 파일 %d개", project.total_file_count)
-    logger.info("  - 분석 대상: %d개 (Java: %d, XML: %d, Config: %d, DDL: %d)",
-                analyzed_count,
-                project.total_java_file_count,
-                project.total_xml_file_count,
-                project.total_config_file_count,
-                project.total_ddl_file_count)
-    logger.info("  - 분석 미대상: %d개", project.total_ignored_file_count)
-    logger.info("  - LOC 통계: PLOC %d, LLOC %d, CLOC %d",
-                project.total_PLOC, project.total_LLOC, project.total_CLOC)
+    logger.info(_t("project.stats_header", total=project.total_file_count))
+    logger.info(_t("project.stats_analyzed",
+                analyzed=analyzed_count,
+                java=project.total_java_file_count,
+                xml=project.total_xml_file_count,
+                config=project.total_config_file_count,
+                ddl=project.total_ddl_file_count))
+    logger.info(_t("project.stats_ignored", ignored=project.total_ignored_file_count))
+    logger.info(_t("project.stats_loc",
+                ploc=project.total_PLOC, lloc=project.total_LLOC, cloc=project.total_CLOC))
     logger.info("=" * 80)
 
     db.add_project(project)
@@ -675,9 +676,9 @@ def save_java_objects_to_neo4j(
     # artifacts.sql_statements가 Neo4j에 저장된 후 실행
     if artifacts.sql_statements:
         logger.info("")
-        logger.info("Creating Method -> SqlStatement CALLS relationships...")
+        logger.info(_t("neo4j.method_sql_start"))
         relationships_created = db.create_method_sql_relationships(project_name)
-        logger.info("Created %s Method -> SqlStatement relationships", relationships_created)
+        logger.info(_t("neo4j.method_sql_done", count=relationships_created))
 
     java_end_time = datetime.now()
     if streaming_mode:
@@ -713,7 +714,7 @@ def save_java_objects_to_neo4j(
         java_stats.end_time = java_end_time
         duration_seconds = (java_end_time - java_start_time).total_seconds()
 
-    logger.info("Java object analysis completed in %s", format_duration(duration_seconds))
+    logger.info(_t("neo4j.java_complete", duration=format_duration(duration_seconds)))
 
     return java_stats
 

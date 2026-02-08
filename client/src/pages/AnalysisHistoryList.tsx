@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import client from '../api/client';
-import { Trash2, RefreshCw, Search, FileText, Settings, X, ArrowUpDown, ArrowUp, ArrowDown, History, CheckSquare, Square } from 'lucide-react';
+import { Trash2, RefreshCw, Search, FileText, Settings, X, ArrowUpDown, ArrowUp, ArrowDown, History } from 'lucide-react';
 
 import ConfirmModal from '../components/ConfirmModal';
 import toast from 'react-hot-toast';
@@ -38,7 +38,7 @@ const AnalysisHistoryList: React.FC = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [sortConfig, setSortConfig] = useState<SortConfig | null>({ key: 'start_time', direction: 'desc' });
-    
+
     // Selection State
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
@@ -70,10 +70,10 @@ const AnalysisHistoryList: React.FC = () => {
 
     const handleBulkDelete = () => {
         if (selectedIds.size === 0) return;
-        setDeleteConfirm({ 
-            id: null, 
+        setDeleteConfirm({
+            id: null,
             ids: Array.from(selectedIds),
-            jobId: `${selectedIds.size} logs` 
+            jobId: `${selectedIds.size} logs`
         });
     }
 
@@ -250,8 +250,8 @@ const AnalysisHistoryList: React.FC = () => {
                         <thead className="bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-semibold border-b border-slate-200 dark:border-slate-800">
                             <tr>
                                 <th className="px-4 py-4 w-10">
-                                    <input 
-                                        type="checkbox" 
+                                    <input
+                                        type="checkbox"
                                         className="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-4 w-4"
                                         checked={isAllSelected}
                                         ref={input => { if (input) input.indeterminate = isIndeterminate; }}
@@ -290,8 +290,8 @@ const AnalysisHistoryList: React.FC = () => {
                                 sortedHistory.map((item) => (
                                     <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 transition-colors">
                                         <td className="px-4 py-4">
-                                            <input 
-                                                type="checkbox" 
+                                            <input
+                                                type="checkbox"
                                                 className="rounded border-slate-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 h-4 w-4"
                                                 checked={selectedIds.has(item.id)}
                                                 onChange={() => handleSelectRow(item.id)}
@@ -301,18 +301,17 @@ const AnalysisHistoryList: React.FC = () => {
                                             {item.job_id}
                                         </td>
                                         <td className="px-6 py-4">
-                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                                                item.analysis_type === 'AI'
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${item.analysis_type === 'AI'
                                                     ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800'
                                                     : item.analysis_type === 'Reanalysis'
-                                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
-                                                    : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
+                                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-800'
+                                                        : 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800'
                                                 }`}>
                                                 {item.analysis_type === 'AI'
                                                     ? (t('analysis.typeAi') || "AI")
                                                     : item.analysis_type === 'Reanalysis'
-                                                    ? (t('analysis.typeReanalysis') || "Reanalysis")
-                                                    : (t('analysis.typeStatic') || "Static")
+                                                        ? (t('analysis.typeReanalysis') || "Reanalysis")
+                                                        : (t('analysis.typeStatic') || "Static")
                                                 }
                                             </span>
                                         </td>
@@ -474,9 +473,9 @@ const AnalysisHistoryList: React.FC = () => {
                 onClose={() => setDeleteConfirm(null)}
                 onConfirm={executeDelete}
                 title={deleteConfirm?.ids ? (t('analysis.deleteBulkLogTitle') || "Delete Analysis Logs") : (t('analysis.deleteLogTitle') || "Delete Analysis Log")}
-                message={deleteConfirm?.ids ? 
-                         (t('analysis.deleteBulkLogConfirm', {count: deleteConfirm.ids.length}) || `Are you sure you want to delete ${deleteConfirm.ids.length} selected logs?`) : 
-                         deleteConfirm ? `${t('analysis.deleteLogConfirm') || "Are you sure you want to delete the log for Job ID:"} ${deleteConfirm.jobId}?` : ""}
+                message={deleteConfirm?.ids ?
+                    (t('analysis.deleteBulkLogConfirm', { count: deleteConfirm.ids.length }) || `Are you sure you want to delete ${deleteConfirm.ids.length} selected logs?`) :
+                    deleteConfirm ? `${t('analysis.deleteLogConfirm') || "Are you sure you want to delete the log for Job ID:"} ${deleteConfirm.jobId}?` : ""}
                 confirmText={t('common.delete') || "Delete"}
                 variant="danger"
             />

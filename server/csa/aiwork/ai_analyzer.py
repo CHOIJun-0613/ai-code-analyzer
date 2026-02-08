@@ -11,6 +11,7 @@ import time
 from .ai_config import ai_config, AIConfig
 from .ai_providers import AIProviderManager, ai_provider_manager
 from .prompt import get_prompt
+from csa.utils.i18n import _t
 
 logger = logging.getLogger(__name__)
 
@@ -39,16 +40,16 @@ class AIAnalyzer:
 
         # AI 분석 시스템 활성화 여부 확인
         if not self.ai_config.ai_use_analysis:
-            logger.info("AI 분석이 비활성화되어 있습니다 (USE_AI_ANALYSIS=false)")
+            logger.info(_t("ai.init_disabled"))
             return
 
         # LLM 초기화 시도
         try:
             self._llm = self.provider_manager.create_llm()
             self._is_available = True
-            logger.info(f"AI 분석 초기화 완료: {self.ai_config.ai_provider} / {self.ai_config.get_current_model_name()}")
+            logger.info(_t("ai.init_complete", provider=self.ai_config.ai_provider, model=self.ai_config.get_current_model_name()))
         except Exception as e:
-            logger.warning(f"AI 분석 초기화 실패: {e}")
+            logger.warning(_t("ai.init_failed", error=str(e)))
             self._is_available = False
 
     def is_available(self) -> bool:

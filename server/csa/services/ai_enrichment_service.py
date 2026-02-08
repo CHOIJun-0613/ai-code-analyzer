@@ -9,6 +9,8 @@ from typing import Any, Dict, List, Optional, Callable
 
 import click
 
+from csa.utils.i18n import _t
+
 
 class AIEnrichmentService:
     """Service to add AI-generated descriptions to nodes without ai_description."""
@@ -74,7 +76,7 @@ class AIEnrichmentService:
                     result = session.run(query, project_name=project_name)
                     record = result.single()
                     cleaned = record["cnt"] if record and "cnt" in record else 0
-                    self.logger.info(f"[CLEAN] {label}: cleared ai_description for {cleaned} nodes")
+                    self.logger.info(_t("ai.enrichment.clean", label=label, count=cleaned))
                 except Exception as exc:
                     self.logger.error(f"[CLEAN] Failed to clear ai_description for {label}: {exc}")
                     raise
@@ -373,11 +375,11 @@ class AIEnrichmentService:
 
         total = len(classes)
         if total == 0:
-            self.logger.info("No Class nodes found that need AI enrichment")
+            self.logger.info(_t("ai.enrichment.no_class_nodes"))
             return stats
 
-        self.logger.info(f"Found {total} Class nodes to enrich")
-        self.logger.info(f"Processing {total} Class nodes with {concurrent_requests} concurrent requests...")
+        self.logger.info(_t("ai.enrichment.found_class", count=total))
+        self.logger.info(_t("ai.enrichment.processing_class", count=total, concurrent=concurrent_requests))
         self.logger.info(f"[0/{total}] (0%) Processing started...")
 
         # Semaphore: 청크 분석 시 동시 LLM 요청 수 제한
@@ -493,11 +495,11 @@ class AIEnrichmentService:
 
         total = len(methods)
         if total == 0:
-            self.logger.info("No Method nodes found")
+            self.logger.info(_t("ai.enrichment.no_method_nodes"))
             return stats
 
-        self.logger.info(f"Found {total} Method nodes to enrich")
-        self.logger.info(f"Processing {total} Method nodes with batch size {batch_size}...")
+        self.logger.info(_t("ai.enrichment.found_method", count=total))
+        self.logger.info(_t("ai.enrichment.processing_method", count=total, batch_size=batch_size))
         self.logger.info(f"[0/{total}] (0%) Processing started...")
 
         # batch_size = 5 # Used from argument
@@ -746,11 +748,11 @@ class AIEnrichmentService:
 
         total = len(sql_statements)
         if total == 0:
-            self.logger.info("No SqlStatement nodes found")
+            self.logger.info(_t("ai.enrichment.no_sql_nodes"))
             return stats
 
-        self.logger.info(f"Found {total} SqlStatement nodes to enrich")
-        self.logger.info(f"Processing {total} SqlStatement nodes with batch size {batch_size}...")
+        self.logger.info(_t("ai.enrichment.found_sql", count=total))
+        self.logger.info(_t("ai.enrichment.processing_sql", count=total, batch_size=batch_size))
         self.logger.info(f"[0/{total}] (0%) Processing started...")
 
         # batch_size = 5 # Used from argument

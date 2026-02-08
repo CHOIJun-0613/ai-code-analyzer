@@ -8,6 +8,7 @@ from datetime import datetime
 from typing import Dict, Optional
 
 from csa.utils.context import get_client_id, get_job_id
+from csa.utils.i18n import _t
 
 from csa.models.analysis import AnalysisResult, DatabaseAnalysisStats, JavaAnalysisStats
 from csa.models.graph_entities import Project
@@ -37,7 +38,7 @@ def _prepare_database(
 ) -> Optional[GraphDB]:
     """Initialise GraphDB connection and perform optional cleanup."""
     if dry_run:
-        logger.info("Running in dry-run mode - no database operations will be performed")
+        logger.info(_t("db.dryrun"))
         return None
 
     if not neo4j_password:
@@ -50,17 +51,17 @@ def _prepare_database(
         # clean_database()로 데이터만 삭제되고 인덱스는 남음
 
         if all_objects:
-            logger.info(f"Cleaning all objects for project '{project_name}'...")
+            logger.info(_t("db.clean.all_start", project_name=project_name))
             db.clean_database(project_name)
-            logger.info(f"All objects for project '{project_name}' cleaned successfully")
+            logger.info(_t("db.clean.all_done", project_name=project_name))
         elif java_object:
-            logger.info(f"Cleaning Java objects for project '{project_name}'...")
+            logger.info(_t("db.clean.java_start", project_name=project_name))
             db.clean_java_objects(project_name)
-            logger.info(f"Java objects for project '{project_name}' cleaned successfully")
+            logger.info(_t("db.clean.java_done", project_name=project_name))
         elif db_object:
-            logger.info("Cleaning DB objects (shared across all projects)...")
+            logger.info(_t("db.clean.db_start"))
             db.clean_db_objects()
-            logger.info("DB objects cleaned successfully")
+            logger.info(_t("db.clean.db_done"))
 
     # 인덱스 확인 및 생성 (없으면 생성, 있으면 건너뜀)
     # 데이터 저장 전에 실행하여 MERGE 성능 보장
@@ -234,11 +235,11 @@ def analyze_project(
                 if os.path.exists(resolved_db_folder):
                     db_stats = analyze_full_project_db(db, resolved_db_folder, project_name, dry_run, logger)
                 else:
-                    logger.warning("Database script folder does not exist: %s", resolved_db_folder)
-                    logger.info("Please check the DB_SCRIPT_FOLDER path in your .env file or use --db-script-folder option")
+                    logger.warning(_t("db_folder.not_exist", path=resolved_db_folder))
+                    logger.info(_t("db_folder.check_path"))
             else:
-                logger.warning("Database script folder not provided - skipping database analysis")
-                logger.info("To analyze database objects, use --db-script-folder option to specify the path to SQL script files")
+                logger.warning(_t("db_folder.not_provided"))
+                logger.info(_t("db_folder.use_option"))
 
         # Check Cancellation
         check_cancellation(job_id, logger)

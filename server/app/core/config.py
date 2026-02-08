@@ -33,6 +33,7 @@ class Settings(BaseSettings):
 
     # Logging
     LOG_LEVEL: str = "INFO"
+    LOG_LANGUAGE: str = "ko"
 
     # Output Directories
     SEQUENCE_DIAGRAM_OUTPUT_DIR: str = "output/sequence-diagram"

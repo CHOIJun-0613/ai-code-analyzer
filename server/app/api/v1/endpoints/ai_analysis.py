@@ -7,6 +7,8 @@ import datetime
 import random
 import json
 
+from fastapi import Request
+
 from app.api import deps
 from app.models.user import UserInDB
 from app.services.user_service import UserService
@@ -80,10 +82,13 @@ def run_enrichment_task(
     user_ai_prefs: Dict[str, Any],
     neo4j_config: Dict[str, str],
     user_id: str,
-    is_reanalysis: bool = False
+    is_reanalysis: bool = False,
+    language: str = "ko"
 ):
     """Background task to run AI enrichment."""
-    
+    from csa.utils.context import set_language
+    set_language(language)
+
     if job_id in jobs:
         jobs[job_id]["status"] = "running"
     
@@ -116,7 +121,8 @@ def run_enrichment_task(
 
     db = None
     try:
-        task_logger.info(f"Starting AI Enrichment task for project: {request.project_name} (Job ID: {job_id})")
+        from csa.utils.i18n import _t
+        task_logger.info(_t("ai.enrichment.start", project_name=request.project_name, job_id=job_id))
         task_logger.info(f"Log Level: {request.log_level}")
 
         # 2. Configure AI Analyzer
@@ -216,7 +222,7 @@ def run_enrichment_task(
         )
         
     except Exception as e:
-        task_logger.error(f"AI Enrichment task failed: {e}", exc_info=True)
+        task_logger.error(_t("ai.enrichment.failed", error=str(e)), exc_info=True)
         if job_id in jobs:
             jobs[job_id]["status"] = "failed"
             jobs[job_id]["error"] = str(e)
@@ -380,8 +386,11 @@ def run_enrichment_task(
 def trigger_ai_enrichment(
     request: AIEnrichRequest,
     background_tasks: BackgroundTasks,
+    http_request: Request,
     current_user: UserInDB = Depends(deps.get_current_user),
 ):
+    # Set language context from Accept-Language header
+    language = deps.get_language_from_header(http_request)
     # Fetch preferences
     user_ai_prefs_str = UserService.get_user_ai_preferences(current_user.username)
     try:
@@ -422,7 +431,8 @@ def trigger_ai_enrichment(
         request,
         user_ai_prefs,
         neo4j_config,
-        user_id
+        user_id,
+        language=language
     )
 
     return AIEnrichResponse(
