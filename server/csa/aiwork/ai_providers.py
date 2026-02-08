@@ -303,16 +303,18 @@ class AIProviderManager:
             provider.model_name = model_name
 
         if not provider.is_available():
-            print(f"Provider '{provider_name_to_use}'가 사용 불가능합니다.")
+            from csa.utils.i18n import _t
+            logger.warning(_t("ai.provider_unavailable", provider=provider_name_to_use))
             # Google으로 폴백
             fallback_provider = self.providers["google"]
             if fallback_provider.is_available():
-                print("Google Gemini로 폴백합니다.")
+                logger.info(_t("ai.provider_fallback"))
                 return fallback_provider.create_llm()
             else:
-                raise ValueError("사용 가능한 AI Provider가 없습니다.")
+                raise ValueError(_t("ai.provider_none_available"))
 
-        print(f"AI Provider '{provider_name_to_use}' 사용, 모델: {provider.get_model_name()}")
+        from csa.utils.i18n import _t
+        logger.info(_t("ai.provider_using", provider=provider_name_to_use, model=provider.get_model_name()))
         return provider.create_llm()
 
     # def create_llm(self):
