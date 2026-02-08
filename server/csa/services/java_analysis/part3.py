@@ -17,17 +17,17 @@ def parse_java_project_full(
     classes = {}
     class_to_package_map = {}
     
-    logger.info(f"Starting Java project analysis in: {directory}")
-    logger.info(f"Project name: {project_name}")
+    logger.info(_t("java_analysis.start_analysis", directory=directory))
+    logger.info(_t("java_analysis.project_name", name=project_name))
 
     # Fetch existing class hashes for skipping analysis
     existing_hashes = {}
     if graph_db:
         try:
             existing_hashes = graph_db.get_project_class_hashes(project_name)
-            logger.info(f"Loaded {len(existing_hashes)} existing class hashes for incremental analysis")
+            logger.info(_t("java_analysis.loaded_existing_hashes", count=len(existing_hashes)))
         except Exception as e:
-            logger.warning(f"Failed to load existing class hashes: {e}")
+            logger.warning(_t("java_analysis.failed_load_hashes", error=str(e)))
 
     java_file_count = 0
     processed_file_count = 0
@@ -80,7 +80,7 @@ def parse_java_project_full(
             stop_check_callback()
             
         java_file_count += 1
-        logger.debug(f"Processing Java file {java_file_count}: {file_path}")
+        logger.debug(_t("java_analysis.processing_file", number=java_file_count, path=file_path))
 
         with open(file_path, 'r', encoding='utf-8') as f:
             file_content = f.read()
@@ -88,7 +88,7 @@ def parse_java_project_full(
         try:
             tree = javalang.parse.parse(file_content)
             package_name = tree.package.name if tree.package else ""
-            logger.debug(f"Parsed file: {file_path}, package: {package_name}")
+            logger.debug(_t("java_analysis.parsed_file", path=file_path, package=package_name))
             
             if package_name and package_name not in packages:
                 packages[package_name] = Package(
@@ -114,7 +114,7 @@ def parse_java_project_full(
             for _, class_declaration in class_declarations:
                 class_name = class_declaration.name
                 class_key = f"{package_name}.{class_name}"
-                logger.debug(f"Processing class/interface: {class_name} (type: {type(class_declaration).__name__})")
+                logger.debug(_t("java_analysis.processing_class", name=class_name, type=type(class_declaration).__name__))
                 
                 if class_key not in classes:
                     class_annotations = parse_annotations(class_declaration.annotations, "class") if hasattr(class_declaration, 'annotations') else []
@@ -164,7 +164,7 @@ def parse_java_project_full(
                         code_complexity=0  # 메서드와 필드 추가 후 재계산
                     )
                     class_to_package_map[class_key] = package_name
-                    logger.debug(f"Successfully added class to classes dict: {class_name} (key: {class_key})")
+                    logger.debug(_t("java_analysis.class_added_to_dict", name=class_name, key=class_key))
                     
                     # 진행 상황을 10% 단위로 표시
                     processed_classes += 1
@@ -174,7 +174,7 @@ def parse_java_project_full(
                         last_logged_percent = current_percent
                         logger.info(_t("java_analysis.class_parsing_progress", current=processed_classes, total=total_classes, percent=current_percent, class_name=class_name))
                 else:
-                    logger.debug(f"Class {class_name} already exists, skipping")
+                    logger.debug(_t("java_analysis.class_already_exists", name=class_name))
                 
                 for imp in tree.imports:
                     classes[class_key].imports.append(imp.path)
@@ -405,18 +405,18 @@ def parse_java_project_full(
                 
                 has_data_annotation = any(ann.name == "Data" for ann in classes[class_key].annotations)
                 if has_data_annotation:
-                    logger.debug(f"Found @Data annotation on {class_name}, generating Lombok methods")
+                    logger.debug(_t("java_analysis.found_data_annotation", name=class_name))
                     lombok_methods = generate_lombok_methods(classes[class_key].properties, class_name, package_name)
                     classes[class_key].methods.extend(lombok_methods)
-                    logger.debug(f"Generated {len(lombok_methods)} Lombok methods for {class_name}")
+                    logger.debug(_t("java_analysis.generated_lombok_methods", count=len(lombok_methods), name=class_name))
             
             processed_file_count += 1
-            logger.debug(f"Successfully processed file: {file_path}")
+            logger.debug(_t("java_analysis.file_processed_success", path=file_path))
             
             # Rule001 논리명 추출 로직 제거 - 이미 파싱 시 처리됨
                 
         except Exception as e:
-                    logger.error(f"Error processing file {file_path}: {e}")
+                    logger.error(_t("java_analysis.file_processing_error", path=file_path, error=str(e)))
                     continue
     
     classes_list = list(classes.values())
@@ -443,11 +443,11 @@ def parse_java_project_full(
     sql_method_relationships = analyze_sql_method_relationships(sql_statements, classes_list)
     db_call_chain_analysis = generate_db_call_chain_analysis(sql_statements, classes_list)
     
-    logger.info(f"Java project analysis complete:")
-    logger.info(f"  - Java files processed: {processed_file_count}/{java_file_count}")
-    logger.info(f"  - Packages found: {len(packages)}")
-    logger.info(f"  - Classes found: {len(classes)}")
-    logger.info(f"  - Classes list length: {len(classes_list)}")
+    logger.info(_t("java_analysis.analysis_complete"))
+    logger.info(_t("java_analysis.files_processed", processed=processed_file_count, total=java_file_count))
+    logger.info(_t("java_analysis.packages_found_summary", count=len(packages)))
+    logger.info(_t("java_analysis.classes_found_summary", count=len(classes)))
+    logger.info(_t("java_analysis.classes_list_length", count=len(classes_list)))
     
     return (
         list(packages.values()),

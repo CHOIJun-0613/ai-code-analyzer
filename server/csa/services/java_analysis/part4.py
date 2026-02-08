@@ -230,8 +230,8 @@ def parse_java_project_streaming(
 
     logger = get_logger(__name__)
 
-    logger.info(f"Starting Java project streaming analysis in: {directory}")
-    logger.info(f"Project name: {project_name}")
+    logger.info(_t("java_analysis.start_streaming_analysis", directory=directory))
+    logger.info(_t("java_analysis.project_name", name=project_name))
 
     packages_saved = set()
     stats = {
@@ -679,16 +679,16 @@ def parse_java_project_streaming(
         bean_elapsed = time.time() - bean_start_time
         logger.info(f"Bean 의존성 해결 완료 ({bean_elapsed:.1f}초)")
 
-    logger.info(f"Java project streaming analysis complete:")
-    logger.info(f"  - Java files processed: {stats['processed_files']}/{stats['total_files']}")
-    logger.info(f"  - Packages found: {stats['packages']}")
-    logger.info(f"  - Classes found: {stats['classes']}")
-    logger.info(f"  - Beans: {stats['beans']}")
-    logger.info(f"  - Endpoints: {stats['endpoints']}")
-    logger.info(f"  - JPA Repositories: {stats['jpa_repositories']}")
-    logger.info(f"  - JPA Queries: {stats['jpa_queries']}")
-    logger.info(f"  - MyBatis Mappers: {stats['mybatis_mappers']}")
-    logger.info(f"  - SQL Statements: {stats['sql_statements']}")
+    logger.info(_t("java_analysis.streaming_analysis_complete"))
+    logger.info(_t("java_analysis.files_processed", processed=stats['processed_files'], total=stats['total_files']))
+    logger.info(_t("java_analysis.packages_found_summary", count=stats['packages']))
+    logger.info(_t("java_analysis.classes_found_summary", count=stats['classes']))
+    logger.info(_t("java_analysis.beans_found", count=stats['beans']))
+    logger.info(_t("java_analysis.endpoints_found", count=stats['endpoints']))
+    logger.info(_t("java_analysis.jpa_repositories", count=stats['jpa_repositories']))
+    logger.info(_t("java_analysis.jpa_queries", count=stats['jpa_queries']))
+    logger.info(_t("java_analysis.mybatis_mappers", count=stats['mybatis_mappers']))
+    logger.info(_t("java_analysis.sql_statements", count=stats['sql_statements']))
 
     return stats
 

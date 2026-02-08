@@ -427,10 +427,10 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
     
     try:
         tree = javalang.parse.parse(file_content)
-        logger.debug(f"Successfully parsed file: {file_path}")
-        
+        logger.debug(_t("java_analysis.file_processed_success", path=file_path))
+
         package_name = tree.package.name if tree.package else ""
-        logger.debug(f"Parsed package name: {package_name}")
+        logger.debug(_t("java_analysis.parsed_file", path=file_path, package=package_name))
         
         if package_name:
             package_node = Package(name=package_name)
@@ -451,7 +451,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 break
         
         if not class_declaration:
-            logger.error(f"No class declaration found in file: {file_path}")
+            logger.error(_t("java_analysis.no_class_declaration", path=file_path))
             return None, None, [], ""
         
         class_name = class_declaration.name
@@ -472,14 +472,14 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
 
                     # use_ai 인자는 parse_single_java_file의 인자로 전달됨
                     if not use_ai:
-                        logger.info(f"Skipping analysis for {class_name} (source unchanged, AI not requested)")
+                        logger.info(_t("java_analysis.skipping_unchanged_no_ai", name=class_name))
                         return None, None, [], "SKIPPED_UNCHANGED"
                     else:
-                        logger.info(f"Proceeding with analysis for {class_name} despite unchanged source (AI requested)")
+                        logger.info(_t("java_analysis.proceeding_unchanged_with_ai", name=class_name))
              except Exception as e:
-                 logger.warning(f"Failed to check existing hash for {class_name}: {e}")
+                 logger.warning(_t("java_analysis.failed_check_hash", name=class_name, error=str(e)))
         elif force_reanalysis:
-            logger.info(f"Force reanalysis enabled for {class_name} - skipping hash check")
+            logger.info(_t("java_analysis.force_reanalysis_enabled", name=class_name))
 
         class_annotations = parse_annotations(class_declaration.annotations, "class") if hasattr(class_declaration, 'annotations') else []
         class_type = "interface" if isinstance(class_declaration, javalang.tree.InterfaceDeclaration) else "class"
@@ -522,9 +522,9 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                         if existing_ai_desc:
                             ai_description = existing_ai_desc
                             skip_ai = True
-                            logger.info(f"Skipping AI analysis for {class_name} (source unchanged)")
+                            logger.info(_t("java_analysis.skipping_ai_unchanged", name=class_name))
                 elif force_reanalysis:
-                    logger.info(f"Force reanalysis enabled - performing AI analysis for {class_name}")
+                    logger.info(_t("java_analysis.force_reanalysis_ai", name=class_name))
 
                 # AI Analyzer 초기화 (Class/Method 공통)
                 analyzer = None
@@ -535,7 +535,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                             config = AIConfig(ai_options)
                             analyzer = AIAnalyzer(config)
                         except Exception as e:
-                            logger.warning(f"Failed to initialize AI Analyzer with options: {e}")
+                            logger.warning(_t("java_analysis.failed_init_ai", error=str(e)))
                             analyzer = None
                     
                     if not analyzer:
@@ -656,7 +656,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             
             for declaration in all_declarations:
                 method_name = declaration.name
-                logger.debug(f"Processing method declaration: {method_name}")
+                logger.debug(_t("java_analysis.processing_method", name=method_name))
                 local_var_map = field_map.copy()
                 params = []
                 for param in declaration.parameters:
@@ -751,11 +751,11 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 # USE_AI_ANALYSIS 결정 로직은 위에서 계산된 use_ai 사용
                 if use_ai and not is_simple_method:
                     if not AI_ANALYZER_AVAILABLE:
-                         logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer not available")
+                         logger.warning(_t("java_analysis.ai_skipped_unavailable", class_=class_name, method=declaration.name))
                     elif not method_source:
-                         logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: Empty method source")
+                         logger.warning(_t("java_analysis.ai_skipped_empty_source", class_=class_name, method=declaration.name))
                     else:
-                        logger.info(f"Starting AI Analysis for method: {class_name}.{declaration.name}")
+                        logger.info(_t("java_analysis.starting_ai_method", class_=class_name, method=declaration.name))
                         try:
                             # analyzer는 위에서 초기화된 인스턴스 사용
                             if analyzer and analyzer.is_available():
@@ -765,11 +765,11 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                                     method_name=declaration.name,
                                     class_name=class_name
                                 )
-                                logger.info(f"AI Analysis completed for method: {class_name}.{declaration.name}")
+                                logger.info(_t("java_analysis.ai_completed_method", class_=class_name, method=declaration.name))
                             else:
-                                logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer is not available or not initialized")
+                                logger.warning(_t("java_analysis.ai_skipped_not_initialized", class_=class_name, method=declaration.name))
                         except Exception as ai_err:
-                            logger.error(f"AI Analysis failed for {class_name}.{declaration.name}: {ai_err}")
+                            logger.error(_t("java_analysis.ai_failed_method", class_=class_name, method=declaration.name, error=str(ai_err)))
                 
                  # DTO skipping logs are handled by caller/config usually, but here is where logic resides.
                  # Actually, use_ai already accounts for skip_dto_methods via caller?
@@ -913,11 +913,11 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             logger.debug(_t("java_analysis.class_code_complexity_failed", class_name=class_name, error=str(e)))
             class_node.code_complexity = 0
 
-        logger.debug(f"Successfully parsed single file: {file_path} (found {len(inner_classes)} inner classes)")
+        logger.debug(_t("java_analysis.successfully_parsed_file", path=file_path, inner_classes=len(inner_classes)))
         return package_node, class_node, inner_classes, package_name
 
     except Exception as e:
-        logger.error(f"Error parsing file: {e}")
+        logger.error(_t("java_analysis.error_parsing_file", error=str(e)))
         return None, None, [], ""
 
 def parse_java_project_full(
@@ -939,18 +939,18 @@ def parse_java_project_full(
     packages = {}
     classes = {}
     class_to_package_map = {}
-    
-    logger.info(f"Starting Java project analysis in: {directory}")
-    logger.info(f"Project name: {project_name}")
+
+    logger.info(_t("java_analysis.start_analysis", directory=directory))
+    logger.info(_t("java_analysis.project_name", name=project_name))
 
     # Fetch existing class hashes for skipping analysis
     existing_hashes = {}
     if graph_db:
         try:
             existing_hashes = graph_db.get_project_class_hashes(project_name)
-            logger.info(f"Loaded {len(existing_hashes)} existing class hashes for incremental analysis")
+            logger.info(_t("java_analysis.loaded_existing_hashes", count=len(existing_hashes)))
         except Exception as e:
-            logger.warning(f"Failed to load existing class hashes: {e}")
+            logger.warning(_t("java_analysis.failed_load_hashes", error=str(e)))
 
     java_file_count = 0
     processed_file_count = 0
@@ -1003,7 +1003,7 @@ def parse_java_project_full(
             stop_check_callback()
             
         java_file_count += 1
-        logger.debug(f"Processing Java file {java_file_count}: {file_path}")
+        logger.debug(_t("java_analysis.processing_file", number=java_file_count, path=file_path))
 
         with open(file_path, 'r', encoding='utf-8') as f:
             file_content = f.read()
@@ -1011,7 +1011,7 @@ def parse_java_project_full(
         try:
             tree = javalang.parse.parse(file_content)
             package_name = tree.package.name if tree.package else ""
-            logger.debug(f"Parsed file: {file_path}, package: {package_name}")
+            logger.debug(_t("java_analysis.parsed_file", path=file_path, package=package_name))
             
             if package_name and package_name not in packages:
                 packages[package_name] = Package(
@@ -1037,7 +1037,7 @@ def parse_java_project_full(
             for _, class_declaration in class_declarations:
                 class_name = class_declaration.name
                 class_key = f"{package_name}.{class_name}"
-                logger.debug(f"Processing class/interface: {class_name} (type: {type(class_declaration).__name__})")
+                logger.debug(_t("java_analysis.processing_class", name=class_name, type=type(class_declaration).__name__))
                 
                 if class_key not in classes:
                     class_annotations = parse_annotations(class_declaration.annotations, "class") if hasattr(class_declaration, 'annotations') else []
@@ -1093,17 +1093,17 @@ def parse_java_project_full(
                         code_complexity=0  # 메서드와 필드 추가 후 재계산
                     )
                     class_to_package_map[class_key] = package_name
-                    logger.debug(f"Successfully added class to classes dict: {class_name} (key: {class_key})")
-                    
+                    logger.debug(_t("java_analysis.class_added_to_dict", name=class_name, key=class_key))
+
                     # 진행 상황을 10% 단위로 표시
                     processed_classes += 1
                     current_percent = int((processed_classes / total_classes) * 100) if total_classes > 0 else 0
-                    
+
                     if current_percent >= last_logged_percent + 10 or processed_classes == total_classes:
                         last_logged_percent = current_percent
                         logger.info(_t("java_analysis.class_parsing_progress", current=processed_classes, total=total_classes, percent=current_percent, class_name=class_name))
                 else:
-                    logger.debug(f"Class {class_name} already exists, skipping")
+                    logger.debug(_t("java_analysis.class_already_exists", name=class_name))
                 
                 for imp in tree.imports:
                     classes[class_key].imports.append(imp.path)
@@ -1339,18 +1339,18 @@ def parse_java_project_full(
                 
                 has_data_annotation = any(ann.name == "Data" for ann in classes[class_key].annotations)
                 if has_data_annotation:
-                    logger.debug(f"Found @Data annotation on {class_name}, generating Lombok methods")
+                    logger.debug(_t("java_analysis.found_data_annotation", name=class_name))
                     lombok_methods = generate_lombok_methods(classes[class_key].properties, class_name, package_name)
                     classes[class_key].methods.extend(lombok_methods)
-                    logger.debug(f"Generated {len(lombok_methods)} Lombok methods for {class_name}")
-            
+                    logger.debug(_t("java_analysis.generated_lombok_methods", count=len(lombok_methods), name=class_name))
+
             processed_file_count += 1
-            logger.debug(f"Successfully processed file: {file_path}")
-            
+            logger.debug(_t("java_analysis.file_processed_success", path=file_path))
+
             # Rule001 논리명 추출 로직 제거 - 이미 파싱 시 처리됨
-                
+
         except Exception as e:
-                    logger.error(f"Error processing file {file_path}: {e}")
+                    logger.error(_t("java_analysis.file_processing_error", path=file_path, error=str(e)))
                     continue
     
     classes_list = list(classes.values())
@@ -1376,12 +1376,12 @@ def parse_java_project_full(
     resultmap_mapping_analysis = analyze_mybatis_resultmap_mapping(mybatis_mappers, sql_statements)
     sql_method_relationships = analyze_sql_method_relationships(sql_statements, classes_list)
     db_call_chain_analysis = generate_db_call_chain_analysis(sql_statements, classes_list)
-    
-    logger.info(f"Java project analysis complete:")
-    logger.info(f"  - Java files processed: {processed_file_count}/{java_file_count}")
-    logger.info(f"  - Packages found: {len(packages)}")
-    logger.info(f"  - Classes found: {len(classes)}")
-    logger.info(f"  - Classes list length: {len(classes_list)}")
+
+    logger.info(_t("java_analysis.analysis_complete"))
+    logger.info(_t("java_analysis.files_processed", processed=processed_file_count, total=java_file_count))
+    logger.info(_t("java_analysis.packages_found_summary", count=len(packages)))
+    logger.info(_t("java_analysis.classes_found_summary", count=len(classes)))
+    logger.info(_t("java_analysis.classes_list_length", count=len(classes_list)))
     
     return (
         list(packages.values()),
@@ -1635,8 +1635,8 @@ def parse_java_project_streaming(
 
     logger = get_logger(__name__)
 
-    logger.info(f"Starting Java project streaming analysis in: {directory}")
-    logger.info(f"Project name: {project_name}")
+    logger.info(_t("java_analysis.start_streaming_analysis", directory=directory))
+    logger.info(_t("java_analysis.project_name", name=project_name))
 
     packages_saved = set()
     stats = {
@@ -1689,7 +1689,7 @@ def parse_java_project_streaming(
     if source_options and 'charset' in source_options:
         charset = source_options['charset']
 
-    logger.info(f"Using charset: {charset}")
+    logger.info(_t("java_analysis.using_charset", charset=charset))
 
     logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
@@ -2102,16 +2102,16 @@ def parse_java_project_streaming(
         bean_elapsed = time.time() - bean_start_time
         logger.info(_t("java_analysis.bean_dependency_complete", elapsed=bean_elapsed))
 
-    logger.info(f"Java project streaming analysis complete:")
-    logger.info(f"  - Java files processed: {stats['processed_files']}/{stats['total_files']}")
-    logger.info(f"  - Packages found: {stats['packages']}")
-    logger.info(f"  - Classes found: {stats['classes']}")
-    logger.info(f"  - Beans: {stats['beans']}")
-    logger.info(f"  - Endpoints: {stats['endpoints']}")
-    logger.info(f"  - JPA Repositories: {stats['jpa_repositories']}")
-    logger.info(f"  - JPA Queries: {stats['jpa_queries']}")
-    logger.info(f"  - MyBatis Mappers: {stats['mybatis_mappers']}")
-    logger.info(f"  - SQL Statements: {stats['sql_statements']}")
+    logger.info(_t("java_analysis.streaming_analysis_complete"))
+    logger.info(_t("java_analysis.files_processed", processed=stats['processed_files'], total=stats['total_files']))
+    logger.info(_t("java_analysis.packages_found_summary", count=stats['packages']))
+    logger.info(_t("java_analysis.classes_found_summary", count=stats['classes']))
+    logger.info(_t("java_analysis.beans_found", count=stats['beans']))
+    logger.info(_t("java_analysis.endpoints_found", count=stats['endpoints']))
+    logger.info(_t("java_analysis.jpa_repositories", count=stats['jpa_repositories']))
+    logger.info(_t("java_analysis.jpa_queries", count=stats['jpa_queries']))
+    logger.info(_t("java_analysis.mybatis_mappers", count=stats['mybatis_mappers']))
+    logger.info(_t("java_analysis.sql_statements", count=stats['sql_statements']))
 
     return stats
 
