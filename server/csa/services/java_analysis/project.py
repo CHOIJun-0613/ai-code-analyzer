@@ -980,7 +980,7 @@ def parse_java_project_full(
 
     logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
-    logger.info(f"총 {len(java_files)}개 Java 파일 발견")
+    logger.info(_t("java_analysis.java_files_found", count=len(java_files)))
 
     # 먼저 전체 클래스 개수를 계산
     logger.info(_t("java_analysis.calculating_classes"))
@@ -996,7 +996,7 @@ def parse_java_project_full(
         except Exception:
             continue
 
-    logger.info(f"총 {total_classes}개 클래스 발견")
+    logger.info(_t("java_analysis.classes_found", count=total_classes))
 
     for file_path in java_files:
         if stop_check_callback:
@@ -1101,7 +1101,7 @@ def parse_java_project_full(
                     
                     if current_percent >= last_logged_percent + 10 or processed_classes == total_classes:
                         last_logged_percent = current_percent
-                        logger.info(f"클래스 파싱 진행중 [{processed_classes}/{total_classes}] ({current_percent}%) - 최근: {class_name}")
+                        logger.info(_t("java_analysis.class_parsing_progress", current=processed_classes, total=total_classes, percent=current_percent, class_name=class_name))
                 else:
                     logger.debug(f"Class {class_name} already exists, skipping")
                 
@@ -1696,7 +1696,7 @@ def parse_java_project_streaming(
 
     total_files = len(java_files)
     stats['total_files'] = total_files
-    logger.info(f"총 {total_files}개 Java 파일 발견")
+    logger.info(_t("java_analysis.java_files_found", count=total_files))
 
     # 파일 복잡도 기반 정렬 (복잡한 파일을 먼저 처리 - 워크로드 균형 개선)
     logger.info(_t("java_analysis.analyzing_complexity"))
@@ -1769,7 +1769,7 @@ def parse_java_project_streaming(
         max_size=max_batch_size
     )
 
-    logger.info(f"병렬 파싱 워커 수: {parallel_workers} (CPU 코어: {cpu_count}, 기본값: {default_workers}), 초기 배치 크기: {initial_batch_size} (동적 조정 활성화)")
+    logger.info(_t("java_analysis.parallel_workers_info", workers=parallel_workers, cpu_count=cpu_count, default_workers=default_workers, batch_size=initial_batch_size))
 
     # 0. Package 사전 생성 (성능 최적화)
     logger.info(_t("java_analysis.collecting_packages"))
@@ -1930,11 +1930,14 @@ def parse_java_project_streaming(
                         # [mm:ss] 형식으로 경과 시간 표시
                         elapsed_mm = int(elapsed / 60)
                         elapsed_ss = int(elapsed % 60)
-                        logger.info(
-                            f"[{elapsed_mm:02d}:{elapsed_ss:02d}] "
-                            f"파싱 진행중 [{current_processed}/{total_files}] ({current_percent}%) "
-                            f"- {files_per_sec:.1f} files/sec, ETA: {eta_minutes}분, RAM: {memory_mb:.0f}MB"
-                        )
+                        logger.info(_t("java_analysis.parsing_progress_detail",
+                                       elapsed=f"{elapsed_mm:02d}:{elapsed_ss:02d}",
+                                       current=current_processed,
+                                       total=total_files,
+                                       percent=current_percent,
+                                       files_per_sec=files_per_sec,
+                                       eta=eta_minutes,
+                                       memory=memory_mb))
 
                     # Lock 밖에서 Neo4j 저장 수행 (다른 스레드 블록 방지)
                     if batch_to_save:

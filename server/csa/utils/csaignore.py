@@ -45,7 +45,7 @@ class CSAIgnoreFilter:
         .csaignore 파일을 로드하고 추가 패턴과 합쳐서 파싱합니다.
         """
         if not PATHSPEC_AVAILABLE:
-            logger.warning(".csaignore 지원을 위해 pathspec 라이브러리가 필요합니다. pip install pathspec")
+            logger.warning(_t("csaignore.pathspec_required"))
             return
 
         patterns = []
@@ -63,15 +63,15 @@ class CSAIgnoreFilter:
                         if line and not line.startswith("#"):
                             patterns.append(line)
                 except Exception as e:
-                    logger.error(f".csaignore 파일 로드 실패: {e}")
+                    logger.error(_t("csaignore.load_failed", error=str(e)))
             else:
-                logger.debug(f".csaignore 파일이 없습니다: {self.csaignore_path}")
+                logger.debug(_t("csaignore.file_not_exist", path=str(self.csaignore_path)))
         else:
-            logger.debug(".csaignore 파일 로드 건너뜀 (CLI/UI 옵션 우선 적용)")
+            logger.debug(_t("csaignore.file_loading_skipped"))
 
         # 2. 추가 패턴 병합
         if self.additional_patterns:
-            logger.info(f"UI/옵션에서 전달된 제외 패턴 {len(self.additional_patterns)}개 적용")
+            logger.info(_t("csaignore.ui_patterns_applied", count=len(self.additional_patterns)))
             patterns.extend(self.additional_patterns)
 
         # 3. PathSpec 생성
@@ -84,9 +84,9 @@ class CSAIgnoreFilter:
                 patterns
             )
             logger.info(_t("csaignore.patterns_loaded", count=len(patterns)))
-            logger.debug(f"적용된 패턴: {patterns}")
+            logger.debug(_t("csaignore.applied_patterns", patterns=str(patterns)))
         else:
-            logger.debug("적용할 제외 패턴이 없습니다.")
+            logger.debug(_t("csaignore.no_patterns"))
 
     def should_ignore(self, file_path: str | Path) -> bool:
         """
@@ -120,12 +120,12 @@ class CSAIgnoreFilter:
             is_ignored = self.spec.match_file(relative_path_str)
 
             if is_ignored:
-                logger.debug(f"제외됨: {relative_path_str}")
+                logger.debug(_t("csaignore.file_excluded", path=relative_path_str))
 
             return is_ignored
 
         except Exception as e:
-            logger.error(f"파일 무시 여부 확인 실패 ({file_path}): {e}")
+            logger.error(_t("csaignore.check_failed", path=str(file_path), error=str(e)))
             return False
 
     def filter_files(self, file_paths: List[str | Path]) -> List[str | Path]:
@@ -145,7 +145,7 @@ class CSAIgnoreFilter:
 
         excluded_count = len(file_paths) - len(filtered)
         if excluded_count > 0:
-            logger.info(f".csaignore로 {excluded_count}개 파일 제외됨 (총 {len(file_paths)}개 중)")
+            logger.info(_t("csaignore.files_excluded", excluded=excluded_count, total=len(file_paths)))
 
         return filtered
 

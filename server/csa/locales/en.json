@@ -296,5 +296,12 @@
     "java_analysis.packages_found_batch_creating": "{count} packages found, batch creating...",
     "java_analysis.package_batch_complete": "Package batch creation completed ({elapsed:.2f}s)",
     "java_analysis.parse_timeout_setting": "File parsing timeout: {timeout}s",
-    "java_analysis.batch_save_starting": "Batch save starting ({count} classes)"
+    "java_analysis.batch_save_starting": "Batch save starting ({count} classes)",
+
+    "java_analysis.java_files_found": "Total {count} Java files found",
+    "java_analysis.classes_found": "Total {count} classes found",
+    "java_analysis.class_parsing_progress": "Class parsing in progress [{current}/{total}] ({percent}%) - Recent: {class_name}",
+    "java_analysis.top_complex_file": "{index}. {name} (complexity: {complexity})",
+    "java_analysis.parallel_workers_info": "Parallel parsing workers: {workers} (CPU cores: {cpu_count}, default: {default_workers}), initial batch size: {batch_size} (dynamic adjustment enabled)",
+    "java_analysis.parsing_progress_detail": "[{elapsed}] Parsing in progress [{current}/{total}] ({percent}%) - {files_per_sec:.1f} files/sec, ETA: {eta} min, RAM: {memory:.0f}MB"
 }

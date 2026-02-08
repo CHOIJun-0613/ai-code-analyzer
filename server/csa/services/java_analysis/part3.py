@@ -57,7 +57,7 @@ def parse_java_project_full(
 
     logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
-    logger.info(f"총 {len(java_files)}개 Java 파일 발견")
+    logger.info(_t("java_analysis.java_files_found", count=len(java_files)))
 
     # 먼저 전체 클래스 개수를 계산
     logger.info(_t("java_analysis.calculating_classes"))
@@ -73,7 +73,7 @@ def parse_java_project_full(
         except Exception:
             continue
 
-    logger.info(f"총 {total_classes}개 클래스 발견")
+    logger.info(_t("java_analysis.classes_found", count=total_classes))
 
     for file_path in java_files:
         if stop_check_callback:
@@ -172,7 +172,7 @@ def parse_java_project_full(
                     
                     if current_percent >= last_logged_percent + 10 or processed_classes == total_classes:
                         last_logged_percent = current_percent
-                        logger.info(f"클래스 파싱 진행중 [{processed_classes}/{total_classes}] ({current_percent}%) - 최근: {class_name}")
+                        logger.info(_t("java_analysis.class_parsing_progress", current=processed_classes, total=total_classes, percent=current_percent, class_name=class_name))
                 else:
                     logger.debug(f"Class {class_name} already exists, skipping")
                 

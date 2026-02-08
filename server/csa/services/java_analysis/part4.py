@@ -283,7 +283,7 @@ def parse_java_project_streaming(
 
     total_files = len(java_files)
     stats['total_files'] = total_files
-    logger.info(f"총 {total_files}개 Java 파일 발견")
+    logger.info(_t("java_analysis.java_files_found", count=total_files))
 
     # 파일 복잡도 기반 정렬 (복잡한 파일을 먼저 처리 - 워크로드 균형 개선)
     logger.info(_t("java_analysis.analyzing_complexity"))
@@ -332,7 +332,7 @@ def parse_java_project_streaming(
     logger.info(_t("java_analysis.top_complex_files"))
     for i, (file_path, complexity) in enumerate(top_complex_files, 1):
         file_name = os.path.basename(file_path)
-        logger.info(f"  {i}. {file_name} (복잡도: {complexity})")
+        logger.info(_t("java_analysis.top_complex_file", index=i, name=file_name, complexity=complexity))
 
     # 환경 변수에서 병렬 워커 수 가져오기 (CPU 코어 수 기반 자동 설정)
     # 기본값: max(4, CPU 코어수 - 2) - 최소 4개, 최대 (코어수-2)개
@@ -356,7 +356,7 @@ def parse_java_project_streaming(
         max_size=max_batch_size
     )
 
-    logger.info(f"병렬 파싱 워커 수: {parallel_workers} (CPU 코어: {cpu_count}, 기본값: {default_workers}), 초기 배치 크기: {initial_batch_size} (동적 조정 활성화)")
+    logger.info(_t("java_analysis.parallel_workers_info", workers=parallel_workers, cpu_count=cpu_count, default_workers=default_workers, batch_size=initial_batch_size))
 
     # 0. Package 사전 생성 (성능 최적화)
     logger.info(_t("java_analysis.collecting_packages"))

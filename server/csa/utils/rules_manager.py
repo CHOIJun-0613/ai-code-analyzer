@@ -337,7 +337,7 @@ class RulesManager:
 
     def reload_rules(self):
         """규칙 파일들 재로드"""
-        self.logger.info("규칙 파일들 재로드 중...")
+        self.logger.info(_t("rules.reload_start"))
         self._rules_loaded = False
         self.load_rules()
 

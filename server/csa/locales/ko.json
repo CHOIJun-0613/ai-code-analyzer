@@ -296,5 +296,44 @@
     "java_analysis.packages_found_batch_creating": "총 {count}개 패키지 발견, 배치 생성 중...",
     "java_analysis.package_batch_complete": "Package 배치 생성 완료 ({elapsed:.2f}초)",
     "java_analysis.parse_timeout_setting": "파일 파싱 타임아웃: {timeout}초",
-    "java_analysis.batch_save_starting": "배치 저장 시작 ({count}개 클래스)"
+    "java_analysis.batch_save_starting": "배치 저장 시작 ({count}개 클래스)",
+
+    "rules.reload_start": "규칙 파일들 재로드 중...",
+
+    "neo4j.indexes_created": "인덱스 생성: {created}개 생성, {skipped}개 기존 유지",
+    "neo4j.indexes_already_exist": "인덱스 확인 완료: 모든 인덱스({total}개) 이미 존재함",
+    "neo4j.index_created_debug": "✓ {label}({properties}) {type} 생성: {name}",
+    "neo4j.index_already_exists_debug": "{name} 이미 존재함 (건너뜀)",
+    "neo4j.index_creation_failed": "✗ {name} 생성 실패: {error}",
+    "neo4j.no_indexes_to_delete": "삭제할 인덱스가 없습니다.",
+    "neo4j.index_deleted": "✓ 삭제됨: {name} ({type})",
+    "neo4j.index_deletion_failed": "✗ {name} 삭제 실패: {error}",
+    "neo4j.indexes_deletion_complete": "인덱스 삭제 완료: {deleted}개 성공, {failed}개 실패",
+
+    "java_analysis.java_files_found": "총 {count}개 Java 파일 발견",
+    "java_analysis.classes_found": "총 {count}개 클래스 발견",
+    "java_analysis.class_parsing_progress": "클래스 파싱 진행중 [{current}/{total}] ({percent}%) - 최근: {class_name}",
+    "java_analysis.top_complex_file": "{index}. {name} (복잡도: {complexity})",
+    "java_analysis.parallel_workers_info": "병렬 파싱 워커 수: {workers} (CPU 코어: {cpu_count}, 기본값: {default_workers}), 초기 배치 크기: {batch_size} (동적 조정 활성화)",
+    "java_analysis.parsing_progress_detail": "[{elapsed}] 파싱 진행중 [{current}/{total}] ({percent}%) - {files_per_sec:.1f} files/sec, ETA: {eta}분, RAM: {memory:.0f}MB",
+    "java_analysis.complexity_skipped_files": "⚠️  복잡도 임계값({threshold}) 초과로 건너뛴 파일: {count}개",
+    "java_analysis.complexity_skipped_file_detail": "- {name} (복잡도: {complexity})",
+    "java_analysis.parsing_progress_in_progress": "파싱 진행중 [{current}/{total}] ({percent}%)",
+
+    "csaignore.pathspec_required": ".csaignore 지원을 위해 pathspec 라이브러리가 필요합니다. pip install pathspec",
+    "csaignore.load_failed": ".csaignore 파일 로드 실패: {error}",
+    "csaignore.file_not_exist": ".csaignore 파일이 없습니다: {path}",
+    "csaignore.file_loading_skipped": ".csaignore 파일 로드 건너뜀 (CLI/UI 옵션 우선 적용)",
+    "csaignore.ui_patterns_applied": "UI/옵션에서 전달된 제외 패턴 {count}개 적용",
+    "csaignore.applied_patterns": "적용된 패턴: {patterns}",
+    "csaignore.no_patterns": "적용할 제외 패턴이 없습니다.",
+    "csaignore.file_excluded": "제외됨: {path}",
+    "csaignore.check_failed": "파일 무시 여부 확인 실패 ({path}): {error}",
+    "csaignore.files_excluded": ".csaignore로 {excluded}개 파일 제외됨 (총 {total}개 중)",
+
+    "statistics.calculate_start": "calculate_project_statistics 호출: classes 수={count}, java_source_folder={folder}",
+    "statistics.file_traversal_start": "파일 시스템 순회 시작: {folder}",
+    "statistics.file_aggregation_complete": "파일 집계 완료: 전체={total}, Java={java}, XML={xml}, Config={config}, DDL={ddl}, Ignored={ignored}",
+    "statistics.java_folder_not_exist": "Java 소스 폴더가 존재하지 않음: {folder}",
+    "statistics.loc_aggregation_complete": "LOC 집계 완료: PLOC={ploc}, LLOC={lloc}, CLOC={cloc}"
 }

@@ -7,6 +7,7 @@ Project 통계 집계 유틸리티 모듈
 import os
 from typing import Dict, List, TYPE_CHECKING
 from csa.models.graph_entities import Class, Project
+from csa.utils.i18n import _t
 
 if TYPE_CHECKING:
     from csa.services.graph_db import GraphDB
@@ -31,7 +32,7 @@ def calculate_project_statistics(
     from csa.utils.logger import get_logger
     logger = get_logger(__name__)
 
-    logger.debug(f"calculate_project_statistics 호출: classes 수={len(classes)}, java_source_folder={java_source_folder}")
+    logger.debug(_t("statistics.calculate_start", count=len(classes), folder=java_source_folder))
 
     # 파일 수 집계
     total_file_count = 0
@@ -44,7 +45,7 @@ def calculate_project_statistics(
     total_etc_file_count = 0
 
     if java_source_folder and os.path.exists(java_source_folder):
-        logger.debug(f"파일 시스템 순회 시작: {java_source_folder}")
+        logger.debug(_t("statistics.file_traversal_start", folder=java_source_folder))
         for root, dirs, files in os.walk(java_source_folder):
             # 제외할 디렉터리 건너뛰기
             dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ('node_modules', 'build', 'target', 'dist')]
@@ -74,10 +75,11 @@ def calculate_project_statistics(
         # 하위 호환용 total_etc_file_count 계산
         total_etc_file_count = total_config_file_count + total_ddl_file_count + total_other_analyzed_file_count + total_ignored_file_count
 
-        logger.debug(f"파일 집계 완료: 전체={total_file_count}, Java={total_java_file_count}, XML={total_xml_file_count}, "
-                     f"Config={total_config_file_count}, DDL={total_ddl_file_count}, Ignored={total_ignored_file_count}")
+        logger.debug(_t("statistics.file_aggregation_complete", total=total_file_count, java=total_java_file_count,
+                        xml=total_xml_file_count, config=total_config_file_count, ddl=total_ddl_file_count,
+                        ignored=total_ignored_file_count))
     else:
-        logger.warning(f"Java 소스 폴더가 존재하지 않음: {java_source_folder}")
+        logger.warning(_t("statistics.java_folder_not_exist", folder=java_source_folder))
 
     # LOC 통계 집계 (Java 파일만)
     total_ploc = 0
@@ -93,7 +95,7 @@ def calculate_project_statistics(
             total_lloc += lloc
             total_cloc += cloc
 
-    logger.debug(f"LOC 집계 완료: PLOC={total_ploc}, LLOC={total_lloc}, CLOC={total_cloc}")
+    logger.debug(_t("statistics.loc_aggregation_complete", ploc=total_ploc, lloc=total_lloc, cloc=total_cloc))
 
     # Project 객체 업데이트
     project.total_file_count = total_file_count

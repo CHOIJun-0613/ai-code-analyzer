@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from csa.services.graph_db.base import GraphDBBase
 from csa.utils.logger import get_logger
+from csa.utils.i18n import _t
 
 
 class IndexManager:
@@ -110,9 +111,9 @@ class IndexManager:
         else: skipped_count += 1
 
         if created_count > 0:
-            self.logger.info(f"인덱스 생성: {created_count}개 생성, {skipped_count}개 기존 유지")
+            self.logger.info(_t("neo4j.indexes_created", created=created_count, skipped=skipped_count))
         else:
-            self.logger.info(f"인덱스 확인 완료: 모든 인덱스({created_count + skipped_count}개) 이미 존재함")
+            self.logger.info(_t("neo4j.indexes_already_exist", total=created_count + skipped_count))
 
     def _create_index(
         self,
@@ -152,15 +153,15 @@ class IndexManager:
         try:
             self.graph_db._execute_write(self._create_index_tx, query)
             index_type = "UNIQUE 제약조건" if unique else "인덱스"
-            self.logger.debug(f"✓ {label}({', '.join(properties)}) {index_type} 생성: {index_name}")
+            self.logger.debug(_t("neo4j.index_created_debug", label=label, properties=', '.join(properties), type=index_type, name=index_name))
             return True
         except Exception as e:
             # 이미 존재하거나 다른 이유로 실패한 경우
             if "already exists" in str(e).lower() or "equivalent" in str(e).lower():
-                self.logger.debug(f"  {index_name} 이미 존재함 (건너뜀)")
+                self.logger.debug(_t("neo4j.index_already_exists_debug", name=index_name))
                 return False
             else:
-                self.logger.warning(f"✗ {index_name} 생성 실패: {e}")
+                self.logger.warning(_t("neo4j.index_creation_failed", name=index_name, error=str(e)))
                 return False
 
     @staticmethod
@@ -203,7 +204,7 @@ class IndexManager:
         indexes = self.list_indexes()
 
         if not indexes:
-            self.logger.debug("삭제할 인덱스가 없습니다.")
+            self.logger.debug(_t("neo4j.no_indexes_to_delete"))
             return
 
         deleted_count = 0
@@ -222,12 +223,12 @@ class IndexManager:
 
                     self.graph_db._execute_write(self._drop_index_tx, query)
                     deleted_count += 1
-                    self.logger.debug(f"✓ 삭제됨: {idx_name} ({idx_type})")
+                    self.logger.debug(_t("neo4j.index_deleted", name=idx_name, type=idx_type))
                 except Exception as e:
                     failed_count += 1
-                    self.logger.debug(f"✗ {idx_name} 삭제 실패: {e}")
+                    self.logger.debug(_t("neo4j.index_deletion_failed", name=idx_name, error=str(e)))
 
-        self.logger.info(f"인덱스 삭제 완료: {deleted_count}개 성공, {failed_count}개 실패")
+        self.logger.info(_t("neo4j.indexes_deletion_complete", deleted=deleted_count, failed=failed_count))
 
     @staticmethod
     def _drop_index_tx(tx, query: str) -> None:
