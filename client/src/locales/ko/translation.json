@@ -69,6 +69,20 @@
         "logicalName": "메서드 논리명",
         "className": "Class 명"
     },
+    "mapperList": {
+        "title": "SQL 매퍼 목록",
+        "subtitle": "프로젝트 내 MyBatis 매퍼 파일을 검색하고 조회합니다",
+        "searchPlaceholder": "매퍼명으로 검색...",
+        "projectName": "프로젝트",
+        "packageName": "패키지",
+        "mapperName": "매퍼",
+        "sqlCount": "SQL 개수",
+        "filterProject": "프로젝트",
+        "filterPackage": "패키지",
+        "filterMapper": "매퍼",
+        "mappersFound": "검색된 매퍼: {{count}}개",
+        "noMappers": "검색 결과가 없습니다."
+    },
     "settings": {
         "title": "화면 설정",
         "appearance": "화면 설정",
