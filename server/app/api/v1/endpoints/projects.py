@@ -14,8 +14,24 @@ class ProjectUpdate(BaseModel):
     repository: str = None
 
 @router.patch("/{project_name}")
-def update_project(project_name: str, update_data: ProjectUpdate):
+def update_project(
+    project_name: str, 
+    update_data: ProjectUpdate,
+    current_user: Any = Depends(deps.verify_project_access)
+):
     pool = get_db()
+    
+    # Check if user has 'manage_project' permission if not admin
+    # This is an additional check on top of project access
+    is_admin = any(g.name.lower() == "administrators" for g in current_user.groups)
+    if not is_admin:
+        has_manage_perm = any(
+            p == "manage_project" 
+            for g in current_user.groups 
+            for p in g.permissions
+        )
+        if not has_manage_perm:
+             raise HTTPException(status_code=403, detail="You do not have permission to manage projects")
     
     # Dynamic query construction
     set_clauses = []
@@ -65,14 +81,20 @@ def get_projects(current_user: Any = Depends(deps.get_current_user)):
         """
         params = {}
     else:
+        # Improved: Use pre-fetched allowed projects from user object
+        allowed_projects = deps.get_allowed_projects(current_user)
+        if not allowed_projects:
+            return []
+            
         query = """
-        MATCH (u:User {id: $username})-[:BELONGS_TO]->(g:UserGroup)-[:HAS_ACCESS_TO]->(p:Project)
+        MATCH (p:Project)
+        WHERE p.name IN $allowed_projects
         OPTIONAL MATCH (p)-[:CONTAINS]->(pkg:Package)
         OPTIONAL MATCH (pkg)-[:CONTAINS]->(c:Class)
         RETURN p, count(distinct pkg) as package_count, count(distinct c) as class_count
         ORDER BY p.updated_at DESC
         """
-        params = {"username": current_user.username}
+        params = {"allowed_projects": list(allowed_projects)}
 
     with pool.session() as session:
         result = session.run(query, **params)
@@ -86,7 +108,10 @@ def get_projects(current_user: Any = Depends(deps.get_current_user)):
     return projects
 
 @router.get("/{project_name}/stats")
-def get_project_stats(project_name: str):
+def get_project_stats(
+    project_name: str,
+    current_user: Any = Depends(deps.verify_project_access)
+):
     pool = get_db()
     # Example stats query
     query = """
@@ -108,7 +133,10 @@ def get_project_stats(project_name: str):
         }
 
 @router.get("/{project_name}/hierarchy")
-def get_project_hierarchy(project_name: str):
+def get_project_hierarchy(
+    project_name: str,
+    current_user: Any = Depends(deps.verify_project_access)
+):
     pool = get_db()
     query = """
     MATCH (p:Project {name: $name})-[:CONTAINS]->(pkg:Package)
@@ -127,7 +155,12 @@ def get_project_hierarchy(project_name: str):
     return hierarchy
 
 @router.get("/{project_name}/reports/{report_type}")
-def get_project_report(project_name: str, report_type: str, format: str = "markdown"):
+def get_project_report(
+    project_name: str, 
+    report_type: str, 
+    format: str = "markdown",
+    current_user: Any = Depends(deps.verify_project_access)
+):
     from csa.services.report_service import ReportService
     report_service = ReportService()
     
@@ -156,7 +189,12 @@ def get_project_report(project_name: str, report_type: str, format: str = "markd
     return {"content": content}
 
 @router.get("/{project_name}/classes/{class_name}")
-def get_class_details(project_name: str, class_name: str, package: str):
+def get_class_details(
+    project_name: str, 
+    class_name: str, 
+    package: str,
+    current_user: Any = Depends(deps.verify_project_access)
+):
     pool = get_db()
     
     # 1. Fetch Class Node & Basic Info
@@ -214,7 +252,13 @@ def get_class_details(project_name: str, class_name: str, package: str):
         return class_data
 
 @router.get("/{project_name}/classes/{class_name}/methods/{method_name}")
-def get_method_details(project_name: str, class_name: str, method_name: str, package: str):
+def get_method_details(
+    project_name: str, 
+    class_name: str, 
+    method_name: str, 
+    package: str,
+    current_user: Any = Depends(deps.verify_project_access)
+):
     pool = get_db()
     
     # 1. Fetch Method Node & Basic Info
