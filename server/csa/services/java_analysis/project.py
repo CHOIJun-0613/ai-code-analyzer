@@ -978,12 +978,12 @@ def parse_java_project_full(
             else:
                 exclude_patterns = []
 
-    logger.info("Java 파일 수집 중...")
+    logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
     logger.info(f"총 {len(java_files)}개 Java 파일 발견")
 
     # 먼저 전체 클래스 개수를 계산
-    logger.info("클래스 개수 계산 중...")
+    logger.info(_t("java_analysis.calculating_classes"))
     for file_path in java_files:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
@@ -1691,7 +1691,7 @@ def parse_java_project_streaming(
 
     logger.info(f"Using charset: {charset}")
 
-    logger.info("Java 파일 수집 중...")
+    logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
 
     total_files = len(java_files)
@@ -1699,7 +1699,7 @@ def parse_java_project_streaming(
     logger.info(f"총 {total_files}개 Java 파일 발견")
 
     # 파일 복잡도 기반 정렬 (복잡한 파일을 먼저 처리 - 워크로드 균형 개선)
-    logger.info("파일 복잡도 분석 중...")
+    logger.info(_t("java_analysis.analyzing_complexity"))
     complexity_start = time.time()
     file_complexities = [(f, estimate_file_complexity(f, charset=charset)) for f in java_files]
 
@@ -1742,7 +1742,7 @@ def parse_java_project_streaming(
 
     # 상위 10개 복잡한 파일 로깅 (필터링 후)
     top_complex_files = filtered_complexities[:10]
-    logger.info("복잡도 상위 10개 파일:")
+    logger.info(_t("java_analysis.top_complex_files"))
     for i, (file_path, complexity) in enumerate(top_complex_files, 1):
         file_name = os.path.basename(file_path)
         logger.info(f"  {i}. {file_name} (복잡도: {complexity})")
@@ -1772,7 +1772,7 @@ def parse_java_project_streaming(
     logger.info(f"병렬 파싱 워커 수: {parallel_workers} (CPU 코어: {cpu_count}, 기본값: {default_workers}), 초기 배치 크기: {initial_batch_size} (동적 조정 활성화)")
 
     # 0. Package 사전 생성 (성능 최적화)
-    logger.info("Package 정보 수집 중...")
+    logger.info(_t("java_analysis.collecting_packages"))
     package_names = set()
     package_pattern = re.compile(r'^\s*package\s+([\w.]+)\s*;', re.MULTILINE)
 
@@ -1799,7 +1799,7 @@ def parse_java_project_streaming(
         logger.info(f"Package 배치 생성 완료 ({package_elapsed:.2f}초)")
 
     # 1. 병렬 파일 파싱 + 배치 Neo4j 저장
-    logger.info("병렬 파싱 시작...")
+    logger.info(_t("java_analysis.parallel_parsing_start"))
     parse_start_time = time.time()
 
     # 파싱된 결과를 임시 저장할 버퍼
@@ -2020,7 +2020,7 @@ def parse_java_project_streaming(
     logger.info(f"  성공: {success_files}/{total_files}, 실패: {failed_files}, 타임아웃: {timeout_files}")
 
     # 2. MyBatis XML mappers 추출 및 저장
-    logger.info("MyBatis XML mappers 처리 중...")
+    logger.info(_t("java_analysis.processing_xml_mappers"))
     xml_mappers = extract_mybatis_xml_mappers(directory, project_name, graph_db)
     total_xml_mappers = len(xml_mappers)
 
@@ -2059,11 +2059,11 @@ def parse_java_project_streaming(
         xml_elapsed = time.time() - xml_start_time
         logger.info(f"XML mapper 처리 완료 ({total_xml_mappers}개, {xml_elapsed:.1f}초)")
     else:
-        logger.info("XML mapper 없음")
+        logger.info(_t("java_analysis.no_xml_mappers"))
 
 
     # 3. Config files 처리
-    logger.info("Config files 처리 중...")
+    logger.info(_t("java_analysis.processing_config"))
     config_files = extract_config_files(directory)
     total_config_files = len(config_files)
 
@@ -2083,7 +2083,7 @@ def parse_java_project_streaming(
         config_elapsed = time.time() - config_start_time
         logger.info(f"Config 파일 처리 완료 ({total_config_files}개, {config_elapsed:.1f}초)")
     else:
-        logger.info("Config 파일 없음")
+        logger.info(_t("java_analysis.no_config_files"))
 
     # 4. Bean 의존성 해결 (Neo4j 쿼리)
     if stats['beans'] > 0:
@@ -2141,7 +2141,7 @@ def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[st
         use_file=use_csaignore_file
     )
     if csaignore_filter.has_patterns():
-        logger.info(".csaignore 패턴 적용 중...")
+        logger.info(_t("java_analysis.applying_exclude_patterns"))
         original_count = len(java_files)
         java_files = csaignore_filter.filter_files(java_files)
         excluded_count = original_count - len(java_files)
