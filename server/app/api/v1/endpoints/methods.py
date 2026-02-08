@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Depends
+from app.api import deps
 from typing import Optional, List, Dict, Any
 from app.core.database import get_db
 from csa.utils.logger import get_logger
@@ -13,7 +14,8 @@ def search_methods(
     class_name: Optional[str] = None,
     method_name: Optional[str] = None,
     skip: int = 0,
-    limit: int = 50
+    limit: int = 50,
+    current_user: Any = Depends(deps.get_current_user)
 ) -> List[Dict[str, Any]]:
     """
     Search methods across projects with filters.
@@ -27,6 +29,12 @@ def search_methods(
     query = """
     MATCH (p:Project)-[:CONTAINS]->(pkg:Package)-[:CONTAINS]->(c:Class)-[:HAS_METHOD]->(m:Method)
     """
+    
+    # Access Control
+    allowed_projects = deps.get_allowed_projects(current_user)
+    if allowed_projects is not None:
+        where_clauses.append("p.name IN $allowed_projects")
+        params["allowed_projects"] = list(allowed_projects)
     
     if project_name:
         where_clauses.append("toLower(p.name) CONTAINS toLower($project_name)")
