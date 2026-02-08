@@ -59,6 +59,12 @@ def search_sqls(
     if project_name:
         s_filters.append("toLower(s.project_name) CONTAINS toLower($project_name)")
         params["project_name"] = project_name
+        
+    # Access Control
+    allowed_projects = deps.get_allowed_projects(current_user)
+    if allowed_projects is not None:
+        s_filters.append("s.project_name IN $allowed_projects")
+        params["allowed_projects"] = list(allowed_projects)
     
     # For sql_id, we check s.id and s.logical_name. logical_name is on s.
     if sql_id:
@@ -110,7 +116,12 @@ def search_sqls(
 
 
 @router.get("/projects/{project_name}/sqls/{sql_id}")
-def get_sql_details(project_name: str, sql_id: str, mapper_name: str = None):
+def get_sql_details(
+    project_name: str, 
+    sql_id: str, 
+    mapper_name: str = None,
+    current_user: Any = Depends(deps.verify_project_access)
+):
     """
     Get details for a specific SQL statement.
     """
@@ -207,7 +218,7 @@ def trigger_sql_analysis(
     mapper_name: str,
     request: SqlAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: UserInDB = Depends(deps.get_current_user),
+    current_user: UserInDB = Depends(deps.verify_project_access),
     language: str = Depends(deps.get_language_from_header),
 ) -> Dict[str, str]:
     """
