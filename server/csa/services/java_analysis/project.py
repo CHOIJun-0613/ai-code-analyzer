@@ -225,7 +225,7 @@ def parse_inner_classes(
 
             if skip_dto_source and is_dto_class(body_item.name, file_path):
                 inner_source = ""  # DTO inner class는 소스 저장 안 함
-                logger.debug(f"DTO inner 소스 저장 건너뜀: {inner_class_full_name}")
+                logger.debug(_t("java_analysis.dto_inner_source_skipped", class_name=inner_class_full_name))
 
             # Inner class LOC 메트릭 계산
             inner_loc_metrics = calculate_loc(inner_class_source)
@@ -376,7 +376,7 @@ def parse_inner_classes(
                         try:
                             inner_method_cognitive_complexity = calculate_method_cognitive_complexity(method_declaration)
                         except Exception as e:
-                            logger.debug(f"Inner class 메서드 Cognitive Complexity 계산 실패 ({inner_class_full_name}.{method_name}): {e}")
+                            logger.debug(_t("java_analysis.inner_class_complexity_failed", class_name=inner_class_full_name, method_name=method_name, error=str(e)))
 
                     method = Method(
                         name=method_name,
@@ -397,7 +397,7 @@ def parse_inner_classes(
             try:
                 inner_class_node.code_complexity = calculate_code_complexity_from_class_node(inner_class_node)
             except Exception as e:
-                logger.debug(f"Inner class code_complexity 계산 실패 ({inner_class_full_name}): {e}")
+                logger.debug(_t("java_analysis.inner_class_code_complexity_failed", class_name=inner_class_full_name, error=str(e)))
                 inner_class_node.code_complexity = 0
 
             inner_classes.append(inner_class_node)
@@ -546,7 +546,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 if analyzer and analyzer.is_available():
                     ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
-                logger.warning(f"AI Class 분석 실패 ({class_name}): {e}")
+                logger.warning(_t("java_analysis.ai_class_analysis_failed", class_name=class_name, error=str(e)))
                 ai_description = f"AI 분석 실패: {e}"
 
         # DTO 클래스 소스 저장 여부 결정 (인자 우선, 없으면 환경변수-기본값 true로 변경 고려)
@@ -557,7 +557,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         if skip_dto_source and is_dto_class(class_name, file_path):
             class_source = ""  # DTO 클래스는 소스 저장 안 함
             source_hashcode = ""
-            logger.debug(f"DTO 소스 저장 건너뜀: {class_name}")
+            logger.debug(_t("java_analysis.dto_source_skipped", class_name=class_name))
 
         # LOC 메트릭 계산
         loc_metrics = calculate_loc(file_content)
@@ -650,7 +650,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
 
         if SKIP_DTO_METHODS and sub_type == "dto":
             # DTO 메서드 분석 생략
-            logger.debug(f"DTO 메서드 분석 생략: {class_name} (sub_type={sub_type})")
+            logger.debug(_t("java_analysis.dto_method_skipped", class_name=class_name, sub_type=sub_type))
         else:
             all_declarations = class_declaration.methods + class_declaration.constructors
             
@@ -800,7 +800,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     try:
                         method_cognitive_complexity = calculate_method_cognitive_complexity(declaration)
                     except Exception as e:
-                        logger.debug(f"메서드 Cognitive Complexity 계산 실패 ({class_name}.{declaration.name}): {e}")
+                        logger.debug(_t("java_analysis.method_complexity_failed", class_name=class_name, method_name=declaration.name, error=str(e)))
 
                 method = Method(
                     name=declaration.name,
@@ -910,7 +910,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         try:
             class_node.code_complexity = calculate_code_complexity_from_class_node(class_node)
         except Exception as e:
-            logger.debug(f"Class code_complexity 계산 실패 ({class_name}): {e}")
+            logger.debug(_t("java_analysis.class_code_complexity_failed", class_name=class_name, error=str(e)))
             class_node.code_complexity = 0
 
         logger.debug(f"Successfully parsed single file: {file_path} (found {len(inner_classes)} inner classes)")
@@ -1161,7 +1161,7 @@ def parse_java_project_full(
                 
                 # DTO 메서드 생략 로직
                 if skip_dto_methods and sub_type == "dto":
-                     logger.debug(f"DTO 메서드 분석 생략: {class_name}")
+                     logger.debug(_t("java_analysis.dto_method_skipped", class_name=class_name, sub_type=sub_type))
                      all_declarations = []
 
                 for declaration in all_declarations:
@@ -1722,10 +1722,10 @@ def parse_java_project_streaming(
 
     # 건너뛴 파일 로깅
     if skipped_files:
-        logger.warning(f"⚠️  복잡도 임계값({complexity_threshold}) 초과로 건너뛴 파일: {len(skipped_files)}개")
+        logger.warning(_t("java_analysis.complexity_skipped_files", threshold=complexity_threshold, count=len(skipped_files)))
         for file_path, complexity in skipped_files:
             file_name = os.path.basename(file_path)
-            logger.warning(f"  - {file_name} (복잡도: {complexity})")
+            logger.warning(_t("java_analysis.complexity_skipped_file_detail", name=file_name, complexity=complexity))
 
     # 복잡도 높은 순으로 정렬 (큰 작업부터 워커에 배정)
     filtered_complexities.sort(key=lambda x: x[1], reverse=True)
@@ -1784,7 +1784,7 @@ def parse_java_project_streaming(
                 if match:
                     package_names.add(match.group(1))
         except Exception as e:
-            logger.debug(f"Package 추출 실패 (무시): {file_path} - {e}")
+            logger.debug(_t("java_analysis.package_extraction_failed", file_path=file_path, error=str(e)))
             continue
 
     # 모든 Package를 한 번에 생성 (배치 처리)
@@ -1844,7 +1844,7 @@ def parse_java_project_streaming(
                             processed_classes += 1
                             timeout_files += 1
                             current_timeout = timeout_files
-                        logger.warning(f"⏱️  파싱 타임아웃 #{current_timeout} ({file_timeout}초 초과): {file_name}")
+                        logger.warning(_t("java_analysis.parse_timeout_detail", count=current_timeout, timeout=file_timeout, file_name=file_name))
                         continue
 
                     # 파싱 실패 시 (에러 메시지가 package_name에 담김)
@@ -1862,9 +1862,9 @@ def parse_java_project_streaming(
                             failed_files += 1
                             current_failed = failed_files
                         if isinstance(package_name, str) and package_name:
-                            logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name} - {package_name}")
+                            logger.error(_t("java_analysis.parse_failed_detail", count=current_failed, file_name=file_name, package_name=package_name))
                         else:
-                            logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name}")
+                            logger.error(_t("java_analysis.parse_failed_no_package_detail", count=current_failed, file_name=file_name))
                         continue
 
                     # 버퍼에 추가 및 배치 저장 여부 결정 (Lock 범위 최소화)
@@ -1989,16 +1989,16 @@ def parse_java_project_streaming(
                             # 배치 크기 동적 조정
                             new_batch_size = batch_sizer.adjust(batch_elapsed, len(batch_to_save))
                             if new_batch_size != current_batch_size:
-                                logger.info(f"  📊 배치 크기 조정: {current_batch_size} → {new_batch_size}")
+                                logger.info(_t("java_analysis.batch_size_adjusted", old_size=current_batch_size, new_size=new_batch_size))
 
-                            logger.info(f"  ← 배치 저장 완료 ({batch_elapsed:.2f}초)")
+                            logger.info(_t("java_analysis.batch_save_complete_detail", elapsed=batch_elapsed))
 
                             # 메모리 명시적 해제 (배치 저장 후)
                             del batch_to_save
                             gc.collect()
 
                         except Exception as batch_error:
-                            logger.error(f"배치 저장 실패: {batch_error}")
+                            logger.error(_t("java_analysis.batch_save_failed", error=str(batch_error)))
                             # 배치 저장 실패 시에도 계속 진행
                             continue
 
@@ -2019,8 +2019,8 @@ def parse_java_project_streaming(
     parse_elapsed = time.time() - parse_start_time
     success_files = total_files - failed_files - timeout_files
     avg_time_per_file = (parse_elapsed / total_files * 1000) if total_files > 0 else 0
-    logger.info(f"파싱 및 저장 완료 - 소요 시간: {parse_elapsed:.2f}초 (파일당 평균: {avg_time_per_file:.0f}ms)")
-    logger.info(f"  성공: {success_files}/{total_files}, 실패: {failed_files}, 타임아웃: {timeout_files}")
+    logger.info(_t("java_analysis.parse_and_save_complete", total_time=parse_elapsed, avg_time=avg_time_per_file))
+    logger.info(_t("java_analysis.result_summary_detail", success=success_files, total=total_files, failed=failed_files, timeout=timeout_files))
 
     # 2. MyBatis XML mappers 추출 및 저장
     logger.info(_t("java_analysis.processing_xml_mappers"))
@@ -2028,7 +2028,7 @@ def parse_java_project_streaming(
     total_xml_mappers = len(xml_mappers)
 
     if total_xml_mappers > 0:
-        logger.info(f"총 {total_xml_mappers}개 XML mapper 발견")
+        logger.info(_t("java_analysis.xml_mappers_found", count=total_xml_mappers))
         xml_start_time = time.time()
         xml_last_log_time = xml_start_time
 
@@ -2056,11 +2056,11 @@ def parse_java_project_streaming(
             current_time = time.time()
             if (i % 10 == 0) or (current_time - xml_last_log_time >= 5.0) or (i == total_xml_mappers):
                 xml_percent = int(i / total_xml_mappers * 100)
-                logger.info(f"  XML mapper 처리중 [{i}/{total_xml_mappers}] ({xml_percent}%)")
+                logger.info(_t("java_analysis.xml_mapper_processing", current=i, total=total_xml_mappers, percent=xml_percent))
                 xml_last_log_time = current_time
 
         xml_elapsed = time.time() - xml_start_time
-        logger.info(f"XML mapper 처리 완료 ({total_xml_mappers}개, {xml_elapsed:.1f}초)")
+        logger.info(_t("java_analysis.xml_mapper_complete_detail", count=total_xml_mappers, elapsed=xml_elapsed))
     else:
         logger.info(_t("java_analysis.no_xml_mappers"))
 
@@ -2071,7 +2071,7 @@ def parse_java_project_streaming(
     total_config_files = len(config_files)
 
     if total_config_files > 0:
-        logger.info(f"총 {total_config_files}개 Config 파일 발견")
+        logger.info(_t("java_analysis.config_files_found", count=total_config_files))
         config_start_time = time.time()
 
         for i, config in enumerate(config_files, 1):
@@ -2081,17 +2081,17 @@ def parse_java_project_streaming(
             # 5개마다 진행율 표시
             if (i % 5 == 0) or (i == total_config_files):
                 config_percent = int(i / total_config_files * 100)
-                logger.info(f"  Config 파일 처리중 [{i}/{total_config_files}] ({config_percent}%)")
+                logger.info(_t("java_analysis.config_file_processing", current=i, total=total_config_files, percent=config_percent))
 
         config_elapsed = time.time() - config_start_time
-        logger.info(f"Config 파일 처리 완료 ({total_config_files}개, {config_elapsed:.1f}초)")
+        logger.info(_t("java_analysis.config_file_complete", count=total_config_files, elapsed=config_elapsed))
     else:
         logger.info(_t("java_analysis.no_config_files"))
 
     # 4. Bean 의존성 해결 (Neo4j 쿼리)
     if stats['beans'] > 0:
         logger.info("")
-        logger.info(f"Bean 의존성 해결 중... (총 {stats['beans']}개 Bean, 시간이 걸릴 수 있습니다)")
+        logger.info(_t("java_analysis.bean_dependency_resolving", count=stats['beans']))
         bean_start_time = time.time()
 
         from csa.services.java_analysis.bean_dependency_resolver import (
@@ -2100,7 +2100,7 @@ def parse_java_project_streaming(
         resolve_bean_dependencies_from_neo4j(graph_db, project_name, logger)
 
         bean_elapsed = time.time() - bean_start_time
-        logger.info(f"Bean 의존성 해결 완료 ({bean_elapsed:.1f}초)")
+        logger.info(_t("java_analysis.bean_dependency_complete", elapsed=bean_elapsed))
 
     logger.info(f"Java project streaming analysis complete:")
     logger.info(f"  - Java files processed: {stats['processed_files']}/{stats['total_files']}")
@@ -2149,7 +2149,7 @@ def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[st
         java_files = csaignore_filter.filter_files(java_files)
         excluded_count = original_count - len(java_files)
         if excluded_count > 0:
-            logger.info(f".csaignore로 {excluded_count}개 파일 제외됨")
+            logger.info(_t("java_analysis.csaignore_files_excluded", count=excluded_count))
 
     return java_files
 
