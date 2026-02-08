@@ -1828,6 +1828,8 @@ def parse_java_project_streaming(
     source_options: dict = None,
     use_ai_analysis: bool = False,
     stop_check_callback: callable = None,
+    skip_dto_source: bool = True,
+    skip_dto_methods: bool = True,
 ) -> dict:
     """
     스트리밍 방식 Java 프로젝트 파싱
