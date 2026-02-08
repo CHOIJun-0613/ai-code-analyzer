@@ -26,22 +26,25 @@ def search_mappers(
     where_clauses = []
     params = {"skip": skip, "limit": limit}
 
+    # Mapper nodes are stored with labels :MyBatisMapper:Analysis
+    # They have properties: project_name, package_name, name
+    # No direct relationships to Project/Package nodes exist
     query = """
-    MATCH (p:Project)-[:CONTAINS]->(pkg:Package)-[:CONTAINS]->(m:Mapper)
+    MATCH (m:MyBatisMapper)
     """
 
     # Access Control
     allowed_projects = deps.get_allowed_projects(current_user)
     if allowed_projects is not None:
-        where_clauses.append("p.name IN $allowed_projects")
+        where_clauses.append("m.project_name IN $allowed_projects")
         params["allowed_projects"] = list(allowed_projects)
 
     if project_name:
-        where_clauses.append("toLower(p.name) CONTAINS toLower($project_name)")
+        where_clauses.append("toLower(m.project_name) CONTAINS toLower($project_name)")
         params["project_name"] = project_name
 
     if package_name:
-        where_clauses.append("toLower(pkg.name) CONTAINS toLower($package_name)")
+        where_clauses.append("toLower(m.package_name) CONTAINS toLower($package_name)")
         params["package_name"] = package_name
 
     if mapper_name:
@@ -52,17 +55,18 @@ def search_mappers(
         query += " WHERE " + " AND ".join(where_clauses)
 
     # Count SQL statements for each mapper
+    # SQL statements have relationship HAS_SQL_STATEMENT from Mapper
     query += """
-    OPTIONAL MATCH (m)-[:HAS_SQL]->(s:SQL)
-    WITH p, pkg, m, count(s) as sql_count
+    OPTIONAL MATCH (m)-[:HAS_SQL_STATEMENT]->(s:SqlStatement)
+    WITH m, count(s) as sql_count
     RETURN
-        p.name as project_name,
-        pkg.name as package_name,
+        m.project_name as project_name,
+        m.package_name as package_name,
         m.name as mapper_name,
         m.logical_name as mapper_logical_name,
         m.type as mapper_type,
         sql_count
-    ORDER BY p.name, pkg.name, m.name
+    ORDER BY m.project_name, m.package_name, m.name
     SKIP $skip
     LIMIT $limit
     """
