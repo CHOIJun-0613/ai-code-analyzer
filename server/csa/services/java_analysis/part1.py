@@ -177,7 +177,8 @@ def parse_inner_classes(
     file_path: str,
     file_content: str,
     project_name: str,
-    import_map: dict
+    import_map: dict,
+    skip_dto_source: bool = True
 ) -> list[Class]:
     """
     재귀적으로 Inner class 파싱
@@ -218,8 +219,7 @@ def parse_inner_classes(
             from csa.parsers.java.description import extract_class_description_from_annotations
             inner_class_description = extract_class_description_from_annotations(inner_class_annotations) or ""
 
-            # DTO 클래스 소스 저장 여부 결정 (환경 변수로 제어)
-            skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
+            # DTO 클래스 소스 저장 여부 결정 (파라미터로 전달받은 값 사용)
             inner_source = inner_class_source
 
             if skip_dto_source and is_dto_class(body_item.name, file_path):
@@ -363,7 +363,6 @@ def parse_inner_classes(
                         method_source = "".join(lines[start_line:end_line + 1])
 
                     # DTO inner class 메서드는 복잡도 측정 건너뛰기
-                    skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
                     is_dto = skip_dto_source and is_dto_class(body_item.name, file_path)
 
                     # Inner class 메서드 LOC 메트릭 계산
@@ -405,7 +404,7 @@ def parse_inner_classes(
             if hasattr(body_item, 'body') and body_item.body:
                 nested = parse_inner_classes(
                     body_item, inner_class_full_name, package_name, file_path,
-                    file_content, project_name, import_map
+                    file_content, project_name, import_map, skip_dto_source
                 )
                 inner_classes.extend(nested)
 
@@ -501,15 +500,14 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     else:
                         # global analyzer
                         analyzer = get_ai_analyzer()
-                        
+
                     if analyzer and analyzer.is_available():
                         ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
                 logger.warning(_t("java_analysis.ai_class_analysis_failed", class_name=class_name, error=str(e)))
                 ai_description = ""
 
-        # DTO 클래스 소스 저장 여부 결정 (환경 변수로 제어)
-        skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
+        # DTO 클래스 소스 저장 여부 결정 (파라미터로 전달받은 값 사용)
         class_source = file_content
 
         if skip_dto_source and is_dto_class(class_name, file_path):
@@ -860,7 +858,8 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             file_path,
             file_content,
             project_name,
-            import_map
+            import_map,
+            skip_dto_source
         )
 
         # Class code_complexity 계산 (메서드와 필드 추가 완료 후)
