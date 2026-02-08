@@ -176,14 +176,14 @@ def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: di
         # 처리 시간 계산 및 로깅
         elapsed = time.time() - start_time
         if elapsed >= 5.0:
-            logger.warning(f"⏱️  느린 파일 처리 ({elapsed:.1f}초): {file_name}")
+            logger.warning(_t("java_analysis.slow_file", elapsed=elapsed, file_name=file_name))
 
         return (file_path, package_node, class_node, inner_classes, package_name)
     except Exception as e:
         # 예외 발생 시 None 반환 (메인 스레드에서 로깅)
         elapsed = time.time() - start_time
         if elapsed >= 5.0:
-            logger.warning(f"⏱️  느린 파일 처리 실패 ({elapsed:.1f}초): {file_name}")
+            logger.warning(_t("java_analysis.slow_file_failed", elapsed=elapsed, file_name=file_name))
         return (file_path, None, None, [], str(e))
 
 
@@ -324,8 +324,8 @@ def parse_java_project_streaming(
     stats['skipped_files'] = len(skipped_files)
 
     complexity_elapsed = time.time() - complexity_start
-    logger.info(f"파일 복잡도 분석 완료 ({complexity_elapsed:.2f}초)")
-    logger.info(f"분석 대상: {total_files}개 (건너뜀: {len(skipped_files)}개)")
+    logger.info(_t("java_analysis.complexity_analysis_complete", elapsed=complexity_elapsed))
+    logger.info(_t("java_analysis.analysis_target", total=total_files, skipped=len(skipped_files)))
 
     # 상위 10개 복잡한 파일 로깅 (필터링 후)
     top_complex_files = filtered_complexities[:10]
@@ -376,14 +376,14 @@ def parse_java_project_streaming(
 
     # 모든 Package를 한 번에 생성 (배치 처리)
     if package_names:
-        logger.info(f"총 {len(package_names)}개 패키지 발견, 배치 생성 중...")
+        logger.info(_t("java_analysis.packages_found_batch_creating", count=len(package_names)))
         package_start = time.time()
         package_nodes = [Package(name=pkg_name) for pkg_name in package_names]
         graph_db.add_packages_batch(package_nodes, project_name)
         packages_saved.update(package_names)
         stats['packages'] = len(package_names)
         package_elapsed = time.time() - package_start
-        logger.info(f"Package 배치 생성 완료 ({package_elapsed:.2f}초)")
+        logger.info(_t("java_analysis.package_batch_complete", elapsed=package_elapsed))
 
     # 1. 병렬 파일 파싱 + 배치 Neo4j 저장
     logger.info(_t("java_analysis.parallel_parsing_start"))
@@ -401,7 +401,7 @@ def parse_java_project_streaming(
         file_timeout = source_options['java_file_parse_timeout']
     else:
         file_timeout = float(os.getenv("JAVA_FILE_PARSE_TIMEOUT", "60.0"))
-    logger.info(_t("java_analysis.parse_timeout", timeout=file_timeout))
+    logger.info(_t("java_analysis.parse_timeout_setting", timeout=file_timeout))
     
     # AI 옵션 필터링
     effective_ai_options = ai_options if use_ai_analysis else None
@@ -520,7 +520,7 @@ def parse_java_project_streaming(
                     if batch_to_save:
                         try:
                             batch_start_time = time.time()
-                            logger.info(_t("java_analysis.batch_save_start", count=len(batch_to_save)))
+                            logger.info(_t("java_analysis.batch_save_starting", count=len(batch_to_save)))
 
                             # Class 배치 저장 (Top-level + Inner classes)
                             classes_to_save = []

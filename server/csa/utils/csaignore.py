@@ -14,6 +14,7 @@ except ImportError:
     PATHSPEC_AVAILABLE = False
 
 from csa.utils.logger import get_logger
+from csa.utils.i18n import _t
 
 logger = get_logger(__name__)
 
@@ -82,7 +83,7 @@ class CSAIgnoreFilter:
                 pathspec.patterns.GitWildMatchPattern,
                 patterns
             )
-            logger.info(f"제외 패턴 로드 완료: 총 {len(patterns)}개")
+            logger.info(_t("csaignore.patterns_loaded", count=len(patterns)))
             logger.debug(f"적용된 패턴: {patterns}")
         else:
             logger.debug("적용할 제외 패턴이 없습니다.")

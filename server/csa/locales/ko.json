@@ -285,5 +285,16 @@
     "bean.debug.setter_params_parse_failed": "{source}.{setter}: parameters JSON 파싱 실패",
     "bean.error.field_injection_failed": "Field injection 의존성 해결 중 오류: {error}",
     "bean.error.constructor_injection_failed": "Constructor injection 의존성 해결 중 오류: {error}",
-    "bean.error.setter_injection_failed": "Setter injection 의존성 해결 중 오류: {error}"
+    "bean.error.setter_injection_failed": "Setter injection 의존성 해결 중 오류: {error}",
+
+    "csaignore.patterns_loaded": "제외 패턴 로드 완료: 총 {count}개",
+
+    "java_analysis.slow_file": "⏱️  느린 파일 처리 ({elapsed:.1f}초): {file_name}",
+    "java_analysis.slow_file_failed": "⏱️  느린 파일 처리 실패 ({elapsed:.1f}초): {file_name}",
+    "java_analysis.complexity_analysis_complete": "파일 복잡도 분석 완료 ({elapsed:.2f}초)",
+    "java_analysis.analysis_target": "분석 대상: {total}개 (건너뜀: {skipped}개)",
+    "java_analysis.packages_found_batch_creating": "총 {count}개 패키지 발견, 배치 생성 중...",
+    "java_analysis.package_batch_complete": "Package 배치 생성 완료 ({elapsed:.2f}초)",
+    "java_analysis.parse_timeout_setting": "파일 파싱 타임아웃: {timeout}초",
+    "java_analysis.batch_save_starting": "배치 저장 시작 ({count}개 클래스)"
 }

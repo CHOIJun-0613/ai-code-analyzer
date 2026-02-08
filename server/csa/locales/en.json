@@ -285,5 +285,16 @@
     "bean.debug.setter_params_parse_failed": "{source}.{setter}: parameters JSON parsing failed",
     "bean.error.field_injection_failed": "Error resolving field injection dependencies: {error}",
     "bean.error.constructor_injection_failed": "Error resolving constructor injection dependencies: {error}",
-    "bean.error.setter_injection_failed": "Error resolving setter injection dependencies: {error}"
+    "bean.error.setter_injection_failed": "Error resolving setter injection dependencies: {error}",
+
+    "csaignore.patterns_loaded": "Exclude patterns loaded: {count} total",
+
+    "java_analysis.slow_file": "⏱️  Slow file processing ({elapsed:.1f}s): {file_name}",
+    "java_analysis.slow_file_failed": "⏱️  Slow file processing failed ({elapsed:.1f}s): {file_name}",
+    "java_analysis.complexity_analysis_complete": "File complexity analysis completed ({elapsed:.2f}s)",
+    "java_analysis.analysis_target": "Analysis target: {total} files (skipped: {skipped})",
+    "java_analysis.packages_found_batch_creating": "{count} packages found, batch creating...",
+    "java_analysis.package_batch_complete": "Package batch creation completed ({elapsed:.2f}s)",
+    "java_analysis.parse_timeout_setting": "File parsing timeout: {timeout}s",
+    "java_analysis.batch_save_starting": "Batch save starting ({count} classes)"
 }
