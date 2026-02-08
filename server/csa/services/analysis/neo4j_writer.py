@@ -107,7 +107,7 @@ def _log_progress(prefix: str, current: int, total: int, last_percent: int, logg
 def _log_duration(message: str, item_count: int, start_time: float, logger) -> None:
     """Helper to log duration for batched operations."""
     elapsed = time.time() - start_time
-    logger.info("? %s %s개 처리 (%.2fs)", message, item_count, elapsed)
+    logger.info(_t("neo4j.batch_save_duration", message=message, item_count=item_count, elapsed=elapsed))
 
 
 def add_springboot_objects(
@@ -318,49 +318,49 @@ def add_batch_class_objects_streaming(
     if beans:
         db.add_beans_batch(beans, project_name)
         stats['beans'] = len(beans)
-        logger.debug(f"  → Bean {len(beans)}개 배치 저장")
+        logger.debug(_t("neo4j.debug_batch_save_bean", count=len(beans)))
 
     # Endpoint 추출 및 배치 저장
     endpoints = extract_endpoints_from_classes(all_classes)
     if endpoints:
         db.add_endpoints_batch(endpoints, project_name)
         stats['endpoints'] = len(endpoints)
-        logger.debug(f"  → Endpoint {len(endpoints)}개 배치 저장")
+        logger.debug(_t("neo4j.debug_batch_save_endpoint", count=len(endpoints)))
 
     # JPA Entity 추출 및 배치 저장
     jpa_entities = extract_jpa_entities_from_classes(all_classes)
     if jpa_entities:
         db.add_jpa_entities_batch(jpa_entities, project_name)
         stats['jpa_entities'] = len(jpa_entities)
-        logger.debug(f"  → JPA Entity {len(jpa_entities)}개 배치 저장")
+        logger.debug(_t("neo4j.debug_batch_save_jpa_entity", count=len(jpa_entities)))
 
     # JPA Repository 추출 및 배치 저장
     jpa_repositories = extract_jpa_repositories_from_classes(all_classes)
     if jpa_repositories:
         db.add_jpa_repositories_batch(jpa_repositories, project_name)
         stats['jpa_repositories'] = len(jpa_repositories)
-        logger.debug(f"  → JPA Repository {len(jpa_repositories)}개 배치 저장")
+        logger.debug(_t("neo4j.debug_batch_save_jpa_repo", count=len(jpa_repositories)))
 
         # JPA Queries 즉시 추출 및 배치 저장
         jpa_queries = extract_jpa_queries_from_repositories(jpa_repositories)
         if jpa_queries:
             db.add_jpa_queries_batch(jpa_queries, project_name)
             stats['jpa_queries'] = len(jpa_queries)
-            logger.debug(f"  → JPA Query {len(jpa_queries)}개 배치 저장")
+            logger.debug(_t("neo4j.debug_batch_save_jpa_query", count=len(jpa_queries)))
 
     # Test 추출 및 배치 저장
     test_classes = extract_test_classes_from_classes(all_classes)
     if test_classes:
         db.add_test_classes_batch(test_classes, project_name)
         stats['test_classes'] = len(test_classes)
-        logger.debug(f"  → Test Class {len(test_classes)}개 배치 저장")
+        logger.debug(_t("neo4j.debug_batch_save_test_class", count=len(test_classes)))
 
     # MyBatis Mapper 추출 및 배치 저장
     mybatis_mappers = extract_mybatis_mappers_from_classes(all_classes)
     if mybatis_mappers:
         db.add_mybatis_mappers_batch(mybatis_mappers, project_name)
         stats['mybatis_mappers'] = len(mybatis_mappers)
-        logger.debug(f"  → MyBatis Mapper {len(mybatis_mappers)}개 배치 저장")
+        logger.debug(_t("neo4j.debug_batch_save_mybatis", count=len(mybatis_mappers)))
 
         # SQL Statements 즉시 추출 및 배치 저장
         sql_statements = extract_sql_statements_from_mappers(mybatis_mappers, project_name)
@@ -378,7 +378,7 @@ def add_batch_class_objects_streaming(
             if relationships:
                 db.add_mapper_sql_relationships_batch(relationships, project_name)
             stats['sql_statements'] = len(sql_statements)
-            logger.debug(f"  → SQL Statement {len(sql_statements)}개 배치 저장")
+            logger.debug(_t("neo4j.debug_batch_save_sql", count=len(sql_statements)))
 
     return stats
 
@@ -439,7 +439,7 @@ def add_single_class_objects_streaming(
         for bean in beans:
             db.add_bean(bean, project_name)
         stats['beans'] = len(beans)
-        logger.debug(f"  → Bean {len(beans)}개 저장")
+        logger.debug(_t("neo4j.debug_save_bean", count=len(beans)))
 
     # Endpoint 추출 및 저장
     endpoints = extract_endpoints_from_classes(classes_list)
@@ -447,7 +447,7 @@ def add_single_class_objects_streaming(
         for endpoint in endpoints:
             db.add_endpoint(endpoint, project_name)
         stats['endpoints'] = len(endpoints)
-        logger.debug(f"  → Endpoint {len(endpoints)}개 저장")
+        logger.debug(_t("neo4j.debug_save_endpoint", count=len(endpoints)))
 
     # JPA Entity 추출 및 저장
     jpa_entities = extract_jpa_entities_from_classes(classes_list)
@@ -455,7 +455,7 @@ def add_single_class_objects_streaming(
         for entity in jpa_entities:
             db.add_jpa_entity(entity, project_name)
         stats['jpa_entities'] = len(jpa_entities)
-        logger.debug(f"  → JPA Entity {len(jpa_entities)}개 저장")
+        logger.debug(_t("neo4j.debug_save_jpa_entity", count=len(jpa_entities)))
 
     # JPA Repository 추출 및 저장 + Queries 즉시 추출
     jpa_repositories = extract_jpa_repositories_from_classes(classes_list)
@@ -463,7 +463,7 @@ def add_single_class_objects_streaming(
         for repo in jpa_repositories:
             db.add_jpa_repository(repo, project_name)
         stats['jpa_repositories'] = len(jpa_repositories)
-        logger.debug(f"  → JPA Repository {len(jpa_repositories)}개 저장")
+        logger.debug(_t("neo4j.debug_save_jpa_repo", count=len(jpa_repositories)))
 
         # JPA Queries 즉시 추출 및 저장
         jpa_queries = extract_jpa_queries_from_repositories(jpa_repositories)
@@ -471,7 +471,7 @@ def add_single_class_objects_streaming(
             for query in jpa_queries:
                 db.add_jpa_query(query, project_name)
             stats['jpa_queries'] = len(jpa_queries)
-            logger.debug(f"  → JPA Query {len(jpa_queries)}개 저장")
+            logger.debug(_t("neo4j.debug_save_jpa_query", count=len(jpa_queries)))
 
     # Test 추출 및 저장
     test_classes = extract_test_classes_from_classes(classes_list)
@@ -479,7 +479,7 @@ def add_single_class_objects_streaming(
         for test_class in test_classes:
             db.add_test_class(test_class, project_name)
         stats['test_classes'] = len(test_classes)
-        logger.debug(f"  → Test Class {len(test_classes)}개 저장")
+        logger.debug(_t("neo4j.debug_save_test_class", count=len(test_classes)))
 
     # MyBatis Mapper 추출 및 저장 + SQL Statements 즉시 추출
     mybatis_mappers = extract_mybatis_mappers_from_classes(classes_list)
@@ -487,7 +487,7 @@ def add_single_class_objects_streaming(
         for mapper in mybatis_mappers:
             db.add_mybatis_mapper(mapper, project_name)
         stats['mybatis_mappers'] = len(mybatis_mappers)
-        logger.debug(f"  → MyBatis Mapper {len(mybatis_mappers)}개 저장")
+        logger.debug(_t("neo4j.debug_save_mybatis", count=len(mybatis_mappers)))
 
         # SQL Statements 즉시 추출 및 저장
         sql_statements = extract_sql_statements_from_mappers(mybatis_mappers, project_name)
@@ -504,7 +504,7 @@ def add_single_class_objects_streaming(
             if relationships:
                 db.add_mapper_sql_relationships_batch(relationships, project_name)
             stats['sql_statements'] = len(sql_statements)
-            logger.debug(f"  → SQL Statement {len(sql_statements)}개 저장")
+            logger.debug(_t("neo4j.debug_save_sql", count=len(sql_statements)))
 
     return stats
 
@@ -611,15 +611,19 @@ def save_java_objects_to_neo4j(
         # artifacts.classes가 리스트인지 딕셔너리인지 확인
         if isinstance(artifacts.classes, dict):
             classes_dict = artifacts.classes
-            logger.info(f"artifacts.classes는 딕셔너리입니다. 키 수: {len(classes_dict)}")
+            logger.info(_t("neo4j.classes_dict_check", count=len(classes_dict)))
         else:
             classes_dict = {cls.name: cls for cls in artifacts.classes if hasattr(cls, 'name')}
-            logger.info(f"artifacts.classes를 딕셔너리로 변환: {len(classes_dict)}개")
+            logger.info(_t("neo4j.classes_dict_convert", count=len(classes_dict)))
 
         # 첫 번째 클래스의 LOC 값 확인 (디버깅)
         if classes_dict:
             first_class = next(iter(classes_dict.values()))
-            logger.debug(f"샘플 클래스: {first_class.name}, PLOC={getattr(first_class, 'PLOC', 'N/A')}, LLOC={getattr(first_class, 'LLOC', 'N/A')}, CLOC={getattr(first_class, 'CLOC', 'N/A')}")
+            logger.debug(_t("neo4j.classes_sample_info",
+                           class_name=first_class.name,
+                           ploc=getattr(first_class, 'PLOC', 'N/A'),
+                           lloc=getattr(first_class, 'LLOC', 'N/A'),
+                           cloc=getattr(first_class, 'CLOC', 'N/A')))
 
         project = calculate_project_statistics(project, classes_dict, java_source_folder)
 
