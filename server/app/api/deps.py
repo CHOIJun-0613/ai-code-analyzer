@@ -53,13 +53,19 @@ def get_language_from_header(request: Request) -> str:
     """
     Accept-Language 헤더에서 언어를 추출하고 컨텍스트에 설정합니다.
 
-    지원 언어: ko, en (기본값: ko)
+    지원 언어: ko, en (기본값: en)
     """
-    accept_language = request.headers.get("accept-language", "ko")
+    from csa.utils.logger import get_logger
+    logger = get_logger(__name__)
+
+    accept_language = request.headers.get("accept-language", "en")
+    logger.debug(f"Accept-Language header received: {accept_language}")
+
     # 간단한 파싱: 첫 번째 언어 코드만 추출 (예: "en-US,en;q=0.9" → "en")
     lang = accept_language.split(",")[0].split("-")[0].strip().lower()
     if lang not in ("ko", "en"):
-        lang = "ko"
+        lang = "en"
+    logger.debug(f"Parsed language: {lang}")
     set_language(lang)
     return lang
 

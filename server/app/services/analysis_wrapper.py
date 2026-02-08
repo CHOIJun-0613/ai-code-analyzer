@@ -32,13 +32,14 @@ class JobLogHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
-def run_analysis_task(job_id: str, params: dict, user_id: str, language: str = "ko"):
+def run_analysis_task(job_id: str, params: dict, user_id: str, language: str = "en"):
     # Set job context
     set_job_id(job_id)
     # Set client context for this thread using the passed user_id
     set_client_id(user_id)
     # Set language context for this thread
     set_language(language)
+    logger.info(f"Analysis language set to: {language}")
 
     jobs[job_id]["status"] = "running"
     

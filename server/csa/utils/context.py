@@ -28,8 +28,8 @@ def set_job_id(job_id: str):
 language_ctx: ContextVar[Optional[str]] = ContextVar("language", default=None)
 
 def get_language() -> str:
-    """현재 컨텍스트의 언어를 반환 (없으면 'ko')"""
-    return language_ctx.get() or "ko"
+    """현재 컨텍스트의 언어를 반환 (없으면 'en')"""
+    return language_ctx.get() or "en"
 
 def set_language(language: str):
     """현재 컨텍스트의 언어 설정"""
