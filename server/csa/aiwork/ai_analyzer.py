@@ -92,20 +92,20 @@ class AIAnalyzer:
         if retry_match:
             try:
                 wait_time = float(retry_match.group(1))
-                logger.info(f"API 요청 대기 시간 감지: {wait_time}초")
+                logger.info(_t("ai.api_wait_detected", wait_time=wait_time))
             except ValueError:
                 pass
 
         # 1. 서비스 일시 불가 (503 UNAVAILABLE)
         if '503' in error_msg or 'unavailable' in error_msg_lower or 'service unavailable' in error_msg_lower:
-            logger.warning("서비스 일시 불가 감지 (503 UNAVAILABLE)")
-            logger.warning("  - Gemini 서비스가 일시적으로 사용 불가능합니다")
+            logger.warning(_t("ai.service_unavailable"))
+            logger.warning(_t("ai.service_unavailable_detail"))
             return True, wait_time
 
         # 2. Rate Limit 초과 (429 RESOURCE_EXHAUSTED)
         if '429' in error_msg or 'resource_exhausted' in error_msg_lower:
-            logger.warning("Rate Limit 초과 감지 (429 RESOURCE_EXHAUSTED)")
-            logger.warning("  - 분당 요청 수(RPM) 또는 분당 토큰 수(TPM) 초과")
+            logger.warning(_t("ai.rate_limit_exceeded"))
+            logger.warning(_t("ai.rate_limit_detail"))
             return True, wait_time
 
         return False, 0.0
@@ -126,28 +126,28 @@ class AIAnalyzer:
 
         # 1. 인증 실패 (401 UNAUTHENTICATED)
         if '401' in error_msg or 'unauthenticated' in error_msg_lower or 'unauthorized' in error_msg_lower:
-            logger.warning("인증 실패 감지 (401 UNAUTHENTICATED)")
-            logger.warning("  - API 키가 유효하지 않거나 만료되었습니다")
-            logger.warning("  - .env 파일의 GOOGLE_API_KEY를 확인하세요")
+            logger.warning(_t("ai.auth_failed"))
+            logger.warning(_t("ai.auth_failed_detail"))
+            logger.warning(_t("ai.auth_failed_env"))
             return True
 
         # 2. 권한 없음 (403 PERMISSION_DENIED)
         if '403' in error_msg or 'permission_denied' in error_msg_lower or 'forbidden' in error_msg_lower:
-            logger.warning("권한 없음 감지 (403 PERMISSION_DENIED)")
-            logger.warning("  - 해당 API를 사용할 권한이 없습니다")
-            logger.warning("  - Google Cloud 프로젝트 설정을 확인하세요")
+            logger.warning(_t("ai.permission_denied"))
+            logger.warning(_t("ai.permission_denied_detail"))
+            logger.warning(_t("ai.permission_denied_project"))
             return True
 
         # 3. 잘못된 요청 (400 INVALID_ARGUMENT)
         if '400' in error_msg or 'invalid_argument' in error_msg_lower or 'bad request' in error_msg_lower:
-            logger.warning("잘못된 요청 감지 (400 INVALID_ARGUMENT)")
-            logger.warning("  - 요청 형식이나 파라미터가 잘못되었습니다")
+            logger.warning(_t("ai.bad_request"))
+            logger.warning(_t("ai.bad_request_detail"))
             return True
 
         # 4. API 키 관련 에러
         if 'api key' in error_msg_lower or 'api_key' in error_msg_lower:
-            logger.warning("API 키 관련 에러 감지")
-            logger.warning("  - .env 파일의 GOOGLE_API_KEY를 확인하세요")
+            logger.warning(_t("ai.api_key_error"))
+            logger.warning(_t("ai.api_key_error_env"))
             return True
 
         return False
@@ -221,11 +221,11 @@ class AIAnalyzer:
                     
                     # API 에러(재시도 가능/불가능)인 경우 즉시 중단하고 에러 전파 (다른 메서드 시도 안함)
                     if self._is_non_retryable_error(e, error_msg, logger=logger) or self._is_retryable_error(e, error_msg, logger=logger)[0]:
-                         logger.warning(f"메서드 {method_name} 호출 중 API 에러 발생: {error_msg[:100]}")
+                         logger.warning(_t("ai.method_call_api_error", method_name=method_name, error_msg=error_msg[:100]))
                          raise e
 
                     failed_attempts.append(f"{method_name}: {error_type} - {error_msg[:100]}")
-                    logger.debug(f"메서드 {method_name} 호출 실패: {e}")
+                    logger.debug(_t("ai.method_call_failed", method_name=method_name, error=str(e)))
                     # 일반 에러(AttributeError 등)는 다음 메서드 시도
             else:
                 failed_attempts.append(f"{method_name}: 메서드 없음")
@@ -257,15 +257,15 @@ class AIAnalyzer:
                 result = loop.run_until_complete(collect_async_generator())
                 loop.close()
 
-                logger.debug(f"generate_content_async 결과 길이: {len(result)} 문자")
+                logger.debug(_t("ai.llm_response_length", length=len(result)))
                 return result
 
             except Exception as e:
-                logger.error(f"generate_content_async 호출 실패: {e}")
+                logger.error(_t("ai.llm_call_failed", error=str(e)))
                 failed_attempts.append(f"generate_content_async: {str(e)[:100]}")
 
         # 모든 메서드 실패 시 에러
-        logger.warning(f"LLM 호출 실패 - 모든 메서드 시도 실패:")
+        logger.warning(_t("ai.llm_call_all_failed"))
         for attempt in failed_attempts:
             logger.warning(f"  - {attempt}")
 
@@ -294,7 +294,7 @@ class AIAnalyzer:
 
                 # 재시도하면 안 되는 에러 감지 (즉시 중단)
                 if self._is_non_retryable_error(e, error_msg, logger=logger):
-                    logger.warning(f"LLM API 호출 실패 (재시도 불가): {error_type} - {error_msg[:200]}")
+                    logger.warning(_t("ai.llm_api_failed_no_retry", error_type=error_type, error_msg=error_msg[:200]))
                     raise e
 
                 is_retryable, api_wait_time = self._is_retryable_error(e, error_msg, logger=logger)
@@ -304,11 +304,11 @@ class AIAnalyzer:
                         retry_count += 1
                         backoff_time = retry_delay * (2 ** (retry_count - 1))
                         wait_time = max(backoff_time, api_wait_time + 1 if api_wait_time > 0 else 0)
-                        logger.warning(f"재시도 {retry_count}/{max_retries}: {wait_time:.1f}초 대기 중... (API제안: {api_wait_time}s)")
+                        logger.warning(_t("ai.retry_waiting", retry_count=retry_count, max_retries=max_retries, wait_time=wait_time, api_wait_time=api_wait_time))
                         time.sleep(wait_time)
                         continue
                     else:
-                        logger.error(f"최대 재시도 횟수 초과 ({max_retries}회): {error_type} - {error_msg[:200]}")
+                        logger.error(_t("ai.max_retries_exceeded", max_retries=max_retries, error_type=error_type, error_msg=error_msg[:200]))
                         raise e
                 else:
                     raise e
@@ -552,13 +552,11 @@ class AIAnalyzer:
         footer_size = len(footer_text)
         overhead = header_size + footer_size
 
-        logger.debug(f"클래스 구조 파싱: Header={header_size} chars, "
-                    f"Methods={len(method_groups)}개, Footer={footer_size} chars")
+        logger.debug(_t("ai.class_structure_parsing", header_size=header_size, methods_count=len(method_groups), footer_size=footer_size))
 
         if overhead >= max_chars:
             # Header/Footer만으로도 제한 초과 → Truncation 불가피
-            logger.warning(f"Header/Footer 크기({overhead})가 제한({max_chars}) 초과 "
-                          f"→ Chunking 불가, Hard Truncation 적용")
+            logger.warning(_t("ai.header_footer_exceeded", overhead=overhead, max_chars=max_chars))
             return [self._truncate_center(source_code, max_chars)]
 
         # 3. 메서드를 청크로 그룹화
@@ -580,8 +578,7 @@ class AIAnalyzer:
                 if current_chunk_methods:
                     chunk = header_text + '\n' + '\n'.join(current_chunk_methods) + '\n' + footer_text
                     chunks.append(chunk)
-                    logger.debug(f"청크 생성: {len(chunk)} chars, "
-                                f"{len(current_chunk_methods)}개 메서드")
+                    logger.debug(_t("ai.chunk_created", chunk_size=len(chunk), methods_count=len(current_chunk_methods)))
 
                 # 새 청크 시작
                 current_chunk_methods = [method_text]
@@ -591,10 +588,9 @@ class AIAnalyzer:
         if current_chunk_methods:
             chunk = header_text + '\n' + '\n'.join(current_chunk_methods) + '\n' + footer_text
             chunks.append(chunk)
-            logger.debug(f"청크 생성 (마지막): {len(chunk)} chars, "
-                        f"{len(current_chunk_methods)}개 메서드")
+            logger.debug(_t("ai.chunk_created_last", chunk_size=len(chunk), methods_count=len(current_chunk_methods)))
 
-        logger.info(f"클래스를 {len(chunks)}개 청크로 분할 완료")
+        logger.info(_t("ai.class_chunked", chunks_count=len(chunks)))
 
         return chunks if chunks else [source_code]
 
@@ -626,7 +622,7 @@ class AIAnalyzer:
         if len(chunk_results) == 1:
             return chunk_results[0]
 
-        logger.info(f"청크 결과 병합 시작: {len(chunk_results)}개 청크")
+        logger.info(_t("ai.merge_chunk_start", chunks_count=len(chunk_results)))
 
         # 간단한 병합 전략: 각 청크 결과를 섹션으로 구분
         merged = f"# {class_name} (분할 분석)\n\n"
@@ -637,7 +633,7 @@ class AIAnalyzer:
             merged += result
             merged += "\n\n---\n\n"
 
-        logger.info(f"청크 결과 병합 완료: {len(merged)} chars")
+        logger.info(_t("ai.merge_chunk_complete", merged_size=len(merged)))
 
         return merged
 
@@ -671,7 +667,7 @@ class AIAnalyzer:
         if len(chunk_results) == 1:
             return chunk_results[0]
 
-        logger.info(f"LLM 기반 청크 결과 병합 시작: {len(chunk_results)}개 청크")
+        logger.info(_t("ai.llm_merge_chunk_start", chunks_count=len(chunk_results)))
 
         # 병합 프롬프트 작성
         merge_prompt = f"""다음은 `{class_name}` 클래스를 {len(chunk_results)}개 청크로 나누어 분석한 결과입니다.
@@ -696,7 +692,7 @@ class AIAnalyzer:
 
         try:
             # LLM 호출
-            logger.debug(f"LLM 병합 프롬프트 크기: {len(merge_prompt)} chars")
+            logger.debug(_t("ai.llm_merge_prompt_size", prompt_size=len(merge_prompt)))
             raw_response = await self._call_llm_async(
                 merge_prompt,
                 stop_check_callback=stop_check_callback,
@@ -705,13 +701,13 @@ class AIAnalyzer:
 
             merged_result = self._clean_response(raw_response)
 
-            logger.info(f"LLM 기반 청크 결과 병합 완료: {len(merged_result)} chars")
+            logger.info(_t("ai.llm_merge_chunk_complete", merged_size=len(merged_result)))
 
             return merged_result
 
         except Exception as e:
-            logger.error(f"LLM 기반 병합 실패: {e}")
-            logger.warning(f"단순 병합으로 fallback")
+            logger.error(_t("ai.llm_merge_failed", error=str(e)))
+            logger.warning(_t("ai.fallback_simple_merge"))
 
             # Fallback: 단순 병합
             return self._merge_chunk_results(chunk_results, class_name, logger)
@@ -743,10 +739,10 @@ class AIAnalyzer:
 
         # Step 0: Pass-through
         if original_len <= max_chars:
-            logger.debug(f"소스 코드 크기 적정 ({original_len} chars <= {max_chars})")
+            logger.debug(_t("ai.source_code_size_ok", original_len=original_len, max_chars=max_chars))
             return source_code, "none"
 
-        logger.info(f"소스 코드 크기 초과 감지 ({original_len} chars > {max_chars}), 최적화 시작")
+        logger.info(_t("ai.source_code_exceeded", original_len=original_len, max_chars=max_chars))
 
         # Step 1: Body Stripping
         optimized = self._remove_method_bodies(source_code)
@@ -756,7 +752,7 @@ class AIAnalyzer:
                    f"({(1 - optimized_len/original_len)*100:.1f}% 감소)")
 
         if optimized_len <= max_chars:
-            logger.info(f"Body Stripping으로 크기 제한 충족 ({optimized_len} <= {max_chars})")
+            logger.info(_t("ai.source_code_body_stripped", optimized_len=optimized_len, max_chars=max_chars))
             return optimized, "body_stripped"
 
         # Step 2: Hard Truncation
@@ -765,7 +761,7 @@ class AIAnalyzer:
 
         logger.info(f"Step 2 (Hard Truncation): {optimized_len} → {truncated_len} chars "
                    f"({(1 - truncated_len/original_len)*100:.1f}% 총 감소)")
-        logger.warning(f"Hard Truncation 적용됨 - 클래스 분석 결과가 불완전할 수 있습니다")
+        logger.warning(_t("ai.source_code_hard_truncated"))
 
         return truncated, "truncated"
 
@@ -789,7 +785,7 @@ class AIAnalyzer:
         while retry_count <= max_retries:
             # 취소 확인
             if stop_check_callback and stop_check_callback():
-                logger.warning("LLM 호출 대기 중 사용자 취소 확인됨")
+                logger.warning(_t("ai.llm_call_wait_cancelled"))
                 raise RuntimeError("LLM call cancelled by user")
 
             try:
@@ -805,7 +801,7 @@ class AIAnalyzer:
 
                 # 재시도 불가능 에러 체크
                 if self._is_non_retryable_error(e, error_msg, logger=logger):
-                    logger.warning(f"LLM API 호출 실패 (재시도 불가): {error_msg[:200]}")
+                    logger.warning(_t("ai.llm_api_failed_no_retry_async", error_msg=error_msg[:200]))
                     raise e
                 
                 is_retryable, api_wait_time = self._is_retryable_error(e, error_msg, logger=logger)
@@ -819,7 +815,7 @@ class AIAnalyzer:
                         backoff_time = retry_delay * (2 ** (retry_count - 1))
                         wait_time = max(backoff_time, api_wait_time + 1 if api_wait_time > 0 else 0)
                         
-                        logger.warning(f"[Async] 재시도 {retry_count}/{max_retries}: {wait_time:.1f}초 대기 중... (API제안: {api_wait_time}s)")
+                        logger.warning(_t("ai.async_retry_waiting", retry_count=retry_count, max_retries=max_retries, wait_time=wait_time, api_wait_time=api_wait_time))
                         
                         # 비동기 대기 (Cancellation 가능)
                         # wait_time 동안 1.0초 간격으로 취소 확인
@@ -830,7 +826,7 @@ class AIAnalyzer:
                                 is_cancelled = stop_check_callback()
                                 # logger.debug(f"[AsyncRetry] Cancellation Check: {is_cancelled}") # 주석 처리됨 (너무 빈번)
                                 if is_cancelled:
-                                    logger.warning(f"LLM 재시도 대기 중 사용자 취소 확인됨 (대기중 {slept:.1f}s/{wait_time:.1f}s)")
+                                    logger.warning(_t("ai.async_retry_cancelled", slept=slept, wait_time=wait_time))
                                     raise RuntimeError("LLM call cancelled by user")
                             
                             to_sleep = min(chunk, wait_time - slept)
@@ -839,10 +835,10 @@ class AIAnalyzer:
                         
                         continue
                     else:
-                         logger.error(f"[Async] 최대 재시도 횟수 초과: {error_msg[:200]}")
+                         logger.error(_t("ai.async_max_retries_exceeded", error_msg=error_msg[:200]))
                          raise e
                 else:
-                    logger.error(f"[Async] 재시도 조건 불충족: {error_msg[:200]}")
+                    logger.error(_t("ai.async_retry_condition_failed", error_msg=error_msg[:200]))
                     raise e
 
     async def analyze_class_async(
@@ -891,20 +887,18 @@ class AIAnalyzer:
             # 소스 코드에 사용 가능한 최대 크기
             source_code_max = max_total_chars - prompt_overhead
 
-            logger.debug(f"Token 제한: {max_tokens} tokens ({max_total_chars} chars), "
-                        f"프롬프트: {len(prompt)} chars, "
-                        f"소스 최대: {source_code_max} chars")
+            logger.debug(_t("ai.token_limit_detailed", max_tokens=max_tokens, max_total_chars=max_total_chars, prompt_size=len(prompt), source_code_max=source_code_max))
 
             # Step 0: Pass-through (크기가 제한 이내이면 원본 그대로)
             if len(source_code) <= source_code_max:
-                logger.debug(f"소스 코드 크기 적정 ({len(source_code)} <= {source_code_max})")
+                logger.debug(_t("ai.source_code_size_ok_async", length=len(source_code), max_chars=source_code_max))
                 input_text = f"{prompt}\n\n```java\n{source_code}\n```"
                 raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
                 ai_description = self._clean_response(raw_response)
-                logger.debug(f"Class AI 분석 완료 (async): {class_name}")
+                logger.debug(_t("ai.async_class_complete", class_name=class_name))
                 return ai_description if ai_description else ""
 
-            logger.info(f"소스 코드 크기 초과 감지 ({len(source_code)} > {source_code_max}), 최적화 시작")
+            logger.info(_t("ai.source_code_exceeded_async", length=len(source_code), max_chars=source_code_max))
 
             # Step 1: Body Stripping
             optimized_code = self._remove_method_bodies(source_code)
@@ -916,22 +910,21 @@ class AIAnalyzer:
             # Step 2: Chunking vs. Truncation 판단
             if optimized_len <= source_code_max:
                 # 크기 OK → 단일 분석
-                logger.debug(f"Body Stripping 후 크기 적정 ({optimized_len} <= {source_code_max})")
+                logger.debug(_t("ai.body_stripped_ok", optimized_len=optimized_len, max_chars=source_code_max))
                 input_text = f"{prompt}\n\n```java\n{optimized_code}\n```"
                 raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
                 ai_description = self._clean_response(raw_response)
-                logger.debug(f"Class AI 분석 완료 (async): {class_name}")
+                logger.debug(_t("ai.async_class_complete", class_name=class_name))
                 return ai_description if ai_description else ""
 
             # Step 3: Chunking 적용
-            logger.info(f"Body Stripping 후에도 크기 초과 ({optimized_len} > {source_code_max}), "
-                       f"Chunking 전략 적용")
+            logger.info(_t("ai.body_stripped_exceeded", optimized_len=optimized_len, max_chars=source_code_max))
 
             chunks = self._chunk_class_source(optimized_code, source_code_max, logger=logger)
 
             if len(chunks) == 1:
                 # Chunking 실패 (단일 청크) → Hard Truncation
-                logger.warning(f"Chunking 실패, Hard Truncation 적용")
+                logger.warning(_t("ai.chunking_failed_hard_truncation"))
                 truncated = self._truncate_center(optimized_code, source_code_max)
                 input_text = f"{prompt}\n\n```java\n{truncated}\n```"
                 raw_response = await self._call_llm_async(input_text, stop_check_callback=stop_check_callback, logger=logger)
@@ -939,20 +932,20 @@ class AIAnalyzer:
                 return ai_description if ai_description else ""
 
             # Step 4: 각 청크 병렬 분석
-            logger.info(f"청크별 분석 시작: {len(chunks)}개 청크 (병렬 처리)")
+            logger.info(_t("ai.async_chunking_started", chunks_count=len(chunks)))
 
             # 청크별 분석 함수 (순서 유지를 위해 인덱스 포함)
             async def analyze_single_chunk(idx: int, chunk: str) -> tuple[int, str]:
                 """단일 청크 분석 (병렬 처리용)"""
                 # 취소 확인
                 if stop_check_callback and stop_check_callback():
-                    logger.warning(f"청크 분석 중 사용자 취소 확인됨 (청크 {idx + 1}/{len(chunks)})")
+                    logger.warning(_t("ai.async_chunk_analysis_cancelled", current_chunk=idx + 1, total_chunks=len(chunks)))
                     raise RuntimeError("Chunked analysis cancelled by user")
 
                 # Semaphore를 사용하여 동시 요청 수 제한
                 if semaphore:
                     async with semaphore:
-                        logger.debug(f"청크 {idx + 1}/{len(chunks)} 분석 시작 (Semaphore 획득)")
+                        logger.debug(_t("ai.async_chunk_analysis_started", current_chunk=idx + 1, total_chunks=len(chunks)))
                         input_text = f"{prompt}\n\n```java\n{chunk}\n```"
                         raw_response = await self._call_llm_async(
                             input_text,
@@ -960,11 +953,11 @@ class AIAnalyzer:
                             logger=logger
                         )
                         chunk_result = self._clean_response(raw_response)
-                        logger.info(f"청크 {idx + 1}/{len(chunks)} 분석 완료 ({len(chunk_result)} chars)")
+                        logger.info(_t("ai.async_chunk_analysis_complete", current_chunk=idx + 1, total_chunks=len(chunks), result_size=len(chunk_result)))
                         return idx, chunk_result
                 else:
                     # Semaphore 없이 병렬 실행 (동시 요청 수 무제한)
-                    logger.debug(f"청크 {idx + 1}/{len(chunks)} 분석 시작")
+                    logger.debug(_t("ai.async_chunk_analysis_started_simple", current_chunk=idx + 1, total_chunks=len(chunks)))
                     input_text = f"{prompt}\n\n```java\n{chunk}\n```"
                     raw_response = await self._call_llm_async(
                         input_text,
@@ -972,7 +965,7 @@ class AIAnalyzer:
                         logger=logger
                     )
                     chunk_result = self._clean_response(raw_response)
-                    logger.info(f"청크 {idx + 1}/{len(chunks)} 분석 완료 ({len(chunk_result)} chars)")
+                    logger.info(_t("ai.async_chunk_analysis_complete_simple", current_chunk=idx + 1, total_chunks=len(chunks), result_size=len(chunk_result)))
                     return idx, chunk_result
 
             # 모든 청크를 병렬로 분석
@@ -983,12 +976,12 @@ class AIAnalyzer:
             indexed_results.sort(key=lambda x: x[0])
             chunk_results = [result for _, result in indexed_results]
 
-            logger.info(f"모든 청크 분석 완료: {len(chunk_results)}개")
+            logger.info(_t("ai.async_all_chunks_complete", chunks_count=len(chunk_results)))
 
             # Step 5: 결과 병합
             if use_llm_merge:
                 # LLM 기반 병합 (고품질, 추가 LLM 호출)
-                logger.info(f"LLM 기반 병합 사용")
+                logger.info(_t("ai.async_llm_merge_used"))
                 merged_result = await self._merge_chunk_results_with_llm(
                     chunk_results,
                     class_name,
@@ -997,12 +990,11 @@ class AIAnalyzer:
                 )
             else:
                 # 단순 병합 (기본값, 빠름)
-                logger.info(f"단순 병합 사용")
+                logger.info(_t("ai.async_simple_merge_used"))
                 merged_result = self._merge_chunk_results(chunk_results, class_name, logger=logger)
 
             merge_method = "LLM 병합" if use_llm_merge else "단순 병합"
-            logger.info(f"Class AI 분석 완료 (Chunking + {merge_method}): {class_name}, "
-                       f"{len(chunks)}개 청크, 최종 {len(merged_result)} chars")
+            logger.info(_t("ai.class_analysis_chunking_final", class_name=class_name, merge_method=merge_method, chunks_count=len(chunks), result_size=len(merged_result)))
 
             return merged_result if merged_result else ""
 
@@ -1010,11 +1002,13 @@ class AIAnalyzer:
             # 상세한 오류 로그 기록
             error_type = type(e).__name__
             error_msg = str(e)
-            logger.warning(f"Class AI 분석 실패 (async, {class_name}): {error_type} - {error_msg}")
+            logger.warning(_t("ai.async_class_analysis_failed", class_name=class_name, error_type=error_type, error_msg=error_msg))
 
             # 디버그 레벨로 전체 traceback 기록
-            import traceback
-            logger.debug(f"Class AI 분석 상세 오류 (async, {class_name}):\n{traceback.format_exc()}")
+            logger.debug(_t("ai.class_analysis_error_async", class_name=class_name) + "
+" + traceback.format_exc())
+            logger.debug(_t("ai.class_analysis_error_detailed", class_name=class_name) + "
+" + traceback.format_exc())
             return ""
 
     async def analyze_method_async(
@@ -1061,7 +1055,7 @@ class AIAnalyzer:
                     logger=logger
                 )
                 identifier = f"{class_name}.{method_name}" if class_name else method_name
-                logger.info(f"Method AI 분석 - 소스 코드 최적화 적용 ({identifier}): "
+                logger.info(_t("ai.method_source_optimized_detailed", identifier=identifier, original_size=len(source_code), optimized_size=optimized_len))
                            f"{len(source_code)} → {len(optimized_code)} chars, "
                            f"level={optimization_level}")
             else:
@@ -1077,7 +1071,7 @@ class AIAnalyzer:
 
             # 로깅용 식별자 생성
             identifier = f"{class_name}.{method_name}" if class_name else method_name
-            logger.debug(f"Method AI 분석 완료 (async): {identifier}")
+            logger.debug(_t("ai.async_method_analysis_complete", identifier=identifier))
             return ai_description if ai_description else ""
 
         except Exception as e:
@@ -1085,13 +1079,15 @@ class AIAnalyzer:
             error_type = type(e).__name__
             error_msg = str(e)
             identifier = f"{class_name}.{method_name}" if class_name else method_name
-            logger.warning(f"Method AI 분석 실패 (async, {identifier}): {error_type} - {error_msg}")
+            logger.warning(_t("ai.async_method_analysis_failed", identifier=identifier, error_type=error_type, error_msg=error_msg))
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(f"Method AI 분석 상세 오류 (async, {identifier}):\n{traceback.format_exc()}")
+            logger.debug(_t("ai.method_analysis_error_detailed", identifier=identifier) + "
+" + traceback.format_exc())
             return ""
-
+            logger.debug(_t("ai.method_analysis_error_async", identifier=identifier) + "
+" + traceback.format_exc())
     async def analyze_sql_async(
         self,
         sql_statement: str,
@@ -1130,7 +1126,7 @@ class AIAnalyzer:
             if len(sql_statement) > sql_max:
                 # SQL은 truncate만 적용 (Body Stripping은 의미 없음)
                 optimized_sql = sql_statement[:sql_max] + "\n/* ... SQL truncated ... */"
-                logger.info(f"SQL AI 분석 - SQL 크기 제한으로 Truncation 적용 ({sql_id}): "
+                logger.info(_t("ai.sql_truncation_applied", sql_id=sql_id, original_size=len(original_sql), truncated_size=len(truncated_sql)))
                            f"{len(sql_statement)} → {len(optimized_sql)} chars")
             else:
                 optimized_sql = sql_statement
@@ -1143,20 +1139,22 @@ class AIAnalyzer:
             # 응답 정제 (think 태그, markdown 블록 제거)
             ai_description = self._clean_response(raw_response)
 
-            logger.debug(f"SQL AI 분석 완료 (async): {sql_id}")
+            logger.debug(_t("ai.async_sql_analysis_complete", sql_id=sql_id))
             return ai_description if ai_description else ""
 
         except Exception as e:
             # 상세한 오류 로그 기록
             error_type = type(e).__name__
             error_msg = str(e)
-            logger.warning(f"SQL AI 분석 실패 (async, {sql_id}): {error_type} - {error_msg}")
+            logger.warning(_t("ai.async_sql_analysis_failed", sql_id=sql_id, error_type=error_type, error_msg=error_msg))
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(f"SQL AI 분석 상세 오류 (async, {sql_id}):\n{traceback.format_exc()}")
+            logger.debug(_t("ai.sql_analysis_error_detailed", sql_id=sql_id) + "
+" + traceback.format_exc())
             return ""
-
+            logger.debug(_t("ai.sql_analysis_error_async", sql_id=sql_id) + "
+" + traceback.format_exc())
     async def analyze_method_batch_async(
         self, 
         method_items: list,
@@ -1203,20 +1201,22 @@ class AIAnalyzer:
             # 응답 파싱: ---Method#N---...---END#N--- 형식
             results = self._parse_batch_method_response(cleaned_response, method_items)
 
-            logger.debug(f"Method 배치 AI 분석 완료: {len(results)}개 처리됨")
+            logger.debug(_t("ai.batch_method_analysis_complete", count=len(results)))
             return results
 
         except Exception as e:
             # 상세한 오류 로그 기록
             error_type = type(e).__name__
             error_msg = str(e)
-            logger.warning(f"Method 배치 AI 분석 실패: {error_type} - {error_msg}")
+            logger.warning(_t("ai.batch_method_analysis_failed", error_type=error_type, error_msg=error_msg))
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(f"Method 배치 AI 분석 상세 오류:\n{traceback.format_exc()}")
+            logger.debug(_t("ai.batch_method_error_detailed") + "
+" + traceback.format_exc())
             return {}
-
+            logger.debug(_t("ai.batch_method_analysis_error") + "
+" + traceback.format_exc())
     async def analyze_sql_batch_async(
         self, 
         sql_items: list,
@@ -1261,20 +1261,22 @@ class AIAnalyzer:
             # 응답 파싱: ---SQL#N---...---END#N--- 형식
             results = self._parse_batch_sql_response(cleaned_response, sql_items)
 
-            logger.debug(f"SQL 배치 AI 분석 완료: {len(results)}개 처리됨")
+            logger.debug(_t("ai.batch_sql_analysis_complete", count=len(results)))
             return results
 
         except Exception as e:
             # 상세한 오류 로그 기록
             error_type = type(e).__name__
             error_msg = str(e)
-            logger.warning(f"SQL 배치 AI 분석 실패: {error_type} - {error_msg}")
+            logger.warning(_t("ai.batch_sql_analysis_failed", error_type=error_type, error_msg=error_msg))
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(f"SQL 배치 AI 분석 상세 오류:\n{traceback.format_exc()}")
+            logger.debug(_t("ai.batch_sql_error_detailed") + "
+" + traceback.format_exc())
             return {}
-
+            logger.debug(_t("ai.batch_sql_analysis_error") + "
+" + traceback.format_exc())
     def _parse_batch_sql_response(self, response: str, sql_items: list[dict]) -> dict[str, str]:
         """
         배치 SQL 분석 응답을 파싱합니다.
@@ -1292,7 +1294,7 @@ class AIAnalyzer:
         pattern1 = r'---SQL#(\d+)---(.*?)---END#\1---'
         matches1 = re.findall(pattern1, response, flags=re.DOTALL)
 
-        logger.debug(f"패턴 1 (---END#N---): {len(matches1)}개 매칭")
+        logger.debug(_t("ai.parse_pattern1_matches", count=len(matches1)))
 
         # 패턴 1로 매칭된 SQL 번호 기록
         matched_nums = set()
@@ -1303,11 +1305,11 @@ class AIAnalyzer:
                 sql_id = sql_items[sql_num - 1].get("sql_id", "")
                 if sql_id:
                     results[sql_id] = description.strip()
-                    logger.debug(f"  SQL#{sql_num} ({sql_id}): {len(description)}자 추출")
+                    logger.debug(_t("ai.parse_sql_extracted", sql_num=sql_num, sql_id=sql_id, length=len(description)))
 
         # 매칭되지 않은 SQL 처리 (END 태그 없는 경우)
         if len(matches1) < len(sql_items):
-            logger.debug(f"패턴 2 (유연한 파싱) 시도: 미처리 {len(sql_items) - len(matches1)}개")
+            logger.debug(_t("ai.parse_pattern2_start", remaining=len(sql_items) - len(matches1)))
             # 패턴 2: ---SQL#N---부터 다음 ---SQL# 또는 문자열 끝까지
             pattern2 = r'---SQL#(\d+)---(.*?)(?=---SQL#\d+---|$)'
             matches2 = re.findall(pattern2, response, flags=re.DOTALL)
@@ -1321,7 +1323,7 @@ class AIAnalyzer:
                         # ---END#N--- 태그 제거 (있을 경우)
                         desc_clean = re.sub(r'---END#?\d*---', '', description).strip()
                         results[sql_id] = desc_clean
-                        logger.debug(f"  SQL#{sql_num} ({sql_id}): {len(desc_clean)}자 추출 (유연한 파싱)")
+                        logger.debug(_t("ai.parse_sql_extracted_flexible", sql_num=sql_num, sql_id=sql_id, length=len(desc_clean)))
 
         # 이전 fallback 패턴들은 제거
         if False:
@@ -1330,7 +1332,7 @@ class AIAnalyzer:
             matches = re.findall(pattern2, response, flags=re.DOTALL)
 
             if matches:
-                logger.debug(f"패턴 2 (---END---) 매칭: {len(matches)}개")
+                logger.debug(_t("ai.parse_pattern2_matches", count=len(matches)))
                 for sql_num_str, description in matches:
                     sql_num = int(sql_num_str)
                     if 1 <= sql_num <= len(sql_items):
@@ -1344,7 +1346,7 @@ class AIAnalyzer:
                 matches = re.findall(pattern3, response, flags=re.DOTALL)
 
                 if matches:
-                    logger.debug(f"패턴 3 (유연한 파싱) 매칭: {len(matches)}개")
+                    logger.debug(_t("ai.parse_pattern3_matches", count=len(matches)))
                     for sql_num_str, description in matches:
                         sql_num = int(sql_num_str)
                         if 1 <= sql_num <= len(sql_items):
@@ -1360,9 +1362,11 @@ class AIAnalyzer:
                 f"SQL 배치 분석 응답 파싱 불완전: "
                 f"{len(results)}/{len(sql_items)}개만 파싱됨"
             )
-            logger.debug(f"응답 내용 (첫 1000자):\n{response[:1000]}")
+            logger.debug(_t("ai.response_preview_detailed", length=1000) + "
+" + response[:1000])
 
-        return results
+            logger.debug(_t("ai.response_preview_sql", length=1000) + "
+" + response[:1000])
 
     def _parse_batch_method_response(self, response: str, method_items: list[dict]) -> dict[str, str]:
         """
@@ -1381,7 +1385,7 @@ class AIAnalyzer:
         pattern1 = r'---Method#(\d+)---(.*?)---END#\1---'
         matches1 = re.findall(pattern1, response, flags=re.DOTALL)
 
-        logger.debug(f"패턴 1 (---END#N---): {len(matches1)}개 매칭")
+        logger.debug(_t("ai.parse_pattern1_matches", count=len(matches1)))
 
         # 패턴 1로 매칭된 Method 번호 기록
         matched_nums = set()
@@ -1392,11 +1396,11 @@ class AIAnalyzer:
                 method_id = method_items[method_num - 1].get("method_id", "")
                 if method_id:
                     results[method_id] = description.strip()
-                    logger.debug(f"  Method#{method_num} ({method_id}): {len(description)}자 추출")
+                    logger.debug(_t("ai.parse_method_extracted", method_num=method_num, method_id=method_id, length=len(description)))
 
         # 매칭되지 않은 Method 처리 (END 태그 없는 경우)
         if len(matches1) < len(method_items):
-            logger.debug(f"패턴 2 (유연한 파싱) 시도: 미처리 {len(method_items) - len(matches1)}개")
+            logger.debug(_t("ai.parse_pattern2_start", remaining=len(method_items) - len(matches1)))
             # 패턴 2: ---Method#N---부터 다음 ---Method# 또는 문자열 끝까지
             pattern2 = r'---Method#(\d+)---(.*?)(?=---Method#\d+---|$)'
             matches2 = re.findall(pattern2, response, flags=re.DOTALL)
@@ -1410,7 +1414,7 @@ class AIAnalyzer:
                         # ---END#N--- 태그 제거 (있을 경우)
                         desc_clean = re.sub(r'---END#?\d*---', '', description).strip()
                         results[method_id] = desc_clean
-                        logger.debug(f"  Method#{method_num} ({method_id}): {len(desc_clean)}자 추출 (유연한 파싱)")
+                        logger.debug(_t("ai.parse_method_extracted_flexible", method_num=method_num, method_id=method_id, length=len(desc_clean)))
 
         # 결과 검증
         if len(results) < len(method_items):
@@ -1418,9 +1422,11 @@ class AIAnalyzer:
                 f"Method 배치 분석 응답 파싱 불완전: "
                 f"{len(results)}/{len(method_items)}개만 파싱됨"
             )
-            logger.debug(f"응답 내용 (첫 1000자):\n{response[:1000]}")
+            logger.debug(_t("ai.response_preview_method_detailed", length=1000) + "
+" + response[:1000])
 
-        return results
+            logger.debug(_t("ai.response_preview_method", length=1000) + "
+" + response[:1000])
 
     def analyze_class(self, source_code: str, class_name: str = "") -> str:
         """
