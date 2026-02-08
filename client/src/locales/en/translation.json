@@ -68,6 +68,20 @@
         "logicalName": "Method Logical Name",
         "className": "Class Name"
     },
+    "mapperList": {
+        "title": "SQL Mapper List",
+        "subtitle": "Search and view MyBatis mapper files across all projects",
+        "searchPlaceholder": "Search by mapper name...",
+        "projectName": "Project",
+        "packageName": "Package",
+        "mapperName": "Mapper",
+        "sqlCount": "SQL Count",
+        "filterProject": "Project",
+        "filterPackage": "Package",
+        "filterMapper": "Mapper",
+        "mappersFound": "Mappers Found: {{count}}",
+        "noMappers": "No mappers found matching your search."
+    },
     "aiPrompt": {
         "title": "AI Prompt Management",
         "subtitle": "Manage and tune system prompts used for AI analysis.",
