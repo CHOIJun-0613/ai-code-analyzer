@@ -56,20 +56,6 @@ class AIAnalyzer:
         """AI 분석 사용 가능 여부 확인"""
         return self._is_available
 
-    def _is_retryable_error(self, exception: Exception, error_msg: str) -> tuple[bool, float]:
-        """
-        재시도 가능한 에러인지 확인하고, 대기 시간이 있다면 반환합니다.
-
-        Args:
-            exception: 발생한 예외 객체
-            error_msg: 에러 메시지
-
-        Returns:
-            (재시도 가능 여부, 추천 대기 시간(초))
-        """
-        error_msg_lower = error_msg.lower()
-        wait_time = 0.0
-
     def _is_retryable_error(self, exception: Exception, error_msg: str, logger: logging.Logger = logger) -> tuple[bool, float]:
         """
         재시도 가능한 에러인지 확인하고, 대기 시간이 있다면 반환합니다.
@@ -152,20 +138,6 @@ class AIAnalyzer:
 
         return False
 
-    def _call_llm(self, input_text: str, max_retries: int = 5, retry_delay: int = 5) -> str:
-        """
-        LLM을 호출하여 결과를 반환합니다.
-        Provider별로 다른 메서드를 시도합니다.
-
-        Args:
-            input_text: LLM에 전달할 입력 텍스트
-            max_retries: 최대 재시도 횟수 (기본값: 5)
-            retry_delay: 재시도 기본 간격 (초, 기본값: 5)
-                - Exponential Backoff 및 API 제안 대기 시간 사용
-
-        Returns:
-            LLM 응답 문자열
-        """
     def _call_llm_single_attempt(self, input_text: str, logger: logging.Logger = logger) -> str:
         """
         단일 LLM 호출 시도 (재시도 로직 없음).
