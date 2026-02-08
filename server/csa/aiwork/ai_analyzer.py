@@ -1397,7 +1397,7 @@ class AIAnalyzer:
             prompt_template = DEFAULT_PROMPTS.get("class_doc", "")
             
         if not prompt_template:
-            logger.error("Class analysis prompt not found")
+            logger.error(_t("ai_analyzer.class_analysis_prompt_not_found"))
             return ""
 
         # 소스 코드 길이 제한 (약 30000자 - 토큰 제한 고려)
@@ -1407,17 +1407,17 @@ class AIAnalyzer:
         full_prompt = f"{prompt_template}\n\n```java\n{truncated_source}\n```"
         
         try:
-            logger.info(f"AI Class Analysis Start: {class_name} ({len(source_code)} chars)")
+            logger.info(_t("ai_analyzer.class_analysis_start_sync", class_name=class_name, size=len(source_code)))
             response = self._call_llm(full_prompt)
             clean_response = self._clean_response(response)
             
             elapsed = time.time() - start_time
-            logger.info(f"AI Class Analysis Completed: {class_name} ({elapsed:.2f}s)")
-            
+            logger.info(_t("ai_analyzer.class_analysis_complete_sync", class_name=class_name, elapsed=elapsed))
+
             return clean_response
             
         except Exception as e:
-            logger.error(f"AI Class Analysis Failed: {class_name} - {e}")
+            logger.error(_t("ai_analyzer.class_analysis_failed_sync", class_name=class_name, error=str(e)))
             raise e
 
     def analyze_method(self, source_code: str, method_name: str = "", class_name: str = "") -> str:
@@ -1442,7 +1442,7 @@ class AIAnalyzer:
             prompt_template = DEFAULT_PROMPTS.get("method_doc", "")
 
         if not prompt_template:
-            logger.error("Method analysis prompt not found")
+            logger.error(_t("ai_analyzer.method_analysis_prompt_not_found"))
             return ""
             
         # 프롬프트 구성
@@ -1451,17 +1451,17 @@ class AIAnalyzer:
         full_name = f"{class_name}.{method_name}" if class_name else method_name
         
         try:
-            logger.debug(f"AI Method Analysis Start: {full_name}")
+            logger.debug(_t("ai_analyzer.method_analysis_start_sync", identifier=full_name))
             response = self._call_llm(full_prompt)
             clean_response = self._clean_response(response)
             
             elapsed = time.time() - start_time
-            logger.debug(f"AI Method Analysis Completed: {full_name} ({elapsed:.2f}s)")
-            
+            logger.debug(_t("ai_analyzer.method_analysis_complete_sync", identifier=full_name, elapsed=elapsed))
+
             return clean_response
             
         except Exception as e:
-            logger.error(f"AI Method Analysis Failed: {full_name} - {e}")
+            logger.error(_t("ai_analyzer.method_analysis_failed_sync", identifier=full_name, error=str(e)))
             raise e
 
 

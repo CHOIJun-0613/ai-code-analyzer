@@ -309,10 +309,10 @@ def parse_java_project_streaming(
 
     # 건너뛴 파일 로깅
     if skipped_files:
-        logger.warning(f"⚠️  복잡도 임계값({complexity_threshold}) 초과로 건너뛴 파일: {len(skipped_files)}개")
+        logger.warning(_t("java_analysis.complexity_skipped_files", threshold=complexity_threshold, count=len(skipped_files)))
         for file_path, complexity in skipped_files:
             file_name = os.path.basename(file_path)
-            logger.warning(f"  - {file_name} (복잡도: {complexity})")
+            logger.warning(_t("java_analysis.complexity_skipped_file_detail", name=file_name, complexity=complexity))
 
     # 복잡도 높은 순으로 정렬 (큰 작업부터 워커에 배정)
     filtered_complexities.sort(key=lambda x: x[1], reverse=True)
@@ -371,7 +371,7 @@ def parse_java_project_streaming(
                 if match:
                     package_names.add(match.group(1))
         except Exception as e:
-            logger.debug(f"Package 추출 실패 (무시): {file_path} - {e}")
+            logger.debug(_t("java_analysis.package_extraction_failed", file_path=file_path, error=str(e)))
             continue
 
     # 모든 Package를 한 번에 생성 (배치 처리)
@@ -588,7 +588,7 @@ def parse_java_project_streaming(
                     continue
 
         except KeyboardInterrupt:
-            logger.warning("Analysis canceled, cancelling pending tasks...")
+            logger.warning(_t("java_analysis.analysis_cancelled_pending_tasks"))
             for f in future_to_file:
                 f.cancel()
             raise
@@ -605,7 +605,7 @@ def parse_java_project_streaming(
     total_xml_mappers = len(xml_mappers)
 
     if total_xml_mappers > 0:
-        logger.info(f"총 {total_xml_mappers}개 XML mapper 발견")
+        logger.info(_t("java_analysis.xml_mappers_found", count=total_xml_mappers))
         xml_start_time = time.time()
         xml_last_log_time = xml_start_time
 
@@ -648,7 +648,7 @@ def parse_java_project_streaming(
     total_config_files = len(config_files)
 
     if total_config_files > 0:
-        logger.info(f"총 {total_config_files}개 Config 파일 발견")
+        logger.info(_t("java_analysis.config_files_found", count=total_config_files))
         config_start_time = time.time()
 
         for i, config in enumerate(config_files, 1):
@@ -658,17 +658,17 @@ def parse_java_project_streaming(
             # 5개마다 진행율 표시
             if (i % 5 == 0) or (i == total_config_files):
                 config_percent = int(i / total_config_files * 100)
-                logger.info(f"  Config 파일 처리중 [{i}/{total_config_files}] ({config_percent}%)")
+                logger.info(_t("java_analysis.config_file_processing", current=i, total=total_config_files, percent=config_percent))
 
         config_elapsed = time.time() - config_start_time
-        logger.info(f"Config 파일 처리 완료 ({total_config_files}개, {config_elapsed:.1f}초)")
+        logger.info(_t("java_analysis.config_files_complete", total=total_config_files, elapsed=config_elapsed))
     else:
         logger.info(_t("java_analysis.no_config_files"))
 
     # 4. Bean 의존성 해결 (Neo4j 쿼리)
     if stats['beans'] > 0:
         logger.info("")
-        logger.info(f"Bean 의존성 해결 중... (총 {stats['beans']}개 Bean, 시간이 걸릴 수 있습니다)")
+        logger.info(_t("java_analysis.bean_dependency_resolving_detailed", count=stats['beans']))
         bean_start_time = time.time()
 
         from csa.services.java_analysis.bean_dependency_resolver import (
@@ -677,7 +677,7 @@ def parse_java_project_streaming(
         resolve_bean_dependencies_from_neo4j(graph_db, project_name, logger)
 
         bean_elapsed = time.time() - bean_start_time
-        logger.info(f"Bean 의존성 해결 완료 ({bean_elapsed:.1f}초)")
+        logger.info(_t("java_analysis.bean_dependency_complete_detailed", elapsed=bean_elapsed))
 
     logger.info(_t("java_analysis.streaming_analysis_complete"))
     logger.info(_t("java_analysis.files_processed", processed=stats['processed_files'], total=stats['total_files']))
@@ -726,7 +726,7 @@ def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[st
         java_files = csaignore_filter.filter_files(java_files)
         excluded_count = original_count - len(java_files)
         if excluded_count > 0:
-            logger.info(f".csaignore로 {excluded_count}개 파일 제외됨")
+            logger.info(_t("java_analysis.csaignore_files_excluded_count", count=excluded_count))
 
     return java_files
 

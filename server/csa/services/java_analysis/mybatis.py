@@ -67,8 +67,9 @@ def extract_sql_statements_from_mappers(mybatis_mappers: list[MyBatisMapper], pr
                         sql_ai_description = analyzer.analyze_sql(sql_content, sql_dict.get('id', ''))
                 except Exception as e:
                     from csa.utils.logger import get_logger
+                    from csa.utils.i18n import _t
                     logger = get_logger(__name__)
-                    logger.warning(f"AI SQL 분석 실패 ({mapper.name}.{sql_dict.get('id', '')}): {e}")
+                    logger.warning(_t("java_analysis.ai_sql_analysis_failed", mapper_name=mapper.name, sql_id=sql_dict.get('id', ''), error=str(e)))
                     sql_ai_description = ""
 
             sql_statement = SqlStatement(
@@ -104,8 +105,9 @@ def extract_sql_statements_from_mappers(mybatis_mappers: list[MyBatisMapper], pr
                         sql_statement.flow_json = flow_json
                 except Exception as e:
                     from csa.utils.logger import get_logger
+                    from csa.utils.i18n import _t
                     logger = get_logger(__name__)
-                    logger.debug(f"Failed to generate SQL Flow for {sql_statement.id}: {e}")
+                    logger.debug(_t("java_analysis.sql_flow_generation_failed", sql_id=sql_statement.id, error=str(e)))
 
                 # 디버깅 로그: tables가 비어있는 경우 (DEBUG 레벨에서만 출력)
                 if not sql_statement.tables:
@@ -659,10 +661,12 @@ def parse_mybatis_xml_file(file_path: str) -> MyBatisMapper:
         return mapper
         
     except ET.ParseError as e:
-        logger.error(f"Error parsing XML file {file_path}: {e}")
+        from csa.utils.i18n import _t
+        logger.error(_t("java_analysis.xml_parse_error", file_path=file_path, error=str(e)))
         return None
     except Exception as e:
-        logger.error(f"Error reading XML file {file_path}: {e}")
+        from csa.utils.i18n import _t
+        logger.error(_t("java_analysis.xml_read_error", file_path=file_path, error=str(e)))
         return None
 
 def extract_mybatis_xml_mappers(directory: str, project_name: str = "", graph_db: GraphDB = None) -> list[MyBatisMapper]:

@@ -273,11 +273,12 @@ class AIProviderManager:
         provider_name이 주어지면 해당 provider를 반환하고,
         없으면 self.current_provider_name을 사용합니다.
         """
+        from csa.utils.i18n import _t
         name = provider_name if provider_name is not None else self.current_provider_name
         provider = self.providers.get(name)
         self.current_provider_name = name
         if not provider:
-            logger.warning(f"알 수 없는 AI Provider: {name}, Google로 기본 설정")
+            logger.warning(_t("ai_providers.unknown_provider", name=name))
             return self.providers["google"]
         return provider
 

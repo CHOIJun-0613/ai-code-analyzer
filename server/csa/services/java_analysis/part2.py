@@ -60,7 +60,7 @@
 
         if SKIP_DTO_METHODS and sub_type == "dto":
             # DTO 메서드 분석 생략
-            logger.debug(f"DTO 메서드 분석 생략: {class_name} (sub_type={sub_type})")
+            logger.debug(_t("java_analysis.dto_method_analysis_skipped", class_name=class_name, sub_type=sub_type))
         else:
             all_declarations = class_declaration.methods + class_declaration.constructors
             
@@ -163,7 +163,7 @@
                     try:
                         method_cognitive_complexity = calculate_method_cognitive_complexity(declaration)
                     except Exception as e:
-                        logger.debug(f"메서드 Cognitive Complexity 계산 실패 ({class_name}.{declaration.name}): {e}")
+                        logger.debug(_t("java_analysis.method_complexity_failed", class_name=class_name, method_name=declaration.name, error=str(e)))
 
                 method = Method(
                     name=declaration.name,
@@ -273,12 +273,12 @@
         try:
             class_node.code_complexity = calculate_code_complexity_from_class_node(class_node)
         except Exception as e:
-            logger.debug(f"Class code_complexity 계산 실패 ({class_name}): {e}")
+            logger.debug(_t("java_analysis.class_complexity_failed", class_name=class_name, error=str(e)))
             class_node.code_complexity = 0
 
-        logger.debug(f"Successfully parsed single file: {file_path} (found {len(inner_classes)} inner classes)")
+        logger.debug(_t("java_analysis.single_file_parsed_success", file_path=file_path, inner_classes=len(inner_classes)))
         return package_node, class_node, inner_classes, package_name
 
     except Exception as e:
-        logger.error(f"Error parsing file: {e}")
+        logger.error(_t("java_analysis.file_parsing_error", error=str(e)))
         return None, None, [], ""

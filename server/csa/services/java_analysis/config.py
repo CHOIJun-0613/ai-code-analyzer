@@ -16,6 +16,7 @@ from csa.models.graph_entities import (
     ServerConfig,
 )
 from csa.utils.logger import get_logger
+from csa.utils.i18n import _t
 
 def parse_yaml_config(file_path: str) -> ConfigFile:
     """Parse YAML configuration file.
@@ -72,7 +73,7 @@ def parse_yaml_config(file_path: str) -> ConfigFile:
         )
     
     except Exception as e:
-        logger.error(f"Error parsing YAML file {file_path}: {e}")
+        logger.error(_t("java_analysis.yaml_parse_error", file_path=file_path, error=str(e)))
         return ConfigFile(
             name=os.path.basename(file_path),
             file_path=file_path,
@@ -161,7 +162,7 @@ def parse_properties_config(file_path: str) -> ConfigFile:
         )
     
     except Exception as e:
-        logger.error(f"Error parsing Properties file {file_path}: {e}")
+        logger.error(_t("java_analysis.properties_parse_error", file_path=file_path, error=str(e)))
         return ConfigFile(
             name=os.path.basename(file_path),
             file_path=file_path,

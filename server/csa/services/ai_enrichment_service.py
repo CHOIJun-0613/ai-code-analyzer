@@ -67,7 +67,7 @@ class AIEnrichmentService:
             ))
 
         if not scopes:
-            self.logger.warning(f"Unknown node_type '{node_type}' for clean operation. Skipping cleanup.")
+            self.logger.warning(_t("ai_enrichment.unknown_node_type", node_type=node_type))
             return
 
         with self.db.driver.session(database=self.db.database) as session:
@@ -78,7 +78,7 @@ class AIEnrichmentService:
                     cleaned = record["cnt"] if record and "cnt" in record else 0
                     self.logger.info(_t("ai.enrichment.clean", label=label, count=cleaned))
                 except Exception as exc:
-                    self.logger.error(f"[CLEAN] Failed to clear ai_description for {label}: {exc}")
+                    self.logger.error(_t("ai_enrichment.clear_failed", label=label, error=str(exc)))
                     raise
 
     async def enrich_project_async(
@@ -159,7 +159,7 @@ class AIEnrichmentService:
             )
             if class_stats.get("status") == "cancelled":
                 stats["status"] = "cancelled"
-                self.logger.warning(f"Project enrichment {project_name} stopped (Class cancelled)")
+                self.logger.warning(_t("ai_enrichment.class_enrichment_cancelled", project_name=project_name))
                 return stats
             stats["total_processed"] += class_stats["processed"]
             stats["success_count"] += class_stats["success"]
@@ -180,7 +180,7 @@ class AIEnrichmentService:
             )
             if method_stats.get("status") == "cancelled":
                 stats["status"] = "cancelled"
-                self.logger.warning(f"Project enrichment {project_name} stopped (Method cancelled)")
+                self.logger.warning(_t("ai_enrichment.method_enrichment_cancelled", project_name=project_name))
                 return stats
             stats["total_processed"] += method_stats["processed"]
             stats["success_count"] += method_stats["success"]
@@ -201,7 +201,7 @@ class AIEnrichmentService:
             )
             if sql_stats.get("status") == "cancelled":
                 stats["status"] = "cancelled"
-                self.logger.warning(f"Project enrichment {project_name} stopped (SQL cancelled)")
+                self.logger.warning(_t("ai_enrichment.sql_enrichment_cancelled", project_name=project_name))
                 return stats
             stats["total_processed"] += sql_stats["processed"]
             stats["success_count"] += sql_stats["success"]
@@ -293,11 +293,11 @@ class AIEnrichmentService:
 
         total = len(classes)
         if total == 0:
-            self.logger.info("No Class nodes found that need AI enrichment")
+            self.logger.info(_t("ai_enrichment.no_classes_found"))
             return stats
 
-        self.logger.info(f"Found {total} Class nodes to enrich")
-        self.logger.info(f"Processing {total} Class nodes...")
+        self.logger.info(_t("ai_enrichment.classes_found", total=total))
+        self.logger.info(_t("ai_enrichment.processing_classes", total=total))
 
         # 배치 처리
         for i, record in enumerate(classes, 1):
@@ -313,7 +313,7 @@ class AIEnrichmentService:
                     # Neo4j 업데이트
                     self._update_node_ai_description(node_id, ai_description)
                     stats["success"] += 1
-                    self.logger.info(f"[{i}/{total}] Class enriched: {class_name}")
+                    self.logger.info(_t("ai_enrichment.class_enriched", current=i, total=total, class_name=class_name))
                 else:
                     stats["failed"] += 1
                     self.logger.warning(f"[{i}/{total}] Class AI analysis returned empty: {class_name}")

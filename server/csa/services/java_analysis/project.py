@@ -62,7 +62,6 @@ from .utils import (
     extract_project_name,
     extract_sub_type,
     generate_lombok_methods,
-    is_dto_class,
     parse_annotations,
 )
 
@@ -348,7 +347,7 @@ def parse_inner_classes(
                                     if found_opening_brace and brace_count == 0:
                                         end_line = i
                                         break
-                            if found_opening_brace and brace_count == 0:
+                        if found_opening_brace and brace_count == 0:
                                 break
 
                         # 어노테이션 위치 고려하여 시작 라인 조정
@@ -376,7 +375,7 @@ def parse_inner_classes(
                         try:
                             inner_method_cognitive_complexity = calculate_method_cognitive_complexity(method_declaration)
                         except Exception as e:
-                            logger.debug(_t("java_analysis.inner_class_complexity_failed", class_name=inner_class_full_name, method_name=method_name, error=str(e)))
+                            logger.debug(_t("java_analysis.inner_class_method_complexity_failed", class_name=inner_class_full_name, method_name=method_name, error=str(e)))
 
                     method = Method(
                         name=method_name,
@@ -397,7 +396,7 @@ def parse_inner_classes(
             try:
                 inner_class_node.code_complexity = calculate_code_complexity_from_class_node(inner_class_node)
             except Exception as e:
-                logger.debug(_t("java_analysis.inner_class_code_complexity_failed", class_name=inner_class_full_name, error=str(e)))
+                logger.debug(_t("java_analysis.inner_class_complexity_failed", class_name=inner_class_full_name, error=str(e)))
                 inner_class_node.code_complexity = 0
 
             inner_classes.append(inner_class_node)
@@ -413,24 +412,19 @@ def parse_inner_classes(
     return inner_classes
 
 
-def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True, charset: str = 'utf-8', force_reanalysis: bool = False) -> tuple[Package, Class, list[Class], str]:
-    """
-    Parse a single Java file and return parsed entities.
-
-    Args:
-        force_reanalysis: If True, skip hash_code check and always perform analysis (for reanalysis feature)
-    """
+def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None) -> tuple[Package, Class, list[Class], str]:
+    """Parse a single Java file and return parsed entities."""
     logger = get_logger(__name__)
     
-    with open(file_path, 'r', encoding=charset) as f:
+    with open(file_path, 'r', encoding='utf-8') as f:
         file_content = f.read()
     
     try:
         tree = javalang.parse.parse(file_content)
-        logger.debug(_t("java_analysis.file_processed_success", path=file_path))
+        logger.debug(_t("java_analysis.file_successfully_parsed", file_path=file_path))
 
         package_name = tree.package.name if tree.package else ""
-        logger.debug(_t("java_analysis.parsed_file", path=file_path, package=package_name))
+        logger.debug(_t("java_analysis.package_name_parsed", package_name=package_name))
         
         if package_name:
             package_node = Package(name=package_name)
@@ -451,36 +445,10 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 break
         
         if not class_declaration:
-            logger.error(_t("java_analysis.no_class_declaration", path=file_path))
+            logger.error(_t("java_analysis.no_class_found_in_file", file_path=file_path))
             return None, None, [], ""
         
         class_name = class_declaration.name
-
-        # Calculate source hashcode immediately
-        source_hashcode = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
-
-        # Check for existing analysis if DB is available (Early Skip)
-        skip_analysis_completely = False
-        if graph_db and not force_reanalysis:
-             try:
-                analysis_info = graph_db.get_class_analysis_info(class_name, project_name)
-                if analysis_info and analysis_info.get("source_hashcode") == source_hashcode:
-                    # AI 분석을 요청한 경우, 소스가 변경되지 않았더라도 진행 (AI 분석 결과 갱신 등을 위해)
-                    # use_ai 플래그가 True이면 스킵하지 않음
-                    # 단, use_ai는 이 함수 호출 시점에는 아직 정확히 확정되지 않았을 수 있음 (env vs option)
-                    # 따라서 여기서 use_ai 인자를 확인하거나, 아래에서 결정된 값을 미리 계산해야 함.
-
-                    # use_ai 인자는 parse_single_java_file의 인자로 전달됨
-                    if not use_ai:
-                        logger.info(_t("java_analysis.skipping_unchanged_no_ai", name=class_name))
-                        return None, None, [], "SKIPPED_UNCHANGED"
-                    else:
-                        logger.info(_t("java_analysis.proceeding_unchanged_with_ai", name=class_name))
-             except Exception as e:
-                 logger.warning(_t("java_analysis.failed_check_hash", name=class_name, error=str(e)))
-        elif force_reanalysis:
-            logger.info(_t("java_analysis.force_reanalysis_enabled", name=class_name))
-
         class_annotations = parse_annotations(class_declaration.annotations, "class") if hasattr(class_declaration, 'annotations') else []
         class_type = "interface" if isinstance(class_declaration, javalang.tree.InterfaceDeclaration) else "class"
         
@@ -515,48 +483,37 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
             try:
                 # Check for existing analysis if DB is available
                 skip_ai = False
-                if graph_db and not force_reanalysis:
+                if graph_db:
                     analysis_info = graph_db.get_class_analysis_info(class_name, project_name)
                     if analysis_info and analysis_info.get("source_hashcode") == source_hashcode:
                         existing_ai_desc = analysis_info.get("ai_description")
                         if existing_ai_desc:
                             ai_description = existing_ai_desc
                             skip_ai = True
-                            logger.info(_t("java_analysis.skipping_ai_unchanged", name=class_name))
-                elif force_reanalysis:
-                    logger.info(_t("java_analysis.force_reanalysis_ai", name=class_name))
+                            logger.info(_t("java_analysis.ai_analysis_skipped_unchanged", class_name=class_name))
 
-                # AI Analyzer 초기화 (Class/Method 공통)
-                analyzer = None
                 if not skip_ai:
+                    analyzer = None
                     if ai_options and AIAnalyzer and AIConfig:
                         # worker-specific analyzer
-                        try:
-                            config = AIConfig(ai_options)
-                            analyzer = AIAnalyzer(config)
-                        except Exception as e:
-                            logger.warning(_t("java_analysis.failed_init_ai", error=str(e)))
-                            analyzer = None
-                    
-                    if not analyzer:
-                        # global analyzer or fallback
+                        config = AIConfig(ai_options)
+                        analyzer = AIAnalyzer(config)
+                    else:
+                        # global analyzer
                         analyzer = get_ai_analyzer()
-
-
-                if analyzer and analyzer.is_available():
-                    ai_description = analyzer.analyze_class(file_content, class_name)
+                        
+                    if analyzer and analyzer.is_available():
+                        ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
                 logger.warning(_t("java_analysis.ai_class_analysis_failed", class_name=class_name, error=str(e)))
-                ai_description = f"AI 분석 실패: {e}"
+                ai_description = ""
 
-        # DTO 클래스 소스 저장 여부 결정 (인자 우선, 없으면 환경변수-기본값 true로 변경 고려)
-        # skip_dto_source 인자가 있으므로 그대로 사용
-        class_source = file_content
+        # DTO 클래스 소스 저장 여부 결정 (환경 변수로 제어)
+        skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
         class_source = file_content
 
         if skip_dto_source and is_dto_class(class_name, file_path):
             class_source = ""  # DTO 클래스는 소스 저장 안 함
-            source_hashcode = ""
             logger.debug(_t("java_analysis.dto_source_skipped", class_name=class_name))
 
         # LOC 메트릭 계산
@@ -586,7 +543,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         # imports 추가
         for imp in tree.imports:
             class_node.imports.append(imp.path)
-        
+
         # 상속 관계 처리
         if class_declaration.extends:
             superclass_name = class_declaration.extends.name
@@ -594,7 +551,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 class_node.superclass = import_map[superclass_name]
             else:
                 class_node.superclass = f"{package_name}.{superclass_name}" if package_name else superclass_name
-        
+
         # 인터페이스 구현 처리
         if hasattr(class_declaration, 'implements') and class_declaration.implements:
             for impl_ref in class_declaration.implements:
@@ -603,15 +560,15 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     class_node.interfaces.append(import_map[interface_name])
                 else:
                     class_node.interfaces.append(f"{package_name}.{interface_name}" if package_name else interface_name)
-        
+
         # 필드 처리
         field_map = {}
         for field_declaration in class_declaration.fields:
             for declarator in field_declaration.declarators:
                 field_map[declarator.name] = field_declaration.type.name
-                
+
                 field_annotations = parse_annotations(field_declaration.annotations, "field") if hasattr(field_declaration, 'annotations') else []
-                
+
                 initial_value = ""
                 if hasattr(declarator, 'initializer') and declarator.initializer:
                     if hasattr(declarator.initializer, 'value'):
@@ -620,7 +577,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                         initial_value = str(declarator.initializer.type)
                     else:
                         initial_value = str(declarator.initializer)
-                
+
                 # 필드 논리명 추출 시도 (DTO는 건너뛰기)
                  # skip_dto_source 인자 사용
                 if skip_dto_source and is_dto_class(class_name, file_path):
@@ -629,7 +586,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     from csa.services.java_parser_addon_r001 import extract_java_field_logical_name
                     line_number = field_declaration.position.line if field_declaration.position else None
                     field_logical_name = extract_java_field_logical_name(file_content, declarator.name, project_name, line_number)
-                
+
                 prop = Field(
                     name=declarator.name,
                     logical_name=field_logical_name if field_logical_name else "",
@@ -643,20 +600,20 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     ai_description=""
                 )
                 class_node.properties.append(prop)
-        
+
         # 메서드 처리 (인자로 제어)
         SKIP_DTO_METHODS = skip_dto_methods
         logger.debug(f"Sub-type check: {sub_type}, Skip DTO Methods: {SKIP_DTO_METHODS}, Class Annotations: {[a.name for a in class_annotations]}")
 
         if SKIP_DTO_METHODS and sub_type == "dto":
             # DTO 메서드 분석 생략
-            logger.debug(_t("java_analysis.dto_method_skipped", class_name=class_name, sub_type=sub_type))
+            logger.debug(_t("java_analysis.dto_method_analysis_skipped", class_name=class_name, sub_type=sub_type))
         else:
             all_declarations = class_declaration.methods + class_declaration.constructors
-            
+
             for declaration in all_declarations:
                 method_name = declaration.name
-                logger.debug(_t("java_analysis.processing_method", name=method_name))
+                logger.debug(f"Processing method declaration: {method_name}")
                 local_var_map = field_map.copy()
                 params = []
                 for param in declaration.parameters:
@@ -668,17 +625,17 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                             param_type_name = param.type.name
                     local_var_map[param.name] = param_type_name
                     params.append(Field(name=param.name, logical_name=f"{package_name}.{class_name}.{param.name}", type=param_type_name, package_name=package_name, class_name=class_name))
-                
+
                 if declaration.body:
                     for _, var_decl in declaration.filter(javalang.tree.LocalVariableDeclaration):
                         for declarator in var_decl.declarators:
                             local_var_map[declarator.name] = var_decl.type.name
-                
+
                 if isinstance(declaration, javalang.tree.MethodDeclaration):
                     return_type = declaration.return_type.name if declaration.return_type else "void"
                 else:
                     return_type = "constructor"
-                
+
                 modifiers = list(declaration.modifiers)
                 method_annotations = parse_annotations(declaration.annotations, "method") if hasattr(declaration, 'annotations') else []
 
@@ -717,6 +674,323 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                             if ';' in line:
                                 end_line = i
                                 break
+
+                    # 어노테이션 위치 고려하여 시작 라인 조정
+                    if hasattr(declaration, 'annotations') and declaration.annotations:
+                        for annotation in declaration.annotations:
+                            if hasattr(annotation, 'position') and annotation.position:
+                                if annotation.position.line - 1 < start_line:
+                                    start_line = annotation.position.line - 1
+
+                    # 선행 주석 스캔
+                    start_line = _scan_for_preceding_comments(lines, start_line)
+
+                    method_source = "".join(lines[start_line:end_line + 1])
+
+                    # Metadata 추출 (start_line ~ original_start_line)
+                    if start_line < original_start_line:
+                        method_metadata = "".join(lines[start_line:original_start_line])
+
+                # 논리명 추출 시도 (rule001: @BxmCategory의 logicalName 파라미터에서 추출)
+                from csa.services.java_parser_addon_r001 import extract_method_logical_name_from_annotations
+                method_logical_name = extract_method_logical_name_from_annotations(method_annotations) or ""
+
+                # description 추출 시도 (rule002: @BxmCategory의 description 파라미터에서 추출)
+                from csa.parsers.java.description import extract_method_description_from_annotations
+                method_description = extract_method_description_from_annotations(method_annotations) or ""
+
+                # AI 분석 수행 (오류 시 빈 문자열 반환)
+                method_ai_description = ""
+
+                # Getter/Setter 등 단순 메서드는 AI 분석 제외 (속도 최적화)
+                is_simple_method = method_name.startswith(('get', 'set', 'is')) and len(method_source.strip().splitlines()) <= 5
+
+                # USE_AI_ANALYSIS 결정 로직은 위에서 계산된 use_ai 사용
+                if use_ai and not is_simple_method:
+                    if not AI_ANALYZER_AVAILABLE:
+                        logger.warning(_t("java_analysis.ai_skipped_unavailable_detail", class_name=class_name, method_name=declaration.name))
+                    elif not method_source:
+                        logger.warning(_t("java_analysis.ai_skipped_empty_source_detail", class_name=class_name, method_name=declaration.name))
+                    else:
+                        logger.info(_t("java_analysis.starting_ai_method_detail", class_name=class_name, method_name=declaration.name))
+                        try:
+                            analyzer = get_ai_analyzer()
+                            if analyzer.is_available():
+                                # class_name도 함께 전달하여 로그에 Class.Method 형식으로 표시
+                                method_ai_description = analyzer.analyze_method(
+                                    method_source,
+                                    method_name=declaration.name,
+                                    class_name=class_name
+                                )
+                                logger.info(_t("java_analysis.ai_completed_method_detail", class_name=class_name, method_name=declaration.name))
+                            else:
+                                logger.warning(_t("java_analysis.ai_skipped_unavailable_check", class_name=class_name, method_name=declaration.name))
+                        except Exception as ai_err:
+                            logger.error(_t("java_analysis.ai_failed_method_detail", class_name=class_name, method_name=declaration.name, error=str(ai_err)))
+
+                 # DTO skipping logs are handled by caller/config usually, but here is where logic resides.
+                 # Actually, use_ai already accounts for skip_dto_methods via caller?
+                 # parse_single_java_file receives use_ai. But project.py logic:
+                 # line 506: use_ai = ai_options.get('use_ai', False) if ai_options else use_ai
+
+                 # The 'skip_dto_source' logic is for skipping FIELDS logical name.
+                 # The method logic is below. Method AI analysis is gated by `use_ai`.
+                 # Caller (handlers.py) passes `use_ai` which comes from request params.
+                 # If user unchecked "Include AI", use_ai is False.
+                 # If use_ai is True, but this is a DTO and skip_dto_methods is True, AI *should* be skipped.
+                 # Wait, does parse_single_java_file handle DTO skipping for AI?
+                 # No, `use_ai` is passed directly.
+                 # However, `is_dto` calculated at line 715 is mostly for complexity/loc metrics.
+                 # If we want to skip AI for DTOs, we must check it here.
+
+
+                # DTO 클래스 메서드는 복잡도 측정 건너뛰기
+                # skip_dto_source 사용 (기존 로직 유지)
+                is_dto = skip_dto_source and is_dto_class(class_name, file_path)
+
+                # 메서드 LOC 메트릭 계산
+                method_loc_metrics = calculate_loc(method_source) if method_source and not is_dto else LOCMetrics(0, 0, 0)
+
+                # 메서드 Cognitive Complexity 계산
+                method_cognitive_complexity = 0
+                if method_source and not is_dto:
+                    try:
+                        method_cognitive_complexity = calculate_method_cognitive_complexity(declaration)
+                    except Exception as e:
+                        logger.debug(_t("java_analysis.method_complexity_failed", class_name=class_name, method_name=declaration.name, error=str(e)))
+
+                method = Method(
+                    name=declaration.name,
+                    logical_name=method_logical_name if method_logical_name else "",
+                    return_type=return_type,
+                    parameters=params,
+                    modifiers=modifiers,
+                    source=method_source,
+                    metadata=method_metadata,
+                    package_name=package_name,
+                    annotations=method_annotations,
+                    description=method_description if method_description else "",
+                    ai_description=method_ai_description,
+                    calls=[],  # 명시적으로 calls 속성 초기화
+                    PLOC=method_loc_metrics.ploc,
+                    LLOC=method_loc_metrics.lloc,
+                    CLOC=method_loc_metrics.cloc,
+                    cognitive_complexity=method_cognitive_complexity
+                )
+
+                # 메서드 호출 분석 - MethodCall 객체 생성
+                if declaration.body:
+                    call_order = 1
+                    for _, invocation in declaration.filter(javalang.tree.MethodInvocation):
+                        if not invocation.position:
+                            continue
+
+                        # 로그 메서드 자체 제외
+                        if invocation.qualifier and invocation.qualifier in ['log', 'logger', 'LOGGER']:
+                            if hasattr(invocation, 'member') and invocation.member in ['info', 'debug', 'warn', 'error', 'trace']:
+                                continue
+
+                        target_class_name = None
+                        resolved_target_package = ""
+                        resolved_target_class_name = ""
+
+                        if invocation.qualifier:
+                            if invocation.qualifier in local_var_map:
+                                target_class_name = local_var_map[invocation.qualifier]
+                            else:
+                                target_class_name = invocation.qualifier
+
+                            if target_class_name:
+                                if target_class_name == "System.out":
+                                    resolved_target_package = "java.io"
+                                    resolved_target_class_name = "PrintStream"
+                                else:
+                                    if invocation.qualifier in local_var_map:
+                                        resolved_target_class_name = target_class_name
+                                        if target_class_name in import_map:
+                                            resolved_target_package = ".".join(import_map[target_class_name].split(".")[:-1])
+                                        else:
+                                            # import_map에 없으면 현재 패키지만 사용
+                                            # (잘못된 패키지 추론 로직 제거)
+                                            resolved_target_package = package_name
+
+                                    if '<' in target_class_name:
+                                        base_type = target_class_name.split('<')[0]
+                                        resolved_target_class_name = base_type
+
+                                    if not resolved_target_class_name:
+                                        if target_class_name in import_map:
+                                            resolved_target_package = ".".join(import_map[target_class_name].split(".")[:-1])
+                                        else:
+                                            resolved_target_package = package_name
+                                        resolved_target_class_name = target_class_name
+                        else:
+                            resolved_target_package = package_name
+                            resolved_target_class_name = class_name
+
+                        if resolved_target_class_name:
+                            method_name = invocation.member
+                            # Stream API 메서드 필터링
+                            if method_name in {'collect', 'map', 'filter', 'forEach', 'stream', 'reduce', 'findFirst', 'findAny', 'anyMatch', 'allMatch', 'noneMatch', 'count', 'distinct', 'sorted', 'limit', 'skip', 'peek', 'flatMap', 'toArray'}:
+                                continue
+
+                            line_number = invocation.position.line if invocation.position else 0
+
+                            call = MethodCall(
+                                source_package=package_name,
+                                source_class=class_name,
+                                source_method=declaration.name,
+                                target_package=resolved_target_package,
+                                target_class=resolved_target_class_name,
+                                target_method=invocation.member,
+                                call_order=call_order,
+                                line_number=line_number,
+                                return_type="void"
+                            )
+                            class_node.calls.append(call)
+                            call_order += 1
+
+                class_node.methods.append(method)
+
+        # Inner class 파싱
+        inner_classes = parse_inner_classes(
+            class_declaration,
+            class_name,
+            package_name,
+            file_path,
+            file_content,
+            project_name,
+            import_map
+        )
+
+        # Class code_complexity 계산 (메서드와 필드 추가 완료 후)
+        try:
+            class_node.code_complexity = calculate_code_complexity_from_class_node(class_node)
+        except Exception as e:
+            logger.debug(_t("java_analysis.class_complexity_failed", class_name=class_name, error=str(e)))
+            class_node.code_complexity = 0
+
+        logger.debug(_t("java_analysis.single_file_parsed_success", file_path=file_path, inner_classes=len(inner_classes)))
+        return package_node, class_node, inner_classes, package_name
+
+    except Exception as e:
+        logger.error(_t("java_analysis.file_parsing_error", error=str(e)))
+        return None, None, [], ""
+
+        
+        # 상속 관계 처리
+        if class_declaration.extends:
+            superclass_name = class_declaration.extends.name
+            if superclass_name in import_map:
+                class_node.superclass = import_map[superclass_name]
+            else:
+                class_node.superclass = f"{package_name}.{superclass_name}" if package_name else superclass_name
+        
+        # 인터페이스 구현 처리
+        if hasattr(class_declaration, 'implements') and class_declaration.implements:
+            for impl_ref in class_declaration.implements:
+                interface_name = impl_ref.name
+                if interface_name in import_map:
+                    class_node.interfaces.append(import_map[interface_name])
+                else:
+                    class_node.interfaces.append(f"{package_name}.{interface_name}" if package_name else interface_name)
+        
+        # 필드 처리
+        field_map = {}
+        for field_declaration in class_declaration.fields:
+            for declarator in field_declaration.declarators:
+                field_map[declarator.name] = field_declaration.type.name
+                
+                field_annotations = parse_annotations(field_declaration.annotations, "field") if hasattr(field_declaration, 'annotations') else []
+                
+                initial_value = ""
+                if hasattr(declarator, 'initializer') and declarator.initializer:
+                    if hasattr(declarator.initializer, 'value'):
+                        initial_value = str(declarator.initializer.value)
+                    elif hasattr(declarator.initializer, 'type'):
+                        initial_value = str(declarator.initializer.type)
+                    else:
+                        initial_value = str(declarator.initializer)
+                
+                # 필드 논리명 추출 시도 (DTO는 건너뛰기)
+                skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
+                if skip_dto_source and is_dto_class(class_name, file_path):
+                    field_logical_name = ""  # DTO 필드 논리명 추출 건너뛰기 (성능 최적화)
+                else:
+                    from csa.services.java_parser_addon_r001 import extract_java_field_logical_name
+                    field_logical_name = extract_java_field_logical_name(file_content, declarator.name, project_name)
+                
+                prop = Field(
+                    name=declarator.name,
+                    logical_name=field_logical_name if field_logical_name else "",
+                    type=field_declaration.type.name,
+                    modifiers=list(field_declaration.modifiers),
+                    package_name=package_name,
+                    class_name=class_name,
+                    annotations=field_annotations,
+                    initial_value=initial_value,
+                    description="",
+                    ai_description=""
+                )
+                class_node.properties.append(prop)
+        
+        # 메서드 처리 (환경 변수로 DTO 생략 제어)
+        SKIP_DTO_METHODS = os.getenv("SKIP_DTO_METHODS", "true").lower() == "true"
+
+        if SKIP_DTO_METHODS and sub_type == "dto":
+            # DTO 메서드 분석 생략
+            logger.debug(_t("java_analysis.dto_method_analysis_skipped", class_name=class_name, sub_type=sub_type))
+        else:
+            all_declarations = class_declaration.methods + class_declaration.constructors
+            
+            for declaration in all_declarations:
+                local_var_map = field_map.copy()
+                params = []
+                for param in declaration.parameters:
+                    param_type_name = 'Unknown'
+                    if param.type:
+                        if hasattr(param.type, 'sub_type') and param.type.sub_type:
+                            param_type_name = f"{param.type.name}.{param.type.sub_type.name}"
+                        elif hasattr(param.type, 'name') and param.type.name:
+                            param_type_name = param.type.name
+                    local_var_map[param.name] = param_type_name
+                    params.append(Field(name=param.name, logical_name=f"{package_name}.{class_name}.{param.name}", type=param_type_name, package_name=package_name, class_name=class_name))
+                
+                if declaration.body:
+                    for _, var_decl in declaration.filter(javalang.tree.LocalVariableDeclaration):
+                        for declarator in var_decl.declarators:
+                            local_var_map[declarator.name] = var_decl.type.name
+                
+                if isinstance(declaration, javalang.tree.MethodDeclaration):
+                    return_type = declaration.return_type.name if declaration.return_type else "void"
+                else:
+                    return_type = "constructor"
+                
+                modifiers = list(declaration.modifiers)
+                method_annotations = parse_annotations(declaration.annotations, "method") if hasattr(declaration, 'annotations') else []
+                
+                method_metadata = ""
+                if declaration.position:
+                    lines = file_content.splitlines(keepends=True)
+                    original_start_line = declaration.position.line - 1
+                    start_line = original_start_line
+                    
+                    brace_count = 0
+                    end_line = start_line
+                    found_opening_brace = False
+                    for i in range(start_line, len(lines)):
+                        line = lines[i]
+                        for char in line:
+                            if char == '{':
+                                brace_count += 1
+                                found_opening_brace = True
+                            elif char == '}':
+                                brace_count -= 1
+                                if found_opening_brace and brace_count == 0:
+                                    end_line = i
+                                    break
+                        if found_opening_brace and brace_count == 0:
+                            break
                     
                     # 어노테이션 위치 고려하여 시작 라인 조정
                     if hasattr(declaration, 'annotations') and declaration.annotations:
@@ -744,51 +1018,19 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
     
                 # AI 분석 수행 (오류 시 빈 문자열 반환)
                 method_ai_description = ""
-                
-                # Getter/Setter 등 단순 메서드는 AI 분석 제외 (속도 최적화)
-                is_simple_method = method_name.startswith(('get', 'set', 'is')) and len(method_source.strip().splitlines()) <= 5
-
                 # USE_AI_ANALYSIS 결정 로직은 위에서 계산된 use_ai 사용
-                if use_ai and not is_simple_method:
-                    if not AI_ANALYZER_AVAILABLE:
-                         logger.warning(_t("java_analysis.ai_skipped_unavailable", class_=class_name, method=declaration.name))
-                    elif not method_source:
-                         logger.warning(_t("java_analysis.ai_skipped_empty_source", class_=class_name, method=declaration.name))
-                    else:
-                        logger.info(_t("java_analysis.starting_ai_method", class_=class_name, method=declaration.name))
-                        try:
-                            # analyzer는 위에서 초기화된 인스턴스 사용
-                            if analyzer and analyzer.is_available():
-                                # class_name도 함께 전달하여 로그에 Class.Method 형식으로 표시
-                                method_ai_description = analyzer.analyze_method(
-                                    method_source,
-                                    method_name=declaration.name,
-                                    class_name=class_name
-                                )
-                                logger.info(_t("java_analysis.ai_completed_method", class_=class_name, method=declaration.name))
-                            else:
-                                logger.warning(_t("java_analysis.ai_skipped_not_initialized", class_=class_name, method=declaration.name))
-                        except Exception as ai_err:
-                            logger.error(_t("java_analysis.ai_failed_method", class_=class_name, method=declaration.name, error=str(ai_err)))
-                
-                 # DTO skipping logs are handled by caller/config usually, but here is where logic resides.
-                 # Actually, use_ai already accounts for skip_dto_methods via caller?
-                 # parse_single_java_file receives use_ai. But project.py logic:
-                 # line 506: use_ai = ai_options.get('use_ai', False) if ai_options else use_ai
-                 
-                 # The 'skip_dto_source' logic is for skipping FIELDS logical name.
-                 # The method logic is below. Method AI analysis is gated by `use_ai`.
-                 # Caller (handlers.py) passes `use_ai` which comes from request params.
-                 # If user unchecked "Include AI", use_ai is False.
-                 # If use_ai is True, but this is a DTO and skip_dto_methods is True, AI *should* be skipped.
-                 # Wait, does parse_single_java_file handle DTO skipping for AI?
-                 # No, `use_ai` is passed directly. 
-                 # However, `is_dto` calculated at line 715 is mostly for complexity/loc metrics.
-                 # If we want to skip AI for DTOs, we must check it here.
-
+                if use_ai and AI_ANALYZER_AVAILABLE and method_source:
+                    analyzer = get_ai_analyzer()
+                    if analyzer.is_available():
+                        # class_name도 함께 전달하여 로그에 Class.Method 형식으로 표시
+                        method_ai_description = analyzer.analyze_method(
+                            method_source,
+                            method_name=declaration.name,
+                            class_name=class_name
+                        )
 
                 # DTO 클래스 메서드는 복잡도 측정 건너뛰기
-                # skip_dto_source 사용 (기존 로직 유지)
+                skip_dto_source = os.getenv("SKIP_DTO_SOURCE", "false").lower() == "true"
                 is_dto = skip_dto_source and is_dto_class(class_name, file_path)
 
                 # 메서드 LOC 메트릭 계산
@@ -910,23 +1152,22 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         try:
             class_node.code_complexity = calculate_code_complexity_from_class_node(class_node)
         except Exception as e:
-            logger.debug(_t("java_analysis.class_code_complexity_failed", class_name=class_name, error=str(e)))
+            logger.debug(_t("java_analysis.class_complexity_failed", class_name=class_name, error=str(e)))
             class_node.code_complexity = 0
 
-        logger.debug(_t("java_analysis.successfully_parsed_file", path=file_path, inner_classes=len(inner_classes)))
+        logger.debug(_t("java_analysis.single_file_parsed_success", file_path=file_path, inner_classes=len(inner_classes)))
         return package_node, class_node, inner_classes, package_name
 
     except Exception as e:
-        logger.error(_t("java_analysis.error_parsing_file", error=str(e)))
+        logger.error(_t("java_analysis.file_parsing_error", error=str(e)))
         return None, None, [], ""
+
 
 def parse_java_project_full(
     directory: str,
     graph_db: GraphDB = None,
     source_options: dict = None,
     stop_check_callback: callable = None,
-    skip_dto_source: bool = True,
-    skip_dto_methods: bool = True,
 ) -> tuple[
     list[Package], list[Class], dict[str, str], list[Bean], list[BeanDependency],
     list[Endpoint], list[MyBatisMapper], list[JpaEntity], list[JpaRepository],
@@ -939,7 +1180,7 @@ def parse_java_project_full(
     packages = {}
     classes = {}
     class_to_package_map = {}
-
+    
     logger.info(_t("java_analysis.start_analysis", directory=directory))
     logger.info(_t("java_analysis.project_name", name=project_name))
 
@@ -1059,12 +1300,6 @@ def parse_java_project_full(
 
                     # Source Hash Calculation & Incremental Analysis Check
                     source_hashcode = hashlib.sha256(file_content.encode('utf-8')).hexdigest()
-
-                    # DTO check for source skipping (do not save source and hashcode)
-                    is_skipped_dto = skip_dto_source and is_dto_class(class_name, file_path)
-                    if is_skipped_dto:
-                        source_hashcode = ""
-
                     ai_description = ""
                     
                     if class_name in existing_hashes:
@@ -1079,7 +1314,7 @@ def parse_java_project_full(
                         file_path=file_path,
                         type=class_type,
                         sub_type=sub_type,
-                        source="" if is_skipped_dto else file_content,
+                        source=file_content,
                         source_hashcode=source_hashcode,
                         annotations=class_annotations,
                         package_name=package_name,
@@ -1094,11 +1329,11 @@ def parse_java_project_full(
                     )
                     class_to_package_map[class_key] = package_name
                     logger.debug(_t("java_analysis.class_added_to_dict", name=class_name, key=class_key))
-
+                    
                     # 진행 상황을 10% 단위로 표시
                     processed_classes += 1
                     current_percent = int((processed_classes / total_classes) * 100) if total_classes > 0 else 0
-
+                    
                     if current_percent >= last_logged_percent + 10 or processed_classes == total_classes:
                         last_logged_percent = current_percent
                         logger.info(_t("java_analysis.class_parsing_progress", current=processed_classes, total=total_classes, percent=current_percent, class_name=class_name))
@@ -1159,11 +1394,6 @@ def parse_java_project_full(
 
                 all_declarations = class_declaration.methods + class_declaration.constructors
                 
-                # DTO 메서드 생략 로직
-                if skip_dto_methods and sub_type == "dto":
-                     logger.debug(_t("java_analysis.dto_method_skipped", class_name=class_name, sub_type=sub_type))
-                     all_declarations = []
-
                 for declaration in all_declarations:
                     local_var_map = field_map.copy()
                     params = []
@@ -1343,12 +1573,12 @@ def parse_java_project_full(
                     lombok_methods = generate_lombok_methods(classes[class_key].properties, class_name, package_name)
                     classes[class_key].methods.extend(lombok_methods)
                     logger.debug(_t("java_analysis.generated_lombok_methods", count=len(lombok_methods), name=class_name))
-
+            
             processed_file_count += 1
             logger.debug(_t("java_analysis.file_processed_success", path=file_path))
-
+            
             # Rule001 논리명 추출 로직 제거 - 이미 파싱 시 처리됨
-
+                
         except Exception as e:
                     logger.error(_t("java_analysis.file_processing_error", path=file_path, error=str(e)))
                     continue
@@ -1376,7 +1606,7 @@ def parse_java_project_full(
     resultmap_mapping_analysis = analyze_mybatis_resultmap_mapping(mybatis_mappers, sql_statements)
     sql_method_relationships = analyze_sql_method_relationships(sql_statements, classes_list)
     db_call_chain_analysis = generate_db_call_chain_analysis(sql_statements, classes_list)
-
+    
     logger.info(_t("java_analysis.analysis_complete"))
     logger.info(_t("java_analysis.files_processed", processed=processed_file_count, total=java_file_count))
     logger.info(_t("java_analysis.packages_found_summary", count=len(packages)))
@@ -1399,6 +1629,7 @@ def parse_java_project_full(
         sql_statements,
         project_name,
     )
+
 
 class AdaptiveBatchSizer:
     """
@@ -1459,7 +1690,7 @@ class AdaptiveBatchSizer:
         return int(self.current_size)
 
 
-def estimate_file_complexity(file_path: str, charset: str = 'utf-8') -> int:
+def estimate_file_complexity(file_path: str) -> int:
     """
     파일 복잡도 추정 (빠른 휴리스틱 분석)
 
@@ -1468,13 +1699,12 @@ def estimate_file_complexity(file_path: str, charset: str = 'utf-8') -> int:
 
     Args:
         file_path: Java 파일 경로
-        charset: 파일 인코딩 (기본값: utf-8)
 
     Returns:
         int: 복잡도 점수 (높을수록 복잡)
     """
     try:
-        with open(file_path, 'r', encoding=charset) as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
 
         # 라인 수
@@ -1510,7 +1740,7 @@ def estimate_file_complexity(file_path: str, charset: str = 'utf-8') -> int:
             return 0
 
 
-def is_dto_class(class_name: str, file_path: str = None, charset: str = 'utf-8') -> bool:
+def is_dto_class(class_name: str, file_path: str = None) -> bool:
     """
     DTO 클래스 여부 판별
 
@@ -1521,7 +1751,6 @@ def is_dto_class(class_name: str, file_path: str = None, charset: str = 'utf-8')
     Args:
         class_name: 클래스명
         file_path: 파일 경로 (선택사항, 더 정확한 판별을 위해)
-        charset: 파일 인코딩
 
     Returns:
         bool: DTO 클래스 여부
@@ -1534,7 +1763,7 @@ def is_dto_class(class_name: str, file_path: str = None, charset: str = 'utf-8')
     # 2. 파일 내용 기반 체크 (선택적)
     if file_path and os.path.exists(file_path):
         try:
-            with open(file_path, 'r', encoding=charset) as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
             # 필드 수 카운트 (private, protected 필드)
@@ -1556,7 +1785,7 @@ def is_dto_class(class_name: str, file_path: str = None, charset: str = 'utf-8')
     return False
 
 
-def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True, charset: str = 'utf-8') -> tuple:
+def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None) -> tuple:
     """
     병렬 처리용 파싱 래퍼 함수 (Neo4j 연결 없이 파싱만 수행)
 
@@ -1573,7 +1802,7 @@ def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: di
 
     try:
         package_node, class_node, inner_classes, package_name = parse_single_java_file(
-            file_path, project_name, None, ai_options, use_ai=use_ai, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods, charset=charset
+            file_path, project_name, None, ai_options, use_ai=use_ai  # graph_db=None for parsing only
         )
 
         # 처리 시간 계산 및 로깅
@@ -1599,8 +1828,6 @@ def parse_java_project_streaming(
     source_options: dict = None,
     use_ai_analysis: bool = False,
     stop_check_callback: callable = None,
-    skip_dto_source: bool = True,
-    skip_dto_methods: bool = True,
 ) -> dict:
     """
     스트리밍 방식 Java 프로젝트 파싱
@@ -1654,7 +1881,6 @@ def parse_java_project_streaming(
         'mybatis_mappers': 0,
         'sql_statements': 0,
         'config_files': 0,
-        'unchanged_files': 0,
     }
 
     # 진행 상황 추적 (스레드 안전)
@@ -1684,13 +1910,6 @@ def parse_java_project_streaming(
             else:
                 exclude_patterns = []
 
-    # Charset 설정
-    charset = "utf-8"
-    if source_options and 'charset' in source_options:
-        charset = source_options['charset']
-
-    logger.info(_t("java_analysis.using_charset", charset=charset))
-
     logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
 
@@ -1701,7 +1920,7 @@ def parse_java_project_streaming(
     # 파일 복잡도 기반 정렬 (복잡한 파일을 먼저 처리 - 워크로드 균형 개선)
     logger.info(_t("java_analysis.analyzing_complexity"))
     complexity_start = time.time()
-    file_complexities = [(f, estimate_file_complexity(f, charset=charset)) for f in java_files]
+    file_complexities = [(f, estimate_file_complexity(f)) for f in java_files]
 
     # 복잡도 임계값 설정 (환경 변수로 제어 가능, 기본값: 50000)
     # 복잡도 임계값 설정 (source_options > 환경 변수 > 기본값 50000)
@@ -1745,7 +1964,7 @@ def parse_java_project_streaming(
     logger.info(_t("java_analysis.top_complex_files"))
     for i, (file_path, complexity) in enumerate(top_complex_files, 1):
         file_name = os.path.basename(file_path)
-        logger.info(f"  {i}. {file_name} (복잡도: {complexity})")
+        logger.info(_t("java_analysis.top_complex_file", index=i, name=file_name, complexity=complexity))
 
     # 환경 변수에서 병렬 워커 수 가져오기 (CPU 코어 수 기반 자동 설정)
     # 기본값: max(4, CPU 코어수 - 2) - 최소 4개, 최대 (코어수-2)개
@@ -1778,7 +1997,7 @@ def parse_java_project_streaming(
 
     for file_path in java_files:
         try:
-            with open(file_path, 'r', encoding=charset) as f:
+            with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read(500)  # 첫 500자만 읽기 (package는 파일 상단에 위치)
                 match = package_pattern.search(content)
                 if match:
@@ -1822,7 +2041,7 @@ def parse_java_project_streaming(
     with ThreadPoolExecutor(max_workers=parallel_workers) as executor:
         # 모든 파일을 병렬로 파싱 제출
         future_to_file = {
-            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods, charset=charset): file_path
+            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis): file_path
             for file_path in java_files
         }
 
@@ -1844,27 +2063,20 @@ def parse_java_project_streaming(
                             processed_classes += 1
                             timeout_files += 1
                             current_timeout = timeout_files
-                        logger.warning(_t("java_analysis.parse_timeout_detail", count=current_timeout, timeout=file_timeout, file_name=file_name))
+                        logger.warning(_t("java_analysis.timeout_exceeded", count=current_timeout, timeout=file_timeout, file_name=file_name))
                         continue
 
                     # 파싱 실패 시 (에러 메시지가 package_name에 담김)
                     if class_node is None:
-                        # 변경 없음 (Skip) 처리
-                        if package_name == "SKIPPED_UNCHANGED":
-                            with progress_lock:
-                                processed_classes += 1
-                                stats['unchanged_files'] = stats.get('unchanged_files', 0) + 1
-                            continue
-
                         file_name = os.path.basename(file_path)
                         with progress_lock:
                             processed_classes += 1
                             failed_files += 1
                             current_failed = failed_files
                         if isinstance(package_name, str) and package_name:
-                            logger.error(_t("java_analysis.parse_failed_detail", count=current_failed, file_name=file_name, package_name=package_name))
+                            logger.error(_t("java_analysis.parse_failed", count=current_failed, file_name=file_name, package_name=package_name))
                         else:
-                            logger.error(_t("java_analysis.parse_failed_no_package_detail", count=current_failed, file_name=file_name))
+                            logger.error(_t("java_analysis.parse_failed_no_package", count=current_failed, file_name=file_name))
                         continue
 
                     # 버퍼에 추가 및 배치 저장 여부 결정 (Lock 범위 최소화)
@@ -1930,14 +2142,11 @@ def parse_java_project_streaming(
                         # [mm:ss] 형식으로 경과 시간 표시
                         elapsed_mm = int(elapsed / 60)
                         elapsed_ss = int(elapsed % 60)
-                        logger.info(_t("java_analysis.parsing_progress_detail",
-                                       elapsed=f"{elapsed_mm:02d}:{elapsed_ss:02d}",
-                                       current=current_processed,
-                                       total=total_files,
-                                       percent=current_percent,
-                                       files_per_sec=files_per_sec,
-                                       eta=eta_minutes,
-                                       memory=memory_mb))
+                        logger.info(
+                            f"[{elapsed_mm:02d}:{elapsed_ss:02d}] "
+                            + _t("java_analysis.parsing_progress", current=current_processed, total=total_files, percent=current_percent)
+                            + f" - {files_per_sec:.1f} files/sec, ETA: {eta_minutes}분, RAM: {memory_mb:.0f}MB"
+                        )
 
                     # Lock 밖에서 Neo4j 저장 수행 (다른 스레드 블록 방지)
                     if batch_to_save:
@@ -1991,7 +2200,7 @@ def parse_java_project_streaming(
                             if new_batch_size != current_batch_size:
                                 logger.info(_t("java_analysis.batch_size_adjusted", old_size=current_batch_size, new_size=new_batch_size))
 
-                            logger.info(_t("java_analysis.batch_save_complete_detail", elapsed=batch_elapsed))
+                            logger.info(_t("java_analysis.batch_save_complete", elapsed=batch_elapsed))
 
                             # 메모리 명시적 해제 (배치 저장 후)
                             del batch_to_save
@@ -2004,14 +2213,14 @@ def parse_java_project_streaming(
 
                 except Exception as e:
                     file_name = os.path.basename(file_path)
-                    logger.error(f"❌ 예외 발생: {file_name} - {e}")
+                    logger.error(_t("java_analysis.exception_occurred", file_name=file_name, error=str(e)))
                     with progress_lock:
                         processed_classes += 1
                         failed_files += 1
                     continue
 
         except KeyboardInterrupt:
-            logger.warning("Analysis canceled, cancelling pending tasks...")
+            logger.warning(_t("java_analysis.analysis_cancelled_pending_tasks"))
             for f in future_to_file:
                 f.cancel()
             raise
@@ -2019,8 +2228,8 @@ def parse_java_project_streaming(
     parse_elapsed = time.time() - parse_start_time
     success_files = total_files - failed_files - timeout_files
     avg_time_per_file = (parse_elapsed / total_files * 1000) if total_files > 0 else 0
-    logger.info(_t("java_analysis.parse_and_save_complete", total_time=parse_elapsed, avg_time=avg_time_per_file))
-    logger.info(_t("java_analysis.result_summary_detail", success=success_files, total=total_files, failed=failed_files, timeout=timeout_files))
+    logger.info(_t("java_analysis.parse_complete", total_time=parse_elapsed, avg_time=avg_time_per_file))
+    logger.info(_t("java_analysis.result_summary", success=success_files, total=total_files, failed=failed_files, timeout=timeout_files))
 
     # 2. MyBatis XML mappers 추출 및 저장
     logger.info(_t("java_analysis.processing_xml_mappers"))
@@ -2060,7 +2269,7 @@ def parse_java_project_streaming(
                 xml_last_log_time = current_time
 
         xml_elapsed = time.time() - xml_start_time
-        logger.info(_t("java_analysis.xml_mapper_complete_detail", count=total_xml_mappers, elapsed=xml_elapsed))
+        logger.info(_t("java_analysis.xml_mapper_complete", count=total_xml_mappers, elapsed=xml_elapsed))
     else:
         logger.info(_t("java_analysis.no_xml_mappers"))
 
@@ -2084,14 +2293,14 @@ def parse_java_project_streaming(
                 logger.info(_t("java_analysis.config_file_processing", current=i, total=total_config_files, percent=config_percent))
 
         config_elapsed = time.time() - config_start_time
-        logger.info(_t("java_analysis.config_file_complete", count=total_config_files, elapsed=config_elapsed))
+        logger.info(_t("java_analysis.config_files_complete", total=total_config_files, elapsed=config_elapsed))
     else:
         logger.info(_t("java_analysis.no_config_files"))
 
     # 4. Bean 의존성 해결 (Neo4j 쿼리)
     if stats['beans'] > 0:
         logger.info("")
-        logger.info(_t("java_analysis.bean_dependency_resolving", count=stats['beans']))
+        logger.info(_t("java_analysis.bean_dependency_resolving_detailed", count=stats['beans']))
         bean_start_time = time.time()
 
         from csa.services.java_analysis.bean_dependency_resolver import (
@@ -2100,7 +2309,7 @@ def parse_java_project_streaming(
         resolve_bean_dependencies_from_neo4j(graph_db, project_name, logger)
 
         bean_elapsed = time.time() - bean_start_time
-        logger.info(_t("java_analysis.bean_dependency_complete", elapsed=bean_elapsed))
+        logger.info(_t("java_analysis.bean_dependency_complete_detailed", elapsed=bean_elapsed))
 
     logger.info(_t("java_analysis.streaming_analysis_complete"))
     logger.info(_t("java_analysis.files_processed", processed=stats['processed_files'], total=stats['total_files']))
@@ -2149,7 +2358,7 @@ def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[st
         java_files = csaignore_filter.filter_files(java_files)
         excluded_count = original_count - len(java_files)
         if excluded_count > 0:
-            logger.info(_t("java_analysis.csaignore_files_excluded", count=excluded_count))
+            logger.info(_t("java_analysis.csaignore_files_excluded_count", count=excluded_count))
 
     return java_files
 
@@ -2178,3 +2387,4 @@ __all__ = [
     "parse_java_project_streaming",
     "parse_single_java_file",
 ]
+

@@ -36,6 +36,7 @@ from csa.models.graph_entities import (
 )
 from csa.services.graph_db import GraphDB
 from csa.utils.logger import get_logger
+from csa.utils.i18n import _t
 from csa.utils.loc_calculator import calculate_loc, LOCMetrics
 from csa.utils.cognitive_complexity import calculate_method_cognitive_complexity
 from csa.utils.code_complexity import calculate_code_complexity_from_class_node
@@ -223,7 +224,7 @@ def parse_inner_classes(
 
             if skip_dto_source and is_dto_class(body_item.name, file_path):
                 inner_source = ""  # DTO inner class는 소스 저장 안 함
-                logger.debug(f"DTO inner 소스 저장 건너뜀: {inner_class_full_name}")
+                logger.debug(_t("java_analysis.dto_inner_source_skipped", class_name=inner_class_full_name))
 
             # Inner class LOC 메트릭 계산
             inner_loc_metrics = calculate_loc(inner_class_source)
@@ -374,7 +375,7 @@ def parse_inner_classes(
                         try:
                             inner_method_cognitive_complexity = calculate_method_cognitive_complexity(method_declaration)
                         except Exception as e:
-                            logger.debug(f"Inner class 메서드 Cognitive Complexity 계산 실패 ({inner_class_full_name}.{method_name}): {e}")
+                            logger.debug(_t("java_analysis.inner_class_method_complexity_failed", class_name=inner_class_full_name, method_name=method_name, error=str(e)))
 
                     method = Method(
                         name=method_name,
@@ -395,7 +396,7 @@ def parse_inner_classes(
             try:
                 inner_class_node.code_complexity = calculate_code_complexity_from_class_node(inner_class_node)
             except Exception as e:
-                logger.debug(f"Inner class code_complexity 계산 실패 ({inner_class_full_name}): {e}")
+                logger.debug(_t("java_analysis.inner_class_complexity_failed", class_name=inner_class_full_name, error=str(e)))
                 inner_class_node.code_complexity = 0
 
             inner_classes.append(inner_class_node)
@@ -420,10 +421,10 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
     
     try:
         tree = javalang.parse.parse(file_content)
-        logger.debug(f"Successfully parsed file: {file_path}")
-        
+        logger.debug(_t("java_analysis.file_successfully_parsed", file_path=file_path))
+
         package_name = tree.package.name if tree.package else ""
-        logger.debug(f"Parsed package name: {package_name}")
+        logger.debug(_t("java_analysis.package_name_parsed", package_name=package_name))
         
         if package_name:
             package_node = Package(name=package_name)
@@ -444,7 +445,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 break
         
         if not class_declaration:
-            logger.error(f"No class declaration found in file: {file_path}")
+            logger.error(_t("java_analysis.no_class_found_in_file", file_path=file_path))
             return None, None, [], ""
         
         class_name = class_declaration.name
@@ -489,7 +490,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                         if existing_ai_desc:
                             ai_description = existing_ai_desc
                             skip_ai = True
-                            logger.info(f"Skipping AI analysis for {class_name} (source unchanged)")
+                            logger.info(_t("java_analysis.ai_analysis_skipped_unchanged", class_name=class_name))
 
                 if not skip_ai:
                     analyzer = None
@@ -504,7 +505,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     if analyzer and analyzer.is_available():
                         ai_description = analyzer.analyze_class(file_content, class_name)
             except Exception as e:
-                logger.warning(f"AI Class 분석 실패 ({class_name}): {e}")
+                logger.warning(_t("java_analysis.ai_class_analysis_failed", class_name=class_name, error=str(e)))
                 ai_description = ""
 
         # DTO 클래스 소스 저장 여부 결정 (환경 변수로 제어)
@@ -513,7 +514,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
 
         if skip_dto_source and is_dto_class(class_name, file_path):
             class_source = ""  # DTO 클래스는 소스 저장 안 함
-            logger.debug(f"DTO 소스 저장 건너뜀: {class_name}")
+            logger.debug(_t("java_analysis.dto_source_skipped", class_name=class_name))
 
         # LOC 메트릭 계산
         loc_metrics = calculate_loc(file_content)
@@ -606,7 +607,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
 
         if SKIP_DTO_METHODS and sub_type == "dto":
             # DTO 메서드 분석 생략
-            logger.debug(f"DTO 메서드 분석 생략: {class_name} (sub_type={sub_type})")
+            logger.debug(_t("java_analysis.dto_method_analysis_skipped", class_name=class_name, sub_type=sub_type))
         else:
             all_declarations = class_declaration.methods + class_declaration.constructors
 
@@ -707,11 +708,11 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                 # USE_AI_ANALYSIS 결정 로직은 위에서 계산된 use_ai 사용
                 if use_ai and not is_simple_method:
                     if not AI_ANALYZER_AVAILABLE:
-                         logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer not available")
+                        logger.warning(_t("java_analysis.ai_skipped_unavailable_detail", class_name=class_name, method_name=declaration.name))
                     elif not method_source:
-                         logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: Empty method source")
+                        logger.warning(_t("java_analysis.ai_skipped_empty_source_detail", class_name=class_name, method_name=declaration.name))
                     else:
-                        logger.info(f"Starting AI Analysis for method: {class_name}.{declaration.name}")
+                        logger.info(_t("java_analysis.starting_ai_method_detail", class_name=class_name, method_name=declaration.name))
                         try:
                             analyzer = get_ai_analyzer()
                             if analyzer.is_available():
@@ -721,11 +722,11 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                                     method_name=declaration.name,
                                     class_name=class_name
                                 )
-                                logger.info(f"AI Analysis completed for method: {class_name}.{declaration.name}")
+                                logger.info(_t("java_analysis.ai_completed_method_detail", class_name=class_name, method_name=declaration.name))
                             else:
-                                logger.warning(f"AI Analysis skipped for {class_name}.{declaration.name}: AI Analyzer is_available returned False")
+                                logger.warning(_t("java_analysis.ai_skipped_unavailable_check", class_name=class_name, method_name=declaration.name))
                         except Exception as ai_err:
-                            logger.error(f"AI Analysis failed for {class_name}.{declaration.name}: {ai_err}")
+                            logger.error(_t("java_analysis.ai_failed_method_detail", class_name=class_name, method_name=declaration.name, error=str(ai_err)))
 
                  # DTO skipping logs are handled by caller/config usually, but here is where logic resides.
                  # Actually, use_ai already accounts for skip_dto_methods via caller?
@@ -756,7 +757,7 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
                     try:
                         method_cognitive_complexity = calculate_method_cognitive_complexity(declaration)
                     except Exception as e:
-                        logger.debug(f"메서드 Cognitive Complexity 계산 실패 ({class_name}.{declaration.name}): {e}")
+                        logger.debug(_t("java_analysis.method_complexity_failed", class_name=class_name, method_name=declaration.name, error=str(e)))
 
                 method = Method(
                     name=declaration.name,
@@ -866,12 +867,12 @@ def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB 
         try:
             class_node.code_complexity = calculate_code_complexity_from_class_node(class_node)
         except Exception as e:
-            logger.debug(f"Class code_complexity 계산 실패 ({class_name}): {e}")
+            logger.debug(_t("java_analysis.class_complexity_failed", class_name=class_name, error=str(e)))
             class_node.code_complexity = 0
 
-        logger.debug(f"Successfully parsed single file: {file_path} (found {len(inner_classes)} inner classes)")
+        logger.debug(_t("java_analysis.single_file_parsed_success", file_path=file_path, inner_classes=len(inner_classes)))
         return package_node, class_node, inner_classes, package_name
 
     except Exception as e:
-        logger.error(f"Error parsing file: {e}")
+        logger.error(_t("java_analysis.file_parsing_error", error=str(e)))
         return None, None, [], ""
