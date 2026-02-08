@@ -170,7 +170,7 @@ def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: di
 
     try:
         package_node, class_node, inner_classes, package_name = parse_single_java_file(
-            file_path, project_name, None, ai_options, use_ai=use_ai  # graph_db=None for parsing only
+            file_path, project_name, None, ai_options, use_ai=use_ai, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods  # graph_db=None for parsing only
         )
 
         # 처리 시간 계산 및 로깅

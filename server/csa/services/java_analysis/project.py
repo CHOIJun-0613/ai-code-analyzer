@@ -412,7 +412,7 @@ def parse_inner_classes(
     return inner_classes
 
 
-def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None) -> tuple[Package, Class, list[Class], str]:
+def parse_single_java_file(file_path: str, project_name: str, graph_db: GraphDB = None, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True) -> tuple[Package, Class, list[Class], str]:
     """Parse a single Java file and return parsed entities."""
     logger = get_logger(__name__)
     
@@ -1802,7 +1802,7 @@ def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: di
 
     try:
         package_node, class_node, inner_classes, package_name = parse_single_java_file(
-            file_path, project_name, None, ai_options, use_ai=use_ai  # graph_db=None for parsing only
+            file_path, project_name, None, ai_options, use_ai=use_ai, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods  # graph_db=None for parsing only
         )
 
         # 처리 시간 계산 및 로깅
