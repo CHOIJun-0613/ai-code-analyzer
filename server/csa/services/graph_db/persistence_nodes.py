@@ -86,6 +86,8 @@ class PersistenceMixin:
     @staticmethod
     def _create_mybatis_mapper_node_tx(tx, mapper: MyBatisMapper, project_name: str) -> None:
         current_timestamp = GraphDBBase._get_current_timestamp()
+
+        # 1. Mapper 노드 생성/업데이트
         mapper_query = (
             "MERGE (m:MyBatisMapper {name: $name, project_name: $project_name}) "
             "SET m:Analysis, m.logical_name = $logical_name, m.type = $type, m.file_extension = $file_extension, "
@@ -109,6 +111,32 @@ class PersistenceMixin:
             description=mapper.description or "",
             ai_description=mapper.ai_description or "",
             updated_at=current_timestamp,
+        )
+
+        # 2. Package-[:CONTAINS]->Mapper 관계 생성
+        if mapper.package_name:
+            package_relation_query = (
+                "MATCH (pkg:Package {name: $package_name}) "
+                "MATCH (m:MyBatisMapper {name: $name, project_name: $project_name}) "
+                "MERGE (pkg)-[:CONTAINS]->(m)"
+            )
+            tx.run(
+                package_relation_query,
+                package_name=mapper.package_name,
+                name=mapper.name,
+                project_name=project_name,
+            )
+
+        # 3. Project-[:CONTAINS]->Mapper 관계 생성
+        project_relation_query = (
+            "MATCH (proj:Project {name: $project_name}) "
+            "MATCH (m:MyBatisMapper {name: $name, project_name: $project_name}) "
+            "MERGE (proj)-[:CONTAINS]->(m)"
+        )
+        tx.run(
+            project_relation_query,
+            project_name=project_name,
+            name=mapper.name,
         )
 
     @staticmethod
@@ -278,6 +306,8 @@ class PersistenceMixin:
     def _create_mybatis_mappers_batch_tx(tx, mappers: List[MyBatisMapper], project_name: str) -> None:
         """배치로 여러 MyBatis Mapper를 한 번의 트랜잭션에 저장"""
         current_timestamp = GraphDBBase._get_current_timestamp()
+
+        # 1. Mapper 노드들 배치 생성/업데이트
         mapper_query = (
             "UNWIND $mappers AS m "
             "MERGE (mapper:MyBatisMapper {name: m.name, project_name: m.project_name}) "
@@ -312,6 +342,48 @@ class PersistenceMixin:
             for mapper in mappers
         ]
         tx.run(mapper_query, mappers=mappers_data)
+
+        # 2. Package-[:CONTAINS]->Mapper 관계 배치 생성
+        package_mapper_records = [
+            {
+                'package_name': mapper.package_name,
+                'mapper_name': mapper.name,
+                'project_name': project_name,
+            }
+            for mapper in mappers
+            if mapper.package_name
+        ]
+
+        if package_mapper_records:
+            tx.run(
+                """
+                UNWIND $relations AS r
+                MATCH (pkg:Package {name: r.package_name})
+                MATCH (m:MyBatisMapper {name: r.mapper_name, project_name: r.project_name})
+                MERGE (pkg)-[:CONTAINS]->(m)
+                """,
+                relations=package_mapper_records
+            )
+
+        # 3. Project-[:CONTAINS]->Mapper 관계 배치 생성
+        project_mapper_records = [
+            {
+                'project_name': project_name,
+                'mapper_name': mapper.name,
+            }
+            for mapper in mappers
+        ]
+
+        if project_mapper_records:
+            tx.run(
+                """
+                UNWIND $relations AS r
+                MATCH (proj:Project {name: r.project_name})
+                MATCH (m:MyBatisMapper {name: r.mapper_name, project_name: r.project_name})
+                MERGE (proj)-[:CONTAINS]->(m)
+                """,
+                relations=project_mapper_records
+            )
 
     @staticmethod
     def _create_jpa_entities_batch_tx(tx, entities: List[JpaEntity], project_name: str) -> None:
