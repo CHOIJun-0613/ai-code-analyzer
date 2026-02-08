@@ -7,6 +7,7 @@ import os
 from typing import Dict, Any, Optional, List
 from threading import Lock
 from csa.utils.logger import get_logger
+from csa.utils.i18n import _t
 
 
 class RulesManager:
@@ -52,9 +53,9 @@ class RulesManager:
     def _load_all_rules_internal(self):
         """실제 규칙 로딩 로직 (내부용)"""
         from csa.services.analysis_rule_service import analysis_rule_service
-        
-        self.logger.info("분석 규칙 로드 시작 (DB)...")
-        
+
+        self.logger.info(_t("rules.load_start"))
+
         # Reset rules
         self._logical_name_rules = {}
         self._description_rules = {"class": [], "method": []}
@@ -63,18 +64,21 @@ class RulesManager:
         try:
             # Load active rules from DB
             active_rules = analysis_rule_service.get_all_rules(active_only=True)
-            
+
             if not active_rules:
-                self.logger.warning("활성화된 분석 규칙이 없습니다.")
+                self.logger.warning(_t("rules.no_active"))
                 return
 
             for rule in active_rules:
                 self._process_rule_content(rule.content, rule.name)
 
-            self.logger.info(f"규칙 로드 완료 - 논리명: {len(self._logical_name_rules)}개 패턴, Description: {len(self._description_rules['class']) + len(self._description_rules['method'])}개 규칙, Class Subtype: {len(self._class_subtype_rules)}개 규칙")
-            
+            self.logger.info(_t("rules.load_complete",
+                               logical_count=len(self._logical_name_rules),
+                               description_count=len(self._description_rules['class']) + len(self._description_rules['method']),
+                               subtype_count=len(self._class_subtype_rules)))
+
         except Exception as e:
-            self.logger.error(f"규칙 로드 중 오류 발생: {e}")
+            self.logger.error(_t("rules.load_error", error=str(e)))
 
     def _process_rule_content(self, content: str, rule_name: str):
         """단일 규칙 컨텐츠를 해석하여 타입별로 병합"""
@@ -84,27 +88,27 @@ class RulesManager:
                 # Class Subtype Rule
                 rules = self._parse_class_subtype_rules_from_content(content)
                 self._class_subtype_rules.extend(rules)
-                self.logger.debug(f"Class Subtype 규칙 로드: {rule_name}")
-                
+                self.logger.debug(_t("rules.loaded_class_subtype", rule_name=rule_name))
+
             elif "**@Annotation**" in content or "description 파라미터" in content:
                 # Description Rule
                 rules = self._parse_description_rules_from_content(content)
                 self._description_rules["class"].extend(rules.get("class", []))
                 self._description_rules["method"].extend(rules.get("method", []))
-                self.logger.debug(f"Description 규칙 로드: {rule_name}")
+                self.logger.debug(_t("rules.loaded_class_subtype", rule_name=rule_name))
                 
             elif "/**" in content or "<!--" in content or "logical_name" in content:
                 # Logical Name Rule
                 rules = self._parse_logical_name_rules_from_content(content)
                 for key, val in rules.items():
                     self._logical_name_rules[key] = val
-                self.logger.debug(f"Logical Name 규칙 로드: {rule_name}")
-            
+                self.logger.debug(_t("rules.loaded_logical_name", rule_name=rule_name))
+
             else:
-                self.logger.debug(f"알 수 없는 규칙 형식, 건너뜀: {rule_name}")
+                self.logger.debug(_t("rules.unknown_format", rule_name=rule_name))
 
         except Exception as e:
-            self.logger.error(f"규칙 처리 실패: {rule_name}, {e}")
+            self.logger.error(_t("rules.process_failed", rule_name=rule_name, error=str(e)))
 
     
     def _parse_logical_name_rules_from_content(self, content: str) -> Dict[str, Any]:
@@ -165,9 +169,9 @@ class RulesManager:
                         rules[current_section]['pattern'] = pattern
 
             return rules
-            
+
         except Exception as e:
-            self.logger.error(f"논리명 규칙 파싱 실패: {e}")
+            self.logger.error(_t("rules.logical_parse_failed", error=str(e)))
             return {}
     
     def _parse_description_rules_from_content(self, content: str) -> Dict[str, Any]:
@@ -213,7 +217,7 @@ class RulesManager:
             return rules
 
         except Exception as e:
-            self.logger.error(f"Description 규칙 파싱 실패: {e}")
+            self.logger.error(_t("rules.description_parse_failed", error=str(e)))
             return {"class": [], "method": []}
 
 
@@ -271,7 +275,7 @@ class RulesManager:
             return rules
 
         except Exception as e:
-            self.logger.error(f"Class sub-type 규칙 파싱 실패: {e}")
+            self.logger.error(_t("rules.class_subtype_parse_failed", error=str(e)))
             return []
     
     def _extract_template_from_line(self, line: str) -> str:
