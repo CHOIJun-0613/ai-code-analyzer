@@ -61,26 +61,44 @@ class UserService:
         query = """
         MATCH (u:User {id: $username})
         OPTIONAL MATCH (u)-[:BELONGS_TO]->(g:UserGroup)
-        RETURN u, collect(g) as groups
+        OPTIONAL MATCH (g)-[:HAS_ACCESS_TO]->(p:Project)
+        RETURN u, g, collect(p.name) as projects, collect(g) as groups
         """
         
         with pool.session() as session:
             result = session.run(query, {"username": username})
-            record = result.single()
-            if not record:
+            records = list(result)
+            if not records:
                 return None
             
-            user_node = record["u"]
-            group_nodes = record["groups"]
+            # Use first record for user info (duplicated across rows)
+            user_node = records[0]["u"]
+            
+            # Group by group node to handle multiple rows per group-project pair
+            groups_map = {}
+            for record in records:
+                g_node = record["g"]
+                if g_node:
+                    g_id = g_node["id"]
+                    if g_id not in groups_map:
+                        groups_map[g_id] = {
+                            "node": g_node,
+                            "projects": set()
+                        }
+                    # Add projects from this row (collect(p.name) returns list)
+                    for p_name in record["projects"]:
+                        groups_map[g_id]["projects"].add(p_name)
             
             groups = []
-            for g in group_nodes:
-                if g:
-                    groups.append(Group(
-                        id=g["id"],
-                        name=g["name"],
-                        permissions=[Permission(p) for p in g.get("permissions", [])]
-                    ))
+            for g_data in groups_map.values():
+                g = g_data["node"]
+                projects = list(g_data["projects"])
+                groups.append(Group(
+                    id=g["id"],
+                    name=g["name"],
+                    permissions=[Permission(p) for p in g.get("permissions", [])],
+                    projects=projects
+                ))
             
             return UserInDB(
                 id=user_node["id"],
@@ -214,25 +232,42 @@ class UserService:
         query = """
         MATCH (u:User {id: $user_id})
         OPTIONAL MATCH (u)-[:BELONGS_TO]->(g:UserGroup)
-        RETURN u, collect(g) as groups
+        OPTIONAL MATCH (g)-[:HAS_ACCESS_TO]->(p:Project)
+        RETURN u, g, collect(p.name) as projects
         """
         with pool.session() as session:
             result = session.run(query, {"user_id": user_id})
-            record = result.single()
-            if not record:
+            records = list(result)
+            if not records:
                 return None
             
-            user_node = record["u"]
-            group_nodes = record["groups"]
+            user_node = records[0]["u"]
+            
+            # Group by group node to handle multiple rows per group-project pair
+            groups_map = {}
+            for record in records:
+                g_node = record["g"]
+                if g_node:
+                    g_id = g_node["id"]
+                    if g_id not in groups_map:
+                        groups_map[g_id] = {
+                            "node": g_node,
+                            "projects": set()
+                        }
+                    # Add projects from this row (collect(p.name) returns list)
+                    for p_name in record["projects"]:
+                        groups_map[g_id]["projects"].add(p_name)
             
             groups = []
-            for g in group_nodes:
-                if g:
-                    groups.append(Group(
-                        id=g["id"],
-                        name=g["name"],
-                        permissions=[Permission(p) for p in g.get("permissions", [])]
-                    ))
+            for g_data in groups_map.values():
+                g = g_data["node"]
+                projects = list(g_data["projects"])
+                groups.append(Group(
+                    id=g["id"],
+                    name=g["name"],
+                    permissions=[Permission(p) for p in g.get("permissions", [])],
+                    projects=projects
+                ))
             
             
             return User(
