@@ -21,5 +21,7 @@ from app.api.v1.endpoints import sqls
 api_router.include_router(sqls.router, tags=["sqls"])
 from app.api.v1.endpoints import methods
 api_router.include_router(methods.router, tags=["methods"])
+from app.api.v1.endpoints import mappers
+api_router.include_router(mappers.router, prefix="/mappers", tags=["mappers"])
 api_router.include_router(websocket.router, tags=["websocket"])
 
