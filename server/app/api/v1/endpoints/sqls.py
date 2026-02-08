@@ -1,7 +1,7 @@
 import json
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 
 from app.api import deps
@@ -10,6 +10,7 @@ from app.models.user import UserInDB
 from app.services.analysis_wrapper import start_ai_analysis
 from csa.utils.logger import get_logger
 from csa.utils.sql_flow_normalizer import normalize_and_extract
+from csa.utils.i18n import _t
 from csa.parsers.sql.parser import SQLParser
 from csa.services.sql_flow.generator import SQLFlowGenerator
 
@@ -203,7 +204,8 @@ def trigger_sql_analysis(
     mapper_name: str,
     request: SqlAnalysisRequest,
     background_tasks: BackgroundTasks,
-    current_user: UserInDB = Depends(deps.get_current_user)
+    current_user: UserInDB = Depends(deps.get_current_user),
+    language: str = Depends(deps.get_language_from_header),
 ) -> Dict[str, str]:
     """
     특정 SQL Statement에 대한 코드 정적 분석 및 AI 재분석 실행
@@ -219,7 +221,7 @@ def trigger_sql_analysis(
     Returns:
         job_id를 포함한 응답
     """
-    logger.info(f"=== SQL 재분석 API 호출됨 === project={project_name}, sql_id={sql_id}, mapper={mapper_name}")
+    logger.info(_t("sql_reanalysis.api_called", project_name=project_name, sql_id=sql_id, mapper_name=mapper_name))
     pool = get_db()
 
     # 1. SQL 노드 존재 확인 및 데이터 조회
@@ -243,16 +245,16 @@ def trigger_sql_analysis(
         sql_type = result[0].get("sql_type", "SELECT")
 
         # 2. 코드 정적 분석 실행 (SQLParser)
-        logger.info(f"SQL 정적 분석 시작: sql_id={sql_id}")
+        logger.info(_t("sql_reanalysis.static_start", sql_id=sql_id))
 
         # 정적 분석 로그를 수집할 리스트
         static_analysis_logs = []
-        static_analysis_logs.append(f"[정적 분석] SQL 코드 정적 분석 시작: {sql_id}")
+        static_analysis_logs.append(_t("sql_reanalysis.static_log_start", sql_id=sql_id))
 
         try:
             sql_parser = SQLParser()
             sql_analysis = sql_parser.parse_sql_statement(sql_content, sql_type)
-            static_analysis_logs.append(f"[정적 분석] SQL 파싱 완료 (타입: {sql_type})")
+            static_analysis_logs.append(_t("sql_reanalysis.static_log_parsed", sql_type=sql_type))
 
             # 3. SQL Flow JSON 생성
             flow_json = SQLFlowGenerator.generate_flow_json(
@@ -260,7 +262,7 @@ def trigger_sql_analysis(
                 sql_content=sql_content,
                 sql_id=sql_id
             )
-            static_analysis_logs.append(f"[정적 분석] SQL Flow JSON 생성 완료")
+            static_analysis_logs.append(_t("sql_reanalysis.static_log_flow"))
 
             # 4. 테이블/컬럼 정보를 JSON 문자열로 변환
             tables_json = json.dumps(sql_analysis.tables) if sql_analysis.tables else "[]"
@@ -297,21 +299,23 @@ def trigger_sql_analysis(
             )
 
             static_analysis_logs.append(
-                f"[정적 분석] 완료 - 복잡도: {sql_analysis.complexity_score}, "
-                f"테이블: {len(sql_analysis.tables)}개, "
-                f"컬럼: {len(sql_analysis.columns)}개"
+                _t("sql_reanalysis.static_log_done",
+                   complexity=sql_analysis.complexity_score,
+                   tables=len(sql_analysis.tables),
+                   columns=len(sql_analysis.columns))
             )
 
             logger.info(
-                f"SQL 정적 분석 완료: sql_id={sql_id}, "
-                f"complexity={sql_analysis.complexity_score}, "
-                f"tables={len(sql_analysis.tables)}, "
-                f"columns={len(sql_analysis.columns)}"
+                _t("sql_reanalysis.static_done",
+                   sql_id=sql_id,
+                   complexity=sql_analysis.complexity_score,
+                   tables=len(sql_analysis.tables),
+                   columns=len(sql_analysis.columns))
             )
 
         except Exception as e:
-            logger.error(f"SQL 정적 분석 실패: sql_id={sql_id}, error={e}")
-            static_analysis_logs.append(f"[정적 분석] 실패: {str(e)}")
+            logger.error(_t("sql_reanalysis.static_failed", sql_id=sql_id, error=str(e)))
+            static_analysis_logs.append(_t("sql_reanalysis.static_log_failed", error=str(e)))
             # 정적 분석 실패 시에도 계속 진행 (AI 분석은 실행)
 
     # 6. AI enrichment 작업 시작 (선택사항)
@@ -328,7 +332,8 @@ def trigger_sql_analysis(
             ai_config=ai_config,
             user_id=current_user.username,
             target_sql_id=sql_id,
-            target_mapper_name=mapper_name
+            target_mapper_name=mapper_name,
+            language=language,
         )
 
         # 정적 분석 로그를 AI job의 초기 로그로 추가
@@ -338,13 +343,13 @@ def trigger_sql_analysis(
                 # 정적 분석 로그를 맨 앞에 추가
                 ai_jobs[job_id]["logs"] = static_analysis_logs + ai_jobs[job_id]["logs"]
         except Exception as e:
-            logger.warning(f"정적 분석 로그 추가 실패: {e}")
+            logger.warning(_t("sql_reanalysis.log_append_failed", error=str(e)))
 
-        logger.info(f"SQL AI 분석 작업 시작: job_id={job_id}, sql_id={sql_id}, mapper={mapper_name}")
+        logger.info(_t("sql_reanalysis.ai_start", job_id=job_id, sql_id=sql_id, mapper_name=mapper_name))
         return {"job_id": job_id}
     else:
         # AI 분석 없이 정적 분석만 수행한 경우
-        logger.info(f"SQL 재분석 완료 (정적 분석만): sql_id={sql_id}")
+        logger.info(_t("sql_reanalysis.static_only_done", sql_id=sql_id))
         return {
             "job_id": "static_analysis_only",
             "status": "completed",
