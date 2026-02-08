@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from pydantic import ValidationError
+from typing import Optional, Set
 
 from app.core.config import settings
 from app.core import security
@@ -61,3 +62,44 @@ def get_language_from_header(request: Request) -> str:
         lang = "ko"
     set_language(lang)
     return lang
+
+
+def get_allowed_projects(user: UserInDB) -> Optional[set[str]]:
+    """
+    Returns a set of allowed project names for the user.
+    Returns None if the user is an Administrator (access to all projects).
+    """
+    # Check for Admin
+    if any(g.name.lower() == "administrators" for g in user.groups):
+        return None
+        
+    allowed_projects = set()
+    for group in user.groups:
+        if group.projects:
+            allowed_projects.update(group.projects)
+            
+    return allowed_projects
+
+
+def verify_project_access(
+    project_name: str,
+    current_user: UserInDB = Depends(get_current_user)
+) -> UserInDB:
+    """
+    Dependency to verify if the current user has access to the requested project.
+    Raises 403 Forbidden if access is denied.
+    Returns the current user if allowed.
+    """
+    allowed_projects = get_allowed_projects(current_user)
+    
+    # If None, it means Admin -> Allow
+    if allowed_projects is None:
+        return current_user
+        
+    if project_name not in allowed_projects:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You do not have access to project '{project_name}'"
+        )
+        
+    return current_user
