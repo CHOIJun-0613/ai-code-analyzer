@@ -278,7 +278,7 @@ def parse_java_project_streaming(
             else:
                 exclude_patterns = []
 
-    logger.info("Java 파일 수집 중...")
+    logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
 
     total_files = len(java_files)
@@ -286,7 +286,7 @@ def parse_java_project_streaming(
     logger.info(f"총 {total_files}개 Java 파일 발견")
 
     # 파일 복잡도 기반 정렬 (복잡한 파일을 먼저 처리 - 워크로드 균형 개선)
-    logger.info("파일 복잡도 분석 중...")
+    logger.info(_t("java_analysis.analyzing_complexity"))
     complexity_start = time.time()
     file_complexities = [(f, estimate_file_complexity(f)) for f in java_files]
 
@@ -329,7 +329,7 @@ def parse_java_project_streaming(
 
     # 상위 10개 복잡한 파일 로깅 (필터링 후)
     top_complex_files = filtered_complexities[:10]
-    logger.info("복잡도 상위 10개 파일:")
+    logger.info(_t("java_analysis.top_complex_files"))
     for i, (file_path, complexity) in enumerate(top_complex_files, 1):
         file_name = os.path.basename(file_path)
         logger.info(f"  {i}. {file_name} (복잡도: {complexity})")
@@ -359,7 +359,7 @@ def parse_java_project_streaming(
     logger.info(f"병렬 파싱 워커 수: {parallel_workers} (CPU 코어: {cpu_count}, 기본값: {default_workers}), 초기 배치 크기: {initial_batch_size} (동적 조정 활성화)")
 
     # 0. Package 사전 생성 (성능 최적화)
-    logger.info("Package 정보 수집 중...")
+    logger.info(_t("java_analysis.collecting_packages"))
     package_names = set()
     package_pattern = re.compile(r'^\s*package\s+([\w.]+)\s*;', re.MULTILINE)
 
@@ -386,7 +386,7 @@ def parse_java_project_streaming(
         logger.info(f"Package 배치 생성 완료 ({package_elapsed:.2f}초)")
 
     # 1. 병렬 파일 파싱 + 배치 Neo4j 저장
-    logger.info("병렬 파싱 시작...")
+    logger.info(_t("java_analysis.parallel_parsing_start"))
     parse_start_time = time.time()
 
     # 파싱된 결과를 임시 저장할 버퍼
@@ -401,7 +401,7 @@ def parse_java_project_streaming(
         file_timeout = source_options['java_file_parse_timeout']
     else:
         file_timeout = float(os.getenv("JAVA_FILE_PARSE_TIMEOUT", "60.0"))
-    logger.info(f"파일 파싱 타임아웃: {file_timeout}초")
+    logger.info(_t("java_analysis.parse_timeout", timeout=file_timeout))
     
     # AI 옵션 필터링
     effective_ai_options = ai_options if use_ai_analysis else None
@@ -431,7 +431,7 @@ def parse_java_project_streaming(
                             processed_classes += 1
                             timeout_files += 1
                             current_timeout = timeout_files
-                        logger.warning(f"⏱️  파싱 타임아웃 #{current_timeout} ({file_timeout}초 초과): {file_name}")
+                        logger.warning(_t("java_analysis.timeout_exceeded", count=current_timeout, timeout=file_timeout, file_name=file_name))
                         continue
 
                     # 파싱 실패 시 (에러 메시지가 package_name에 담김)
@@ -442,9 +442,9 @@ def parse_java_project_streaming(
                             failed_files += 1
                             current_failed = failed_files
                         if isinstance(package_name, str) and package_name:
-                            logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name} - {package_name}")
+                            logger.error(_t("java_analysis.parse_failed", count=current_failed, file_name=file_name, package_name=package_name))
                         else:
-                            logger.error(f"❌ 파싱 실패 #{current_failed}: {file_name}")
+                            logger.error(_t("java_analysis.parse_failed_no_package", count=current_failed, file_name=file_name))
                         continue
 
                     # 버퍼에 추가 및 배치 저장 여부 결정 (Lock 범위 최소화)
@@ -512,15 +512,15 @@ def parse_java_project_streaming(
                         elapsed_ss = int(elapsed % 60)
                         logger.info(
                             f"[{elapsed_mm:02d}:{elapsed_ss:02d}] "
-                            f"파싱 진행중 [{current_processed}/{total_files}] ({current_percent}%) "
-                            f"- {files_per_sec:.1f} files/sec, ETA: {eta_minutes}분, RAM: {memory_mb:.0f}MB"
+                            + _t("java_analysis.parsing_progress", current=current_processed, total=total_files, percent=current_percent)
+                            + f" - {files_per_sec:.1f} files/sec, ETA: {eta_minutes}분, RAM: {memory_mb:.0f}MB"
                         )
 
                     # Lock 밖에서 Neo4j 저장 수행 (다른 스레드 블록 방지)
                     if batch_to_save:
                         try:
                             batch_start_time = time.time()
-                            logger.info(f"  → 배치 저장 시작 ({len(batch_to_save)}개 클래스)")
+                            logger.info(_t("java_analysis.batch_save_start", count=len(batch_to_save)))
 
                             # Class 배치 저장 (Top-level + Inner classes)
                             classes_to_save = []
@@ -566,22 +566,22 @@ def parse_java_project_streaming(
                             # 배치 크기 동적 조정
                             new_batch_size = batch_sizer.adjust(batch_elapsed, len(batch_to_save))
                             if new_batch_size != current_batch_size:
-                                logger.info(f"  📊 배치 크기 조정: {current_batch_size} → {new_batch_size}")
+                                logger.info(_t("java_analysis.batch_size_adjusted", old_size=current_batch_size, new_size=new_batch_size))
 
-                            logger.info(f"  ← 배치 저장 완료 ({batch_elapsed:.2f}초)")
+                            logger.info(_t("java_analysis.batch_save_complete", elapsed=batch_elapsed))
 
                             # 메모리 명시적 해제 (배치 저장 후)
                             del batch_to_save
                             gc.collect()
 
                         except Exception as batch_error:
-                            logger.error(f"배치 저장 실패: {batch_error}")
+                            logger.error(_t("java_analysis.batch_save_failed", error=str(batch_error)))
                             # 배치 저장 실패 시에도 계속 진행
                             continue
 
                 except Exception as e:
                     file_name = os.path.basename(file_path)
-                    logger.error(f"❌ 예외 발생: {file_name} - {e}")
+                    logger.error(_t("java_analysis.exception_occurred", file_name=file_name, error=str(e)))
                     with progress_lock:
                         processed_classes += 1
                         failed_files += 1
@@ -596,11 +596,11 @@ def parse_java_project_streaming(
     parse_elapsed = time.time() - parse_start_time
     success_files = total_files - failed_files - timeout_files
     avg_time_per_file = (parse_elapsed / total_files * 1000) if total_files > 0 else 0
-    logger.info(f"파싱 및 저장 완료 - 소요 시간: {parse_elapsed:.2f}초 (파일당 평균: {avg_time_per_file:.0f}ms)")
-    logger.info(f"  성공: {success_files}/{total_files}, 실패: {failed_files}, 타임아웃: {timeout_files}")
+    logger.info(_t("java_analysis.parse_complete", total_time=parse_elapsed, avg_time=avg_time_per_file))
+    logger.info(_t("java_analysis.result_summary", success=success_files, total=total_files, failed=failed_files, timeout=timeout_files))
 
     # 2. MyBatis XML mappers 추출 및 저장
-    logger.info("MyBatis XML mappers 처리 중...")
+    logger.info(_t("java_analysis.processing_xml_mappers"))
     xml_mappers = extract_mybatis_xml_mappers(directory, project_name, graph_db)
     total_xml_mappers = len(xml_mappers)
 
@@ -633,17 +633,17 @@ def parse_java_project_streaming(
             current_time = time.time()
             if (i % 10 == 0) or (current_time - xml_last_log_time >= 5.0) or (i == total_xml_mappers):
                 xml_percent = int(i / total_xml_mappers * 100)
-                logger.info(f"  XML mapper 처리중 [{i}/{total_xml_mappers}] ({xml_percent}%)")
+                logger.info(_t("java_analysis.xml_mapper_processing", current=i, total=total_xml_mappers, percent=xml_percent))
                 xml_last_log_time = current_time
 
         xml_elapsed = time.time() - xml_start_time
-        logger.info(f"XML mapper 처리 완료 ({total_xml_mappers}개, {xml_elapsed:.1f}초)")
+        logger.info(_t("java_analysis.xml_mapper_complete", count=total_xml_mappers, elapsed=xml_elapsed))
     else:
-        logger.info("XML mapper 없음")
+        logger.info(_t("java_analysis.no_xml_mappers"))
 
 
     # 3. Config files 처리
-    logger.info("Config files 처리 중...")
+    logger.info(_t("java_analysis.processing_config"))
     config_files = extract_config_files(directory)
     total_config_files = len(config_files)
 
@@ -663,7 +663,7 @@ def parse_java_project_streaming(
         config_elapsed = time.time() - config_start_time
         logger.info(f"Config 파일 처리 완료 ({total_config_files}개, {config_elapsed:.1f}초)")
     else:
-        logger.info("Config 파일 없음")
+        logger.info(_t("java_analysis.no_config_files"))
 
     # 4. Bean 의존성 해결 (Neo4j 쿼리)
     if stats['beans'] > 0:
@@ -721,7 +721,7 @@ def _collect_java_files_with_csaignore(directory: str, exclude_patterns: list[st
         use_file=use_csaignore_file
     )
     if csaignore_filter.has_patterns():
-        logger.info(".csaignore 패턴 적용 중...")
+        logger.info(_t("java_analysis.applying_exclude_patterns"))
         original_count = len(java_files)
         java_files = csaignore_filter.filter_files(java_files)
         excluded_count = original_count - len(java_files)

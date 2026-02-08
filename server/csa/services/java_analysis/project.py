@@ -36,6 +36,7 @@ from csa.models.graph_entities import (
 )
 from csa.services.graph_db import GraphDB
 from csa.utils.logger import get_logger
+from csa.utils.i18n import _t
 from csa.utils.loc_calculator import calculate_loc, LOCMetrics
 from csa.utils.cognitive_complexity import calculate_method_cognitive_complexity
 from csa.utils.code_complexity import calculate_code_complexity_from_class_node

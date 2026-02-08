@@ -113,7 +113,7 @@ def _resolve_field_injections(
     Raises:
         Exception: Neo4j 쿼리 실행 중 오류 발생 시
     """
-    logger.debug("  → Field injection 의존성 쿼리 실행 중...")
+    logger.debug(_t("bean.debug.field_injection_query"))
 
     # Field injection 의존성 해결 Cypher 쿼리
     # Step 2에서 검증된 쿼리 통합
@@ -158,19 +158,18 @@ def _resolve_field_injections(
 
             # 생성된 의존성 상세 로깅 (DEBUG 레벨)
             if created_count > 0:
-                logger.debug(f"  → {created_count}개의 Field injection 의존성 생성됨:")
+                logger.debug(_t("bean.debug.field_injection_created", count=created_count))
                 for idx, record in enumerate(records, 1):
                     source_bean = record["source_bean"]
                     field_name = record["field_name"]
                     target_bean = record["target_bean"]
-                    logger.debug(
-                        f"     [{idx}] {source_bean} --(@Autowired {field_name})--> {target_bean}"
-                    )
+                    logger.debug(_t("bean.debug.field_injection_detail",
+                                    idx=idx, source=source_bean, field=field_name, target=target_bean))
             else:
-                logger.debug("  → Field injection 의존성이 생성되지 않음 (매칭되는 Bean 없음)")
+                logger.debug(_t("bean.debug.field_injection_none"))
 
     except Exception as e:
-        logger.error(f"  ✗ Field injection 의존성 해결 중 오류: {e}")
+        logger.error(_t("bean.error.field_injection_failed", error=str(e)))
         raise
 
     return created_count
@@ -198,7 +197,7 @@ def _resolve_constructor_injections(
     """
     import json
 
-    logger.debug("  → Constructor injection 의존성 쿼리 실행 중...")
+    logger.debug(_t("bean.debug.constructor_injection_query"))
 
     # Step 1: 생성자 정보 조회 쿼리
     query_constructors = """
@@ -243,7 +242,7 @@ def _resolve_constructor_injections(
                 try:
                     parameters = json.loads(parameters_json)
                 except json.JSONDecodeError:
-                    logger.warning(f"  ⚠ {source_bean}: parameters JSON 파싱 실패")
+                    logger.warning(_t("bean.debug.constructor_params_parse_failed", source=source_bean))
                     continue
 
                 # 각 파라미터에 대해 Bean 매칭 시도
@@ -274,12 +273,12 @@ def _resolve_constructor_injections(
                         created_count += 1
 
             if created_count > 0:
-                logger.debug(f"  → {created_count}개의 Constructor injection 의존성 생성됨")
+                logger.debug(_t("bean.debug.constructor_injection_created", count=created_count))
             else:
-                logger.debug("  → Constructor injection 의존성이 생성되지 않음")
+                logger.debug(_t("bean.debug.constructor_injection_none"))
 
     except Exception as e:
-        logger.error(f"  ✗ Constructor injection 의존성 해결 중 오류: {e}")
+        logger.error(_t("bean.error.constructor_injection_failed", error=str(e)))
         raise
 
     return created_count
@@ -306,7 +305,7 @@ def _resolve_setter_injections(
     """
     import json
 
-    logger.debug("  → Setter injection 의존성 쿼리 실행 중...")
+    logger.debug(_t("bean.debug.setter_injection_query"))
 
     # Step 1: setter 정보 조회 쿼리
     query_setters = """
@@ -354,7 +353,7 @@ def _resolve_setter_injections(
                 try:
                     parameters = json.loads(parameters_json)
                 except json.JSONDecodeError:
-                    logger.warning(f"  ⚠ {source_bean}.{setter_name}: parameters JSON 파싱 실패")
+                    logger.warning(_t("bean.debug.setter_params_parse_failed", source=source_bean, setter=setter_name))
                     continue
 
                 # 각 파라미터에 대해 Bean 매칭 시도 (setter는 일반적으로 파라미터 1개)
@@ -384,12 +383,12 @@ def _resolve_setter_injections(
                         created_count += 1
 
             if created_count > 0:
-                logger.debug(f"  → {created_count}개의 Setter injection 의존성 생성됨")
+                logger.debug(_t("bean.debug.setter_injection_created", count=created_count))
             else:
-                logger.debug("  → Setter injection 의존성이 생성되지 않음")
+                logger.debug(_t("bean.debug.setter_injection_none"))
 
     except Exception as e:
-        logger.error(f"  ✗ Setter injection 의존성 해결 중 오류: {e}")
+        logger.error(_t("bean.error.setter_injection_failed", error=str(e)))
         raise
 
     return created_count

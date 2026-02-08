@@ -55,12 +55,12 @@ def parse_java_project_full(
             else:
                 exclude_patterns = []
 
-    logger.info("Java 파일 수집 중...")
+    logger.info(_t("java_analysis.collecting_files"))
     java_files = _collect_java_files_with_csaignore(directory, exclude_patterns=exclude_patterns, use_csaignore_file=use_csaignore_file)
     logger.info(f"총 {len(java_files)}개 Java 파일 발견")
 
     # 먼저 전체 클래스 개수를 계산
-    logger.info("클래스 개수 계산 중...")
+    logger.info(_t("java_analysis.calculating_classes"))
     for file_path in java_files:
         try:
             with open(file_path, 'r', encoding='utf-8') as f:
