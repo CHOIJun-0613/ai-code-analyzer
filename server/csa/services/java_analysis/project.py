@@ -1784,7 +1784,7 @@ def is_dto_class(class_name: str, file_path: str = None) -> bool:
     return False
 
 
-def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None) -> tuple:
+def _parse_single_file_wrapper(file_path: str, project_name: str, ai_options: dict = None, use_ai: bool = None, skip_dto_source: bool = True, skip_dto_methods: bool = True) -> tuple:
     """
     병렬 처리용 파싱 래퍼 함수 (Neo4j 연결 없이 파싱만 수행)
 
@@ -2042,7 +2042,7 @@ def parse_java_project_streaming(
     with ThreadPoolExecutor(max_workers=parallel_workers) as executor:
         # 모든 파일을 병렬로 파싱 제출
         future_to_file = {
-            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis): file_path
+            executor.submit(_parse_single_file_wrapper, file_path, project_name, effective_ai_options, use_ai=use_ai_analysis, skip_dto_source=skip_dto_source, skip_dto_methods=skip_dto_methods): file_path
             for file_path in java_files
         }
 
