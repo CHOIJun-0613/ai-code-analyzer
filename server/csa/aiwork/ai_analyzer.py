@@ -1005,10 +1005,8 @@ class AIAnalyzer:
             logger.warning(_t("ai.async_class_analysis_failed", class_name=class_name, error_type=error_type, error_msg=error_msg))
 
             # 디버그 레벨로 전체 traceback 기록
-            logger.debug(_t("ai.class_analysis_error_async", class_name=class_name) + "
-" + traceback.format_exc())
-            logger.debug(_t("ai.class_analysis_error_detailed", class_name=class_name) + "
-" + traceback.format_exc())
+            import traceback
+            logger.debug(_t("ai.class_analysis_error_detailed", class_name=class_name) + "\n" + traceback.format_exc())
             return ""
 
     async def analyze_method_async(
@@ -1055,9 +1053,7 @@ class AIAnalyzer:
                     logger=logger
                 )
                 identifier = f"{class_name}.{method_name}" if class_name else method_name
-                logger.info(_t("ai.method_source_optimized_detailed", identifier=identifier, original_size=len(source_code), optimized_size=optimized_len))
-                           f"{len(source_code)} → {len(optimized_code)} chars, "
-                           f"level={optimization_level}")
+                logger.info(_t("ai.method_source_optimized_detailed", identifier=identifier, original_size=len(source_code), optimized_size=len(optimized_code)))
             else:
                 optimized_code = source_code
 
@@ -1083,11 +1079,8 @@ class AIAnalyzer:
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(_t("ai.method_analysis_error_detailed", identifier=identifier) + "
-" + traceback.format_exc())
+            logger.debug(_t("ai.method_analysis_error_detailed", identifier=identifier) + "\n" + traceback.format_exc())
             return ""
-            logger.debug(_t("ai.method_analysis_error_async", identifier=identifier) + "
-" + traceback.format_exc())
     async def analyze_sql_async(
         self,
         sql_statement: str,
@@ -1126,8 +1119,7 @@ class AIAnalyzer:
             if len(sql_statement) > sql_max:
                 # SQL은 truncate만 적용 (Body Stripping은 의미 없음)
                 optimized_sql = sql_statement[:sql_max] + "\n/* ... SQL truncated ... */"
-                logger.info(_t("ai.sql_truncation_applied", sql_id=sql_id, original_size=len(original_sql), truncated_size=len(truncated_sql)))
-                           f"{len(sql_statement)} → {len(optimized_sql)} chars")
+                logger.info(_t("ai.sql_truncation_applied", sql_id=sql_id, original_size=len(sql_statement), truncated_size=len(optimized_sql)))
             else:
                 optimized_sql = sql_statement
 
@@ -1150,11 +1142,8 @@ class AIAnalyzer:
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(_t("ai.sql_analysis_error_detailed", sql_id=sql_id) + "
-" + traceback.format_exc())
+            logger.debug(_t("ai.sql_analysis_error_detailed", sql_id=sql_id) + "\n" + traceback.format_exc())
             return ""
-            logger.debug(_t("ai.sql_analysis_error_async", sql_id=sql_id) + "
-" + traceback.format_exc())
     async def analyze_method_batch_async(
         self, 
         method_items: list,
@@ -1212,11 +1201,8 @@ class AIAnalyzer:
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(_t("ai.batch_method_error_detailed") + "
-" + traceback.format_exc())
+            logger.debug(_t("ai.batch_method_error_detailed") + "\n" + traceback.format_exc())
             return {}
-            logger.debug(_t("ai.batch_method_analysis_error") + "
-" + traceback.format_exc())
     async def analyze_sql_batch_async(
         self, 
         sql_items: list,
@@ -1272,11 +1258,8 @@ class AIAnalyzer:
 
             # 디버그 레벨로 전체 traceback 기록
             import traceback
-            logger.debug(_t("ai.batch_sql_error_detailed") + "
-" + traceback.format_exc())
+            logger.debug(_t("ai.batch_sql_error_detailed") + "\n" + traceback.format_exc())
             return {}
-            logger.debug(_t("ai.batch_sql_analysis_error") + "
-" + traceback.format_exc())
     def _parse_batch_sql_response(self, response: str, sql_items: list[dict]) -> dict[str, str]:
         """
         배치 SQL 분석 응답을 파싱합니다.
@@ -1362,11 +1345,7 @@ class AIAnalyzer:
                 f"SQL 배치 분석 응답 파싱 불완전: "
                 f"{len(results)}/{len(sql_items)}개만 파싱됨"
             )
-            logger.debug(_t("ai.response_preview_detailed", length=1000) + "
-" + response[:1000])
-
-            logger.debug(_t("ai.response_preview_sql", length=1000) + "
-" + response[:1000])
+            logger.debug(_t("ai.response_preview_sql", length=1000) + "\n" + response[:1000])
 
     def _parse_batch_method_response(self, response: str, method_items: list[dict]) -> dict[str, str]:
         """
@@ -1422,11 +1401,7 @@ class AIAnalyzer:
                 f"Method 배치 분석 응답 파싱 불완전: "
                 f"{len(results)}/{len(method_items)}개만 파싱됨"
             )
-            logger.debug(_t("ai.response_preview_method_detailed", length=1000) + "
-" + response[:1000])
-
-            logger.debug(_t("ai.response_preview_method", length=1000) + "
-" + response[:1000])
+            logger.debug(_t("ai.response_preview_method", length=1000) + "\n" + response[:1000])
 
     def analyze_class(self, source_code: str, class_name: str = "") -> str:
         """
