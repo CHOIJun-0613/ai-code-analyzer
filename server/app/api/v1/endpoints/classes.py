@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from typing import Optional
+from app.api import deps
 from app.api.deps import get_current_user, get_language_from_header
 from app.models.user import UserInDB
 from app.services.analysis_wrapper import start_analysis
@@ -23,7 +24,7 @@ def trigger_class_analysis(
     project_name: str,
     class_name: str,
     request: AnalysisRequest,
-    current_user: UserInDB = Depends(get_current_user),
+    current_user: UserInDB = Depends(deps.verify_project_access),
     language: str = Depends(get_language_from_header),
 ):
     # 1. Lookup file path
@@ -66,7 +67,8 @@ def search_classes(
     package_name: Optional[str] = None,
     class_name: Optional[str] = None,
     skip: int = 0,
-    limit: int = 50
+    limit: int = 50,
+    current_user: UserInDB = Depends(get_current_user)
 ):
     pool = get_db()
     
@@ -76,6 +78,12 @@ def search_classes(
     query = """
     MATCH (p:Project)-[:CONTAINS]->(pkg:Package)-[:CONTAINS]->(c:Class)
     """
+    
+    # Access Control
+    allowed_projects = deps.get_allowed_projects(current_user)
+    if allowed_projects is not None:
+        where_clauses.append("p.name IN $allowed_projects")
+        params["allowed_projects"] = list(allowed_projects)
     
     if project_name:
         where_clauses.append("toLower(p.name) CONTAINS toLower($project_name)")
