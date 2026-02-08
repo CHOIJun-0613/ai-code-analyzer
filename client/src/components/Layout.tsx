@@ -133,7 +133,7 @@ const Layout: React.FC = () => {
                         <div className={`pl-11 pr-4 pb-2 space-y-1 ${isCollapsed ? 'hidden' : 'block'}`}>
                             <Link
                                 to="/projects"
-                                className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${location.pathname.startsWith('/projects')
+                                className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${location.pathname.startsWith('/projects') && !location.pathname.includes('/sqls')
                                     ? 'bg-indigo-500/10 text-indigo-400'
                                     : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
                                     }`}
@@ -163,7 +163,7 @@ const Layout: React.FC = () => {
                             </Link>
                             <Link
                                 to="/sqls"
-                                className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${location.pathname.startsWith('/sqls')
+                                className={`flex items-center px-4 py-2 text-sm rounded-lg transition-all duration-200 group ${location.pathname.startsWith('/sqls') || location.pathname.includes('/sqls')
                                     ? 'bg-indigo-500/10 text-indigo-400'
                                     : 'text-slate-400 hover:bg-slate-700/50 hover:text-white'
                                     }`}

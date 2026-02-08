@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { ArrowLeft, Code, Activity, Layers, Database, AlertCircle, HelpCircle, Check, GitMerge, RefreshCw, Sparkles } from 'lucide-react';
+import { Code, Activity, Layers, Database, AlertCircle, HelpCircle, Check, GitMerge, RefreshCw, Sparkles, Box, Cpu } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import MermaidDiagram from '../components/MermaidDiagram';
 import SourceCodeViewer from '../components/SourceCodeViewer';
 import { SqlAnalysisModal } from '../components/SqlAnalysisModal';
+import { useAuthStore } from '../store/authStore';
 
 // ... (inside component)
 
@@ -18,6 +19,7 @@ interface SqlDetailData {
     id: string;
     mapper_name: string;
     project_name: string;
+    mapper_namespace?: string;
     sql_type: string;
     sql_content: string;
     logical_name?: string;
@@ -27,6 +29,9 @@ interface SqlDetailData {
     tables?: string; // stringified json
     columns?: string; // stringified json
     updated_at?: string; // 분석 일시
+    parameter_type?: string;
+    result_type?: string;
+    result_map?: string;
     called_by?: {
         method_name: string;
         class_name: string;
@@ -55,6 +60,8 @@ const SqlDetails: React.FC = () => {
     const [showComplexityHelp, setShowComplexityHelp] = React.useState(false);
     const [viewMode, setViewMode] = React.useState<'flow' | 'json'>('flow');
     const [isAnalysisModalOpen, setIsAnalysisModalOpen] = React.useState(false);
+    const user = useAuthStore((state) => state.user);
+    const isAdmin = user?.groups?.some(g => g.name.toLowerCase() === 'administrators') ?? false;
 
     const { data: sqlData, isLoading, error } = useQuery<SqlDetailData>({
         // ... (existing useQuery options)
@@ -140,20 +147,56 @@ const SqlDetails: React.FC = () => {
 
 
 
+    const renderResultType = () => {
+        const typeStr = sqlData.result_type || sqlData.result_map;
+        if (!typeStr) {
+            return (
+                <span className="text-slate-400 dark:text-slate-500 italic text-sm">
+                    {t('common.noData', 'No data available')}
+                </span>
+            );
+        }
+
+        return (
+            <>
+                {typeStr.includes('.') ? (
+                    <span
+                        onClick={() => navigate(`/projects/${projectName}/classes/${typeStr.substring(typeStr.lastIndexOf('.') + 1)}?package=${typeStr.substring(0, typeStr.lastIndexOf('.'))}`)}
+                        className="text-sm font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block text-center md:text-left shadow-sm break-all cursor-pointer hover:opacity-80 hover:underline transition-all"
+                    >
+                        {typeStr}
+                    </span>
+                ) : (
+                    <span className="text-sm font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block text-center md:text-left shadow-sm break-all">
+                        {typeStr}
+                    </span>
+                )}
+                {sqlData.result_map && !sqlData.result_type && (
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded border border-slate-200 dark:border-slate-600">
+                        ResultMap
+                    </span>
+                )}
+            </>
+        );
+    };
+
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500 pb-20">
             {/* Header */}
             <div className="flex items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-6">
                 <div className="flex items-center gap-4">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors text-slate-500 dark:text-slate-400"
-                        title={t('common.back', 'Back')}
-                    >
-                        <ArrowLeft className="w-5 h-5" />
-                    </button>
+                    <div className="p-3 rounded-xl bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                        <Database className="w-8 h-8" />
+                    </div>
                     <div>
-                        <div className="flex items-center gap-3 mb-1">
+                        <p className="text-slate-500 dark:text-slate-400 font-mono text-sm mb-1">
+                            {sqlData.mapper_namespace || sqlData.mapper_name}
+                        </p>
+                        <div className="flex items-center gap-3">
+                            <h1 className="text-3xl font-bold text-slate-900 dark:text-white font-mono">
+                                {sqlData.id}
+                            </h1>
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold ring-1 ring-inset uppercase ${sqlData.sql_type?.toUpperCase() === 'SELECT' ? 'bg-blue-50 text-blue-700 ring-blue-700/10 dark:bg-blue-400/10 dark:text-blue-400 dark:ring-blue-400/30' :
                                 sqlData.sql_type?.toUpperCase() === 'INSERT' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-400/10 dark:text-green-400 dark:ring-green-400/30' :
                                     sqlData.sql_type?.toUpperCase() === 'UPDATE' ? 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-400/10 dark:text-amber-400 dark:ring-amber-400/30' :
@@ -162,38 +205,32 @@ const SqlDetails: React.FC = () => {
                                 }`}>
                                 {sqlData.sql_type}
                             </span>
-                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white font-mono">
-                                {sqlData.id}
-                            </h1>
                         </div>
                         {sqlData.logical_name && (
-                            <p className="text-lg text-slate-600 dark:text-slate-300">
+                            <p className="text-lg text-slate-600 dark:text-slate-300 mt-1">
                                 {sqlData.logical_name}
                             </p>
                         )}
                         {sqlData.updated_at && (
-                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                                Generated {new Date(sqlData.updated_at).toLocaleString('en-US', {
-                                    year: 'numeric',
-                                    month: '2-digit',
-                                    day: '2-digit',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                    second: '2-digit',
-                                    hour12: false
-                                }).replace(/(\d+)\/(\d+)\/(\d+),/, '$3. $1. $2.')}
+                            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 font-mono">
+                                Last Updated: {(() => {
+                                    const d = new Date(sqlData.updated_at);
+                                    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+                                })()}
                             </p>
                         )}
                     </div>
                 </div>
-                <button
-                    onClick={() => setIsAnalysisModalOpen(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm"
-                    title={t('sqlDetails.reanalyzeDesc', 'Re-run AI analysis for this SQL statement')}
-                >
-                    <RefreshCw className="w-4 h-4" />
-                    {t('sqlDetails.reanalyze', 'Re-analyze')}
-                </button>
+                {isAdmin && (
+                    <button
+                        onClick={() => setIsAnalysisModalOpen(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm font-medium text-slate-700 dark:text-slate-300 shadow-sm"
+                        title={t('sqlDetails.reanalyzeDesc', 'Re-run AI analysis for this SQL statement')}
+                    >
+                        <RefreshCw className="w-4 h-4" />
+                        {t('sqlDetails.reanalyze', 'Re-analyze')}
+                    </button>
+                )}
             </div>
 
             {/* Top Section: Analysis & Metadata Grid */}
@@ -334,6 +371,62 @@ const SqlDetails: React.FC = () => {
                     {activeTab === 'analysis' && (
                         <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
 
+
+                            <div className="space-y-6 mb-8">
+                                {/* Input Parameter Type */}
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <Box className="w-5 h-5 text-indigo-500" />
+                                        {t('sqlDetails.parameterType', 'Input Parameter Type')}
+                                    </h4>
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 rounded-lg shadow-sm">
+                                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                            <div className="min-w-[140px] shrink-0">
+                                                <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400 tracking-wider">Parameter Type</span>
+                                            </div>
+                                            <div className="flex-1">
+                                                {sqlData.parameter_type ? (
+                                                    // Class Navigation Logic
+                                                    sqlData.parameter_type.includes('.') ? (
+                                                        <span
+                                                            onClick={() => navigate(`/projects/${projectName}/classes/${sqlData.parameter_type!.substring(sqlData.parameter_type!.lastIndexOf('.') + 1)}?package=${sqlData.parameter_type!.substring(0, sqlData.parameter_type!.lastIndexOf('.'))}`)}
+                                                            className="text-sm font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block text-center md:text-left shadow-sm break-all cursor-pointer hover:opacity-80 hover:underline transition-all"
+                                                        >
+                                                            {sqlData.parameter_type}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-sm font-mono text-indigo-600 dark:text-indigo-400 font-bold bg-white dark:bg-slate-800 px-3 py-1.5 rounded border border-slate-200 dark:border-slate-700 block text-center md:text-left shadow-sm break-all">
+                                                            {sqlData.parameter_type}
+                                                        </span>
+                                                    )
+                                                ) : (
+                                                    <span className="text-slate-400 dark:text-slate-500 italic text-sm">
+                                                        {t('common.noData', 'No data available')}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Return Type */}
+                                <div>
+                                    <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                        <Cpu className="w-5 h-5 text-emerald-500" />
+                                        {t('sqlDetails.returnType', 'Return Type')}
+                                    </h4>
+                                    <div className="p-4 bg-emerald-50/30 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-900/30 rounded-lg">
+                                        <div className="flex flex-col md:flex-row md:items-center gap-4">
+                                            <div className="min-w-[140px] shrink-0">
+                                                <span className="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-500 tracking-wider">Result Type</span>
+                                            </div>
+                                            <div className="flex-1 flex items-center gap-2 flex-wrap">
+                                                {renderResultType()}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
@@ -481,118 +574,121 @@ const SqlDetails: React.FC = () => {
                     )}
                 </div>
             </div>
+
             {/* Complexity Help Modal */}
-            {showComplexityHelp && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div
-                        className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Modal Header */}
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
-                                    <Activity className="w-5 h-5" />
+            {
+                showComplexityHelp && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div
+                            className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {/* Modal Header */}
+                            <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
+                                <div className="flex items-center gap-3">
+                                    <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                                        <Activity className="w-5 h-5" />
+                                    </div>
+                                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+                                        {t('sqlDetails.complexityHelp.title', 'SQL Complexity Guideline')}
+                                    </h2>
                                 </div>
-                                <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-                                    {t('sqlDetails.complexityHelp.title', 'SQL Complexity Guideline')}
-                                </h2>
-                            </div>
-                            <button
-                                onClick={() => setShowComplexityHelp(false)}
-                                className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
-                            >
-                                <Check className="w-5 h-5 text-slate-500" />
-                            </button>
-                        </div>
-
-                        {/* Modal Body */}
-                        <div className="p-6 overflow-y-auto space-y-6">
-                            {/* Calculation Basis */}
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
-                                    {t('sqlDetails.complexityHelp.calculationBasis', 'Calculation Basis')}
-                                </h3>
-                                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4 text-sm text-slate-600 dark:text-slate-400">
-                                    <p className="leading-relaxed mb-2">{t('sqlDetails.complexityHelp.calculationDesc', 'Starting from a base score of 1, add 1 point for each of the following:')}</p>
-                                    <ul className="list-disc pl-5 space-y-1">
-                                        <li>{t('sqlDetails.complexityHelp.basis.tables', 'Tables')}</li>
-                                        <li>{t('sqlDetails.complexityHelp.basis.joins', 'Joins')}</li>
-                                        <li>{t('sqlDetails.complexityHelp.basis.subqueries', 'Subqueries')}</li>
-                                        <li>{t('sqlDetails.complexityHelp.basis.where', 'WHERE conditions')}</li>
-                                        <li>{t('sqlDetails.complexityHelp.basis.groupBy', 'GROUP BY columns')}</li>
-                                        <li>{t('sqlDetails.complexityHelp.basis.orderBy', 'ORDER BY columns')}</li>
-                                        <li>{t('sqlDetails.complexityHelp.basis.having', 'HAVING conditions')}</li>
-                                    </ul>
-                                </div>
+                                <button
+                                    onClick={() => setShowComplexityHelp(false)}
+                                    className="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full transition-colors"
+                                >
+                                    <Check className="w-5 h-5 text-slate-500" />
+                                </button>
                             </div>
 
-                            {/* Reference Levels */}
-                            <div>
-                                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
-                                    {t('sqlDetails.complexityHelp.rangeTitle', 'Complexity Range')}
-                                </h3>
-                                <div className="space-y-3">
-                                    <div className="flex items-start gap-4 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10">
-                                        <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400 min-w-[60px] text-center">1 ~ 3</div>
-                                        <div>
-                                            <div className="font-bold text-emerald-700 dark:text-emerald-300 text-sm">
-                                                {t('sqlDetails.complexityHelp.ranges.simple.level', 'simple')}
-                                            </div>
-                                            <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                                                {t('sqlDetails.complexityHelp.ranges.simple.desc', 'Simple SQL')}
+                            {/* Modal Body */}
+                            <div className="p-6 overflow-y-auto space-y-6">
+                                {/* Calculation Basis */}
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                                        {t('sqlDetails.complexityHelp.calculationBasis', 'Calculation Basis')}
+                                    </h3>
+                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-800 p-4 text-sm text-slate-600 dark:text-slate-400">
+                                        <p className="leading-relaxed mb-2">{t('sqlDetails.complexityHelp.calculationDesc', 'Starting from a base score of 1, add 1 point for each of the following:')}</p>
+                                        <ul className="list-disc pl-5 space-y-1">
+                                            <li>{t('sqlDetails.complexityHelp.basis.tables', 'Tables')}</li>
+                                            <li>{t('sqlDetails.complexityHelp.basis.joins', 'Joins')}</li>
+                                            <li>{t('sqlDetails.complexityHelp.basis.subqueries', 'Subqueries')}</li>
+                                            <li>{t('sqlDetails.complexityHelp.basis.where', 'WHERE conditions')}</li>
+                                            <li>{t('sqlDetails.complexityHelp.basis.groupBy', 'GROUP BY columns')}</li>
+                                            <li>{t('sqlDetails.complexityHelp.basis.orderBy', 'ORDER BY columns')}</li>
+                                            <li>{t('sqlDetails.complexityHelp.basis.having', 'HAVING conditions')}</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                {/* Reference Levels */}
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                                        {t('sqlDetails.complexityHelp.rangeTitle', 'Complexity Range')}
+                                    </h3>
+                                    <div className="space-y-3">
+                                        <div className="flex items-start gap-4 p-3 rounded-xl border border-emerald-100 dark:border-emerald-900/30 bg-emerald-50/30 dark:bg-emerald-900/10">
+                                            <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400 min-w-[60px] text-center">1 ~ 3</div>
+                                            <div>
+                                                <div className="font-bold text-emerald-700 dark:text-emerald-300 text-sm">
+                                                    {t('sqlDetails.complexityHelp.ranges.simple.level', 'simple')}
+                                                </div>
+                                                <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                                    {t('sqlDetails.complexityHelp.ranges.simple.desc', 'Simple SQL')}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-start gap-4 p-3 rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-900/10">
-                                        <div className="font-mono font-bold text-amber-600 dark:text-amber-400 min-w-[60px] text-center">4 ~ 7</div>
-                                        <div>
-                                            <div className="font-bold text-amber-700 dark:text-amber-300 text-sm">
-                                                {t('sqlDetails.complexityHelp.ranges.medium.level', 'medium')}
-                                            </div>
-                                            <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                                                {t('sqlDetails.complexityHelp.ranges.medium.desc', 'Inspection recommended')}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-start gap-4 p-3 rounded-xl border border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10">
-                                        <div className="font-mono font-bold text-red-600 dark:text-red-400 min-w-[60px] text-center">8 ~ 13</div>
-                                        <div>
-                                            <div className="font-bold text-red-700 dark:text-red-300 text-sm">
-                                                {t('sqlDetails.complexityHelp.ranges.complex.level', 'complex')}
-                                            </div>
-                                            <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                                                {t('sqlDetails.complexityHelp.ranges.complex.desc', 'Consider refactoring')}
+                                        <div className="flex items-start gap-4 p-3 rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50/30 dark:bg-amber-900/10">
+                                            <div className="font-mono font-bold text-amber-600 dark:text-amber-400 min-w-[60px] text-center">4 ~ 7</div>
+                                            <div>
+                                                <div className="font-bold text-amber-700 dark:text-amber-300 text-sm">
+                                                    {t('sqlDetails.complexityHelp.ranges.medium.level', 'medium')}
+                                                </div>
+                                                <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                                    {t('sqlDetails.complexityHelp.ranges.medium.desc', 'Inspection recommended')}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="flex items-start gap-4 p-3 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-100/30 dark:bg-red-900/20">
-                                        <div className="font-mono font-bold text-red-700 dark:text-red-500 min-w-[60px] text-center">13 +</div>
-                                        <div>
-                                            <div className="font-bold text-red-800 dark:text-red-200 text-sm">
-                                                {t('sqlDetails.complexityHelp.ranges.veryComplex.level', 'very_complex')}
+                                        <div className="flex items-start gap-4 p-3 rounded-xl border border-red-100 dark:border-red-900/30 bg-red-50/30 dark:bg-red-900/10">
+                                            <div className="font-mono font-bold text-red-600 dark:text-red-400 min-w-[60px] text-center">8 ~ 13</div>
+                                            <div>
+                                                <div className="font-bold text-red-700 dark:text-red-300 text-sm">
+                                                    {t('sqlDetails.complexityHelp.ranges.complex.level', 'complex')}
+                                                </div>
+                                                <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                                    {t('sqlDetails.complexityHelp.ranges.complex.desc', 'Consider refactoring')}
+                                                </div>
                                             </div>
-                                            <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                                                {t('sqlDetails.complexityHelp.ranges.veryComplex.desc', 'Priority for refactoring')}
+                                        </div>
+                                        <div className="flex items-start gap-4 p-3 rounded-xl border border-red-200 dark:border-red-800/50 bg-red-100/30 dark:bg-red-900/20">
+                                            <div className="font-mono font-bold text-red-700 dark:text-red-500 min-w-[60px] text-center">13 +</div>
+                                            <div>
+                                                <div className="font-bold text-red-800 dark:text-red-200 text-sm">
+                                                    {t('sqlDetails.complexityHelp.ranges.veryComplex.level', 'very_complex')}
+                                                </div>
+                                                <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                                                    {t('sqlDetails.complexityHelp.ranges.veryComplex.desc', 'Priority for refactoring')}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Modal Footer */}
-                        <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end">
-                            <button
-                                onClick={() => setShowComplexityHelp(false)}
-                                className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/25 transition-all active:scale-95"
-                            >
-                                {t('common.confirm', 'Confirm')}
-                            </button>
+                            {/* Modal Footer */}
+                            <div className="p-6 border-t border-slate-100 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 flex justify-end">
+                                <button
+                                    onClick={() => setShowComplexityHelp(false)}
+                                    className="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-lg shadow-indigo-500/25 transition-all active:scale-95"
+                                >
+                                    {t('common.confirm', 'Confirm')}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             {/* SQL Analysis Modal */}
             <SqlAnalysisModal
@@ -607,7 +703,8 @@ const SqlDetails: React.FC = () => {
                 }}
                 onAnalysisComplete={handleAnalysisComplete}
             />
-        </div>
+
+        </div >
     );
 };
 

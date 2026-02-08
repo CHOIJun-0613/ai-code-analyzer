@@ -126,7 +126,8 @@ def get_sql_details(project_name: str, sql_id: str, mapper_name: str = None):
         query_sql += " AND s.mapper_name = $mapper_name"
 
     query_sql += """
-    RETURN s, s.updated_at as updated_at
+    OPTIONAL MATCH (m:MyBatisMapper)-[:HAS_SQL_STATEMENT]->(s)
+    RETURN s, s.updated_at as updated_at, m.namespace as mapper_namespace
     """
     
     # 2. Fetch Calling Methods (Reverse Impact)
@@ -156,6 +157,8 @@ def get_sql_details(project_name: str, sql_id: str, mapper_name: str = None):
             raise HTTPException(status_code=404, detail=detail)
         
         sql_data = result_sql[0]["s"]
+        if result_sql[0].get("mapper_namespace"):
+            sql_data["mapper_namespace"] = result_sql[0]["mapper_namespace"]
         
         # Execute Calling Methods query
         result_calls = session.run(query_calls, **params)

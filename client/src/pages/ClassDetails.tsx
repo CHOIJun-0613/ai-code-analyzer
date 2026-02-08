@@ -15,6 +15,7 @@ import {
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axios from '../api/client';
+import { useAuthStore } from '../store/authStore';
 
 interface Field {
     name: string;
@@ -66,6 +67,8 @@ const ClassDetails: React.FC = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
     const queryClient = useQueryClient();
+    const user = useAuthStore((state) => state.user);
+    const isAdmin = user?.groups?.some(g => g.name.toLowerCase() === 'administrators') ?? false;
 
     const [activeTab, setActiveTab] = useState<'info' | 'source' | 'methods' | 'fields'>('info');
     const [showComplexityHelp, setShowComplexityHelp] = useState(false);
@@ -329,13 +332,15 @@ const ClassDetails: React.FC = () => {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setIsAnalysisModalOpen(true)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
-                                >
-                                    <RefreshCw className="w-4 h-4" />
-                                    {t('classDetails.reanalyze')}
-                                </button>
+                                {isAdmin && (
+                                    <button
+                                        onClick={() => setIsAnalysisModalOpen(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 text-sm font-medium rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-sm"
+                                    >
+                                        <RefreshCw className="w-4 h-4" />
+                                        {t('classDetails.reanalyze')}
+                                    </button>
+                                )}
 
                                 {/* Reports Menu */}
                                 <div className="relative" ref={reportMenuRef}>

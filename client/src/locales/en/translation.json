@@ -681,7 +681,9 @@
         "hideFlowEdges": "Hide Flow",
         "showFlowEdges": "Show Flow",
         "reanalyze": "Re-analyze",
-        "reanalyzeDesc": "Re-run AI analysis for this SQL statement"
+        "reanalyzeDesc": "Re-run AI analysis for this SQL statement",
+        "parameterType": "Input Parameter Type",
+        "returnType": "Return Type"
     },
     "sqlAnalysis": {
         "title": "SQL Re-analysis",

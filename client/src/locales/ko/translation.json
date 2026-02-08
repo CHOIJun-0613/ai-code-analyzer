@@ -679,7 +679,9 @@
         "hideFlowEdges": "흐름도 감추기",
         "showFlowEdges": "흐름도 보이기",
         "reanalyze": "재분석",
-        "reanalyzeDesc": "SQL 문에 대한 AI 분석 재실행"
+        "reanalyzeDesc": "SQL 문에 대한 AI 분석 재실행",
+        "parameterType": "입력 파라미터 타입",
+        "returnType": "반환 타입"
     },
     "sqlAnalysis": {
         "title": "SQL 재분석",
