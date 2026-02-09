@@ -93,7 +93,8 @@ class PersistenceMixin:
             "SET m:Analysis, m.logical_name = $logical_name, m.type = $type, m.file_extension = $file_extension, "
             "m.namespace = $namespace, m.methods = $methods, "
             "m.sql_statements = $sql_statements, m.file_path = $file_path, "
-            "m.package_name = $package_name, m.description = $description, m.ai_description = $ai_description, "
+            "m.package_name = $package_name, m.source = $source, "
+            "m.description = $description, m.ai_description = $ai_description, "
             "m.updated_at = $updated_at"
         )
         tx.run(
@@ -108,6 +109,7 @@ class PersistenceMixin:
             sql_statements=json.dumps(mapper.sql_statements),
             file_path=mapper.file_path,
             package_name=mapper.package_name,
+            source=mapper.source or "",
             description=mapper.description or "",
             ai_description=mapper.ai_description or "",
             updated_at=current_timestamp,
