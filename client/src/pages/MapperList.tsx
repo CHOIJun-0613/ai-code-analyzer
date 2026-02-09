@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { Search, X, Database, FolderOpen, FileCode, Hash } from 'lucide-react';
@@ -17,6 +17,7 @@ interface MapperItem {
 
 const MapperList: React.FC = () => {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
 
     // State for filters
@@ -246,6 +247,11 @@ const MapperList: React.FC = () => {
                         headerHeight={45}
                         hoverable
                         emptyMessage={t('mapperList.noMappers')}
+                        onRowClick={(item: MapperItem) => {
+                            navigate(
+                                `/projects/${encodeURIComponent(item.project_name)}/mappers/${encodeURIComponent(item.mapper_name)}?package=${encodeURIComponent(item.package_name)}`
+                            );
+                        }}
                         onEndReached={() => {
                             if (hasNextPage && !isFetchingNextPage) {
                                 fetchNextPage();
