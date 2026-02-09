@@ -14,6 +14,7 @@ const MapperList = lazy(() => import('./pages/MapperList'));
 const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
 const SqlList = lazy(() => import('./pages/SqlList'));
 const SqlDetails = lazy(() => import('./pages/SqlDetails'));
+const MapperDetails = lazy(() => import('./pages/MapperDetails'));
 const ClassDetails = lazy(() => import('./pages/ClassDetails'));
 const MethodDetails = lazy(() => import('./pages/MethodDetails'));
 const Analysis = lazy(() => import('./pages/Analysis'));
@@ -73,6 +74,11 @@ function App() {
                     <Route path="projects/:projectName/sqls/:sqlId" element={
                         <Suspense fallback={<LoadingSpinner />}>
                             <SqlDetails />
+                        </Suspense>
+                    } />
+                    <Route path="projects/:projectName/mappers/:mapperName" element={
+                        <Suspense fallback={<LoadingSpinner />}>
+                            <MapperDetails />
                         </Suspense>
                     } />
                     <Route path="projects/:projectName" element={
