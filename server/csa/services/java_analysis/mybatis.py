@@ -493,7 +493,8 @@ def extract_mybatis_mappers_from_classes(classes: list[Class]) -> list[MyBatisMa
             methods=mapper_methods,
             sql_statements=sql_statements,
             file_path=cls.file_path,
-            package_name=cls.package_name
+            package_name=cls.package_name,
+            source=cls.source or ""
         )
         mappers.append(mapper)
     
@@ -655,7 +656,8 @@ def parse_mybatis_xml_file(file_path: str) -> MyBatisMapper:
             methods=[],  # XML mappers don't have Java methods
             sql_statements=sql_statements,
             file_path=file_path,
-            package_name=package_name
+            package_name=package_name,
+            source=xml_content
         )
         
         return mapper
