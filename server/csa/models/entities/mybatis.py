@@ -12,6 +12,7 @@ class MyBatisMapper(BaseModel):
     sql_statements: list[dict] = []  # SQL statements
     file_path: str = ""
     package_name: str = ""
+    source: str = ""  # Mapper 파일 원본 소스 코드
     description: str = ""  # Brief description of the mapper
     ai_description: str = ""  # AI-generated description of the mapper
 
