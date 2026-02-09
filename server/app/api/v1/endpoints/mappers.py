@@ -59,12 +59,12 @@ def search_mappers(
     WITH p, pkg, m, count(s) as sql_count
     RETURN
         p.name as project_name,
-        pkg.name as package_name,
+        m.package_name as package_name,
         m.name as mapper_name,
         m.logical_name as mapper_logical_name,
         m.type as mapper_type,
         sql_count
-    ORDER BY p.name, pkg.name, m.name
+    ORDER BY p.name, m.package_name, m.name
     SKIP $skip
     LIMIT $limit
     """
