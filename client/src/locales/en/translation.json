@@ -82,6 +82,23 @@
         "mappersFound": "Mappers Found: {{count}}",
         "noMappers": "No mappers found matching your search."
     },
+    "mapperDetails": {
+        "loading": "Loading mapper details...",
+        "notFound": "Mapper not found.",
+        "tabOverview": "Overview",
+        "tabSqlStatements": "SQL Statements",
+        "tabSource": "Mapper Source",
+        "filePath": "File Path",
+        "description": "Description",
+        "noDescription": "No AI description available. Run AI analysis to generate a description.",
+        "sqlId": "SQL ID",
+        "logicalName": "Logical Name",
+        "sqlType": "SQL Type",
+        "noSqlStatements": "No SQL statements registered.",
+        "sqlStatementsCount": "SQL Statements: {{count}}",
+        "noSource": "No source code available.",
+        "lastUpdated": "Last Updated"
+    },
     "aiPrompt": {
         "title": "AI Prompt Management",
         "subtitle": "Manage and tune system prompts used for AI analysis.",
