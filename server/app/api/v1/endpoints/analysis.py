@@ -51,6 +51,7 @@ class AnalysisRequest(BaseModel):
     java_complexity_threshold: int = 50000
     sequence_diagram_include_packages: Optional[str] = None
     log_level: str = 'INFO'
+    log_language: str = 'ko'
     exclude_patterns: Optional[str] = None
     
     # Advanced AI Options
@@ -66,8 +67,8 @@ def trigger_analysis(
 ):
     # Set client_id context for this request (used for logging and job ID)
     set_client_id(current_user.username)
-    # Set language context from Accept-Language header
-    language = get_language_from_header(http_request)
+    # Set language context from Accept-Language header (default), override with request param if present
+    language = request.log_language or get_language_from_header(http_request)
 
     # TODO: Validate path exists
     data = request.dict()
@@ -88,6 +89,7 @@ def trigger_analysis(
         "java_complexity_threshold": data.pop("java_complexity_threshold", 50000),
         "sequence_diagram_include_packages": data.pop("sequence_diagram_include_packages", None),
         "log_level": data.pop("log_level", "INFO"),
+        "log_language": data.pop("log_language", "ko"),
         "exclude_patterns": data.pop("exclude_patterns", None),
         "charset": data.pop("charset", "UTF-8"),
     }
@@ -176,6 +178,7 @@ def upload_and_analyze(
     java_complexity_threshold: int = Form(50000),
     sequence_diagram_include_packages: Optional[str] = Form(None),
     log_level: str = Form('INFO'),
+    log_language: str = Form('ko'),
     exclude_patterns: Optional[str] = Form(None),
     use_ai_analysis: bool = Form(False),
     concurrent_ai_requests: int = Form(15),
@@ -185,6 +188,9 @@ def upload_and_analyze(
 ):
     # Set client_id context for this request (used for logging and job ID)
     set_client_id(current_user.username)
+    # Set language context for upload - prioritize form param
+    if log_language:
+        language = log_language
 
     # Create temp file
     temp_dir = tempfile.mkdtemp()
@@ -216,7 +222,7 @@ def upload_and_analyze(
             "java_complexity_threshold": java_complexity_threshold,
             "sequence_diagram_include_packages": sequence_diagram_include_packages,
             "log_level": log_level,
-            "log_level": log_level,
+            "log_language": log_language,
             "exclude_patterns": exclude_patterns,
             "charset": charset,
         }
