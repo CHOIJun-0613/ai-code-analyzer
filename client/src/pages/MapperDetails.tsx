@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
-import { FileCode, AlertCircle, FolderOpen, Hash } from 'lucide-react';
+import { FileCode, AlertCircle, FolderOpen } from 'lucide-react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import SourceCodeViewer from '../components/SourceCodeViewer';
@@ -117,11 +117,10 @@ const MapperDetails: React.FC = () => {
                             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
                                 {mapperData.name}{mapperData.file_extension ? `.${mapperData.file_extension}` : ''}
                             </h1>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold ring-1 ring-inset uppercase ${
-                                mapperData.type === 'xml'
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold ring-1 ring-inset uppercase ${mapperData.type === 'xml'
                                     ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-400/10 dark:text-emerald-400 dark:ring-emerald-400/30'
                                     : 'bg-violet-50 text-violet-700 ring-violet-600/20 dark:bg-violet-400/10 dark:text-violet-400 dark:ring-violet-400/30'
-                            }`}>
+                                }`}>
                                 {mapperData.type}
                             </span>
                         </div>
@@ -151,11 +150,10 @@ const MapperDetails: React.FC = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className={`px-6 py-3.5 text-sm font-medium transition-colors relative ${
-                                    activeTab === tab.id
+                                className={`px-6 py-3.5 text-sm font-medium transition-colors relative ${activeTab === tab.id
                                         ? 'text-indigo-600 dark:text-indigo-400'
                                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
-                                }`}
+                                    }`}
                             >
                                 {tab.label}
                                 {activeTab === tab.id && (
