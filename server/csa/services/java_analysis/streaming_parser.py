@@ -493,9 +493,10 @@ def parse_java_project_streaming(
                         elapsed_mm = int(elapsed / 60)
                         elapsed_ss = int(elapsed % 60)
                         logger.info(
-                            f"[{elapsed_mm:02d}:{elapsed_ss:02d}] "
-                            + _t("java_analysis.parsing_progress", current=current_processed, total=total_files, percent=current_percent)
-                            + f" - {files_per_sec:.1f} files/sec, ETA: {eta_minutes}분, RAM: {memory_mb:.0f}MB"
+                            _t("java_analysis.parsing_progress_detail",
+                               elapsed=f"{elapsed_mm:02d}:{elapsed_ss:02d}",
+                               current=current_processed, total=total_files, percent=current_percent,
+                               files_per_sec=files_per_sec, eta=eta_minutes, memory=memory_mb)
                         )
 
                     # Lock 밖에서 Neo4j 저장 수행 (다른 스레드 블록 방지)
