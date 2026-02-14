@@ -28,6 +28,7 @@ export const createAnalysisSchema = (t: TFunction) => z.object({
   sequenceDiagramIncludePackages: z.string().optional(),
   excludePatterns: z.string().optional(),
   logLevel: z.enum(['DEBUG', 'INFO', 'WARNING', 'ERROR']),
+  logLanguage: z.enum(['ko', 'en']).optional(),
 }).refine((data) => {
   // mode가 upload일 때 file 필수
   if (data.mode === 'upload') {
