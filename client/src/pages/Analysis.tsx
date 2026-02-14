@@ -52,6 +52,7 @@ const Analysis: React.FC = () => {
             sequenceDiagramIncludePackages: '',
             excludePatterns: '',
             logLevel: 'INFO',
+            logLanguage: 'ko',
             charset: 'UTF-8',
         },
     });
@@ -121,6 +122,7 @@ const Analysis: React.FC = () => {
                     sequenceDiagramIncludePackages: res.data.sequence_diagram_include_packages !== undefined ? res.data.sequence_diagram_include_packages : '',
                     excludePatterns: res.data.exclude_patterns !== undefined ? res.data.exclude_patterns : '',
                     logLevel: res.data.log_level !== undefined ? res.data.log_level : 'INFO',
+                    logLanguage: res.data.log_language !== undefined ? res.data.log_language : 'ko',
                 });
             }
             return res.data;
@@ -289,6 +291,7 @@ const Analysis: React.FC = () => {
                 sequence_diagram_include_packages: formData.sequenceDiagramIncludePackages,
                 exclude_patterns: formData.excludePatterns,
                 log_level: formData.logLevel,
+                log_language: formData.logLanguage,
                 analysis_target: formData.analysisTarget,
                 save_strategy: formData.saveStrategy
             };
@@ -322,6 +325,7 @@ const Analysis: React.FC = () => {
                 sequence_diagram_include_packages: formData.sequenceDiagramIncludePackages,
                 exclude_patterns: formData.excludePatterns,
                 log_level: formData.logLevel,
+                log_language: formData.logLanguage,
                 analysis_target: formData.analysisTarget,
                 save_strategy: formData.saveStrategy
             };
@@ -369,6 +373,7 @@ const Analysis: React.FC = () => {
                 if (formData.sequenceDiagramIncludePackages) uploadFormData.append('sequence_diagram_include_packages', formData.sequenceDiagramIncludePackages);
                 if (formData.excludePatterns) uploadFormData.append('exclude_patterns', formData.excludePatterns);
                 uploadFormData.append('log_level', formData.logLevel);
+                if (formData.logLanguage) uploadFormData.append('log_language', formData.logLanguage);
 
                 // Advanced AI Options - DISABLING AI
                 uploadFormData.append('use_ai_analysis', 'false');
@@ -405,6 +410,7 @@ const Analysis: React.FC = () => {
                     sequence_diagram_include_packages: formData.sequenceDiagramIncludePackages,
                     exclude_patterns: formData.excludePatterns,
                     log_level: formData.logLevel,
+                    log_language: formData.logLanguage,
 
                     // Advanced AI Options - DISABLING AI
                     use_ai_analysis: false,
@@ -878,7 +884,7 @@ const Analysis: React.FC = () => {
                             </div>
 
                             {/* Sequence Packages & Log Level */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-50 dark:border-slate-800 pt-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-50 dark:border-slate-800 pt-4">
                                 <div>
                                     <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
                                         {t('analysis.includePackages')} <Tooltip text={t('analysis.includePackagesTooltip')} />
@@ -902,6 +908,18 @@ const Analysis: React.FC = () => {
                                         <option value="INFO">INFO</option>
                                         <option value="WARNING">WARNING</option>
                                         <option value="ERROR">ERROR</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                                        {t('analysis.logLanguage')} <Tooltip text={t('analysis.logLanguageTooltip')} position="right-0" arrowPosition="right-2" />
+                                    </label>
+                                    <select
+                                        {...register('logLanguage')}
+                                        className="w-full px-2 py-1.5 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-800 dark:text-white text-sm"
+                                    >
+                                        <option value="ko">{t('analysis.langKo')}</option>
+                                        <option value="en">{t('analysis.langEn')}</option>
                                     </select>
                                 </div>
                             </div>
